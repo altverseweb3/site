@@ -12,6 +12,19 @@ export enum WalletType {
   WALLET_CONNECT = "WALLET_CONNECT",
 }
 
+export type MayanChainName =
+  | "solana"
+  | "ethereum"
+  | "bsc"
+  | "polygon"
+  | "avalanche"
+  | "arbitrum"
+  | "optimism"
+  | "base"
+  | "aptos"
+  | "sui"
+  | "unichain";
+
 export type Token = {
   id: string;
   name: string;
@@ -28,8 +41,11 @@ export type Token = {
 export type Chain = {
   id: string;
   name: string;
+  chainName: string;
+  mayanName: MayanChainName;
   symbol: string;
   icon: string;
+  currency: string;
   backgroundColor: string;
   fontColor: string;
   rpcUrl?: string;
