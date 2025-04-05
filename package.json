@@ -12,6 +12,7 @@
     "postinstall": "chmod +x .husky/pre-push && chmod +x .husky/pre-commit"
   },
   "dependencies": {
+    "@mayanfinance/swap-sdk": "^10.4.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-select": "^2.1.6",
