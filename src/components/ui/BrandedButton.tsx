@@ -1,11 +1,8 @@
 import React, { ButtonHTMLAttributes } from "react";
 import { Button } from "@/components/ui/Button";
-import { Coins, Cable, Wallet } from "lucide-react";
+import { Coins, Cable, Wallet, ArrowLeftRight } from "lucide-react";
+import { AvailableIconName } from "@/types/ui";
 
-// Use a string literal type for the icon names
-type AvailableIconName = "Coins" | "Cable" | "Wallet";
-
-// Props interface extending HTML button attributes
 interface BrandedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconName: AvailableIconName;
   buttonText: string;
@@ -20,11 +17,11 @@ export function BrandedButton({
   iconClassName = "h-6 w-6",
   ...props
 }: BrandedButtonProps) {
-  // Get the correct icon component directly in the component
   const IconComponent = {
     Coins,
     Cable,
     Wallet,
+    ArrowLeftRight,
   }[iconName];
 
   return (

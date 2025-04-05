@@ -12,6 +12,19 @@ export enum WalletType {
   WALLET_CONNECT = "WALLET_CONNECT",
 }
 
+export type MayanChainName =
+  | "solana"
+  | "ethereum"
+  | "bsc"
+  | "polygon"
+  | "avalanche"
+  | "arbitrum"
+  | "optimism"
+  | "base"
+  | "aptos"
+  | "sui"
+  | "unichain";
+
 export type Token = {
   id: string;
   name: string;
@@ -28,8 +41,11 @@ export type Token = {
 export type Chain = {
   id: string;
   name: string;
+  chainName: string;
+  mayanName: MayanChainName;
   symbol: string;
   icon: string;
+  currency: string;
   backgroundColor: string;
   fontColor: string;
   rpcUrl?: string;
@@ -61,6 +77,12 @@ export interface Web3StoreState {
   tokensLoading: boolean;
   tokensError: string | null;
 
+  // Transaction details
+  transactionDetails: {
+    slippage: "auto" | string;
+    receiveAddress: string | null;
+  };
+
   // Wallet actions
   addWallet: (wallet: WalletInfo) => void;
   removeWallet: (walletType: WalletType) => void;
@@ -87,4 +109,8 @@ export interface Web3StoreState {
   getTokenById: (compositeKey: string) => Token | undefined;
   getTokenByAddress: (address: string, chainId: number) => Token | undefined;
   findTokenByAddressAnyChain: (address: string) => Token | undefined;
+
+  // Transaction details actions
+  setSlippageValue: (value: "auto" | string) => void;
+  setReceiveAddress: (address: string | null) => void;
 }
