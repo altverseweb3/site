@@ -24,6 +24,12 @@ const useWeb3Store = create<Web3StoreState>()(
       sourceToken: null,
       destinationToken: null,
 
+      // Transaction details state
+      transactionDetails: {
+        slippage: "3.25%", // Default slippage value
+        receiveAddress: null,
+      },
+
       // tokens
       tokensByCompositeKey: {},
       tokensByChainId: {},
@@ -31,6 +37,27 @@ const useWeb3Store = create<Web3StoreState>()(
       allTokensList: [],
       tokensLoading: false,
       tokensError: null,
+
+      // Transaction details actions
+      setSlippageValue: (value: string) => {
+        // Ensure value has % suffix
+        const formattedValue = value.endsWith("%") ? value : `${value}%`;
+        set((state) => ({
+          transactionDetails: {
+            ...state.transactionDetails,
+            slippage: formattedValue,
+          },
+        }));
+      },
+
+      setReceiveAddress: (address: string | null) => {
+        set((state) => ({
+          transactionDetails: {
+            ...state.transactionDetails,
+            receiveAddress: address,
+          },
+        }));
+      },
 
       // Wallet actions
       addWallet: (wallet: WalletInfo) => {
@@ -279,7 +306,6 @@ const useWeb3Store = create<Web3StoreState>()(
         return localStorage;
       }),
       partialize: (state) => {
-        // Create serializable versions of the tokens to store
         const serializeToken = (token: Token | null) => {
           if (!token) return null;
           return {
@@ -295,7 +321,6 @@ const useWeb3Store = create<Web3StoreState>()(
             isWalletToken: token.isWalletToken,
           };
         };
-
         return {
           // Only persist what we need and ensure we don't store providers
           connectedWallets: state.connectedWallets.map((wallet) => ({
@@ -314,10 +339,9 @@ const useWeb3Store = create<Web3StoreState>()(
             : null,
           sourceChain: state.sourceChain,
           destinationChain: state.destinationChain,
-          // Serialize tokens for storage
+          transactionDetails: state.transactionDetails,
           sourceToken: serializeToken(state.sourceToken),
           destinationToken: serializeToken(state.destinationToken),
-          // We don't need to persist tokens since they're loaded from the JSON files
         };
       },
     },
@@ -389,6 +413,18 @@ export const useTokenByAddress = (
 
 export const useLoadTokens = () => {
   return useWeb3Store((state) => state.loadTokens);
+};
+
+export const useTransactionDetails = () => {
+  return useWeb3Store((state) => state.transactionDetails);
+};
+
+export const useSetSlippageValue = () => {
+  return useWeb3Store((state) => state.setSlippageValue);
+};
+
+export const useSetReceiveAddress = () => {
+  return useWeb3Store((state) => state.setReceiveAddress);
 };
 
 export default useWeb3Store;

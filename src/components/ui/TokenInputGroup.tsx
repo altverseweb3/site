@@ -3,12 +3,14 @@ import { SelectTokenButton } from "@/components/ui/SelectTokenButton";
 import { TokenAmountInput } from "@/components/ui/TokenAmountInput";
 
 interface TokenInputGroupProps {
-  variant: "source" | "destination"; // Use source/destination instead of send/receive
+  variant: "source" | "destination";
   amount: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showSelectToken: boolean;
   dollarValue?: string;
   readOnly?: boolean;
+  isLoadingQuote?: boolean;
+  isEnabled?: boolean; // New prop to control if input is enabled
 }
 
 export function TokenInputGroup({
@@ -18,6 +20,8 @@ export function TokenInputGroup({
   showSelectToken,
   dollarValue = "$0.00",
   readOnly = false,
+  isLoadingQuote = false,
+  isEnabled = true, // Default to true
 }: TokenInputGroupProps) {
   return (
     <div className="flex justify-between items-start gap-2 sm:gap-4 w-full">
@@ -26,7 +30,9 @@ export function TokenInputGroup({
         amount={amount}
         onChange={onChange}
         dollarValue={dollarValue}
-        readOnly={readOnly}
+        readOnly={!isEnabled || readOnly}
+        isLoadingQuote={isLoadingQuote && variant === "destination"}
+        variant={variant}
       />
     </div>
   );
