@@ -1,5 +1,11 @@
 // src/api/evmTokenApi.ts
-import { Network } from "@/types/web3";
+import {
+  Network,
+  TokenAddressInfo,
+  TokenBalance,
+  TokenMetadata,
+  TokenPriceResult,
+} from "@/types/web3";
 
 // Unified API Response type
 export interface ApiResponse<T> {
@@ -11,33 +17,6 @@ export interface ApiResponse<T> {
 // Core request type that all requests extend from
 export interface BaseRequest {
   network: Network;
-}
-
-// Token-related types
-export interface TokenBalance {
-  contractAddress: string;
-  tokenBalance: string;
-}
-
-export interface TokenMetadata {
-  name: string;
-  symbol: string;
-  decimals: number;
-  logo?: string;
-  totalSupply?: string;
-}
-
-export interface TokenPrice {
-  currency: string;
-  value: string;
-  lastUpdatedAt: string;
-}
-
-export interface TokenPriceResult {
-  network: Network;
-  address: string;
-  prices: TokenPrice[];
-  error: string | null;
 }
 
 // Endpoint-specific request types
@@ -54,11 +33,6 @@ export interface AllowanceRequest extends BaseRequest {
 
 export interface MetadataRequest extends BaseRequest {
   contractAddress: string;
-}
-
-export interface TokenAddressInfo {
-  network: Network;
-  address: string;
 }
 
 export interface PricesRequest {

@@ -46,28 +46,20 @@ export const loadTokensForChain = async (
 
     const numericChainId = chainConfig.chainId;
 
-    return data.map((item) => {
-      // TODO: remove this - temporarily 50% chance a token is in wallet
-      const isInWallet = Math.random() < 0.5;
-      const randomBalance = isInWallet ? (Math.random() * 100).toFixed(2) : "0";
-      // TODO: remove this - random balance/USD value
-      const randomBalanceUsd = isInWallet
-        ? `$${(Math.random() * 1000).toFixed(2)}`
-        : "$0.00";
-
-      return {
-        id: item.id,
-        name: item.name.toLowerCase(),
-        ticker: item.symbol.toUpperCase(),
-        icon: item.local_image,
-        address: item.contract_address,
-        decimals: item.alchemy_metadata.decimals,
-        chainId: numericChainId,
-        userBalance: randomBalance,
-        userBalanceUsd: randomBalanceUsd,
-        isWalletToken: isInWallet,
-      };
-    });
+    return data
+      .filter((item) => item.contract_address !== "native")
+      .map((item) => {
+        return {
+          id: item.id,
+          name: item.name.toLowerCase(),
+          ticker: item.symbol.toUpperCase(),
+          icon: item.local_image,
+          address: item.contract_address,
+          decimals: item.alchemy_metadata.decimals,
+          chainId: numericChainId,
+          isWalletToken: false,
+        };
+      });
   } catch (error) {
     console.error(`Error loading tokens for chain ${fetchChainId}:`, error);
     return [];
@@ -97,7 +89,8 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
         }
 
         chainTokens.forEach((token) => {
-          const compositeKey = `${token.id}-${fetchChainId}`;
+          const compositeKey = `${token.chainId}-${token.address.toLowerCase()}`;
+
           tokensByCompositeKey[compositeKey] = token;
 
           tokensByChainId[numericChainId].push(token);

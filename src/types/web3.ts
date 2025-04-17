@@ -35,6 +35,7 @@ export type Token = {
   chainId: number;
   userBalance?: string;
   userBalanceUsd?: string;
+  priceUsd?: string;
   isWalletToken?: boolean;
 };
 
@@ -203,4 +204,35 @@ export enum Network {
   DEGEN_MAINNET = "degen-mainnet",
   INK_MAINNET = "ink-mainnet",
   INK_SEPOLIA = "ink-sepolia",
+}
+
+export interface TokenBalance {
+  contractAddress: string;
+  tokenBalance: string;
+}
+
+export interface TokenMetadata {
+  name: string;
+  symbol: string;
+  decimals: number;
+  logo?: string;
+  totalSupply?: string;
+}
+
+export interface TokenPrice {
+  currency: string;
+  value: string;
+  lastUpdatedAt: string;
+}
+
+export interface TokenAddressInfo {
+  network: Network;
+  address: string;
+}
+
+export interface TokenPriceResult {
+  network: Network;
+  address: string;
+  prices: TokenPrice[];
+  error: string | null;
 }
