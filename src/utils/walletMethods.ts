@@ -2,8 +2,16 @@ import { WalletInfo, WalletType, Token, Chain } from "@/types/web3";
 import useWeb3Store from "@/store/web3Store";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { getMayanQuote } from "@/utils/mayanSwapMethods";
+import { getMayanQuote, executeEvmSwap } from "@/utils/mayanSwapMethods";
 import { Quote } from "@mayanfinance/swap-sdk";
+import { ethers } from "ethers";
+
+function getEthersProvider(): ethers.BrowserProvider {
+  if (typeof window === "undefined" || !window.ethereum) {
+    throw new Error("MetaMask not installed");
+  }
+  return new ethers.BrowserProvider(window.ethereum);
+}
 
 export async function connectMetamask(): Promise<WalletInfo | null> {
   if (!window.ethereum) {
@@ -636,33 +644,66 @@ export function useTokenTransfer(
       return;
     }
 
+    // Generate a toast ID that we'll use for both success and error cases
+    const toastId = toast.loading(
+      `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${sourceToken!.ticker}...`,
+      {
+        description: `From ${sourceChain.name} to ${
+          options.type === "swap"
+            ? destinationToken?.ticker
+            : destinationChain.name
+        }`,
+      },
+    );
+
     try {
       setIsProcessing(true);
 
-      const actionVerb = options.type === "swap" ? "Swapping" : "Bridging";
-      const destination =
-        options.type === "swap"
-          ? destinationToken?.ticker
-          : destinationChain.name;
+      let quotes: Quote[] = [];
 
-      const toastId = toast.loading(
-        `${actionVerb} ${amount} ${sourceToken!.ticker}...`,
-        {
-          description: `From ${sourceChain.name} to ${destination}`,
-        },
-      );
+      // Get current slippage in basis points
+      const slippageBps = getSlippageBps();
 
-      console.log(
-        `Initiating ${options.type} of ${amount} ${sourceToken!.ticker} to ${destination}`,
-      );
+      if (options.type === "swap" && sourceToken && destinationToken) {
+        quotes = await getMayanQuote({
+          amount,
+          sourceToken,
+          destinationToken,
+          sourceChain,
+          destinationChain,
+          slippageBps,
+        });
+      }
 
-      await new Promise((resolve) => setTimeout(resolve, 500)); // TODO: implement the actual swap/bridge
+      setQuoteData(quotes);
+
+      // Get provider and signer
+      const provider = getEthersProvider();
+      const signer = await provider.getSigner();
+
+      // Execute the swap with permit
+      const result = await executeEvmSwap({
+        quote: quoteData![0],
+        swapperAddress: activeWallet!.address,
+        destinationAddress: activeWallet!.address, // Usually same as swapper
+        sourceToken: sourceToken!.address,
+        amount: amount,
+        referrerAddresses: null,
+        signer,
+        tokenDecimals: sourceToken!.decimals || 18,
+      });
+
+      console.log("Swap initiated:", result);
 
       toast.success(
         `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
         {
-          id: toastId,
-          description: `Transferred ${amount} ${sourceToken!.ticker} to ${destination}`,
+          id: toastId, // Update the existing toast
+          description: `Transferred ${amount} ${sourceToken!.ticker} to ${
+            options.type === "swap"
+              ? destinationToken?.ticker
+              : destinationChain.name
+          }`,
         },
       );
 
@@ -670,13 +711,17 @@ export function useTokenTransfer(
         options.onSuccess(amount, sourceToken!, destinationToken);
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Please try again";
+      // Make sure to dismiss the loading toast
+      toast.dismiss(toastId);
+
+      // Use our new error parser to get a user-friendly message
+      const friendlyError = parseSwapError(error);
 
       toast.error(`${options.type === "swap" ? "Swap" : "Bridge"} failed`, {
-        description: errorMessage,
+        description: friendlyError,
       });
 
+      // Still log the full error for debugging
       console.error(`${options.type} failed:`, error);
 
       if (options.onError && error instanceof Error) {
@@ -733,4 +778,84 @@ export async function getMayanBridgeQuote({
     destinationChain,
     slippageBps, // Pass through the slippage parameter
   });
+}
+
+/**
+ * Extract a user-friendly error message from blockchain errors
+ */
+export function parseSwapError(error: unknown): string {
+  // Default fallback message
+  const friendlyMessage = "Something went wrong with your swap";
+
+  try {
+    if (!error) return friendlyMessage;
+
+    // Convert to string for easier parsing
+    const errorString = JSON.stringify(error);
+
+    // Try to extract common error patterns
+    const patterns = [
+      // Balance errors
+      {
+        regex: /transfer amount exceeds balance/i,
+        message: "Insufficient token balance for this swap",
+      },
+      // Slippage errors
+      {
+        regex:
+          /slippage|price impact|price too low|min.*?received|output.*?amount/i,
+        message:
+          "Price moved too much during the swap. Try increasing slippage tolerance.",
+      },
+      // Gas errors
+      {
+        regex: /gas|fee|ETH balance|execution reverted/i,
+        message: "Not enough ETH to cover gas fees",
+      },
+      // Approval errors
+      {
+        regex: /allowance|approve|permission|ERC20: insufficient allowance/i,
+        message: "Token approval required. Please try again.",
+      },
+      // Timeout errors
+      {
+        regex: /timeout|timed? out|expired/i,
+        message: "Request timed out. Please try again.",
+      },
+    ];
+
+    // Check for specific error patterns
+    for (const pattern of patterns) {
+      if (pattern.regex.test(errorString)) {
+        return pattern.message;
+      }
+    }
+
+    // Extract reason if present (common in revert errors)
+    const reasonMatch = /reason="([^"]+)"/.exec(errorString);
+    if (reasonMatch && reasonMatch[1]) {
+      return reasonMatch[1];
+    }
+
+    // Extract message if present
+    const messageMatch = /"message":"([^"]+)"/.exec(errorString);
+    if (messageMatch && messageMatch[1]) {
+      return messageMatch[1];
+    }
+
+    // If error is actually an Error object
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    // If error is a string
+    if (typeof error === "string") {
+      return error;
+    }
+
+    return friendlyMessage;
+  } catch (e) {
+    console.error("Error parsing swap error:", e);
+    return friendlyMessage;
+  }
 }
