@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import useWeb3Store from "@/store/web3Store";
+import { getPricesAndBalancesForActiveWallet } from "@/utils/tokenApiMethods";
 
 /**
  * Component that initializes token data on dApp startup.
@@ -12,6 +13,9 @@ const TokenInitializer: React.FC = () => {
   const loadTokens = useWeb3Store((state) => state.loadTokens);
   const tokensLoading = useWeb3Store((state) => state.tokensLoading);
   const tokenCount = useWeb3Store((state) => state.allTokensList.length);
+  const sourceChain = useWeb3Store((state) => state.sourceChain);
+  const destinationChain = useWeb3Store((state) => state.destinationChain);
+  const activeWallet = useWeb3Store((state) => state.activeWallet);
 
   useEffect(() => {
     // Only load tokens if we don't already have them
@@ -20,7 +24,13 @@ const TokenInitializer: React.FC = () => {
     }
   }, [loadTokens, tokensLoading, tokenCount]);
 
-  // This component doesn't render anything visual
+  useEffect(() => {
+    // Fetch prices and balances for the active wallet
+    if (sourceChain && destinationChain && tokenCount && activeWallet) {
+      getPricesAndBalancesForActiveWallet();
+    }
+  }, [sourceChain, destinationChain, tokenCount, activeWallet]);
+
   return null;
 };
 
