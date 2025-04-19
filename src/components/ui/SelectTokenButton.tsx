@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import Image from "next/image";
-import { Search, X, Copy, Check, Loader2 } from "lucide-react";
+import { Search, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   Dialog,
@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Token, Chain } from "@/types/web3";
 import useWeb3Store, {
-  useTokensLoading,
   useSourceChain,
   useDestinationChain,
   useSourceToken,
@@ -108,7 +107,7 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
           </div>
           <div className="text-right">
             <div className="font-medium text-[#FAFAFA] numeric-input">
-              {token.userBalanceUsd}
+              {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
               {token.userBalance}
@@ -255,8 +254,9 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   const [isTokenListReady, setTokenListReady] = useState(false);
   const tokensPreloadedRef = useRef(false);
   const [userIntentToOpen, setUserIntentToOpen] = useState(false);
+  const [chainTokens, setChainTokens] = useState([] as Token[]);
 
-  const tokensLoading = useTokensLoading();
+  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
   const sourceChain = useSourceChain();
   const destinationChain = useDestinationChain();
   const sourceToken = useSourceToken();
@@ -313,10 +313,9 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
     }
   }, [isOpen, isTokenListReady]);
 
-  const chainTokens = useMemo(() => {
-    if (tokensLoading || !chainToShow) return [];
-    return getTokensForChain(chainToShow.chainId);
-  }, [getTokensForChain, chainToShow, tokensLoading]);
+  useEffect(() => {
+    setChainTokens(getTokensForChain(chainToShow.chainId));
+  }, [getTokensForChain, chainToShow, tokensLoading, isOpen, tokenCount]);
 
   const walletTokens = useMemo(() => {
     return chainTokens.filter((token) => token.isWalletToken);
@@ -479,21 +478,11 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
         {/* Content area */}
         <div className="max-h-[420px] overflow-y-auto scrollbar-thin px-2">
-          {/* Loading state */}
-          {tokensLoading && (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
-              <span className="mt-2 text-[#FAFAFA80]">Loading tokens...</span>
-            </div>
-          )}
-
           {/* Skeleton while the actual tokens are being prepared */}
-          {!tokensLoading && !isTokenListReady && (
-            <SkeletonTokenList itemCount={8} />
-          )}
+          {allTokens.length === 0 && <SkeletonTokenList itemCount={8} />}
 
           {/* Actual token list - only shown when ready */}
-          {!tokensLoading && isTokenListReady && (
+          {tokenCount > 0 && (
             <VirtualizedTokenList
               walletTokens={walletTokens}
               allTokens={allTokens}
