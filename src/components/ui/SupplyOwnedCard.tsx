@@ -30,39 +30,39 @@ const SupplyOwnedCard = ({
 
   return (
     <Card className="bg-black text-white border border-[#232326] w-[271px] h-[198px] p-0 rounded-[3px] shadow-none">
-      <CardHeader className="flex flex-row items-center p-3 space-y-0">
-        <div className="bg-blue-500 rounded-full p-2 mr-3">
+      <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
+        <div className="bg-blue-500 rounded-full p-2 mr-3 flex-shrink-0">
           <DollarSign size={18} color="white" />
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
             {title}
           </CardTitle>
-          <CardDescription className="text-gray-400 text-xs">
+          <CardDescription className="text-gray-400 text-xs mt-1">
             {subtitle}
           </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="p-3 pt-0 space-y-2">
+      <CardContent className="p-3 pt-2 space-y-2">
         {/* Balance row */}
-        <div className="flex justify-between items-center">
-          <div className="text-gray-400 text-sm">supply balance</div>
-          <div className="text-right">
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">supply balance</div>
+          <div className="text-right flex flex-col items-end">
             <div className="text-sm">{balance}</div>
             <div className="text-gray-400 text-xs">${dollarAmount}</div>
           </div>
         </div>
 
         {/* APY row */}
-        <div className="flex justify-between items-center">
-          <div className="text-gray-400 text-sm">supply APY</div>
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">supply APY</div>
           <div className="text-sm">{supplyAPY}%</div>
         </div>
 
         {/* Collateral toggle row */}
-        <div className="flex justify-between items-center">
-          <div className="text-gray-400 text-sm">used as collateral</div>
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">used as collateral</div>
           <SupplyCollateralSwitch
             isCollateral={collateral}
             onToggle={handleToggle}

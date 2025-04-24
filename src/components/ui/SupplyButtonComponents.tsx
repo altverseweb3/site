@@ -127,17 +127,5 @@ const GrayButton: React.FC<BaseButtonProps> = ({
   );
 };
 
-/**
- * Button container with exactly 14px gap
- */
-const ButtonContainer: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-}> = ({ children, className = "" }) => {
-  return (
-    <div className={`flex w-full gap-[14px] ${className}`}>{children}</div>
-  );
-};
-
 // Only export once at the end of the file
-export { PrimaryButton, BlueButton, GrayButton, ButtonContainer };
+export { PrimaryButton, BlueButton, GrayButton };
