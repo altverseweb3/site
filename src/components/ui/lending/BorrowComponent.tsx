@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/Accordion";
+} from "@/components/ui/lending/Accordion";
 
 const BorrowComponent: React.FC = () => {
   return (

@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import SupplyCollateralSwitch from "@/components/ui/SupplyCollateralSwitch";
+import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
 
 const SupplyOwnedCard = ({
   title = "usd coin",

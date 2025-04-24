@@ -5,11 +5,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/Accordion";
-import PoweredByAave from "@/components/ui/PoweredByAave";
-import SupplyOwnedCard from "@/components/ui/SupplyOwnedCard";
-import SupplyUnOwnedCard from "@/components/ui/SupplyUnownedCard";
-import SupplyYourPositionsHeader from "@/components/ui/SupplyAvailablePositionsHeader";
+} from "@/components/ui/lending/Accordion";
+import PoweredByAave from "@/components/ui/lending/PoweredByAave";
+import SupplyOwnedCard from "@/components/ui/lending/SupplyOwnedCard";
+import SupplyUnOwnedCard from "@/components/ui/lending/SupplyUnownedCard";
+import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
 const BorrowLend: React.FC = () => {
   return (
