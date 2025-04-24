@@ -29,7 +29,7 @@ const SupplyOwnedCard = ({
   };
 
   return (
-    <Card className="bg-black text-white border border-[#232326] w-[271px] h-[198px] p-0 rounded-[3px] shadow-none">
+    <Card className=" text-white border border-[#232326] w-[271px] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         <div className="bg-blue-500 rounded-full p-2 mr-3 flex-shrink-0">
           <DollarSign size={18} color="white" />

@@ -9,7 +9,7 @@ import {
 import PoweredByAave from "@/components/ui/PoweredByAave";
 import SupplyOwnedCard from "@/components/ui/SupplyOwnedCard";
 import SupplyUnOwnedCard from "@/components/ui/SupplyUnownedCard";
-import SupplyYourPositionsHeader from "@/components/ui/SupplyYourPositionsHeader";
+import SupplyYourPositionsHeader from "@/components/ui/SupplyAvailablePositionsHeader";
 
 const BorrowLend: React.FC = () => {
   return (
