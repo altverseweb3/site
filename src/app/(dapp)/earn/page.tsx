@@ -59,14 +59,14 @@ const EarnComponent: React.FC = () => {
 
           // Fallback to static values
           setTvlValues({
-            1: "168,123.26",
-            2: "86,946.04",
-            3: "629.09",
-            4: "30,043,876.80",
-            5: "9,926.00",
-            6: "5,272,095.52",
-            7: "336,251.25",
-            8: "77,598.18",
+            1: "NA",
+            2: "NA",
+            3: "NA",
+            4: "NA",
+            5: "NA",
+            6: "NA",
+            7: "NA",
+            8: "NA",
           });
         }
       } catch (error) {
@@ -74,14 +74,14 @@ const EarnComponent: React.FC = () => {
 
         // Fallback to static values
         setTvlValues({
-          1: "168,123.26",
-          2: "86,946.04",
-          3: "629.09",
-          4: "30,043,876.80",
-          5: "9,926.00",
-          6: "5,272,095.52",
-          7: "336,251.25",
-          8: "77,598.18",
+          1: "NA",
+          2: "NA",
+          3: "NA",
+          4: "NA",
+          5: "NA",
+          6: "NA",
+          7: "NA",
+          8: "NA",
         });
       } finally {
         setIsLoading(false);
