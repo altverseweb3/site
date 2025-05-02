@@ -27,10 +27,11 @@ export async function GET() {
 
         if (tvl) {
           // Find the expected token symbol for this vault
+          // Type assertion to handle TypeScript's strict index signature checking
+          const address =
+            VAULT_ID_TO_ADDRESS[vaultId as keyof typeof VAULT_ID_TO_ADDRESS];
           const vault = vaults.find(
-            (v) =>
-              v.address.toLowerCase() ===
-              VAULT_ID_TO_ADDRESS[vaultId].toLowerCase(),
+            (v) => v.address.toLowerCase() === address.toLowerCase(),
           );
 
           const tokenSymbol = vault?.expectedSymbol;
