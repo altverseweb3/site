@@ -123,7 +123,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
       explorerUrl:
         "https://etherscan.io/address/0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
-      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-eth",
+      analyticsUrl: "https://www.ether.fi/app/liquid/eth",
     },
     {
       id: 2,
@@ -137,7 +137,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
       explorerUrl:
         "https://etherscan.io/address/0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
-      analyticsUrl: "https://analytics.ether.fi/vaults/bera-eth",
+      analyticsUrl: "https://www.ether.fi/app/liquid/bera-eth",
     },
     {
       id: 3,
@@ -151,7 +151,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x5f46d540b6eD704C3c8789105F30E075AA900726",
       explorerUrl:
         "https://etherscan.io/address/0x5f46d540b6eD704C3c8789105F30E075AA900726",
-      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-btc",
+      analyticsUrl: "https://www.ether.fi/app/liquid/btc",
     },
     {
       id: 4,
@@ -165,7 +165,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       explorerUrl:
         "https://etherscan.io/address/0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
-      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-usd",
+      analyticsUrl: "https://www.ether.fi/app/liquid/usd",
     },
     {
       id: 5,
@@ -179,7 +179,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
       explorerUrl:
         "https://etherscan.io/address/0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
-      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-move-eth",
+      analyticsUrl: "https://www.ether.fi/app/liquid/move-eth",
     },
     {
       id: 6,
@@ -193,7 +193,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
       explorerUrl:
         "https://etherscan.io/address/0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
-      analyticsUrl: "https://analytics.ether.fi/vaults/ultra-yield",
+      analyticsUrl: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
     },
     {
       id: 7,
@@ -213,7 +213,7 @@ const EarnComponent: React.FC = () => {
       id: 8,
       name: "Usual Stable Vault",
       ecosystem: "Ether.fi",
-      token: ["USD0++"],
+      token: ["USD0"],
       points: "FML",
       apy: "", // Will be populated with real-time data
       description:
@@ -224,7 +224,6 @@ const EarnComponent: React.FC = () => {
       analyticsUrl: "https://analytics.ether.fi/vaults/usual-stable",
     },
   ];
-
   // Tabs for the earn page
   const tabs = [
     { id: "yield", label: "yield", active: true },

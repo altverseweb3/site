@@ -74,7 +74,17 @@ export const VaultModal = ({
               </div>
             </div>
             <div className="bg-zinc-800/50 p-4 rounded-md">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <div className="text-sm text-zinc-400">TVL</div>
+                  <div className="text-zinc-100">
+                    {vault.tvl === "Loading..."
+                      ? "Loading..."
+                      : vault.tvl === "N/A"
+                        ? "N/A"
+                        : `$${vault.tvl}`}
+                  </div>
+                </div>
                 <div>
                   <div className="text-sm text-zinc-400">APY</div>
                   {vault.hasRealAPY && vault.apy !== "N/A" ? (
@@ -113,22 +123,6 @@ export const VaultModal = ({
                       <span>Details</span>
                     </Button>
                   )}
-                </div>
-                <div>
-                  <div className="text-sm text-zinc-400">TVL</div>
-                  <div className="text-zinc-100">
-                    {vault.tvl === "Loading..."
-                      ? "Loading..."
-                      : vault.tvl === "N/A"
-                        ? "N/A"
-                        : `$${vault.tvl}`}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-zinc-400">Points</div>
-                  <div className="text-amber-500 font-medium">
-                    {vault.points}
-                  </div>
                 </div>
               </div>
             </div>
