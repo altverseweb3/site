@@ -11,7 +11,21 @@ export async function GET() {
     await getVaultTVL();
 
     // Get price data for tokens
-    const tokenPrices = await fetchAllTokenPrices();
+    // Use a more specific type for token prices
+    interface TokenPriceData {
+      symbol: string;
+      price_usd: number;
+      success: boolean;
+      total_supply?: number;
+      usd_market_cap?: number;
+      timestamp?: string;
+      error?: string;
+    }
+
+    const tokenPrices = (await fetchAllTokenPrices()) as Record<
+      string,
+      TokenPriceData
+    >;
 
     console.log("Token price data:", tokenPrices);
 
