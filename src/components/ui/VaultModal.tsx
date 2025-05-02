@@ -15,7 +15,7 @@ export type VaultDetails = {
   id: number;
   name: string;
   ecosystem: string;
-  chains: string[];
+  token: string[];
   points: string;
   apy: string;
   tvl?: string;
@@ -63,12 +63,12 @@ export const VaultModal = ({
               <div className="text-sm text-zinc-400">Ecosystem</div>
               <div className="text-zinc-100 mt-1">{vault.ecosystem}</div>
               <div className="flex mt-2">
-                {vault.chains.map((chain, idx) => (
+                {vault.token.map((tokenName, idx) => (
                   <div
                     key={idx}
                     className="bg-zinc-800 rounded-full px-2 text-xs text-zinc-400 mr-1"
                   >
-                    {chain}
+                    {tokenName}
                   </div>
                 ))}
               </div>

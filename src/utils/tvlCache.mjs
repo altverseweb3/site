@@ -42,7 +42,7 @@ function getTVLByVaultId(vaultId) {
 }
 
 // Export functions and data
-export { getTVLByVaultId };
+export { getTVLByVaultId, VAULT_ID_TO_ADDRESS };
 export function allTVLData() {
   return getVaultTVLData();
 }

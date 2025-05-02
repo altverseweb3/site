@@ -115,9 +115,9 @@ const EarnComponent: React.FC = () => {
       id: 1,
       name: "Liquid ETH",
       ecosystem: "Ether.fi",
-      chains: ["Ethereum"],
+      token: ["wETH"],
       points: "FML",
-      apy: "12.4%",
+      apy: "", // Will be populated with real-time data
       description:
         "Liquid ETH vault provides staking rewards plus additional yield from ETH delegation strategies.",
       contractAddress: "0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
@@ -129,9 +129,9 @@ const EarnComponent: React.FC = () => {
       id: 2,
       name: "The Bera ETH Vault",
       ecosystem: "Ether.fi",
-      chains: ["Ethereum"],
+      token: ["wETH"],
       points: "FML",
-      apy: "8.2%",
+      apy: "", // Will be populated with real-time data
       description:
         "The Bera ETH Vault focuses on low-risk strategies with consistent returns for ETH holders.",
       contractAddress: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
@@ -143,9 +143,9 @@ const EarnComponent: React.FC = () => {
       id: 3,
       name: "Liquid BTC",
       ecosystem: "Ether.fi",
-      chains: ["BTC"],
+      token: ["wBTC"],
       points: "FML",
-      apy: "14.5%",
+      apy: "", // Will be populated with real-time data
       description:
         "Liquid BTC vault uses wrapped BTC to generate yield through lending and options strategies.",
       contractAddress: "0x5f46d540b6eD704C3c8789105F30E075AA900726",
@@ -157,9 +157,9 @@ const EarnComponent: React.FC = () => {
       id: 4,
       name: "Liquid USD",
       ecosystem: "Ether.fi",
-      chains: ["USDC"],
+      token: ["USDC"],
       points: "FML",
-      apy: "10.8%",
+      apy: "", // Will be populated with real-time data
       description:
         "Liquid USD vault focuses on stable returns using conservative stablecoin strategies.",
       contractAddress: "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
@@ -171,9 +171,9 @@ const EarnComponent: React.FC = () => {
       id: 5,
       name: "Liquid Move ETH",
       ecosystem: "Ether.fi",
-      chains: ["Ethereum"],
+      token: ["wETH"],
       points: "FML",
-      apy: "6.5%",
+      apy: "", // Will be populated with real-time data
       description:
         "Liquid Move ETH vault combines ETH staking with automated trading strategies.",
       contractAddress: "0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
@@ -185,9 +185,9 @@ const EarnComponent: React.FC = () => {
       id: 6,
       name: "Ultra Yield Stablecoin Vault",
       ecosystem: "Ether.fi",
-      chains: ["USDC"],
+      token: ["USDC"],
       points: "FML",
-      apy: "15.2%",
+      apy: "", // Will be populated with real-time data
       description:
         "Ultra Yield Stablecoin Vault uses aggressive yet secure strategies to maximize stablecoin returns.",
       contractAddress: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
@@ -199,9 +199,9 @@ const EarnComponent: React.FC = () => {
       id: 7,
       name: "Elixir Stable Vault",
       ecosystem: "Ether.fi",
-      chains: ["deUSD"],
+      token: ["deUSD"],
       points: "FML",
-      apy: "11.3%",
+      apy: "", // Will be populated with real-time data
       description:
         "Elixir Stable Vault specializes in decentralized stablecoin yield strategies.",
       contractAddress: "0x352180974C71f84a934953Cf49C4E538a6F9c997",
@@ -213,9 +213,9 @@ const EarnComponent: React.FC = () => {
       id: 8,
       name: "Usual Stable Vault",
       ecosystem: "Ether.fi",
-      chains: ["USD0"],
+      token: ["USD0++"],
       points: "FML",
-      apy: "9.7%",
+      apy: "", // Will be populated with real-time data
       description:
         "Usual Stable Vault provides reliable yield on USD0 stablecoins through diversified DeFi protocols.",
       contractAddress: "0xeDa663610638E6557c27e2f4e973D3393e844E70",
@@ -294,7 +294,7 @@ const EarnComponent: React.FC = () => {
                     Ecosystem
                   </th>
                   <th className="p-4 text-left text-zinc-400 font-medium w-[20%]">
-                    Chain
+                    Token
                   </th>
                   <th className="p-4 text-right text-zinc-400 font-medium w-[15%]">
                     TVL
@@ -323,12 +323,12 @@ const EarnComponent: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex">
-                        {vault.chains.map((chain, idx) => (
+                        {vault.token.map((tokenName, idx) => (
                           <div
                             key={idx}
                             className="bg-zinc-800 rounded-full px-2 text-xs text-zinc-400 mr-1"
                           >
-                            {chain}
+                            {tokenName}
                           </div>
                         ))}
                       </div>
