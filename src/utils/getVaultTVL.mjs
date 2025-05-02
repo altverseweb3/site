@@ -86,7 +86,7 @@ async function retry(fn, retries = 3, delay = 1000, backoff = 2) {
 // Function to query vault TVL data
 async function queryVaultTVL(provider, vault) {
   try {
-    console.log(`Querying TVL for ${vault.name} at ${vault.address}...`);
+    // Removed console.log
     const contract = new ethers.Contract(vault.address, ERC20_ABI, provider);
     
     // Get token information
@@ -98,8 +98,6 @@ async function queryVaultTVL(provider, vault) {
     ]);
     
     const formattedSupply = ethers.formatUnits(totalSupply, decimals);
-    
-    console.log(`- ${symbol}: TVL=${formattedSupply}`);
     
     return {
       address: vault.address,
@@ -122,54 +120,29 @@ async function queryVaultTVL(provider, vault) {
   }
 }
 
-// Format for display
-function formatNumber(num, decimals = 2) {
-  if (num === null || num === undefined) return 'N/A';
-  return parseFloat(num).toLocaleString(undefined, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  });
-}
-
-// Export data as JavaScript variables - logged to console for reference
-function exportVaultData(vaultData) {
-  console.log('\n// Vault TVL Data Variables');
-  console.log('// These variables are also available via global.vaultTVLData');
-  console.log('const vaultTVLData = {');
-  
-  vaultData.forEach(vault => {
-    const varName = vault.symbol || vault.expectedSymbol;
-    console.log(`  ${varName}: {`);
-    console.log(`    address: "${vault.address}",`);
-    console.log(`    protocol: "${vault.protocol}",`);
-    console.log(`    name: "${vault.name}",`);
-    console.log(`    tvl: "${vault.tvl}", // Full precision as string`);
-    console.log(`    tvlNumber: ${parseFloat(vault.tvl)} // As number`);
-    console.log('  },');
-  });
-  
-  console.log('};');
+// Export data as JavaScript variables - function signature kept for API compatibility
+function exportVaultData(/* vaultData */) {
+  // All console logging removed
 }
 
 // Main function
 async function main() {
   try {
-    console.log('Querying vault TVL data...');
+    // Removed console.log
     
     // Create provider
     const provider = new ethers.JsonRpcProvider(RPC_URL, 1); // 1 = Ethereum mainnet
     
     // Query all vaults simultaneously using Promise.all
-    console.log('Running all vault queries in parallel...');
+    // Removed console.log
     const queryPromises = vaults.map(vault => queryVaultTVL(provider, vault));
     const results = await Promise.all(queryPromises);
     
     // Just export the data as variables
     exportVaultData(results);
     
-    // Calculate and log total TVL
-    const totalTVL = results.reduce((sum, vault) => sum + parseFloat(vault.tvl || 0), 0);
-    console.log(`\nTotal TVL across all vaults: ${formatNumber(totalTVL, 6)}`);
+    // Calculate total TVL is no longer needed since we removed the logging
+    // results.reduce((sum, vault) => sum + parseFloat(vault.tvl || 0), 0);
     
     // Make the data available as a global variable
     global.vaultTVLData = {};
@@ -195,13 +168,49 @@ if (isMainModule) {
   main();
 }
 
+// Create a module-level cache that persists between API calls
+let vaultTVLCache = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 60 * 1000; // 1 minute cache TTL
+
 // Export functions for use as a module
 export {
   main as getVaultTVL,
   vaults
 };
 
-// The vaultTVLData will be populated after running main()
-export function getVaultTVLData() {
-  return global.vaultTVLData || {};
+// Improved getVaultTVLData function with local caching
+export async function getVaultTVLData() {
+  const now = Date.now();
+  
+  // Use module-level cache instead of global
+  if (vaultTVLCache && now - lastFetchTime < CACHE_TTL) {
+    // Removed console.log
+    return vaultTVLCache;
+  }
+  
+  // If no cache or cache expired, fetch fresh data
+  // Removed console.log
+  
+  try {
+    // Run the main function to get fresh data
+    await main();
+    
+    // Store the results in our module cache
+    vaultTVLCache = global.vaultTVLData || {};
+    lastFetchTime = now;
+    
+    return vaultTVLCache;
+  } catch (error) {
+    console.error("Error fetching TVL data:", error);
+    
+    // If we have old cache, return it even if expired
+    if (vaultTVLCache) {
+      console.log("Returning expired cache due to fetch error");
+      return vaultTVLCache;
+    }
+    
+    // Otherwise return empty object
+    return {};
+  }
 }

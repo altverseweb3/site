@@ -16,24 +16,29 @@ const VAULT_ID_TO_ADDRESS = {
   8: '0xeDa663610638E6557c27e2f4e973D3393e844E70'  // Usual Stable Vault
 };
 
+// Module-level cache to prevent duplicate fetches
+let tvlDataCache = null;
+
 // Function to get TVL by vault ID
-function getTVLByVaultId(vaultId) {
+async function getTVLByVaultId(vaultId) {
   try {
-    // Get the TVL data
-    const tvlData = getVaultTVLData();
+    // Get the TVL data (now using async/await since getVaultTVLData is async)
+    if (!tvlDataCache) {
+      tvlDataCache = await getVaultTVLData();
+    }
+    
     const address = VAULT_ID_TO_ADDRESS[vaultId];
     
     if (!address) {
       return null;
     }
     
-    // Look through tvlData for matching address
-    for (const symbol in tvlData) {
-      if (tvlData[symbol].address.toLowerCase() === address.toLowerCase()) {
-        return tvlData[symbol].tvl;
+    // Look through tvlDataCache for matching address
+    for (const symbol in tvlDataCache) {
+      if (tvlDataCache[symbol].address.toLowerCase() === address.toLowerCase()) {
+        return tvlDataCache[symbol].tvl;
       }
     }
-    
     return null;
   } catch (error) {
     console.error(`Error getting TVL for vault ${vaultId}:`, error);
@@ -41,8 +46,17 @@ function getTVLByVaultId(vaultId) {
   }
 }
 
+// Function to invalidate the cache
+function invalidateTVLCache() {
+  tvlDataCache = null;
+  // Removed console.log
+}
+
 // Export functions and data
-export { getTVLByVaultId, VAULT_ID_TO_ADDRESS };
-export function allTVLData() {
-  return getVaultTVLData();
+export { getTVLByVaultId, VAULT_ID_TO_ADDRESS, invalidateTVLCache };
+export async function allTVLData() {
+  if (!tvlDataCache) {
+    tvlDataCache = await getVaultTVLData();
+  }
+  return tvlDataCache;
 }

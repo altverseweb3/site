@@ -61,7 +61,7 @@ const vaults = [
     const url = `${sevenSeasBaseUrl}/${vault.address}${sevenSeasQueryParams}`;
     
     try {
-      console.log(`Fetching data for ${vault.name} from Seven Seas API...`);
+      // Removed console.log to reduce terminal output
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -96,7 +96,7 @@ const vaults = [
     const url = `${etherfiBaseUrl}/${vault.path}.json?liquid=${vault.path}`;
     
     try {
-      console.log(`Fetching data for ${vault.name} from ether.fi website...`);
+      // Removed console.log to reduce terminal output
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -169,7 +169,7 @@ const vaults = [
   
   // Main function to query all vaults concurrently using Promise.all
   async function queryAllVaults() {
-    console.log('Starting to query APY data for all vaults concurrently...');
+    // Removed console.log
     
     try {
       // Create an array of promises for all vault queries
@@ -178,24 +178,7 @@ const vaults = [
       // Execute all promises concurrently
       const results = await Promise.all(promises);
       
-      console.log('\nResults:');
-      console.table(results);
-      
-      // Format results for easy copying
-      console.log('\nFormatted APY Results:');
-      for (const result of results) {
-        if (result.error) {
-          console.log(`${result.name}: Error - ${result.error}`);
-        } else if (result.overall_apy === null) {
-          console.log(`${result.name}: APY data not available${result.deposit_disabled ? ' (Deposits disabled)' : ''}`);
-        } else {
-          const overallFormatted = result.overall_apy !== null ? `${(result.overall_apy * 100).toFixed(2)}%` : 'N/A';
-          const feeFormatted = result.fee !== null ? `${(result.fee * 100).toFixed(2)}%` : 'N/A';
-          const netFormatted = result.net_apy !== null ? `${(result.net_apy * 100).toFixed(2)}%` : 'N/A';
-          
-          console.log(`${result.name}: ${netFormatted} (Overall: ${overallFormatted}, Fee: ${feeFormatted})`);
-        }
-      }
+      // Removed console logging of results and tables
       
       return results;
     } catch (error) {

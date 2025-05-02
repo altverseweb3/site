@@ -22,7 +22,7 @@ const tokens = [
     const url = `${baseUrl}/${token.apiPath}`;
     
     try {
-      console.log(`Fetching price data for ${token.symbol}...`);
+      // Removed console.log
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -51,7 +51,7 @@ const tokens = [
   
   // Main function to fetch prices for all tokens concurrently
   async function fetchAllTokenPrices() {
-    console.log('Starting to fetch price data for all tokens concurrently...');
+    // Removed console.log
     
     try {
       // Create an array of promises for all token price queries
@@ -66,18 +66,7 @@ const tokens = [
         priceData[result.symbol] = result;
       });
       
-      console.log('\nResults:');
-      console.table(results);
-      
-      // Format results for easy reading
-      console.log('\nFormatted Price Data:');
-      for (const result of results) {
-        if (!result.success) {
-          console.log(`${result.symbol}: Error - ${result.error}`);
-        } else {
-          console.log(`${result.symbol}: $${result.price_usd.toFixed(2)} USD`);
-        }
-      }
+      // Removed console logging of results and tables
       
       // Save to a file if needed
       // await writeFile('token-prices.json', JSON.stringify(priceData, null, 2));

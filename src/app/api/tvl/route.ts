@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { getTVLByVaultId, VAULT_ID_TO_ADDRESS } from "@/utils/tvlCache.mjs";
-import { getVaultTVL, vaults } from "@/utils/getVaultTVL.mjs";
+import {
+  getTVLByVaultId,
+  VAULT_ID_TO_ADDRESS,
+  invalidateTVLCache,
+} from "@/utils/tvlCache.mjs";
+import { vaults } from "@/utils/getVaultTVL.mjs";
 
 // Import function to get price data
 import { fetchAllTokenPrices } from "@/utils/pricequery.mjs";
 
 export async function GET() {
   try {
-    // Ensure TVL data is loaded first
-    await getVaultTVL();
-
     // Get price data for tokens
     // Use a more specific type for token prices
     interface TokenPriceData {
@@ -22,22 +23,30 @@ export async function GET() {
       error?: string;
     }
 
+    // Get token prices first
+    // Removed console.log
     const tokenPrices = (await fetchAllTokenPrices()) as Record<
       string,
       TokenPriceData
     >;
 
-    console.log("Token price data:", tokenPrices);
+    // Removed console.log
 
+    // Start with empty result object
     const result: Record<number, string> = {};
 
     // Map of vault IDs
     const vaultIds = [1, 2, 3, 4, 5, 6, 7, 8];
 
+    // Invalidate the cache to ensure fresh data when explicitly requested
+    invalidateTVLCache();
+
     // Get TVL for each vault ID and multiply by token price
     for (const vaultId of vaultIds) {
       try {
-        const tvl = getTVLByVaultId(vaultId);
+        // Removed console.log
+        // getTVLByVaultId is now async, so we need to await it
+        const tvl = await getTVLByVaultId(vaultId);
 
         if (tvl) {
           // Find the expected token symbol for this vault
@@ -58,11 +67,14 @@ export async function GET() {
             tokenPrices[tokenSymbol].price_usd
           ) {
             tokenPrice = tokenPrices[tokenSymbol].price_usd;
-            console.log(`Using price for ${tokenSymbol}: $${tokenPrice}`);
+            // Removed console.log
+          } else {
+            // Removed console.log
           }
 
           // Calculate TVL in USD
           const tvlValue = Number(tvl) * tokenPrice;
+          // Removed console.log
 
           // Format the number nicely
           const value = tvlValue.toLocaleString("en-US", {
@@ -73,6 +85,7 @@ export async function GET() {
           result[vaultId] = value;
         } else {
           // If no TVL found, use "N/A"
+          // Removed console.log
           result[vaultId] = "N/A";
         }
       } catch (err) {
@@ -81,7 +94,7 @@ export async function GET() {
       }
     }
 
-    console.log("Returning TVL values:", result);
+    // Removed console.log
     return NextResponse.json(result);
   } catch (error) {
     console.error("API route error:", error);
