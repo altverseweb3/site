@@ -22,6 +22,8 @@ export type VaultDetails = {
   description?: string;
   contractAddress?: string;
   explorerUrl?: string;
+  analyticsUrl?: string;
+  hasRealAPY?: boolean;
 };
 
 export const VaultModal = ({
@@ -75,16 +77,51 @@ export const VaultModal = ({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <div className="text-sm text-zinc-400">APY</div>
-                  <div className="text-green-500 font-medium">{vault.apy}</div>
+                  {vault.hasRealAPY && vault.apy !== "N/A" ? (
+                    <>
+                      <div className="text-green-500 text-sm font-medium mb-1">
+                        {vault.apy}
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-center gap-1 h-6 border-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs px-2 py-0"
+                        onClick={() =>
+                          window.open(
+                            vault.analyticsUrl ||
+                              `https://analytics.example.com/vaults/${vault.id}`,
+                            "_blank",
+                          )
+                        }
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Details</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-1 mt-1 h-6 border-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs px-2 py-0"
+                      onClick={() =>
+                        window.open(
+                          vault.analyticsUrl ||
+                            `https://analytics.example.com/vaults/${vault.id}`,
+                          "_blank",
+                        )
+                      }
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      <span>Details</span>
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <div className="text-sm text-zinc-400">TVL</div>
                   <div className="text-zinc-100">
-                    {vault.tvl
-                      ? vault.tvl === "N/A"
+                    {vault.tvl === "Loading..."
+                      ? "Loading..."
+                      : vault.tvl === "N/A"
                         ? "N/A"
-                        : `$${vault.tvl}`
-                      : "N/A"}
+                        : `$${vault.tvl}`}
                   </div>
                 </div>
                 <div>

@@ -37,9 +37,11 @@ const EarnComponent: React.FC = () => {
     };
   }, []);
 
-  // State for TVL data
+  // State for data
   const [tvlValues, setTvlValues] = useState<Record<number, string>>({});
+  const [apyValues, setApyValues] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isApyLoading, setIsApyLoading] = useState(true);
   const [selectedVault, setSelectedVault] = useState<VaultDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -59,33 +61,13 @@ const EarnComponent: React.FC = () => {
           setTvlValues(data);
         } else {
           console.error("Failed to fetch TVL data, status:", response.status);
-
-          // Fallback to static values
-          setTvlValues({
-            1: "NA",
-            2: "NA",
-            3: "NA",
-            4: "NA",
-            5: "NA",
-            6: "NA",
-            7: "NA",
-            8: "NA",
-          });
+          // No fallback, leave empty
+          setTvlValues({});
         }
       } catch (error) {
         console.error("Error fetching TVL data:", error);
-
-        // Fallback to static values
-        setTvlValues({
-          1: "NA",
-          2: "NA",
-          3: "NA",
-          4: "NA",
-          5: "NA",
-          6: "NA",
-          7: "NA",
-          8: "NA",
-        });
+        // No fallback, leave empty
+        setTvlValues({});
       } finally {
         setIsLoading(false);
       }
@@ -93,6 +75,38 @@ const EarnComponent: React.FC = () => {
 
     // Call the function when component mounts
     fetchTVLData();
+  }, []);
+
+  // Effect to load APY data on page load
+  useEffect(() => {
+    async function fetchAPYData() {
+      try {
+        setIsApyLoading(true);
+        console.log("🔄 Fetching APY data...");
+
+        // Make a simple API call to get APY data
+        const response = await fetch("/api/apy");
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("✅ APY data received:", data);
+          setApyValues(data);
+        } else {
+          console.error("Failed to fetch APY data, status:", response.status);
+          // No fallback, leave empty
+          setApyValues({});
+        }
+      } catch (error) {
+        console.error("Error fetching APY data:", error);
+        // No fallback, leave empty
+        setApyValues({});
+      } finally {
+        setIsApyLoading(false);
+      }
+    }
+
+    // Call the function when component mounts
+    fetchAPYData();
   }, []);
 
   // Create an array of vaults with sample data
@@ -109,6 +123,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
       explorerUrl:
         "https://etherscan.io/address/0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
+      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-eth",
     },
     {
       id: 2,
@@ -122,6 +137,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
       explorerUrl:
         "https://etherscan.io/address/0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
+      analyticsUrl: "https://analytics.ether.fi/vaults/bera-eth",
     },
     {
       id: 3,
@@ -135,6 +151,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x5f46d540b6eD704C3c8789105F30E075AA900726",
       explorerUrl:
         "https://etherscan.io/address/0x5f46d540b6eD704C3c8789105F30E075AA900726",
+      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-btc",
     },
     {
       id: 4,
@@ -148,6 +165,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       explorerUrl:
         "https://etherscan.io/address/0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
+      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-usd",
     },
     {
       id: 5,
@@ -161,6 +179,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
       explorerUrl:
         "https://etherscan.io/address/0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
+      analyticsUrl: "https://analytics.ether.fi/vaults/liquid-move-eth",
     },
     {
       id: 6,
@@ -174,6 +193,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
       explorerUrl:
         "https://etherscan.io/address/0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
+      analyticsUrl: "https://analytics.ether.fi/vaults/ultra-yield",
     },
     {
       id: 7,
@@ -187,6 +207,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0x352180974C71f84a934953Cf49C4E538a6F9c997",
       explorerUrl:
         "https://etherscan.io/address/0x352180974C71f84a934953Cf49C4E538a6F9c997",
+      analyticsUrl: "https://analytics.ether.fi/vaults/elixir-stable",
     },
     {
       id: 8,
@@ -200,6 +221,7 @@ const EarnComponent: React.FC = () => {
       contractAddress: "0xeDa663610638E6557c27e2f4e973D3393e844E70",
       explorerUrl:
         "https://etherscan.io/address/0xeDa663610638E6557c27e2f4e973D3393e844E70",
+      analyticsUrl: "https://analytics.ether.fi/vaults/usual-stable",
     },
   ];
 
@@ -221,12 +243,19 @@ const EarnComponent: React.FC = () => {
   ];
 
   const handleVaultClick = (vault: VaultDetails) => {
-    // Add TVL to the vault data
-    const vaultWithTVL = {
+    // Check if we have real APY data for this vault
+    const realAPY = vault.contractAddress
+      ? apyValues[vault.contractAddress]
+      : null;
+
+    // Add TVL and real APY (if available) to the vault data
+    const vaultWithData = {
       ...vault,
-      tvl: tvlValues[vault.id] || "N/A",
+      tvl: isLoading ? "Loading..." : tvlValues[vault.id] || "N/A",
+      hasRealAPY: !!realAPY,
+      apy: isApyLoading ? "Loading..." : realAPY || "N/A",
     };
-    setSelectedVault(vaultWithTVL);
+    setSelectedVault(vaultWithData);
     setIsModalOpen(true);
   };
 
