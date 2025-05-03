@@ -19,7 +19,7 @@ interface VedaApiResponse {
     ethereum: ChainData;
     base: ChainData;
     sonic: ChainData;
-    [key: string]: ChainData | number;
+    [key: string]: unknown;
   };
 }
 
@@ -105,7 +105,7 @@ export function formatVedaPointsData(
       // Include all chains, even those with 0 points
       .map((chain) => {
         // Handle case where the chain might not exist in the response
-        const chainData = response[chain] || {
+        const chainData = (response[chain] as ChainData) || {
           userChainVedaPointsSum: 0,
           vaults: {},
         };
