@@ -88,8 +88,8 @@ export const VaultModal = ({
                 <div>
                   <div className="text-sm text-zinc-400">APY</div>
                   {vault.hasRealAPY && vault.apy !== "N/A" ? (
-                    <>
-                      <div className="text-green-500 text-sm font-medium mb-1">
+                    <div className="flex items-center justify-between">
+                      <div className="text-green-500 text-sm font-medium">
                         {vault.apy}
                       </div>
                       <Button
@@ -106,22 +106,25 @@ export const VaultModal = ({
                         <ExternalLink className="h-3 w-3" />
                         <span>Details</span>
                       </Button>
-                    </>
+                    </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      className="flex items-center justify-center gap-1 mt-1 h-6 border-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs px-2 py-0"
-                      onClick={() =>
-                        window.open(
-                          vault.analyticsUrl ||
-                            `https://analytics.example.com/vaults/${vault.id}`,
-                          "_blank",
-                        )
-                      }
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      <span>Details</span>
-                    </Button>
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="text-zinc-400 text-sm">N/A</div>
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-center gap-1 h-6 border-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs px-2 py-0"
+                        onClick={() =>
+                          window.open(
+                            vault.analyticsUrl ||
+                              `https://analytics.example.com/vaults/${vault.id}`,
+                            "_blank",
+                          )
+                        }
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Details</span>
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -184,10 +187,12 @@ export const VaultModal = ({
                   Withdraw your funds from {vault.name}
                 </div>
                 <Button
-                  className="bg-zinc-700 hover:bg-zinc-600 text-zinc-100 font-medium"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
                   onClick={() =>
-                    alert(
-                      `Withdraw functionality coming soon for ${vault.name}`,
+                    window.open(
+                      vault.analyticsUrl ||
+                        `https://analytics.example.com/vaults/${vault.id}`,
+                      "_blank",
                     )
                   }
                 >

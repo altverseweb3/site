@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
 import VaultModal, { VaultDetails } from "@/components/ui/VaultModal";
+import { getVedaPoints, FormattedVedaPointsData } from "@/utils/vedapoints";
+import useWeb3Store from "@/store/web3Store";
+import { ExternalLink } from "lucide-react";
 
 const EarnComponent: React.FC = () => {
   // Add scroll padding at the bottom to ensure the table is fully visible
@@ -224,20 +226,27 @@ const EarnComponent: React.FC = () => {
       analyticsUrl: "https://analytics.ether.fi/vaults/usual-stable",
     },
   ];
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<"yield" | "stake" | "points">(
+    "yield",
+  );
+
   // Tabs for the earn page
   const tabs = [
-    { id: "yield", label: "yield", active: true },
+    { id: "yield", label: "yield", active: activeTab === "yield" },
     {
       id: "stake",
       label: "stake",
       disabled: true,
+      active: activeTab === "stake",
       disabledMessage: "Coming soon",
     },
     {
       id: "points",
       label: "points",
-      disabled: true,
-      disabledMessage: "Coming soon",
+      disabled: false,
+      active: activeTab === "points",
+      disabledMessage: "",
     },
   ];
 
@@ -268,6 +277,16 @@ const EarnComponent: React.FC = () => {
               variant="ghost"
               disabled={tab.disabled}
               title={tab.disabledMessage}
+              onClick={() => {
+                if (
+                  !tab.disabled &&
+                  (tab.id === "yield" ||
+                    tab.id === "stake" ||
+                    tab.id === "points")
+                ) {
+                  setActiveTab(tab.id as "yield" | "stake" | "points");
+                }
+              }}
               className={cn(
                 "text-sm font-medium transition-colors bg-transparent mx-2",
                 tab.active
@@ -281,72 +300,75 @@ const EarnComponent: React.FC = () => {
             </Button>
           ))}
         </div>
-        <div className="w-[700px] bg-zinc-900 rounded-[6px] overflow-hidden">
-          <div className="px-8 py-4">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="p-4 text-left text-zinc-400 font-medium w-[35%]">
-                    Vault
-                  </th>
-                  <th className="p-4 text-left text-zinc-400 font-medium w-[30%]">
-                    Ecosystem
-                  </th>
-                  <th className="p-4 text-left text-zinc-400 font-medium w-[20%]">
-                    Token
-                  </th>
-                  <th className="p-4 text-right text-zinc-400 font-medium w-[15%]">
-                    TVL
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {vaults.map((vault) => (
-                  <tr
-                    key={vault.id}
-                    className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/30 transition-colors cursor-pointer"
-                    onClick={() => handleVaultClick(vault)}
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-zinc-700 rounded-full mr-3 flex items-center justify-center">
-                          <span className="text-xs text-zinc-300">
-                            {vault.name[0]}
-                          </span>
-                        </div>
-                        <span className="text-zinc-100">{vault.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-zinc-100">{vault.ecosystem}</span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex">
-                        {vault.token.map((tokenName, idx) => (
-                          <div
-                            key={idx}
-                            className="bg-zinc-800 rounded-full px-2 text-xs text-zinc-400 mr-1"
-                          >
-                            {tokenName}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <span className="text-green-500 font-medium">
-                        {isLoading
-                          ? "Loading..."
-                          : tvlValues[vault.id]
-                            ? `$${tvlValues[vault.id]}`
-                            : "N/A"}
-                      </span>
-                    </td>
+        {activeTab === "yield" && (
+          <div className="w-[700px] bg-zinc-900 rounded-[6px] overflow-hidden">
+            <div className="px-8 py-4">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    <th className="p-4 text-left text-zinc-400 font-medium w-[35%]">
+                      Vault
+                    </th>
+                    <th className="p-4 text-left text-zinc-400 font-medium w-[30%]">
+                      Ecosystem
+                    </th>
+                    <th className="p-4 text-left text-zinc-400 font-medium w-[20%]">
+                      Token
+                    </th>
+                    <th className="p-4 text-right text-zinc-400 font-medium w-[15%]">
+                      TVL
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {vaults.map((vault) => (
+                    <tr
+                      key={vault.id}
+                      className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/30 transition-colors cursor-pointer"
+                      onClick={() => handleVaultClick(vault)}
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-zinc-700 rounded-full mr-3 flex items-center justify-center">
+                            <span className="text-xs text-zinc-300">
+                              {vault.name[0]}
+                            </span>
+                          </div>
+                          <span className="text-zinc-100">{vault.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-zinc-100">{vault.ecosystem}</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex">
+                          {vault.token.map((tokenName, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-zinc-800 rounded-full px-2 text-xs text-zinc-400 mr-1"
+                            >
+                              {tokenName}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-4 text-right">
+                        <span className="text-green-500 font-medium">
+                          {isLoading
+                            ? "Loading..."
+                            : tvlValues[vault.id]
+                              ? `$${tvlValues[vault.id]}`
+                              : "N/A"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
+        {activeTab === "points" && <PointsTab />}
         <div className="h-16 sm:h-20 md:h-24 lg:h-16"></div>{" "}
         {/* Responsive space at the bottom */}
       </div>
@@ -357,6 +379,186 @@ const EarnComponent: React.FC = () => {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
       />
+    </div>
+  );
+};
+
+// The VedaPointsData interface is now imported from utils/vedapoints
+
+// PointsTab component displays Veda points data for the connected wallet
+const PointsTab: React.FC = () => {
+  const [pointsData, setPointsData] = useState<FormattedVedaPointsData | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const activeWallet = useWeb3Store((state) => state.activeWallet);
+
+  // Function to handle wallet connection
+  const handleConnectWallet = async () => {
+    try {
+      // Import dynamically to avoid server-side errors
+      const { connectMetamask } = await import("@/utils/walletMethods");
+      await connectMetamask();
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      setError("Failed to connect wallet. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    async function fetchPoints() {
+      if (!activeWallet) {
+        setError("Please connect your wallet to view points");
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        // Use only the connected wallet address - no fallbacks
+        const data = await getVedaPoints(activeWallet.address);
+        setPointsData(data);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load points data";
+        setError(errorMessage);
+        console.error("Error fetching points data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchPoints();
+  }, [activeWallet]);
+
+  // Function to get chain display name
+  const getChainDisplayName = (name: string): string => {
+    const displayNames: Record<string, string> = {
+      ethereum: "Ethereum",
+      base: "Base",
+      sonic: "Sonic",
+    };
+    return displayNames[name] || name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  return (
+    <div className="w-[700px] bg-zinc-900 rounded-[6px] overflow-hidden">
+      <div className="px-8 py-6">
+        {!activeWallet ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="text-zinc-300 mb-4">
+              Connect your wallet to view your Veda points
+            </div>
+            <Button
+              variant="outline"
+              className="bg-amber-500 hover:bg-amber-600 text-black border-none"
+              onClick={handleConnectWallet}
+            >
+              Connect Wallet
+            </Button>
+          </div>
+        ) : isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="text-zinc-300">Loading points data...</div>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center py-8">
+            <div className="text-red-400">{error}</div>
+          </div>
+        ) : pointsData ? (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-medium text-zinc-100">
+                Your Veda Points
+              </h2>
+              <div className="text-2xl font-bold text-amber-500">
+                {pointsData.totalPoints.toFixed(2)}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {pointsData.chains.map((chain) => (
+                <div
+                  key={chain.name}
+                  className="border border-zinc-800 rounded-md"
+                >
+                  <div className="flex justify-between items-center p-4 border-b border-zinc-800 bg-zinc-800/50">
+                    <div className="text-zinc-200 font-medium">
+                      {getChainDisplayName(chain.name)}
+                    </div>
+                    <div
+                      className={
+                        chain.points > 0
+                          ? "text-amber-500 font-medium"
+                          : "text-zinc-400 font-medium"
+                      }
+                    >
+                      {chain.points.toFixed(2)} points
+                    </div>
+                  </div>
+
+                  {chain.vaults.length > 0 ? (
+                    <div className="p-3">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="text-zinc-400 text-sm">
+                            <th className="text-left p-2 font-normal">Vault</th>
+                            <th className="text-right p-2 font-normal">
+                              Points
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {chain.vaults.map((vault) => (
+                            <tr
+                              key={vault.address}
+                              className="border-t border-zinc-800 text-sm hover:bg-zinc-800/30 transition-colors"
+                            >
+                              <td className="text-left p-2 text-zinc-200">
+                                {vault.name}
+                              </td>
+                              <td className="text-right p-2 text-amber-500">
+                                {vault.points.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-zinc-400 text-sm">
+                      No points earned yet on {getChainDisplayName(chain.name)}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {pointsData.chains.length === 0 && (
+                <div className="text-center py-8 text-zinc-400">
+                  No points data available. Start using vaults to earn points!
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 text-center">
+              <Button
+                variant="outline"
+                className="text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                onClick={() =>
+                  window.open("https://app.veda.tech/points", "_blank")
+                }
+              >
+                View on Veda <ExternalLink className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center py-8">
+            <div className="text-zinc-300">No points data available</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
