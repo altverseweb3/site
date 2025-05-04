@@ -118,6 +118,7 @@ const EarnComponent: React.FC = () => {
       name: "Liquid ETH Yield",
       ecosystem: "Ether.fi",
       type: "Featured",
+      chain: "Ethereum",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -133,6 +134,7 @@ const EarnComponent: React.FC = () => {
       name: "Liquid BTC Yield",
       ecosystem: "Ether.fi",
       type: "Featured",
+      chain: "Ethereum",
       token: ["wBTC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -148,6 +150,7 @@ const EarnComponent: React.FC = () => {
       name: "Market-Neutral USD",
       ecosystem: "Ether.fi",
       type: "Strategy Vault",
+      chain: "Ethereum",
       token: ["USDC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -163,6 +166,7 @@ const EarnComponent: React.FC = () => {
       name: "EIGEN Restaking",
       ecosystem: "Ether.fi",
       type: "Governance Restaking",
+      chain: "Ethereum",
       token: ["EIGEN"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -178,6 +182,7 @@ const EarnComponent: React.FC = () => {
       name: "UltraYield Stablecoin Vault",
       ecosystem: "Ether.fi",
       type: "Partner Vault",
+      chain: "Ethereum",
       token: ["USDC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -193,6 +198,7 @@ const EarnComponent: React.FC = () => {
       name: "Liquid Move ETH",
       ecosystem: "Ether.fi",
       type: "Partner Vault",
+      chain: "Ethereum",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -208,6 +214,7 @@ const EarnComponent: React.FC = () => {
       name: "The Bera ETH Vault",
       ecosystem: "Ether.fi",
       type: "Partner Vault",
+      chain: "Ethereum",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data

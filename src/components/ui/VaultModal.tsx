@@ -11,14 +11,28 @@ import {
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
+// Define the type for tokens
+type TokenAsset = {
+  id: string;
+  name: string;
+  icon: string;
+};
+
 // Common tokens available on all vaults
-const COMMON_TOKENS = [
+const COMMON_TOKENS: TokenAsset[] = [
   { id: "sui", name: "SUI", icon: "🔵" },
   { id: "solana", name: "SOL", icon: "🟣" },
 ];
 
+// Define the type for vault deposit options
+type VaultDepositOption = {
+  depositEnabled: boolean;
+  tokens?: TokenAsset[];
+  disabledMessage?: string;
+};
+
 // Mapping of vault names to their available deposit tokens and status
-const VAULT_DEPOSIT_OPTIONS = {
+const VAULT_DEPOSIT_OPTIONS: Record<string, VaultDepositOption> = {
   "Liquid ETH Yield": {
     depositEnabled: true,
     tokens: [
@@ -70,7 +84,7 @@ const VAULT_DEPOSIT_OPTIONS = {
 };
 
 // Mapping of vault names to their respective receive tokens
-const VAULT_RECEIVE_TOKENS = {
+const VAULT_RECEIVE_TOKENS: Record<string, { name: string; icon: string }> = {
   "Liquid ETH Yield": { name: "liquidETH", icon: "🔹" },
   "Liquid BTC Yield": { name: "liquidBTC", icon: "🟠" },
   "Market-Neutral USD": { name: "liquidUSD", icon: "💵" },
@@ -85,6 +99,7 @@ export type VaultDetails = {
   name: string;
   ecosystem: string;
   type?: string;
+  chain?: string;
   token: string[];
   points: string;
   apy: string;
@@ -134,7 +149,7 @@ export const VaultModal = ({
   );
 
   // Initialize selected asset state
-  const [selectedAsset, setSelectedAsset] = useState({
+  const [selectedAsset, setSelectedAsset] = useState<TokenAsset>({
     id: "",
     name: "",
     icon: "",
@@ -322,9 +337,12 @@ export const VaultModal = ({
                           <span className="text-zinc-100">
                             {selectedAsset.name}
                           </span>
-                          <span className="text-[10px] text-zinc-400 mt-[2px]">
-                            {vault.ecosystem}
-                          </span>
+                          {selectedAsset.id !== "sui" &&
+                            selectedAsset.id !== "solana" && (
+                              <span className="text-[10px] text-zinc-400 mt-[2px]">
+                                {vault.chain || "Ethereum"}
+                              </span>
+                            )}
                         </div>
                       </div>
                       <svg
@@ -404,9 +422,14 @@ export const VaultModal = ({
                               <span className="text-zinc-100">
                                 {VAULT_RECEIVE_TOKENS[vault.name].name}
                               </span>
-                              <span className="text-[10px] text-zinc-400 mt-[2px]">
-                                {vault.ecosystem}
-                              </span>
+                              {VAULT_RECEIVE_TOKENS[vault.name].name !==
+                                "SUI" &&
+                                VAULT_RECEIVE_TOKENS[vault.name].name !==
+                                  "SOL" && (
+                                  <span className="text-[10px] text-zinc-400 mt-[2px]">
+                                    {vault.chain || "Ethereum"}
+                                  </span>
+                                )}
                             </div>
                           </div>
                         </>
