@@ -340,7 +340,7 @@ const EarnComponent: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-4 text-right">
-                        <span className="text-green-500 font-medium">
+                        <span className="text-amber-500 font-medium">
                           {isLoading
                             ? "Loading..."
                             : tvlValues[vault.id]
