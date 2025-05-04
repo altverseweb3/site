@@ -117,6 +117,7 @@ const EarnComponent: React.FC = () => {
       id: 1,
       name: "Liquid ETH Yield",
       ecosystem: "Ether.fi",
+      type: "Featured",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -131,6 +132,7 @@ const EarnComponent: React.FC = () => {
       id: 2,
       name: "Liquid BTC Yield",
       ecosystem: "Ether.fi",
+      type: "Featured",
       token: ["wBTC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -145,6 +147,7 @@ const EarnComponent: React.FC = () => {
       id: 3,
       name: "Market-Neutral USD",
       ecosystem: "Ether.fi",
+      type: "Strategy Vault",
       token: ["USDC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -159,6 +162,7 @@ const EarnComponent: React.FC = () => {
       id: 4,
       name: "EIGEN Restaking",
       ecosystem: "Ether.fi",
+      type: "Governance Restaking",
       token: ["EIGEN"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -173,6 +177,7 @@ const EarnComponent: React.FC = () => {
       id: 5,
       name: "UltraYield Stablecoin Vault",
       ecosystem: "Ether.fi",
+      type: "Partner Vault",
       token: ["USDC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -187,6 +192,7 @@ const EarnComponent: React.FC = () => {
       id: 6,
       name: "Liquid Move ETH",
       ecosystem: "Ether.fi",
+      type: "Partner Vault",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -201,6 +207,7 @@ const EarnComponent: React.FC = () => {
       id: 7,
       name: "The Bera ETH Vault",
       ecosystem: "Ether.fi",
+      type: "Partner Vault",
       token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
@@ -297,7 +304,7 @@ const EarnComponent: React.FC = () => {
                       Vault
                     </th>
                     <th className="p-4 text-left text-zinc-400 font-medium w-[30%]">
-                      Ecosystem
+                      Type
                     </th>
                     <th className="p-4 text-left text-zinc-400 font-medium w-[20%]">
                       Token
@@ -325,7 +332,7 @@ const EarnComponent: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-zinc-100">{vault.ecosystem}</span>
+                        <span className="text-zinc-400">{vault.type}</span>
                       </td>
                       <td className="p-4">
                         <div className="flex">
