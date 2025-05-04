@@ -142,7 +142,7 @@ export const VaultModal = ({
   // Memoize the token list to avoid recreating it on every render
   const allTokensForVault = useMemo(
     () =>
-      vault && vaultOptions.depositEnabled
+      vault && vaultOptions.depositEnabled && vaultOptions.tokens
         ? [...vaultOptions.tokens, ...COMMON_TOKENS]
         : COMMON_TOKENS,
     [vault, vaultOptions.depositEnabled, vaultOptions.tokens],
