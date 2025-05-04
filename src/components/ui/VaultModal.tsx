@@ -160,6 +160,7 @@ export const VaultModal = ({
     if (
       vault &&
       vaultOptions.depositEnabled &&
+      vaultOptions.tokens &&
       vaultOptions.tokens.length > 0
     ) {
       // Set to the first vault-specific token if available
