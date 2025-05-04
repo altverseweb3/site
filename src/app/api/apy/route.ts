@@ -15,17 +15,28 @@ async function getApyData() {
     const apyData: Record<string, string> = {};
 
     for (const result of results) {
-      // Check if result has net_apy property and it's valid
-      if (
+      // More lenient check for APY - allow using either net_apy or overall_apy
+      // Check if the result has a valid net_apy or overall_apy
+      const hasValidApy =
         !result.error &&
-        "net_apy" in result &&
-        result.net_apy !== null &&
-        result.net_apy !== undefined &&
-        typeof result.net_apy === "number" &&
-        result.net_apy > 0
-      ) {
+        (("net_apy" in result &&
+          result.net_apy !== null &&
+          result.net_apy !== undefined &&
+          typeof result.net_apy === "number") ||
+          ("overall_apy" in result &&
+            result.overall_apy !== null &&
+            result.overall_apy !== undefined &&
+            typeof result.overall_apy === "number"));
+
+      if (hasValidApy) {
+        // Prefer net_apy if available, fall back to overall_apy
+        const apyValue =
+          typeof result.net_apy === "number"
+            ? result.net_apy
+            : result.overall_apy;
+
         // Use address as key and format APY as percentage
-        apyData[result.address] = `${(result.net_apy * 100).toFixed(1)}%`;
+        apyData[result.address] = `${(apyValue * 100).toFixed(1)}%`;
       }
     }
 

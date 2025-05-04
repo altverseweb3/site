@@ -9,9 +9,11 @@ const tokens = [
     { symbol: 'wETH', apiPath: 'weth' },
     { symbol: 'wBTC', apiPath: 'wbtc' },
     { symbol: 'USDC', apiPath: 'usdc' },
-    { symbol: 'deUSD', apiPath: 'deusd' },
-    { symbol: 'USD0', apiPath: 'usd0' },
-    // Add additional tokens as needed
+    { symbol: 'EIGEN', apiPath: 'eigen' },
+    // Add fallbacks with case variations to handle potential mismatches
+    { symbol: 'ETH', apiPath: 'weth' },
+    { symbol: 'BTC', apiPath: 'wbtc' },
+    { symbol: 'USD', apiPath: 'usdc' }
   ];
   
   // Base URL for the API

@@ -14,25 +14,31 @@ const vaults = [
   {
     address: '0xf0bb20865277aBd641a307eCe5Ee04E79073416C',
     protocol: 'Ether.fi',
-    name: 'Liquid ETH',
-    expectedSymbol: 'wETH'
-  },
-  {
-    address: '0x83599937c2C9bEA0E0E8ac096c6f32e86486b410',
-    protocol: 'Ether.fi',
-    name: 'The Bera ETH Vault',
+    name: 'Liquid ETH Yield',
     expectedSymbol: 'wETH'
   },
   {
     address: '0x5f46d540b6eD704C3c8789105F30E075AA900726',
     protocol: 'Ether.fi',
-    name: 'Liquid BTC',
+    name: 'Liquid BTC Yield',
     expectedSymbol: 'wBTC'
   },
   {
     address: '0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C',
     protocol: 'Ether.fi',
-    name: 'Liquid USD',
+    name: 'Market-Neutral USD',
+    expectedSymbol: 'USDC'
+  },
+  {
+    address: '0xE77076518A813616315EaAba6cA8e595E845EeE9',
+    protocol: 'Ether.fi',
+    name: 'EIGEN Restaking',
+    expectedSymbol: 'EIGEN'
+  },
+  {
+    address: '0xbc0f3B23930fff9f4894914bD745ABAbA9588265',
+    protocol: 'Ether.fi',
+    name: 'UltraYield Stablecoin Vault',
     expectedSymbol: 'USDC'
   },
   {
@@ -42,22 +48,10 @@ const vaults = [
     expectedSymbol: 'wETH'
   },
   {
-    address: '0xbc0f3B23930fff9f4894914bD745ABAbA9588265',
+    address: '0x83599937c2C9bEA0E0E8ac096c6f32e86486b410',
     protocol: 'Ether.fi',
-    name: 'Ultra Yield Stablecoin Vault',
-    expectedSymbol: 'USDC'
-  },
-  {
-    address: '0x352180974C71f84a934953Cf49C4E538a6F9c997',
-    protocol: 'Ether.fi',
-    name: 'Elixir Stable Vault',
-    expectedSymbol: 'deUSD'
-  },
-  {
-    address: '0xeDa663610638E6557c27e2f4e973D3393e844E70',
-    protocol: 'Ether.fi',
-    name: 'Usual Stable Vault',
-    expectedSymbol: 'USD0'
+    name: 'The Bera ETH Vault',
+    expectedSymbol: 'wETH'
   }
 ];
 

@@ -115,7 +115,7 @@ const EarnComponent: React.FC = () => {
   const vaults = [
     {
       id: 1,
-      name: "Liquid ETH",
+      name: "Liquid ETH Yield",
       ecosystem: "Ether.fi",
       token: ["wETH"],
       points: "FML",
@@ -129,21 +129,7 @@ const EarnComponent: React.FC = () => {
     },
     {
       id: 2,
-      name: "The Bera ETH Vault",
-      ecosystem: "Ether.fi",
-      token: ["wETH"],
-      points: "FML",
-      apy: "", // Will be populated with real-time data
-      description:
-        "The Bera ETH Vault focuses on low-risk strategies with consistent returns for ETH holders.",
-      contractAddress: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
-      explorerUrl:
-        "https://etherscan.io/address/0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
-      analyticsUrl: "https://www.ether.fi/app/liquid/bera-eth",
-    },
-    {
-      id: 3,
-      name: "Liquid BTC",
+      name: "Liquid BTC Yield",
       ecosystem: "Ether.fi",
       token: ["wBTC"],
       points: "FML",
@@ -156,21 +142,49 @@ const EarnComponent: React.FC = () => {
       analyticsUrl: "https://www.ether.fi/app/liquid/btc",
     },
     {
-      id: 4,
-      name: "Liquid USD",
+      id: 3,
+      name: "Market-Neutral USD",
       ecosystem: "Ether.fi",
       token: ["USDC"],
       points: "FML",
       apy: "", // Will be populated with real-time data
       description:
-        "Liquid USD vault focuses on stable returns using conservative stablecoin strategies.",
+        "Market-Neutral USD vault focuses on stable returns using conservative stablecoin strategies.",
       contractAddress: "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       explorerUrl:
         "https://etherscan.io/address/0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       analyticsUrl: "https://www.ether.fi/app/liquid/usd",
     },
     {
+      id: 4,
+      name: "EIGEN Restaking",
+      ecosystem: "Ether.fi",
+      token: ["EIGEN"],
+      points: "FML",
+      apy: "", // Will be populated with real-time data
+      description:
+        "EIGEN Restaking vault allows users to earn rewards by staking EIGEN tokens.",
+      contractAddress: "0xE77076518A813616315EaAba6cA8e595E845EeE9",
+      explorerUrl:
+        "https://etherscan.io/address/0xE77076518A813616315EaAba6cA8e595E845EeE9",
+      analyticsUrl: "https://www.ether.fi/app/eigen",
+    },
+    {
       id: 5,
+      name: "UltraYield Stablecoin Vault",
+      ecosystem: "Ether.fi",
+      token: ["USDC"],
+      points: "FML",
+      apy: "", // Will be populated with real-time data
+      description:
+        "Ultra Yield Stablecoin Vault uses aggressive yet secure strategies to maximize stablecoin returns.",
+      contractAddress: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
+      explorerUrl:
+        "https://etherscan.io/address/0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
+      analyticsUrl: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
+    },
+    {
+      id: 6,
       name: "Liquid Move ETH",
       ecosystem: "Ether.fi",
       token: ["wETH"],
@@ -184,48 +198,21 @@ const EarnComponent: React.FC = () => {
       analyticsUrl: "https://www.ether.fi/app/liquid/move-eth",
     },
     {
-      id: 6,
-      name: "Ultra Yield Stablecoin Vault",
-      ecosystem: "Ether.fi",
-      token: ["USDC"],
-      points: "FML",
-      apy: "", // Will be populated with real-time data
-      description:
-        "Ultra Yield Stablecoin Vault uses aggressive yet secure strategies to maximize stablecoin returns.",
-      contractAddress: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
-      explorerUrl:
-        "https://etherscan.io/address/0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
-      analyticsUrl: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
-    },
-    {
       id: 7,
-      name: "Elixir Stable Vault",
+      name: "The Bera ETH Vault",
       ecosystem: "Ether.fi",
-      token: ["deUSD"],
+      token: ["wETH"],
       points: "FML",
       apy: "", // Will be populated with real-time data
       description:
-        "Elixir Stable Vault specializes in decentralized stablecoin yield strategies.",
-      contractAddress: "0x352180974C71f84a934953Cf49C4E538a6F9c997",
+        "The Bera ETH Vault focuses on low-risk strategies with consistent returns for ETH holders.",
+      contractAddress: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
       explorerUrl:
-        "https://etherscan.io/address/0x352180974C71f84a934953Cf49C4E538a6F9c997",
-      analyticsUrl: "https://analytics.ether.fi/vaults/elixir-stable",
-    },
-    {
-      id: 8,
-      name: "Usual Stable Vault",
-      ecosystem: "Ether.fi",
-      token: ["USD0"],
-      points: "FML",
-      apy: "", // Will be populated with real-time data
-      description:
-        "Usual Stable Vault provides reliable yield on USD0 stablecoins through diversified DeFi protocols.",
-      contractAddress: "0xeDa663610638E6557c27e2f4e973D3393e844E70",
-      explorerUrl:
-        "https://etherscan.io/address/0xeDa663610638E6557c27e2f4e973D3393e844E70",
-      analyticsUrl: "https://analytics.ether.fi/vaults/usual-stable",
+        "https://etherscan.io/address/0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
+      analyticsUrl: "https://www.ether.fi/app/liquid/bera-eth",
     },
   ];
+
   // State for active tab
   const [activeTab, setActiveTab] = useState<"yield" | "stake" | "points">(
     "yield",
