@@ -364,7 +364,7 @@ const EarnComponent: React.FC = () => {
   return (
     <div className="flex h-full w-full items-start justify-center min-h-[500px]">
       <div className="w-full flex flex-col items-center">
-        <div className="w-[800px] flex justify-center mb-6 mt-6">
+        <div className="w-[880px] flex justify-center mb-6 mt-6">
           {tabs.map((tab) => (
             <Button
               key={tab.id}
@@ -395,24 +395,24 @@ const EarnComponent: React.FC = () => {
           ))}
         </div>
         {activeTab === "yield" && (
-          <div className="w-[800px] bg-zinc-900 rounded-[6px] overflow-hidden">
-            <div className="px-8 py-4">
+          <div className="w-[880px] bg-zinc-900 rounded-[6px] overflow-hidden">
+            <div className="px-6 py-3">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-800">
-                    <th className="p-4 text-left text-zinc-400 font-medium w-[28%]">
+                    <th className="p-3 text-left text-zinc-400 font-medium w-[28%]">
                       Vault
                     </th>
-                    <th className="p-4 text-left text-zinc-400 font-medium w-[13%]">
+                    <th className="p-3 text-left text-zinc-400 font-medium w-[13%]">
                       Type
                     </th>
-                    <th className="p-4 text-left text-zinc-400 font-medium w-[31%] pr-0">
+                    <th className="p-3 text-left text-zinc-400 font-medium w-[31%] pr-0">
                       Token
                     </th>
-                    <th className="p-4 text-center text-zinc-400 font-medium w-[12%] pl-0">
+                    <th className="p-3 text-left text-zinc-400 font-medium w-[12%] pl-0">
                       APY
                     </th>
-                    <th className="p-4 text-right text-zinc-400 font-medium w-[16%]">
+                    <th className="p-3 text-right text-zinc-400 font-medium w-[16%]">
                       TVL
                     </th>
                   </tr>
@@ -424,7 +424,7 @@ const EarnComponent: React.FC = () => {
                       className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/30 transition-colors cursor-pointer"
                       onClick={() => handleVaultClick(vault)}
                     >
-                      <td className="p-4">
+                      <td className="p-3">
                         <div className="flex items-center">
                           <div className="w-8 h-8 min-w-[2rem] bg-zinc-100/10 rounded-full mr-3 flex items-center justify-center overflow-hidden">
                             {TOKEN_SVG_MAPPING[vault.name] ? (
@@ -490,30 +490,30 @@ const EarnComponent: React.FC = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="p-4 pl-0 text-center">
+                      <td className="p-3 pl-0 text-left">
                         {isApyLoading ? (
-                          <div className="text-zinc-300 text-sm">
+                          <div className="text-zinc-300 font-medium w-full">
                             Loading...
                           </div>
                         ) : vault.name === "Liquid Move ETH" ? (
                           // Hardcoded 11% APY for Liquid Move ETH vault
-                          <div className="text-green-500 text-sm font-medium">
+                          <div className="text-green-500 font-medium font-mono w-full">
                             11.0%
                           </div>
                         ) : vault.name === "EIGEN Restaking" ? (
                           // Hardcoded 3.9% APY for EIGEN Restaking vault
-                          <div className="text-green-500 text-sm font-medium">
-                            3.9%
+                          <div className="text-green-500 font-medium font-mono w-full">
+                            3.1%
                           </div>
                         ) : vault.name === "The Bera ETH Vault" ||
                           vault.name === "The Bera BTC Vault" ||
                           !vault.contractAddress ||
                           !apyValues[vault.contractAddress] ? (
                           // For Bera vaults or N/A values when apyValues doesn't have a value or is null
-                          <div className="text-zinc-300 text-sm">
+                          <div className="text-zinc-300 w-full">
                             <Button
                               variant="link"
-                              className="h-auto p-0 text-xs text-amber-500 hover:text-amber-300"
+                              className="h-auto p-0 font-medium text-amber-500 hover:text-amber-300"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(vault.analyticsUrl, "_blank");
@@ -524,16 +524,16 @@ const EarnComponent: React.FC = () => {
                           </div>
                         ) : // Check if APY is a number and greater than zero
                         parseFloat(apyValues[vault.contractAddress]) > 0 ? (
-                          <div className="text-green-500 text-sm font-medium">
+                          <div className="text-green-500 font-medium font-mono w-full">
                             {apyValues[vault.contractAddress]}
                           </div>
                         ) : (
                           // For APY values that are 0 or negative
-                          <div className="text-zinc-300 text-sm">&lt;0.01%</div>
+                          <div className="text-zinc-300 font-medium font-mono w-full">&lt;0.01%</div>
                         )}
                       </td>
-                      <td className="p-4 text-right">
-                        <span className="text-amber-500 font-medium">
+                      <td className="p-3 text-right">
+                        <span className="text-amber-500 font-medium font-mono">
                           {isLoading
                             ? "Loading..."
                             : tvlValues[vault.id]
