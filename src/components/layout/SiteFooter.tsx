@@ -28,7 +28,7 @@ export function SiteFooter() {
           />
 
           <SocialIcon
-            url="https://t.me/altverse"
+            url="https://t.me/altverseweb3"
             bgColor="#0A0A0B"
             fgColor="#A6A6A9"
             style={{ height: 24, width: 24 }}
