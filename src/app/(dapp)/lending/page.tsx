@@ -1,9 +1,9 @@
 "use client";
 
-import BorrowComponent from "@/components/ui/BorrowComponent";
-import PoweredByAave from "@/components/ui/PoweredByAave";
-import SupplyBorrowMetricsHeaders from "@/components/ui/SupplyBorrowMetricsHeaders";
-import SupplyComponent from "@/components/ui/SupplyComponent";
+import BorrowComponent from "@/components/ui/lending/BorrowComponent";
+import PoweredByAave from "@/components/ui/lending/PoweredByAave";
+import SupplyBorrowMetricsHeaders from "@/components/ui/lending/SupplyBorrowMetricsHeaders";
+import SupplyComponent from "@/components/ui/lending/SupplyComponent";
 import React, { useState } from "react";
 
 const BorrowLendComponent: React.FC = () => {

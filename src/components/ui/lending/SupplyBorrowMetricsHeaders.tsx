@@ -1,6 +1,6 @@
 import React from "react";
-import MetricsCard from "@/components/ui/SupplyBorrowMetricsCard";
-import SupplyBorrowToggle from "@/components/ui/SupplyBorrowToggle";
+import MetricsCard from "@/components/ui/lending/SupplyBorrowMetricsCard";
+import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
 
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
