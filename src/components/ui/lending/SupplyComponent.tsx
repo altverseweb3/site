@@ -9,6 +9,7 @@ import SupplyOwnedCard from "./SupplyOwnedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositionsHeader";
 import SupplyUnOwnedCard from "./SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
+import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
 
 const SupplyComponent: React.FC = () => {
   return (
@@ -22,7 +23,24 @@ const SupplyComponent: React.FC = () => {
             <SupplyYourPositionsHeader />
           </AccordionTrigger>
           <AccordionContent>
-            <SupplyOwnedCard />
+            <ScrollBoxSupplyBorrowAssets>
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+              <SupplyOwnedCard />
+            </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -35,7 +53,20 @@ const SupplyComponent: React.FC = () => {
             <SupplyAvailablePositionsHeader />
           </AccordionTrigger>
           <AccordionContent>
-            <SupplyUnOwnedCard />
+            <ScrollBoxSupplyBorrowAssets>
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+              <SupplyUnOwnedCard />
+            </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
