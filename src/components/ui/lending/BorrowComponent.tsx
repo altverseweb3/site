@@ -4,14 +4,14 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/Accordion";
+} from "@/components/ui/lending/Accordion";
 
-const SupplyComponent: React.FC = () => {
+const BorrowComponent: React.FC = () => {
   return (
     <div className="w-full space-y-4">
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger>your supply positions</AccordionTrigger>
+          <AccordionTrigger>your borrow positions</AccordionTrigger>
           <AccordionContent>discover your positions</AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -19,4 +19,4 @@ const SupplyComponent: React.FC = () => {
   );
 };
 
-export default SupplyComponent;
+export default BorrowComponent;

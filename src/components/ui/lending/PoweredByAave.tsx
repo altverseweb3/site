@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const PoweredByAave = () => {
   return (
-    <div className="flex justify-end mt-2">
+    <div className="flex justify-end mt-2 mb-12">
       <div className="flex items-center gap-2">
         <span className="text-sm text-white">powered by</span>
         <Image
