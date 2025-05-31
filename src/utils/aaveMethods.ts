@@ -669,7 +669,7 @@ export class AaveMethods {
             return null;
           }
 
-          const priceUSD = await this.getTokenPrice(assetAddress, chainId);
+          const priceUSD = await this.getTokenPrice();
 
           // Skip tokens with no price data
           if (priceUSD <= 0) {
@@ -1007,7 +1007,7 @@ export class AaveMethods {
       let totalBorrowedUSD = 0;
 
       for (const position of userPosition.userPositions) {
-        const priceUSD = await this.getTokenPrice(position.address, chainId);
+        const priceUSD = await this.getTokenPrice();
 
         const suppliedBalance = Number(position.currentATokenBalance);
         if (suppliedBalance > 0) {
