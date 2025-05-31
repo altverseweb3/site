@@ -30,13 +30,14 @@ export function TokenAmountInput({
   const tokenAddress = sourceToken?.address?.toLowerCase();
   const chainId = sourceToken?.chainId;
 
+  // Get the required wallet separately to use for conditional rendering
+  const requiredWallet = useWeb3Store((state) => {
+    return state.getWalletBySourceChain();
+  });
+
   // This will re-render when the specific token balance changes
   const tokenBalance = useWeb3Store((state) => {
-    if (!tokenAddress || !chainId) return null;
-
-    // Create a wallet key that matches the one used in updateTokenBalances
-    const requiredWallet = state.getWalletBySourceChain();
-    if (!requiredWallet) return null;
+    if (!tokenAddress || !chainId || !requiredWallet) return null;
 
     const walletKey = `${chainId}-${requiredWallet.address.toLowerCase()}`;
     const balances = state.tokenBalancesByWallet[walletKey];
@@ -132,7 +133,7 @@ export function TokenAmountInput({
         <span className="text-zinc-400 text-sm numeric-input">
           {displayedAmountUsd}
         </span>
-        {variant === "source" && (
+        {variant === "source" && requiredWallet && (
           <div className="flex justify-end w-full mt-2 gap-2">
             {/* Balance display */}
             <div className="flex items-center px-1 py-0.5 rounded-md bg-amber-500 bg-opacity-25">
