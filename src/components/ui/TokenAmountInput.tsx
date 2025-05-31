@@ -137,7 +137,7 @@ export function TokenAmountInput({
             {/* Balance display */}
             <div className="flex items-center px-1 py-0.5 rounded-md bg-amber-500 bg-opacity-25">
               <Wallet size={14} className="text-amber-500 mr-1" />
-              <span className="text-amber-500 text-xs">
+              <span className="text-amber-500 text-xs numeric-input">
                 {currentBalance ? formatBalance(currentBalance) : "0.000"}
               </span>
             </div>
