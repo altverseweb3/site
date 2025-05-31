@@ -145,6 +145,10 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
 
   // Destination (read-only ticker with pulse on loading)
   if (variant === "destination") {
+    const numAmount = Number(amount);
+    // Show 0 decimal places for zero values, 3 decimal places for non-zero values
+    const decimalPlaces = numAmount === 0 ? 0 : 3;
+
     return (
       <div
         ref={containerRef}
@@ -153,9 +157,9 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
       >
         <div ref={tickerRef} className={isLoading ? "animate-pulse" : ""}>
           <NumberTicker
-            value={Number(amount)}
+            value={numAmount}
             startValue={lastDisplayedAmount}
-            decimalPlaces={3}
+            decimalPlaces={decimalPlaces}
             stiffness={500}
             damping={90}
             className={commonClass}
