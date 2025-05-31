@@ -2,7 +2,77 @@ import React, { useMemo } from "react";
 import MetricsCard from "@/components/ui/lending/SupplyBorrowMetricsCard";
 import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
 
-const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
+interface AccountData {
+  totalCollateralBase: string;
+  totalDebtBase: string;
+  availableBorrowsBase: string;
+  currentLiquidationThreshold: number;
+  ltv: number;
+  healthFactor: string;
+}
+
+interface SuppliedAsset {
+  currentATokenBalance: string | number;
+  supplyAPY?: {
+    aaveMethod?: string | number;
+  };
+}
+
+interface BorrowedAsset {
+  currentStableDebt: string | number;
+  currentVariableDebt: string | number;
+  borrowAPY?: string | number;
+}
+
+interface MarketMetrics {
+  totalMarketSize: number;
+  totalAvailable: number;
+  totalBorrows: number;
+}
+
+interface AaveData {
+  accountData: AccountData | null;
+  marketMetrics: MarketMetrics | null;
+  suppliedAssets: SuppliedAsset[];
+  borrowedAssets: BorrowedAsset[];
+  loading: boolean;
+  error: string | null;
+}
+
+interface UserMetrics {
+  netWorth: string;
+  netAPY: string;
+  healthFactor: string;
+  healthFactorColor: string;
+}
+
+interface FormattedMarketMetrics {
+  marketSize: string;
+  available: string;
+  borrows: string;
+}
+
+interface MetricItem {
+  label: string;
+  value: string;
+  prefix?: string;
+  suffix?: string;
+  color: string;
+  showButton?: boolean;
+  buttonText?: string;
+}
+
+interface SupplyBorrowMetricsHeadersProps {
+  activeTab: string;
+  onTabChange: (button: string) => void;
+  aaveData: AaveData;
+}
+
+const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
+  activeTab,
+  onTabChange,
+  aaveData,
+}) => {
   const {
     accountData,
     marketMetrics,
@@ -13,7 +83,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
   } = aaveData;
 
   // Calculate user metrics from real Aave data
-  const userMetrics = useMemo(() => {
+  const userMetrics = useMemo((): UserMetrics => {
     if (!accountData) {
       return {
         netWorth: "0.00",
@@ -35,7 +105,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
     let weightedBorrowAPY = 0;
 
     // Calculate supply-side weighted APY
-    suppliedAssets.forEach((asset) => {
+    suppliedAssets.forEach((asset: SuppliedAsset) => {
       const value = Number(asset.currentATokenBalance);
       const apy = Number(asset.supplyAPY?.aaveMethod || 0);
       totalSupplyValue += value;
@@ -43,7 +113,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
     });
 
     // Calculate borrow-side weighted APY
-    borrowedAssets.forEach((asset) => {
+    borrowedAssets.forEach((asset: BorrowedAsset) => {
       const value =
         Number(asset.currentStableDebt) + Number(asset.currentVariableDebt);
       const apy = Number(asset.borrowAPY || 0);
@@ -76,7 +146,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
   }, [accountData, suppliedAssets, borrowedAssets]);
 
   // Format market metrics for display
-  const formattedMarketMetrics = useMemo(() => {
+  const formattedMarketMetrics = useMemo((): FormattedMarketMetrics => {
     if (!marketMetrics) {
       return {
         marketSize: "0.00B",
@@ -85,7 +155,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
       };
     }
 
-    const formatLargeNumber = (num) => {
+    const formatLargeNumber = (num: number): string => {
       if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
       if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
       if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
@@ -100,7 +170,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
   }, [marketMetrics]);
 
   // First card metrics (user's position)
-  const metricsDataHealth = [
+  const metricsDataHealth: MetricItem[] = [
     {
       label: "Net Worth",
       value: userMetrics.netWorth,
@@ -123,7 +193,7 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
   ];
 
   // Second card metrics (market data)
-  const marketMetricsData = [
+  const marketMetricsData: MetricItem[] = [
     {
       label: "Market Size",
       value: formattedMarketMetrics.marketSize,
@@ -144,20 +214,20 @@ const SupplyBorrowMetricsHeaders = ({ activeTab, onTabChange, aaveData }) => {
     },
   ];
 
-  const handleButtonClick = (metricLabel) => {
-    console.log(`Button clicked for ${metricLabel}`);
+  const handleButtonClick = (): void => {
+    console.log(`Button clicked`);
     // Add your logic for showing risk details here
   };
 
   // Show loading state
   if (loading && !accountData) {
-    const loadingMetrics = [
+    const loadingMetrics: MetricItem[] = [
       { label: "Net Worth", value: "...", prefix: "$", color: "text-gray-400" },
       { label: "Net APY", value: "...", suffix: "%", color: "text-gray-400" },
       { label: "Health Factor", value: "...", color: "text-gray-400" },
     ];
 
-    const loadingMarketMetrics = [
+    const loadingMarketMetrics: MetricItem[] = [
       {
         label: "Market Size",
         value: "...",

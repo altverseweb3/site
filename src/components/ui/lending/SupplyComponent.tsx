@@ -12,7 +12,52 @@ import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
 import { toast } from "sonner";
 
-const SupplyComponent = ({ aaveData }) => {
+// Define specific asset interfaces
+interface Asset {
+  address: string;
+  name?: string;
+  symbol: string;
+  currentATokenBalance: number | string;
+  priceInUSD?: number | string;
+  supplyAPY?: {
+    aaveMethod?: number | string;
+  };
+  usageAsCollateralEnabled: boolean;
+  canBeCollateral?: boolean;
+}
+
+interface MarketMetrics {
+  totalLiquidity: number;
+  totalBorrows: number;
+  totalSupply: number;
+  // Add other market metrics properties as needed
+}
+
+// Import the Aave data types
+interface AaveDataState {
+  suppliedAssets: Asset[];
+  borrowedAssets: Asset[];
+  availableAssets: Asset[];
+  accountData: {
+    totalCollateralBase: string;
+    totalDebtBase: string;
+    availableBorrowsBase: string;
+    currentLiquidationThreshold: number;
+    ltv: number;
+    healthFactor: string;
+  } | null;
+  marketMetrics: MarketMetrics;
+  loading: boolean;
+  error: string | null;
+  lastUpdateTime: Date | null;
+  refreshData: (force?: boolean) => Promise<void>;
+}
+
+interface SupplyComponentProps {
+  aaveData: AaveDataState;
+}
+
+const SupplyComponent: React.FC<SupplyComponentProps> = ({ aaveData }) => {
   const { suppliedAssets, availableAssets, loading } = aaveData;
 
   // Memoize total supplied value to prevent unnecessary recalculations
@@ -49,10 +94,10 @@ const SupplyComponent = ({ aaveData }) => {
   }, [availableAssets]);
 
   // Handle supply action
-  const handleSupplyAction = async (asset) => {
+  const handleSupplyAction = async (asset: Asset) => {
     console.log(`Supply ${asset.symbol} - APY: ${asset.supplyAPY}%`);
     toast.info(`Supply ${asset.symbol}`, {
-      description: `Current APY: ${asset.formattedSupplyAPY || asset.supplyAPY}% • ${
+      description: `Current APY: ${Number(asset.supplyAPY || 0).toFixed(2)}% • ${
         asset.canBeCollateral
           ? "Can be used as collateral"
           : "Cannot be used as collateral"
@@ -73,7 +118,6 @@ const SupplyComponent = ({ aaveData }) => {
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
             <SupplyYourPositionsHeader
               totalSupplied={totalSuppliedValue}
-              positionsCount={suppliedAssets.length}
               loading={loading}
               suppliedAssets={suppliedAssets}
             />
