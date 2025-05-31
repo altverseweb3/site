@@ -2,41 +2,42 @@ import React, { useMemo } from "react";
 import MetricsCard from "@/components/ui/lending/SupplyBorrowMetricsCard";
 import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
 
-interface AccountData {
-  totalCollateralBase: string;
-  totalDebtBase: string;
-  availableBorrowsBase: string;
-  currentLiquidationThreshold: number;
-  ltv: number;
-  healthFactor: string;
+// Define flexible but type-safe interfaces
+interface FlexibleAccountData {
+  totalCollateralBase?: string | number;
+  totalDebtBase?: string | number;
+  availableBorrowsBase?: string | number;
+  currentLiquidationThreshold?: number;
+  ltv?: number;
+  healthFactor?: string | number;
+  [key: string]: unknown; // Allow additional properties
 }
 
-interface SuppliedAsset {
-  currentATokenBalance: string | number;
-  supplyAPY?: {
-    aaveMethod?: string | number;
-  };
+interface FlexibleSuppliedAsset {
+  currentATokenBalance?: string | number;
+  supplyAPY?:
+    | string
+    | number
+    | {
+        aaveMethod?: string | number;
+        simple?: string | number;
+        [key: string]: unknown;
+      };
+  [key: string]: unknown; // Allow additional properties
 }
 
-interface BorrowedAsset {
-  currentStableDebt: string | number;
-  currentVariableDebt: string | number;
+interface FlexibleBorrowedAsset {
+  currentStableDebt?: string | number;
+  currentVariableDebt?: string | number;
   borrowAPY?: string | number;
+  [key: string]: unknown; // Allow additional properties
 }
 
-interface MarketMetrics {
-  totalMarketSize: number;
-  totalAvailable: number;
-  totalBorrows: number;
-}
-
-interface AaveData {
-  accountData: AccountData | null;
-  marketMetrics: MarketMetrics | null;
-  suppliedAssets: SuppliedAsset[];
-  borrowedAssets: BorrowedAsset[];
-  loading: boolean;
-  error: string | null;
+interface FlexibleMarketMetrics {
+  totalMarketSize?: number;
+  totalAvailable?: number;
+  totalBorrows?: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 interface UserMetrics {
@@ -65,7 +66,14 @@ interface MetricItem {
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
   onTabChange: (button: string) => void;
-  aaveData: AaveData;
+  aaveData: {
+    accountData?: FlexibleAccountData | null;
+    marketMetrics?: FlexibleMarketMetrics | null;
+    suppliedAssets?: FlexibleSuppliedAsset[];
+    borrowedAssets?: FlexibleBorrowedAsset[];
+    loading?: boolean;
+    error?: string | null;
+  };
 }
 
 const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
@@ -73,17 +81,28 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   onTabChange,
   aaveData,
 }) => {
-  const {
-    accountData,
-    marketMetrics,
-    suppliedAssets,
-    borrowedAssets,
-    loading,
-    error,
-  } = aaveData;
-
   // Calculate user metrics from real Aave data
   const userMetrics = useMemo((): UserMetrics => {
+    const accountData = aaveData.accountData || null;
+    const suppliedAssets = aaveData.suppliedAssets || [];
+    const borrowedAssets = aaveData.borrowedAssets || [];
+
+    // Helper function to get APY value from various possible structures
+    const getAPYValue = (asset: FlexibleSuppliedAsset): number => {
+      const supplyAPY = asset.supplyAPY;
+      if (typeof supplyAPY === "number") return supplyAPY;
+      if (typeof supplyAPY === "string") return Number(supplyAPY) || 0;
+      if (typeof supplyAPY === "object" && supplyAPY !== null) {
+        if ("aaveMethod" in supplyAPY && supplyAPY.aaveMethod) {
+          return Number(supplyAPY.aaveMethod) || 0;
+        }
+        if ("simple" in supplyAPY && supplyAPY.simple) {
+          return Number(supplyAPY.simple) || 0;
+        }
+      }
+      return 0;
+    };
+
     if (!accountData) {
       return {
         netWorth: "0.00",
@@ -95,8 +114,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
     // Calculate net worth (collateral - debt)
     const netWorth =
-      Number(accountData.totalCollateralBase) -
-      Number(accountData.totalDebtBase);
+      Number(accountData.totalCollateralBase || 0) -
+      Number(accountData.totalDebtBase || 0);
 
     // Calculate weighted average APY
     let totalSupplyValue = 0;
@@ -105,17 +124,18 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     let weightedBorrowAPY = 0;
 
     // Calculate supply-side weighted APY
-    suppliedAssets.forEach((asset: SuppliedAsset) => {
-      const value = Number(asset.currentATokenBalance);
-      const apy = Number(asset.supplyAPY?.aaveMethod || 0);
+    suppliedAssets.forEach((asset: FlexibleSuppliedAsset) => {
+      const value = Number(asset.currentATokenBalance || 0);
+      const apy = getAPYValue(asset);
       totalSupplyValue += value;
       weightedSupplyAPY += value * apy;
     });
 
     // Calculate borrow-side weighted APY
-    borrowedAssets.forEach((asset: BorrowedAsset) => {
-      const value =
-        Number(asset.currentStableDebt) + Number(asset.currentVariableDebt);
+    borrowedAssets.forEach((asset: FlexibleBorrowedAsset) => {
+      const stableDebt = Number(asset.currentStableDebt || 0);
+      const variableDebt = Number(asset.currentVariableDebt || 0);
+      const value = stableDebt + variableDebt;
       const apy = Number(asset.borrowAPY || 0);
       totalBorrowValue += value;
       weightedBorrowAPY += value * apy;
@@ -130,7 +150,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     const netAPY = avgSupplyAPY - avgBorrowAPY;
 
     // Health factor logic - if net worth is 0, health should be 0
-    const hf = netWorth === 0 ? 0 : Number(accountData.healthFactor);
+    const hf = netWorth === 0 ? 0 : Number(accountData.healthFactor || 0);
     let healthFactorColor = "text-green-400";
     if (netWorth === 0) healthFactorColor = "text-gray-400";
     else if (hf < 1.1) healthFactorColor = "text-red-400";
@@ -143,10 +163,12 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       healthFactor: hf === 0 ? "0.00" : hf === Infinity ? "∞" : hf.toFixed(2),
       healthFactorColor,
     };
-  }, [accountData, suppliedAssets, borrowedAssets]);
+  }, [aaveData.accountData, aaveData.suppliedAssets, aaveData.borrowedAssets]);
 
   // Format market metrics for display
   const formattedMarketMetrics = useMemo((): FormattedMarketMetrics => {
+    const marketMetrics = aaveData.marketMetrics || null;
+
     if (!marketMetrics) {
       return {
         marketSize: "0.00B",
@@ -163,11 +185,16 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     };
 
     return {
-      marketSize: formatLargeNumber(marketMetrics.totalMarketSize),
-      available: formatLargeNumber(marketMetrics.totalAvailable),
-      borrows: formatLargeNumber(marketMetrics.totalBorrows),
+      marketSize: formatLargeNumber(marketMetrics.totalMarketSize || 0),
+      available: formatLargeNumber(marketMetrics.totalAvailable || 0),
+      borrows: formatLargeNumber(marketMetrics.totalBorrows || 0),
     };
-  }, [marketMetrics]);
+  }, [aaveData.marketMetrics]);
+
+  // Only extract simple values needed for rendering
+  const loading = aaveData.loading || false;
+  const error = aaveData.error || null;
+  const accountData = aaveData.accountData || null;
 
   // First card metrics (user's position)
   const metricsDataHealth: MetricItem[] = [

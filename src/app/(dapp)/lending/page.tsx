@@ -26,7 +26,7 @@ const BorrowLendComponent: React.FC = () => {
         {activeTab === "supply" ? (
           <SupplyComponent aaveData={aaveData} />
         ) : (
-          <BorrowComponent aaveData={aaveData} />
+          <BorrowComponent />
         )}
 
         <PoweredByAave />
