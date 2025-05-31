@@ -114,9 +114,13 @@ export function TokenAmountInput({
     }
   };
 
-  // Only apply the faded style for disabled source inputs
-  // For destination/receive inputs, we want them to look normal even when readOnly
-  const shouldApplyDisabledStyle = readOnly && variant === "source";
+  // Apply faded style for:
+  // - Disabled source inputs (readOnly source)
+  // - Destination inputs when showing default/null value (0 or empty)
+  const shouldApplyDisabledStyle =
+    readOnly &&
+    (variant === "source" ||
+      (variant === "destination" && (Number(amount) === 0 || !amount)));
 
   return (
     <div className="flex-1 flex flex-col items-end">
