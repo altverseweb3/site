@@ -134,9 +134,11 @@ export function TokenAmountInput({
         readOnly={readOnly}
       />
       <div className="w-full flex flex-col">
-        <span className="text-zinc-400 text-sm numeric-input">
-          {displayedAmountUsd}
-        </span>
+        {dollarValue > 0 && (
+          <span className="text-zinc-400 text-sm numeric-input">
+            {displayedAmountUsd}
+          </span>
+        )}
         {variant === "source" && requiredWallet && (
           <div className="flex justify-end w-full mt-2 gap-2">
             {/* Balance display */}
