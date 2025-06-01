@@ -28,6 +28,7 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { useDebounce } from "use-debounce";
 import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
 import { getTokenMetadata } from "@/utils/tokenApiMethods";
+import useUIStore from "@/store/uiStore";
 
 interface TokenListItemProps {
   token: Token;
@@ -301,7 +302,6 @@ interface SelectTokenButtonProps {
 export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   variant,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 150);
   const [copiedAddresses, setCopiedAddresses] = useState<
@@ -319,6 +319,8 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const addCustomToken = useWeb3Store((state) => state.addCustomToken);
+  const isOpen = useUIStore((state) => state.tokenSelectOpen);
+  const setIsOpen = useUIStore((state) => state.setTokenSelectOpen);
 
   const chainToShow = variant === "source" ? sourceChain : destinationChain;
 
