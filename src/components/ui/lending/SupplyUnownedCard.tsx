@@ -10,10 +10,21 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 
-const SupplyUnOwnedCard = ({
+interface SupplyUnOwnedCardProps {
+  title?: string;
+  subtitle?: string;
+  balance?: string;
+  dollarAmount?: string;
+  supplyAPY?: string;
+  canBeCollateral?: boolean;
+  onSupply?: () => void;
+  onDetails?: () => void;
+}
+
+const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
   title = "usd coin",
   subtitle = "USDC",
-  balance = "0.0049170",
+  balance = "0.00",
   dollarAmount = "0.72",
   supplyAPY = "1.97",
   canBeCollateral = true,
@@ -37,7 +48,7 @@ const SupplyUnOwnedCard = ({
       </CardHeader>
 
       <CardContent className="p-3 pt-2 space-y-2">
-        {/* Balance row */}
+        {/* Balance row - Shows total amount supplied to Aave formatted as K/M/B */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">supply balance</div>
           <div className="text-right flex flex-col items-end">
@@ -46,13 +57,13 @@ const SupplyUnOwnedCard = ({
           </div>
         </div>
 
-        {/* APY row */}
+        {/* APY row - Current supply interest rate */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">supply APY</div>
           <div className="text-sm">{supplyAPY}%</div>
         </div>
 
-        {/* Collateral indicator row */}
+        {/* Collateral indicator row - Whether asset can be used as collateral */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">can be collateral</div>
           {canBeCollateral && <div className="text-amber-500">✓</div>}

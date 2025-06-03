@@ -1,8 +1,15 @@
+// utils/aaveMethods.ts
 import { ethers } from "ethers";
 import * as markets from "@bgd-labs/aave-address-book";
 
-// Types
-interface AssetInfo {
+// Type definitions
+interface AaveMarket {
+  POOL: string;
+  UI_POOL_DATA_PROVIDER?: string;
+  AAVE_PROTOCOL_DATA_PROVIDER?: string;
+}
+
+interface TokenInfo {
   address: string;
   symbol: string;
   name: string;
@@ -16,7 +23,6 @@ interface UserAccountData {
   currentLiquidationThreshold: number;
   ltv: number;
   healthFactor: string;
-  usedProvider?: string;
 }
 
 interface UserReserveData {
@@ -28,84 +34,182 @@ interface UserReserveData {
   liquidityRate: ethers.BigNumberish;
   liquidityRateFormatted: string;
   usageAsCollateralEnabled: boolean;
-  supplyAPY?: {
-    simple: string;
-    compounded: string;
-    aaveMethod: string;
-  } | null;
+  canBeCollateral: boolean;
+  supplyAPY: { aaveMethod: string };
+  variableBorrowAPY: { aaveMethod: string };
+  stableBorrowAPY: { aaveMethod: string };
+  totalSupplied: string;
 }
+
+// This interface extends TokenInfo with UserReserveData for backward compatibility
+interface UserPosition extends TokenInfo, UserReserveData {}
 
 interface CompleteUserPosition {
   accountData: UserAccountData;
-  userPositions: (AssetInfo & UserReserveData)[];
-  availableAssets: AssetInfo[];
+  userPositions: UserPosition[];
+  availableAssets: TokenInfo[];
 }
 
-// Type for Aave market configuration
-interface AaveMarket {
-  POOL: string;
-  UI_POOL_DATA_PROVIDER?: string;
-  AAVE_PROTOCOL_DATA_PROVIDER?: string;
-  [key: string]: unknown;
-}
-
-interface SuppliedAssetUSD extends AssetInfo, UserReserveData {
-  balanceUSD: number;
+interface USDAsset {
+  address: string;
+  balanceUSD?: number;
+  debtUSD?: number;
   priceUSD: number;
+  totalDebt?: number;
 }
 
-interface BorrowedAssetUSD extends AssetInfo, UserReserveData {
-  debtUSD: number;
-  priceUSD: number;
-  totalDebt: number;
+interface UserPositionsWithUSD {
+  suppliedAssetsUSD: USDAsset[];
+  borrowedAssetsUSD: USDAsset[];
+  totalSuppliedUSD: number;
+  totalBorrowedUSD: number;
+  netWorthUSD: number;
 }
+
+interface ReserveConfigData {
+  supplyAPY: string;
+  canBeCollateral: boolean;
+  liquidityRate: ethers.BigNumberish;
+  variableBorrowRate?: ethers.BigNumberish;
+  stableBorrowRate?: ethers.BigNumberish;
+  totalSupplied: string;
+}
+
+interface MarketMetrics {
+  totalMarketSize: string;
+  totalAvailable: string;
+  totalBorrows: string;
+  averageSupplyAPY: string;
+  averageBorrowAPY: string;
+}
+
+interface ContractUserAccountData {
+  totalCollateralETH: ethers.BigNumberish;
+  totalDebtETH: ethers.BigNumberish;
+  availableBorrowsETH: ethers.BigNumberish;
+  currentLiquidationThreshold: ethers.BigNumberish;
+  ltv: ethers.BigNumberish;
+  healthFactor: ethers.BigNumberish;
+}
+
+interface ContractUserReserveData {
+  currentATokenBalance: ethers.BigNumberish;
+  currentStableDebt: ethers.BigNumberish;
+  currentVariableDebt: ethers.BigNumberish;
+  principalStableDebt: ethers.BigNumberish;
+  scaledVariableDebt: ethers.BigNumberish;
+  stableBorrowRate: ethers.BigNumberish;
+  liquidityRate: ethers.BigNumberish;
+  stableRateLastUpdated: ethers.BigNumberish;
+  usageAsCollateralEnabled: boolean;
+}
+
+interface ContractReserveData {
+  configuration: { data: ethers.BigNumberish };
+  liquidityIndex: ethers.BigNumberish;
+  currentLiquidityRate: ethers.BigNumberish;
+  variableBorrowIndex: ethers.BigNumberish;
+  currentVariableBorrowRate: ethers.BigNumberish;
+  currentStableBorrowRate: ethers.BigNumberish;
+  lastUpdateTimestamp: ethers.BigNumberish;
+  id: ethers.BigNumberish;
+  aTokenAddress: string;
+  stableDebtTokenAddress: string;
+  variableDebtTokenAddress: string;
+  interestRateStrategyAddress: string;
+  accruedToTreasury: ethers.BigNumberish;
+  unbacked: ethers.BigNumberish;
+  isolationModeTotalDebt: ethers.BigNumberish;
+}
+
+interface ContractReserveConfigData {
+  decimals: ethers.BigNumberish;
+  ltv: ethers.BigNumberish;
+  liquidationThreshold: ethers.BigNumberish;
+  liquidationBonus: ethers.BigNumberish;
+  reserveFactor: ethers.BigNumberish;
+  usageAsCollateralEnabled: boolean;
+  borrowingEnabled: boolean;
+  stableBorrowRateEnabled: boolean;
+  isActive: boolean;
+  isFrozen: boolean;
+}
+
+interface EthereumRequestParams {
+  method: string;
+  params?: unknown[] | Record<string, unknown>;
+}
+
+interface WindowEthereum {
+  request: (request: EthereumRequestParams) => Promise<unknown>;
+  on?: (eventName: string, callback: (...args: unknown[]) => void) => void;
+  removeListener?: (
+    eventName: string,
+    callback: (...args: unknown[]) => void,
+  ) => void;
+  isMetaMask?: boolean;
+  isConnected?: () => boolean;
+  selectedAddress?: string | null;
+  chainId?: string;
+}
+
+// Type guard to check if ethereum provider is valid
+function isValidEthereumProvider(
+  ethereum: unknown,
+): ethereum is WindowEthereum {
+  return (
+    ethereum !== null &&
+    ethereum !== undefined &&
+    typeof ethereum === "object" &&
+    "request" in ethereum &&
+    typeof (ethereum as WindowEthereum).request === "function"
+  );
+}
+
+// Constants
+const CHAINS: Record<number, keyof typeof markets> = {
+  1: "AaveV3Ethereum",
+  10: "AaveV3Optimism",
+  56: "AaveV3BNB",
+  137: "AaveV3Polygon",
+  42161: "AaveV3Arbitrum",
+  43114: "AaveV3Avalanche",
+  8453: "AaveV3Base",
+  11155111: "AaveV3Sepolia",
+};
+
+const PROVIDERS: Record<number, string> = {
+  1: "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3",
+  137: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654",
+  43114: "0x65285E9dfab318f57051ab2b139ccCf232945451",
+};
+
+const FALLBACK_PRICES: Record<string, number> = {
+  USDC: 1,
+  USDT: 1,
+  DAI: 1,
+  WETH: 2400,
+  ETH: 2400,
+  WBTC: 43000,
+  BTC: 43000,
+  MATIC: 0.8,
+  WMATIC: 0.8,
+  AVAX: 25,
+  WAVAX: 25,
+};
+
+const NETWORK_NAMES: Record<number, string> = {
+  1: "Ethereum",
+  10: "Optimism",
+  56: "BNB Chain",
+  137: "Polygon",
+  42161: "Arbitrum",
+  43114: "Avalanche",
+  8453: "Base",
+  11155111: "Sepolia",
+};
 
 // ABIs
-const AAVE_POOL_DATA_PROVIDER_ABI = [
-  {
-    inputs: [{ internalType: "address", name: "user", type: "address" }],
-    name: "getUserAccountData",
-    outputs: [
-      { internalType: "uint256", name: "totalCollateralETH", type: "uint256" },
-      { internalType: "uint256", name: "totalDebtETH", type: "uint256" },
-      { internalType: "uint256", name: "availableBorrowsETH", type: "uint256" },
-      {
-        internalType: "uint256",
-        name: "currentLiquidationThreshold",
-        type: "uint256",
-      },
-      { internalType: "uint256", name: "ltv", type: "uint256" },
-      { internalType: "uint256", name: "healthFactor", type: "uint256" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "asset", type: "address" },
-      { internalType: "address", name: "user", type: "address" },
-    ],
-    name: "getUserReserveData",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "currentATokenBalance",
-        type: "uint256",
-      },
-      { internalType: "uint256", name: "currentStableDebt", type: "uint256" },
-      { internalType: "uint256", name: "currentVariableDebt", type: "uint256" },
-      { internalType: "uint256", name: "principalStableDebt", type: "uint256" },
-      { internalType: "uint256", name: "scaledVariableDebt", type: "uint256" },
-      { internalType: "uint256", name: "stableBorrowRate", type: "uint256" },
-      { internalType: "uint256", name: "liquidityRate", type: "uint256" },
-      { internalType: "uint40", name: "stableRateLastUpdated", type: "uint40" },
-      { internalType: "bool", name: "usageAsCollateralEnabled", type: "bool" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
 const POOL_ABI = [
   {
     inputs: [],
@@ -209,7 +313,74 @@ const POOL_ABI = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
+
+const DATA_PROVIDER_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getUserAccountData",
+    outputs: [
+      { internalType: "uint256", name: "totalCollateralETH", type: "uint256" },
+      { internalType: "uint256", name: "totalDebtETH", type: "uint256" },
+      { internalType: "uint256", name: "availableBorrowsETH", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "currentLiquidationThreshold",
+        type: "uint256",
+      },
+      { internalType: "uint256", name: "ltv", type: "uint256" },
+      { internalType: "uint256", name: "healthFactor", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "asset", type: "address" },
+      { internalType: "address", name: "user", type: "address" },
+    ],
+    name: "getUserReserveData",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "currentATokenBalance",
+        type: "uint256",
+      },
+      { internalType: "uint256", name: "currentStableDebt", type: "uint256" },
+      { internalType: "uint256", name: "currentVariableDebt", type: "uint256" },
+      { internalType: "uint256", name: "principalStableDebt", type: "uint256" },
+      { internalType: "uint256", name: "scaledVariableDebt", type: "uint256" },
+      { internalType: "uint256", name: "stableBorrowRate", type: "uint256" },
+      { internalType: "uint256", name: "liquidityRate", type: "uint256" },
+      { internalType: "uint40", name: "stableRateLastUpdated", type: "uint40" },
+      { internalType: "bool", name: "usageAsCollateralEnabled", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "asset", type: "address" }],
+    name: "getReserveConfigurationData",
+    outputs: [
+      { internalType: "uint256", name: "decimals", type: "uint256" },
+      { internalType: "uint256", name: "ltv", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "liquidationThreshold",
+        type: "uint256",
+      },
+      { internalType: "uint256", name: "liquidationBonus", type: "uint256" },
+      { internalType: "uint256", name: "reserveFactor", type: "uint256" },
+      { internalType: "bool", name: "usageAsCollateralEnabled", type: "bool" },
+      { internalType: "bool", name: "borrowingEnabled", type: "bool" },
+      { internalType: "bool", name: "stableBorrowRateEnabled", type: "bool" },
+      { internalType: "bool", name: "isActive", type: "bool" },
+      { internalType: "bool", name: "isFrozen", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 const ERC20_ABI = [
   {
@@ -247,179 +418,64 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function",
   },
-];
-
-const RESERVE_DATA_ABI = [
-  {
-    inputs: [{ internalType: "address", name: "asset", type: "address" }],
-    name: "getReserveData",
-    outputs: [
-      { internalType: "uint256", name: "availableLiquidity", type: "uint256" },
-      { internalType: "uint256", name: "totalStableDebt", type: "uint256" },
-      { internalType: "uint256", name: "totalVariableDebt", type: "uint256" },
-      { internalType: "uint256", name: "liquidityRate", type: "uint256" },
-      { internalType: "uint256", name: "variableBorrowRate", type: "uint256" },
-      { internalType: "uint256", name: "stableBorrowRate", type: "uint256" },
-      {
-        internalType: "uint256",
-        name: "averageStableBorrowRate",
-        type: "uint256",
-      },
-      { internalType: "uint256", name: "liquidityIndex", type: "uint256" },
-      { internalType: "uint256", name: "variableBorrowIndex", type: "uint256" },
-      { internalType: "uint40", name: "lastUpdateTimestamp", type: "uint40" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "asset", type: "address" }],
-    name: "getReserveConfigurationData",
-    outputs: [
-      { internalType: "uint256", name: "decimals", type: "uint256" },
-      { internalType: "uint256", name: "ltv", type: "uint256" },
-      {
-        internalType: "uint256",
-        name: "liquidationThreshold",
-        type: "uint256",
-      },
-      { internalType: "uint256", name: "liquidationBonus", type: "uint256" },
-      { internalType: "uint256", name: "reserveFactor", type: "uint256" },
-      { internalType: "bool", name: "usageAsCollateralEnabled", type: "bool" },
-      { internalType: "bool", name: "borrowingEnabled", type: "bool" },
-      { internalType: "bool", name: "stableBorrowRateEnabled", type: "bool" },
-      { internalType: "bool", name: "isActive", type: "bool" },
-      { internalType: "bool", name: "isFrozen", type: "bool" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+] as const;
 
 export class AaveMethods {
-  private static readonly CHAIN_TO_MARKET: Record<number, string> = {
-    1: "AaveV3Ethereum",
-    10: "AaveV3Optimism",
-    56: "AaveV3BNB",
-    137: "AaveV3Polygon",
-    42161: "AaveV3Arbitrum",
-    43114: "AaveV3Avalanche",
-    8453: "AaveV3Base",
-    11155111: "AaveV3Sepolia",
-  };
-
-  private static readonly FALLBACK_DATA_PROVIDERS: Record<number, string> = {
-    1: "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3",
-    137: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654",
-    43114: "0x65285E9dfab318f57051ab2b139ccCf232945451",
-  };
-
   static getAaveMarket(chainId: number): AaveMarket | null {
-    const marketKey = this.CHAIN_TO_MARKET[chainId];
-    if (!marketKey || !markets[marketKey as keyof typeof markets]) return null;
-    return markets[marketKey as keyof typeof markets] as AaveMarket;
+    const key = CHAINS[chainId];
+    const market = key && markets[key] ? (markets[key] as AaveMarket) : null;
+    return market;
   }
 
   static isChainSupported(chainId: number): boolean {
-    return this.getAaveMarket(chainId) !== null;
+    return !!this.getAaveMarket(chainId);
   }
 
-  private static getProvider(): ethers.BrowserProvider {
-    if (!window.ethereum) throw new Error("No wallet provider found");
-    return new ethers.BrowserProvider(
-      window.ethereum as ethers.Eip1193Provider,
-    );
+  static getProvider(): ethers.BrowserProvider {
+    if (!window.ethereum || !isValidEthereumProvider(window.ethereum)) {
+      throw new Error("No wallet found");
+    }
+    return new ethers.BrowserProvider(window.ethereum);
   }
 
-  private static getDataProviders(
-    market: AaveMarket,
-    chainId: number,
-  ): string[] {
-    return [
-      market.UI_POOL_DATA_PROVIDER,
-      market.AAVE_PROTOCOL_DATA_PROVIDER,
-      this.FALLBACK_DATA_PROVIDERS[chainId],
-    ].filter(Boolean) as string[];
-  }
-
-  private static calculateAPY(liquidityRate: ethers.BigNumberish): {
-    simple: string;
-    compounded: string;
-    aaveMethod: string;
-  } | null {
+  static calculateAPY(rate: ethers.BigNumberish): string {
+    if (!rate || rate.toString() === "0") return "0.00";
     try {
       const RAY = Math.pow(10, 27);
       const SECONDS_PER_YEAR = 31536000;
-      const rayValueInDecimals = Number(liquidityRate.toString()) / RAY;
-      const aaveAPY =
-        (Math.pow(1 + rayValueInDecimals / SECONDS_PER_YEAR, SECONDS_PER_YEAR) -
-          1) *
-        100;
-      const simpleAPY = Number(ethers.formatUnits(liquidityRate, 27)) * 100;
-      const compoundedAPY =
-        (Math.pow(1 + Number(ethers.formatUnits(liquidityRate, 27)), 365) - 1) *
-        100;
-
-      return {
-        simple: simpleAPY.toFixed(2),
-        compounded: compoundedAPY.toFixed(2),
-        aaveMethod: aaveAPY.toFixed(2),
-      };
+      const decimal = Number(rate.toString()) / RAY;
+      const apy =
+        (Math.pow(1 + decimal / SECONDS_PER_YEAR, SECONDS_PER_YEAR) - 1) * 100;
+      return Math.max(0, apy).toFixed(2);
     } catch {
-      return null;
+      return "0.00";
     }
   }
 
-  private static getTokenPriceFromStore(): number {
-    try {
-      return 0;
-    } catch {
-      return 0;
-    }
+  static async getTokenPrice(symbol?: string): Promise<number> {
+    return FALLBACK_PRICES[symbol?.toUpperCase() ?? ""] || 1;
   }
 
-  private static async getTokenPrice(): Promise<number> {
-    const storePrice = this.getTokenPriceFromStore();
-    return storePrice; // Final fallback
-  }
-
-  static async fetchAvailableAssets(chainId: number): Promise<AssetInfo[]> {
+  static async fetchAvailableAssets(chainId: number): Promise<TokenInfo[]> {
     const market = this.getAaveMarket(chainId);
-    if (!market?.POOL)
-      throw new Error(`Aave V3 not supported on chain ${chainId}`);
+    if (!market?.POOL) throw new Error(`Chain ${chainId} not supported`);
 
     const provider = this.getProvider();
-    const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-    const reservesList = await poolContract.getReservesList();
-
-    if (!reservesList?.length) return [];
+    const pool = new ethers.Contract(market.POOL, POOL_ABI, provider);
+    const reserves = (await pool.getReservesList()) as string[];
 
     return Promise.all(
-      reservesList.map(async (assetAddress: string) => {
+      reserves.map(async (address): Promise<TokenInfo> => {
         try {
-          const tokenContract = new ethers.Contract(
-            assetAddress,
-            ERC20_ABI,
-            provider,
-          );
+          const token = new ethers.Contract(address, ERC20_ABI, provider);
           const [symbol, name, decimals] = await Promise.all([
-            tokenContract.symbol(),
-            tokenContract.name(),
-            tokenContract.decimals(),
+            token.symbol() as Promise<string>,
+            token.name() as Promise<string>,
+            token.decimals() as Promise<number>,
           ]);
-          return {
-            address: assetAddress,
-            symbol,
-            name,
-            decimals: Number(decimals),
-          };
+          return { address, symbol, name, decimals: Number(decimals) };
         } catch {
-          return {
-            address: assetAddress,
-            symbol: "Unknown",
-            name: "Unknown Token",
-            decimals: 18,
-          };
+          return { address, symbol: "Unknown", name: "Unknown", decimals: 18 };
         }
       }),
     );
@@ -430,123 +486,195 @@ export class AaveMethods {
     chainId: number,
   ): Promise<UserAccountData> {
     const market = this.getAaveMarket(chainId);
-    if (!market?.POOL)
-      throw new Error(`Aave V3 not supported on chain ${chainId}`);
+    if (!market?.POOL) throw new Error(`Chain ${chainId} not supported`);
 
     const provider = this.getProvider();
-    const dataProviders = this.getDataProviders(market, chainId);
+    const providers = [
+      market.UI_POOL_DATA_PROVIDER,
+      market.AAVE_PROTOCOL_DATA_PROVIDER,
+      PROVIDERS[chainId],
+    ].filter((addr): addr is string => typeof addr === "string");
 
-    let userData: unknown = null;
-    let usedProvider: string | null = null;
-
-    for (const providerAddress of dataProviders) {
+    for (const addr of providers) {
       try {
-        const contract = new ethers.Contract(
-          providerAddress,
-          AAVE_POOL_DATA_PROVIDER_ABI,
-          provider,
-        );
-        userData = await contract.getUserAccountData(userAddress);
-        usedProvider = providerAddress;
-        break;
+        const contract = new ethers.Contract(addr, DATA_PROVIDER_ABI, provider);
+        const data = (await contract.getUserAccountData(
+          userAddress,
+        )) as ContractUserAccountData;
+        return {
+          totalCollateralBase: ethers.formatUnits(
+            data.totalCollateralETH || "0",
+            8,
+          ),
+          totalDebtBase: ethers.formatUnits(data.totalDebtETH || "0", 8),
+          availableBorrowsBase: ethers.formatUnits(
+            data.availableBorrowsETH || "0",
+            8,
+          ),
+          currentLiquidationThreshold:
+            Number(data.currentLiquidationThreshold || "0") / 100,
+          ltv: Number(data.ltv || "0") / 100,
+          healthFactor: ethers.formatUnits(data.healthFactor || "1", 18),
+        };
       } catch {
         continue;
       }
     }
 
-    if (!userData) {
-      const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-      userData = await poolContract.getUserAccountData(userAddress);
-      usedProvider = "Pool Contract";
-    }
-
-    const typedData = userData as {
-      totalCollateralETH?: ethers.BigNumberish;
-      totalDebtETH?: ethers.BigNumberish;
-      availableBorrowsETH?: ethers.BigNumberish;
-      currentLiquidationThreshold?: ethers.BigNumberish;
-      ltv?: ethers.BigNumberish;
-      healthFactor?: ethers.BigNumberish;
-    };
-
+    const pool = new ethers.Contract(market.POOL, POOL_ABI, provider);
+    const data = (await pool.getUserAccountData(
+      userAddress,
+    )) as ContractUserAccountData;
     return {
       totalCollateralBase: ethers.formatUnits(
-        typedData.totalCollateralETH || "0",
+        data.totalCollateralETH || "0",
         8,
       ),
-      totalDebtBase: ethers.formatUnits(typedData.totalDebtETH || "0", 8),
+      totalDebtBase: ethers.formatUnits(data.totalDebtETH || "0", 8),
       availableBorrowsBase: ethers.formatUnits(
-        typedData.availableBorrowsETH || "0",
+        data.availableBorrowsETH || "0",
         8,
       ),
       currentLiquidationThreshold:
-        Number(typedData.currentLiquidationThreshold || "0") / 100,
-      ltv: Number(typedData.ltv || "0") / 100,
-      healthFactor: ethers.formatUnits(typedData.healthFactor || "1", 18),
-      usedProvider: usedProvider || undefined,
+        Number(data.currentLiquidationThreshold || "0") / 100,
+      ltv: Number(data.ltv || "0") / 100,
+      healthFactor: ethers.formatUnits(data.healthFactor || "1", 18),
     };
   }
 
   static async fetchUserReserveData(
     userAddress: string,
     assetAddress: string,
-    assetInfo: AssetInfo,
+    asset: TokenInfo,
     chainId: number,
   ): Promise<UserReserveData> {
     const market = this.getAaveMarket(chainId);
-    if (!market) throw new Error(`Aave V3 not supported on chain ${chainId}`);
+    if (!market) throw new Error(`Chain ${chainId} not supported`);
 
     const provider = this.getProvider();
-    const dataProviders = this.getDataProviders(market, chainId);
+    const providers = [
+      market.UI_POOL_DATA_PROVIDER,
+      market.AAVE_PROTOCOL_DATA_PROVIDER,
+      PROVIDERS[chainId],
+    ].filter((addr): addr is string => typeof addr === "string");
 
-    let userReserveData: unknown = null;
+    let userData: ContractUserReserveData | null = null;
 
-    for (const providerAddress of dataProviders) {
+    // Try data providers with timeout
+    for (const addr of providers) {
       try {
-        const contract = new ethers.Contract(
-          providerAddress,
-          AAVE_POOL_DATA_PROVIDER_ABI,
-          provider,
-        );
-        userReserveData = await contract.getUserReserveData(
+        const contract = new ethers.Contract(addr, DATA_PROVIDER_ABI, provider);
+        const userDataPromise = contract.getUserReserveData(
           assetAddress,
           userAddress,
         );
+        userData = (await Promise.race([
+          userDataPromise,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), 5000),
+          ),
+        ])) as ContractUserReserveData;
         break;
-      } catch {
+      } catch (error) {
+        console.warn(
+          `Data provider ${addr} failed for ${asset.symbol}:`,
+          (error as Error).message,
+        );
         continue;
       }
     }
 
-    if (!userReserveData) throw new Error("Could not fetch reserve data");
+    if (!userData)
+      throw new Error(`Failed to fetch user reserve data for ${asset.symbol}`);
 
-    const typedData = userReserveData as {
-      currentATokenBalance: ethers.BigNumberish;
-      currentStableDebt: ethers.BigNumberish;
-      currentVariableDebt: ethers.BigNumberish;
-      liquidityRate: ethers.BigNumberish;
-      usageAsCollateralEnabled: boolean;
-    };
+    let rates: Partial<ReserveConfigData> = {};
+
+    try {
+      const pool = new ethers.Contract(market.POOL, POOL_ABI, provider);
+      const reserveDataPromise = pool.getReserveData(assetAddress);
+      const reserveData = (await Promise.race([
+        reserveDataPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Pool timeout")), 5000),
+        ),
+      ])) as ContractReserveData;
+
+      // Get total supplied amount
+      const aToken = new ethers.Contract(
+        reserveData.aTokenAddress,
+        ERC20_ABI,
+        provider,
+      );
+      const totalSupplyPromise = aToken.totalSupply();
+      const totalSupply = (await Promise.race([
+        totalSupplyPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("TotalSupply timeout")), 3000),
+        ),
+      ])) as ethers.BigNumberish;
+
+      // Check collateral status using LTV method
+      const configBits = BigInt(reserveData.configuration.data.toString());
+      const LTV_MASK = BigInt(0xffff);
+      const ltv = Number(configBits & LTV_MASK);
+      const canBeCollateral = ltv > 0;
+
+      rates = {
+        liquidityRate: reserveData.currentLiquidityRate,
+        variableBorrowRate: reserveData.currentVariableBorrowRate,
+        stableBorrowRate: reserveData.currentStableBorrowRate,
+        totalSupplied: ethers.formatUnits(totalSupply, asset.decimals),
+        canBeCollateral,
+      };
+    } catch (error) {
+      console.warn(
+        `Failed to get reserve data for ${asset.symbol}:`,
+        (error as Error).message,
+      );
+      rates = {
+        liquidityRate: userData.liquidityRate || "0",
+        variableBorrowRate: "0",
+        stableBorrowRate: userData.stableBorrowRate || "0",
+        totalSupplied: "0",
+        canBeCollateral: false,
+      };
+    }
+
+    // Format user's balance properly
+    const userATokenBalance = ethers.formatUnits(
+      userData.currentATokenBalance,
+      asset.decimals,
+    );
+    const userStableDebt = ethers.formatUnits(
+      userData.currentStableDebt,
+      asset.decimals,
+    );
+    const userVariableDebt = ethers.formatUnits(
+      userData.currentVariableDebt,
+      asset.decimals,
+    );
 
     return {
-      symbol: assetInfo.symbol,
-      name: assetInfo.name,
-      currentATokenBalance: ethers.formatUnits(
-        typedData.currentATokenBalance,
-        assetInfo.decimals,
+      symbol: asset.symbol,
+      name: asset.name,
+      currentATokenBalance: userATokenBalance,
+      currentStableDebt: userStableDebt,
+      currentVariableDebt: userVariableDebt,
+      liquidityRate: rates.liquidityRate || "0",
+      liquidityRateFormatted: ethers.formatUnits(
+        rates.liquidityRate || "0",
+        27,
       ),
-      currentStableDebt: ethers.formatUnits(
-        typedData.currentStableDebt,
-        assetInfo.decimals,
-      ),
-      currentVariableDebt: ethers.formatUnits(
-        typedData.currentVariableDebt,
-        assetInfo.decimals,
-      ),
-      liquidityRate: typedData.liquidityRate,
-      liquidityRateFormatted: ethers.formatUnits(typedData.liquidityRate, 27),
-      usageAsCollateralEnabled: typedData.usageAsCollateralEnabled,
-      supplyAPY: this.calculateAPY(typedData.liquidityRate),
+      usageAsCollateralEnabled: userData.usageAsCollateralEnabled,
+      canBeCollateral: rates.canBeCollateral ?? false,
+      supplyAPY: { aaveMethod: this.calculateAPY(rates.liquidityRate || "0") },
+      variableBorrowAPY: {
+        aaveMethod: this.calculateAPY(rates.variableBorrowRate || "0"),
+      },
+      stableBorrowAPY: {
+        aaveMethod: this.calculateAPY(rates.stableBorrowRate || "0"),
+      },
+      totalSupplied: rates.totalSupplied || "0",
     };
   }
 
@@ -554,478 +682,95 @@ export class AaveMethods {
     userAddress: string,
     chainId: number,
   ): Promise<CompleteUserPosition> {
-    const accountData = await this.fetchUserAccountData(userAddress, chainId);
-    const availableAssets = await this.fetchAvailableAssets(chainId);
+    const [accountData, availableAssets] = await Promise.all([
+      this.fetchUserAccountData(userAddress, chainId),
+      this.fetchAvailableAssets(chainId),
+    ]);
 
-    const userPositions = (
-      await Promise.allSettled(
-        availableAssets.map(async (asset) => {
+    const BATCH_SIZE = 2;
+    const userPositions: UserPosition[] = [];
+
+    for (let i = 0; i < availableAssets.length; i += BATCH_SIZE) {
+      const batch = availableAssets.slice(i, i + BATCH_SIZE);
+
+      const batchResults = await Promise.allSettled(
+        batch.map(async (asset): Promise<UserPosition | null> => {
           try {
-            const reserveData = await this.fetchUserReserveData(
+            const reserve = await this.fetchUserReserveData(
               userAddress,
               asset.address,
               asset,
               chainId,
             );
             const hasPosition =
-              Number(reserveData.currentATokenBalance) > 0 ||
-              Number(reserveData.currentStableDebt) > 0 ||
-              Number(reserveData.currentVariableDebt) > 0;
-            return hasPosition ? { ...asset, ...reserveData } : null;
-          } catch {
-            return null;
-          }
-        }),
-      )
-    )
-      .map((result) => (result.status === "fulfilled" ? result.value : null))
-      .filter(Boolean) as (AssetInfo & UserReserveData)[];
-
-    return { accountData, userPositions, availableAssets };
-  }
-
-  static async fetchReserveConfigurationData(
-    assetAddress: string,
-    chainId: number,
-  ): Promise<{
-    supplyAPY: string;
-    canBeCollateral: boolean;
-    liquidityRate: ethers.BigNumberish;
-  }> {
-    const market = this.getAaveMarket(chainId);
-    if (!market)
-      return { supplyAPY: "0.00", canBeCollateral: false, liquidityRate: "0" };
-
-    const provider = this.getProvider();
-    const dataProviders = this.getDataProviders(market, chainId);
-
-    for (const providerAddress of dataProviders) {
-      try {
-        const contract = new ethers.Contract(
-          providerAddress,
-          RESERVE_DATA_ABI,
-          provider,
-        );
-        const [reserveData, configData] = await Promise.all([
-          contract.getReserveData(assetAddress),
-          contract.getReserveConfigurationData(assetAddress),
-        ]);
-
-        const supplyAPY = this.calculateAPY(reserveData.liquidityRate);
-        return {
-          supplyAPY: supplyAPY?.aaveMethod || "0.00",
-          canBeCollateral: Boolean(configData.usageAsCollateralEnabled),
-          liquidityRate: reserveData.liquidityRate,
-        };
-      } catch {
-        continue;
-      }
-    }
-
-    return { supplyAPY: "0.00", canBeCollateral: false, liquidityRate: "0" };
-  }
-
-  static async fetchMarketDataWithUSD(chainId: number): Promise<{
-    totalMarketSizeUSD: number;
-    totalAvailableUSD: number;
-    totalBorrowsUSD: number;
-  }> {
-    const market = this.getAaveMarket(chainId);
-    if (!market?.POOL)
-      throw new Error(`Aave V3 not supported on chain ${chainId}`);
-
-    const provider = this.getProvider();
-    const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-    const reservesList = await poolContract.getReservesList();
-
-    if (!reservesList?.length)
-      return {
-        totalMarketSizeUSD: 0,
-        totalAvailableUSD: 0,
-        totalBorrowsUSD: 0,
-      };
-
-    console.log(
-      `🔍 Processing ALL ${reservesList.length} reserves for accurate market data...`,
-    );
-
-    // Process ALL reserves, not just 10
-    const reserves = await Promise.allSettled(
-      reservesList.map(async (assetAddress: string) => {
-        try {
-          const tokenContract = new ethers.Contract(
-            assetAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const [symbol, decimals] = await Promise.all([
-            tokenContract.symbol().catch(() => "UNKNOWN"),
-            tokenContract.decimals().catch(() => 18),
-          ]);
-
-          // Skip unknown tokens
-          if (symbol === "UNKNOWN") {
-            console.log(`⚠️ Skipping unknown token ${assetAddress}`);
-            return null;
-          }
-
-          const priceUSD = await this.getTokenPrice();
-
-          // Skip tokens with no price data
-          if (priceUSD <= 0) {
-            console.log(`⚠️ Skipping ${symbol} - no price data`);
-            return null;
-          }
-
-          const reserveData = await poolContract.getReserveData(assetAddress);
-
-          const aTokenContract = new ethers.Contract(
-            reserveData.aTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const stableDebtContract = new ethers.Contract(
-            reserveData.stableDebtTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const variableDebtContract = new ethers.Contract(
-            reserveData.variableDebtTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-
-          const [
-            aTokenTotalSupply,
-            stableDebtTotal,
-            variableDebtTotal,
-            availableLiquidity,
-          ] = await Promise.all([
-            aTokenContract.totalSupply(),
-            stableDebtContract.totalSupply(),
-            variableDebtContract.totalSupply(),
-            tokenContract.balanceOf(reserveData.aTokenAddress),
-          ]);
-
-          const totalLiquidity = Number(
-            ethers.formatUnits(aTokenTotalSupply, decimals),
-          );
-          const totalStableDebt = Number(
-            ethers.formatUnits(stableDebtTotal, decimals),
-          );
-          const totalVariableDebt = Number(
-            ethers.formatUnits(variableDebtTotal, decimals),
-          );
-          const availableLiquidityFormatted = Number(
-            ethers.formatUnits(availableLiquidity, decimals),
-          );
-
-          const totalLiquidityUSD = totalLiquidity * priceUSD;
-          const availableLiquidityUSD = availableLiquidityFormatted * priceUSD;
-          const totalBorrowsUSD =
-            (totalStableDebt + totalVariableDebt) * priceUSD;
-
-          // Only include reserves with meaningful TVL (> $1000)
-          if (totalLiquidityUSD < 1000) {
-            console.log(
-              `⚠️ Skipping ${symbol} - TVL too low: ${totalLiquidityUSD.toFixed(0)}`,
+              Number(reserve.currentATokenBalance) > 0 ||
+              Number(reserve.currentStableDebt) > 0 ||
+              Number(reserve.currentVariableDebt) > 0;
+            return hasPosition ? { ...asset, ...reserve } : null;
+          } catch (error) {
+            console.warn(
+              `Failed to fetch reserve data for ${asset.symbol}:`,
+              error,
             );
             return null;
           }
-
-          console.log(
-            `💰 ${symbol}: ${totalLiquidityUSD.toLocaleString()} TVL, ${availableLiquidityUSD.toLocaleString()} available`,
-          );
-
-          return {
-            symbol,
-            totalLiquidityUSD,
-            availableLiquidityUSD,
-            totalBorrowsUSD,
-          };
-        } catch (error) {
-          console.warn(`⚠️ Failed to fetch data for ${assetAddress}:`, error);
-          return null;
-        }
-      }),
-    );
-
-    const validReserves = reserves
-      .map((result) => (result.status === "fulfilled" ? result.value : null))
-      .filter(Boolean) as {
-      symbol: string;
-      totalLiquidityUSD: number;
-      availableLiquidityUSD: number;
-      totalBorrowsUSD: number;
-    }[];
-
-    const totalMarketSizeUSD = validReserves.reduce(
-      (sum, r) => sum + r.totalLiquidityUSD,
-      0,
-    );
-    const totalAvailableUSD = validReserves.reduce(
-      (sum, r) => sum + r.availableLiquidityUSD,
-      0,
-    );
-    const totalBorrowsUSD = validReserves.reduce(
-      (sum, r) => sum + r.totalBorrowsUSD,
-      0,
-    );
-
-    console.log(
-      `📊 Final market totals: Market Size: ${totalMarketSizeUSD.toLocaleString()}, Available: ${totalAvailableUSD.toLocaleString()}, Borrows: ${totalBorrowsUSD.toLocaleString()}`,
-    );
-    console.log(
-      `📈 Processed ${validReserves.length} valid reserves out of ${reservesList.length} total`,
-    );
-
-    return {
-      totalMarketSizeUSD,
-      totalAvailableUSD,
-      totalBorrowsUSD,
-    };
-  }
-
-  static async getFormattedMarketMetricsUSD(chainId: number): Promise<{
-    totalMarketSize: string;
-    totalAvailable: string;
-    totalBorrows: string;
-    averageSupplyAPY: string;
-    averageBorrowAPY: string;
-  }> {
-    try {
-      console.log(
-        `🔄 Ensuring token prices are loaded for accurate market data...`,
-      );
-      await this.ensureAaveTokenPricesLoaded(chainId);
-
-      console.log(`📊 Fetching complete market data with USD values...`);
-      const marketData = await this.fetchMarketDataWithUSD(chainId);
-
-      if (marketData.totalMarketSizeUSD === 0) {
-        console.warn(`⚠️ Got zero market size, falling back to non-USD method`);
-        return this.getFormattedMarketMetrics(chainId);
-      }
-
-      return {
-        totalMarketSize: this.formatNumber(marketData.totalMarketSizeUSD),
-        totalAvailable: this.formatNumber(marketData.totalAvailableUSD),
-        totalBorrows: this.formatNumber(marketData.totalBorrowsUSD),
-        averageSupplyAPY: "2.50",
-        averageBorrowAPY: "4.20",
-      };
-    } catch (error) {
-      console.error(`❌ USD market metrics failed:`, error);
-      return this.getFormattedMarketMetrics(chainId);
-    }
-  }
-
-  static async getFormattedMarketMetrics(chainId: number): Promise<{
-    totalMarketSize: string;
-    totalAvailable: string;
-    totalBorrows: string;
-    averageSupplyAPY: string;
-    averageBorrowAPY: string;
-  }> {
-    try {
-      const market = this.getAaveMarket(chainId);
-      if (!market?.POOL)
-        throw new Error(`Aave V3 not supported on chain ${chainId}`);
-
-      const provider = this.getProvider();
-      const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-      const reservesList = await poolContract.getReservesList();
-
-      if (!reservesList?.length) {
-        return {
-          totalMarketSize: "0",
-          totalAvailable: "0",
-          totalBorrows: "0",
-          averageSupplyAPY: "0.00",
-          averageBorrowAPY: "0.00",
-        };
-      }
-
-      const reserves = await Promise.allSettled(
-        reservesList.slice(0, 10).map(async (assetAddress: string) => {
-          const tokenContract = new ethers.Contract(
-            assetAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const [symbol, decimals] = await Promise.all([
-            tokenContract.symbol().catch(() => "UNKNOWN"),
-            tokenContract.decimals().catch(() => 18),
-          ]);
-
-          const reserveData = await poolContract.getReserveData(assetAddress);
-          const aTokenContract = new ethers.Contract(
-            reserveData.aTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const stableDebtContract = new ethers.Contract(
-            reserveData.stableDebtTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-          const variableDebtContract = new ethers.Contract(
-            reserveData.variableDebtTokenAddress,
-            ERC20_ABI,
-            provider,
-          );
-
-          const [
-            aTokenTotalSupply,
-            stableDebtTotal,
-            variableDebtTotal,
-            availableLiquidity,
-          ] = await Promise.all([
-            aTokenContract.totalSupply(),
-            stableDebtContract.totalSupply(),
-            variableDebtContract.totalSupply(),
-            tokenContract.balanceOf(reserveData.aTokenAddress),
-          ]);
-
-          const totalLiquidity = Number(
-            ethers.formatUnits(aTokenTotalSupply, decimals),
-          );
-          const totalStableDebt = Number(
-            ethers.formatUnits(stableDebtTotal, decimals),
-          );
-          const totalVariableDebt = Number(
-            ethers.formatUnits(variableDebtTotal, decimals),
-          );
-          const availableLiquidityFormatted = Number(
-            ethers.formatUnits(availableLiquidity, decimals),
-          );
-          const totalBorrows = totalStableDebt + totalVariableDebt;
-
-          return {
-            symbol,
-            totalLiquidity,
-            availableLiquidity: availableLiquidityFormatted,
-            totalBorrows,
-            liquidityRate: ethers.formatUnits(
-              reserveData.currentLiquidityRate,
-              27,
-            ),
-            variableBorrowRate: ethers.formatUnits(
-              reserveData.currentVariableBorrowRate,
-              27,
-            ),
-          };
         }),
       );
 
-      const validReserves = reserves
-        .map((result) => (result.status === "fulfilled" ? result.value : null))
-        .filter(Boolean) as {
-        symbol: string;
-        totalLiquidity: number;
-        availableLiquidity: number;
-        totalBorrows: number;
-        liquidityRate: string;
-        variableBorrowRate: string;
-      }[];
-
-      const totalMarketSize = validReserves.reduce(
-        (sum, r) => sum + r.totalLiquidity,
-        0,
-      );
-      const totalAvailable = validReserves.reduce(
-        (sum, r) => sum + r.availableLiquidity,
-        0,
-      );
-      const totalBorrows = validReserves.reduce(
-        (sum, r) => sum + r.totalBorrows,
-        0,
-      );
-
-      // Calculate weighted average APYs
-      let totalSupplyWeight = 0;
-      let weightedSupplyAPY = 0;
-      let totalBorrowWeight = 0;
-      let weightedBorrowAPY = 0;
-
-      validReserves.forEach((reserve) => {
-        const supplyAPY = Number(reserve.liquidityRate) * 100;
-        const borrowAPY = Number(reserve.variableBorrowRate) * 100;
-
-        if (supplyAPY > 0 && supplyAPY < 50) {
-          totalSupplyWeight += reserve.totalLiquidity;
-          weightedSupplyAPY += reserve.totalLiquidity * supplyAPY;
-        }
-
-        if (borrowAPY > 0 && borrowAPY < 100) {
-          totalBorrowWeight += reserve.totalBorrows;
-          weightedBorrowAPY += reserve.totalBorrows * borrowAPY;
+      // Add successful results to userPositions
+      batchResults.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          userPositions.push(result.value);
         }
       });
 
-      const avgSupplyAPY =
-        totalSupplyWeight > 0 ? weightedSupplyAPY / totalSupplyWeight : 0;
-      const avgBorrowAPY =
-        totalBorrowWeight > 0 ? weightedBorrowAPY / totalBorrowWeight : 0;
-
-      return {
-        totalMarketSize: this.formatNumber(totalMarketSize),
-        totalAvailable: this.formatNumber(totalAvailable),
-        totalBorrows: this.formatNumber(totalBorrows),
-        averageSupplyAPY: avgSupplyAPY.toFixed(2),
-        averageBorrowAPY: avgBorrowAPY.toFixed(2),
-      };
-    } catch {
-      return {
-        totalMarketSize: "0",
-        totalAvailable: "0",
-        totalBorrows: "0",
-        averageSupplyAPY: "0.00",
-        averageBorrowAPY: "0.00",
-      };
+      // Delay between batches to avoid overwhelming RPC
+      if (i + BATCH_SIZE < availableAssets.length) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
     }
+
+    return { accountData, userPositions, availableAssets };
   }
 
   static async fetchUserPositionsWithUSD(
     userAddress: string,
     chainId: number,
-  ): Promise<{
-    suppliedAssetsUSD: SuppliedAssetUSD[];
-    borrowedAssetsUSD: BorrowedAssetUSD[];
-    totalSuppliedUSD: number;
-    totalBorrowedUSD: number;
-    netWorthUSD: number;
-  }> {
+  ): Promise<UserPositionsWithUSD> {
     try {
-      const userPosition = await this.fetchCompleteUserPosition(
+      const { userPositions } = await this.fetchCompleteUserPosition(
         userAddress,
         chainId,
       );
-      const suppliedAssetsUSD: SuppliedAssetUSD[] = [];
-      const borrowedAssetsUSD: BorrowedAssetUSD[] = [];
+      const suppliedAssetsUSD: USDAsset[] = [];
+      const borrowedAssetsUSD: USDAsset[] = [];
       let totalSuppliedUSD = 0;
       let totalBorrowedUSD = 0;
 
-      for (const position of userPosition.userPositions) {
-        const priceUSD = await this.getTokenPrice();
+      for (const position of userPositions) {
+        const price = await this.getTokenPrice(position.symbol);
+        const supplied = Number(position.currentATokenBalance);
+        const borrowed =
+          Number(position.currentStableDebt) +
+          Number(position.currentVariableDebt);
 
-        const suppliedBalance = Number(position.currentATokenBalance);
-        if (suppliedBalance > 0) {
-          const balanceUSD = suppliedBalance * priceUSD;
-          suppliedAssetsUSD.push({ ...position, balanceUSD, priceUSD });
+        if (supplied > 0) {
+          const balanceUSD = supplied * price;
+          suppliedAssetsUSD.push({
+            address: position.address,
+            balanceUSD,
+            priceUSD: price,
+          });
           totalSuppliedUSD += balanceUSD;
         }
 
-        const borrowedBalance =
-          Number(position.currentStableDebt) +
-          Number(position.currentVariableDebt);
-        if (borrowedBalance > 0) {
-          const debtUSD = borrowedBalance * priceUSD;
+        if (borrowed > 0) {
+          const debtUSD = borrowed * price;
           borrowedAssetsUSD.push({
-            ...position,
+            address: position.address,
             debtUSD,
-            priceUSD,
-            totalDebt: borrowedBalance,
+            priceUSD: price,
+            totalDebt: borrowed,
           });
           totalBorrowedUSD += debtUSD;
         }
@@ -1049,159 +794,271 @@ export class AaveMethods {
     }
   }
 
-  static async ensureAaveTokenPricesLoaded(chainId: number): Promise<void> {
+  static async fetchReserveConfigurationData(
+    assetAddress: string,
+    chainId: number,
+  ): Promise<ReserveConfigData> {
+    const market = this.getAaveMarket(chainId);
+    if (!market) {
+      return {
+        supplyAPY: "0.00",
+        canBeCollateral: false,
+        liquidityRate: "0",
+        totalSupplied: "0",
+      };
+    }
+
     try {
-      // This would need to be replaced with proper import when available
-      // For now, this is a placeholder
-      console.log(`Token prices loading placeholder for chain ${chainId}`);
-    } catch {}
+      const provider = this.getProvider();
+      const dataProviders = [
+        market.UI_POOL_DATA_PROVIDER,
+        market.AAVE_PROTOCOL_DATA_PROVIDER,
+        PROVIDERS[chainId],
+      ].filter((addr): addr is string => typeof addr === "string");
+
+      let canBeCollateral = false;
+      let configData: ContractReserveConfigData | null = null;
+
+      // Try data provider method first
+      for (const providerAddr of dataProviders) {
+        try {
+          const dataProviderContract = new ethers.Contract(
+            providerAddr,
+            DATA_PROVIDER_ABI,
+            provider,
+          );
+          configData = (await dataProviderContract.getReserveConfigurationData(
+            assetAddress,
+          )) as ContractReserveConfigData;
+          canBeCollateral = configData.usageAsCollateralEnabled;
+          break;
+        } catch (error) {
+          console.warn(
+            `Data provider ${providerAddr} failed:`,
+            (error as Error).message,
+          );
+          continue;
+        }
+      }
+
+      // Fallback to pool contract
+      const pool = new ethers.Contract(market.POOL, POOL_ABI, provider);
+      const data = (await pool.getReserveData(
+        assetAddress,
+      )) as ContractReserveData;
+
+      // If we couldn't get config from data provider, try to read the bits manually
+      if (!configData) {
+        const configBits = BigInt(data.configuration.data.toString());
+        const ltv = Number(configBits & BigInt(0xffff));
+        const COLLATERAL_ENABLED_MASK = BigInt(1) << BigInt(56);
+        const collateralEnabledFromBits =
+          (configBits & COLLATERAL_ENABLED_MASK) !== BigInt(0);
+        canBeCollateral = ltv > 0 && collateralEnabledFromBits;
+      }
+
+      // Get total supplied amount
+      const aToken = new ethers.Contract(
+        data.aTokenAddress,
+        ERC20_ABI,
+        provider,
+      );
+      const token = new ethers.Contract(assetAddress, ERC20_ABI, provider);
+      const [totalSupply, decimals] = await Promise.all([
+        aToken.totalSupply() as Promise<ethers.BigNumberish>,
+        token.decimals() as Promise<number>,
+      ]);
+
+      const totalSuppliedFormatted = ethers.formatUnits(totalSupply, decimals);
+
+      return {
+        supplyAPY: this.calculateAPY(data.currentLiquidityRate),
+        canBeCollateral,
+        liquidityRate: data.currentLiquidityRate,
+        variableBorrowRate: data.currentVariableBorrowRate,
+        stableBorrowRate: data.currentStableBorrowRate,
+        totalSupplied: totalSuppliedFormatted,
+      };
+    } catch (error) {
+      console.error(
+        `Failed to fetch reserve config for ${assetAddress}:`,
+        error,
+      );
+      return {
+        supplyAPY: "0.00",
+        canBeCollateral: false,
+        liquidityRate: "0",
+        totalSupplied: "0",
+      };
+    }
   }
 
-  static formatNumber(num: number, decimals: number = 2): string {
-    if (num === 0) return "0";
-    const absNum = Math.abs(num);
-    if (absNum >= 1e9) return (num / 1e9).toFixed(decimals) + "B";
-    if (absNum >= 1e6) return (num / 1e6).toFixed(decimals) + "M";
-    if (absNum >= 1e3) return (num / 1e3).toFixed(decimals) + "K";
+  static async getFormattedMarketMetrics(
+    chainId: number,
+  ): Promise<MarketMetrics> {
+    try {
+      const market = this.getAaveMarket(chainId);
+      if (!market?.POOL) throw new Error(`Chain ${chainId} not supported`);
+
+      const provider = this.getProvider();
+      const pool = new ethers.Contract(market.POOL, POOL_ABI, provider);
+      const reserves = (await pool.getReservesList()) as string[];
+
+      if (!reserves.length) {
+        return {
+          totalMarketSize: "0",
+          totalAvailable: "0",
+          totalBorrows: "0",
+          averageSupplyAPY: "0.00",
+          averageBorrowAPY: "0.00",
+        };
+      }
+
+      const sample = await Promise.allSettled(
+        reserves.slice(0, 3).map(async (address) => {
+          try {
+            const token = new ethers.Contract(address, ERC20_ABI, provider);
+            const [symbol, decimals] = await Promise.all([
+              token.symbol() as Promise<string>,
+              token.decimals() as Promise<number>,
+            ]);
+            if (symbol === "UNKNOWN") return null;
+
+            const data = (await pool.getReserveData(
+              address,
+            )) as ContractReserveData;
+            const aToken = new ethers.Contract(
+              data.aTokenAddress,
+              ERC20_ABI,
+              provider,
+            );
+            const [totalSupply, available] = await Promise.all([
+              aToken.totalSupply() as Promise<ethers.BigNumberish>,
+              token.balanceOf(
+                data.aTokenAddress,
+              ) as Promise<ethers.BigNumberish>,
+            ]);
+
+            const price = await this.getTokenPrice(symbol);
+            const total = Number(ethers.formatUnits(totalSupply, decimals));
+            const avail = Number(ethers.formatUnits(available, decimals));
+
+            return {
+              totalUSD: total * price,
+              availableUSD: avail * price,
+              borrowsUSD: (total - avail) * price,
+              supplyAPY: Number(this.calculateAPY(data.currentLiquidityRate)),
+              borrowAPY: Number(
+                this.calculateAPY(data.currentVariableBorrowRate),
+              ),
+            };
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      const valid = sample
+        .map((r) => (r.status === "fulfilled" ? r.value : null))
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+      if (!valid.length) {
+        return {
+          totalMarketSize: "0",
+          totalAvailable: "0",
+          totalBorrows: "0",
+          averageSupplyAPY: "0.00",
+          averageBorrowAPY: "0.00",
+        };
+      }
+
+      const scale = reserves.length / Math.min(3, reserves.length);
+      const totals = valid.reduce(
+        (acc, r) => ({
+          market: acc.market + r.totalUSD,
+          available: acc.available + r.availableUSD,
+          borrows: acc.borrows + r.borrowsUSD,
+          supplyAPY: acc.supplyAPY + r.supplyAPY * r.totalUSD,
+          borrowAPY: acc.borrowAPY + r.borrowAPY * r.borrowsUSD,
+          supplyWeight: acc.supplyWeight + r.totalUSD,
+          borrowWeight: acc.borrowWeight + r.borrowsUSD,
+        }),
+        {
+          market: 0,
+          available: 0,
+          borrows: 0,
+          supplyAPY: 0,
+          borrowAPY: 0,
+          supplyWeight: 0,
+          borrowWeight: 0,
+        },
+      );
+
+      return {
+        totalMarketSize: this.formatNumber(totals.market * scale),
+        totalAvailable: this.formatNumber(totals.available * scale),
+        totalBorrows: this.formatNumber(totals.borrows * scale),
+        averageSupplyAPY: (totals.supplyWeight
+          ? totals.supplyAPY / totals.supplyWeight
+          : 0
+        ).toFixed(2),
+        averageBorrowAPY: (totals.borrowWeight
+          ? totals.borrowAPY / totals.borrowWeight
+          : 0
+        ).toFixed(2),
+      };
+    } catch {
+      return {
+        totalMarketSize: "0",
+        totalAvailable: "0",
+        totalBorrows: "0",
+        averageSupplyAPY: "0.00",
+        averageBorrowAPY: "0.00",
+      };
+    }
+  }
+
+  // Utility methods
+  static formatNumber(num: number, decimals = 2): string {
+    if (!num) return "0";
+    const abs = Math.abs(num);
+    if (abs >= 1e9) return (num / 1e9).toFixed(decimals) + "B";
+    if (abs >= 1e6) return (num / 1e6).toFixed(decimals) + "M";
+    if (abs >= 1e3) return (num / 1e3).toFixed(decimals) + "K";
     return num.toFixed(decimals);
   }
 
   static formatCurrency(
-    value: number | string,
-    currency: string = "$",
-    decimals: number = 2,
+    value: string | number,
+    currency = "$",
+    decimals = 2,
   ): string {
     const num = Number(value);
-    if (isNaN(num) || num === null || num === undefined)
-      return `${currency}0.00`;
-    if (num === 0) return `${currency}0.00`;
+    if (isNaN(num)) return `${currency}0.00`;
     if (Math.abs(num) >= 1000)
       return `${currency}${this.formatNumber(num, decimals)}`;
     return `${currency}${num.toFixed(decimals)}`;
   }
 
-  static getHealthFactorColor(healthFactor: number | string): string {
-    const hf = Number(healthFactor);
-    if (isNaN(hf)) return "text-gray-400";
-    if (hf >= 2) return "text-green-400";
-    if (hf >= 1.5) return "text-yellow-400";
-    if (hf >= 1.1) return "text-orange-400";
+  static getHealthFactorColor(hf: string | number): string {
+    const n = Number(hf);
+    if (isNaN(n)) return "text-gray-400";
+    if (n >= 2) return "text-green-400";
+    if (n >= 1.5) return "text-yellow-400";
+    if (n >= 1.1) return "text-orange-400";
     return "text-red-400";
   }
 
-  static parseContractError(error: Error | unknown): string {
-    if (!error) return "Unknown error occurred";
-    const message =
-      error instanceof Error
-        ? error.message
-        : error?.toString() || "Unknown error";
-    if (message.includes("user rejected"))
-      return "Transaction was rejected by user";
-    if (message.includes("insufficient funds"))
-      return "Insufficient funds for transaction";
-    if (message.includes("execution reverted"))
-      return "Transaction failed - contract execution reverted";
-    if (message.includes("network"))
-      return "Network connection error - please try again";
-    if (message.includes("gas"))
-      return "Gas estimation failed - transaction may fail";
-    const firstSentence = message.split(".")[0];
-    return firstSentence.length > 100 ? "Transaction failed" : firstSentence;
+  static parseContractError(error: unknown): string {
+    const errorObj = error as Error;
+    const msg = errorObj?.message || errorObj?.toString() || "Unknown error";
+    if (msg.includes("user rejected")) return "Transaction rejected";
+    if (msg.includes("insufficient funds")) return "Insufficient funds";
+    if (msg.includes("execution reverted")) return "Transaction failed";
+    return msg.split(".")[0].slice(0, 100);
   }
 
   static getNetworkName(chainId: number): string {
-    const names: Record<number, string> = {
-      1: "Ethereum Mainnet",
-      10: "Optimism",
-      56: "BNB Chain",
-      137: "Polygon",
-      42161: "Arbitrum",
-      43114: "Avalanche",
-      8453: "Base",
-      11155111: "Sepolia",
-    };
-    return names[chainId] || `Unknown Network (${chainId})`;
-  }
-
-  static async testAaveConnection(chainId: number): Promise<{
-    connected: boolean;
-    poolAddress: string | null;
-    reserveCount: number;
-    error?: string;
-  }> {
-    try {
-      const market = this.getAaveMarket(chainId);
-      if (!market?.POOL) {
-        return {
-          connected: false,
-          poolAddress: null,
-          reserveCount: 0,
-          error: `No Aave market found for chain ${chainId}`,
-        };
-      }
-
-      const provider = this.getProvider();
-      const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-      const reservesList = await poolContract.getReservesList();
-
-      return {
-        connected: true,
-        poolAddress: market.POOL,
-        reserveCount: reservesList.length,
-      };
-    } catch (error) {
-      return {
-        connected: false,
-        poolAddress: null,
-        reserveCount: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-
-  static async fetchSimpleMarketData(chainId: number): Promise<{
-    totalMarketSize: string;
-    totalAvailable: string;
-    totalBorrows: string;
-  }> {
-    try {
-      const market = this.getAaveMarket(chainId);
-      if (!market?.POOL)
-        throw new Error(`No market found for chain ${chainId}`);
-
-      const provider = this.getProvider();
-      const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
-      const reservesList = await poolContract.getReservesList();
-
-      if (reservesList.length === 0) {
-        return { totalMarketSize: "0", totalAvailable: "0", totalBorrows: "0" };
-      }
-
-      const firstReserve = reservesList[0];
-      const tokenContract = new ethers.Contract(
-        firstReserve,
-        ERC20_ABI,
-        provider,
-      );
-      const reserveData = await poolContract.getReserveData(firstReserve);
-      const aTokenContract = new ethers.Contract(
-        reserveData.aTokenAddress,
-        ERC20_ABI,
-        provider,
-      );
-      const totalSupply = await aTokenContract.totalSupply();
-      const decimals = await tokenContract.decimals();
-      const totalLiquidity = Number(ethers.formatUnits(totalSupply, decimals));
-
-      return {
-        totalMarketSize: this.formatNumber(
-          (totalLiquidity * reservesList.length) / 10,
-        ),
-        totalAvailable: this.formatNumber(totalLiquidity * 0.7),
-        totalBorrows: this.formatNumber(totalLiquidity * 0.3),
-      };
-    } catch {
-      return { totalMarketSize: "0", totalAvailable: "0", totalBorrows: "0" };
-    }
+    return NETWORK_NAMES[chainId] || `Chain ${chainId}`;
   }
 }

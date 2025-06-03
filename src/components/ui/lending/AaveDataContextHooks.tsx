@@ -3,68 +3,73 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { AaveMethods } from "@/utils/aaveMethods";
 import { useWalletConnection } from "@/utils/walletMethods";
 import { toast } from "sonner";
-import { Token, Chain } from "@/types/web3";
 
-interface SuppliedAsset {
-  address: string;
-  symbol: string;
+interface Token {
+  id: string;
   name: string;
+  ticker: string;
+  address: string;
   decimals: number;
-  currentATokenBalance: string;
-  currentStableDebt: string;
-  currentVariableDebt: string;
-  liquidityRate: unknown;
-  liquidityRateFormatted: string;
-  usageAsCollateralEnabled: boolean;
-  supplyAPY?: { simple: string; compounded: string; aaveMethod: string } | null;
-  balanceUSD?: number;
-  priceUSD?: number;
-  token: Token;
-  chain: Chain;
+  chainId: number;
 }
 
-interface BorrowedAsset {
-  address: string;
+interface ChainData {
+  id: string;
+  name: string;
+  chainName: string;
+  symbol: string;
+  currency: string;
+  decimals: number;
+  chainId: number;
+}
+
+interface BaseAsset {
   symbol: string;
   name: string;
+  address: string;
   decimals: number;
+  token: Token;
+  chain: ChainData;
+  supplyAPY: string;
+  canBeCollateral: boolean;
+  totalSupplied: string;
+  totalSupply: string;
+  priceUSD: number;
+  priceInUSD: number;
+}
+
+interface SuppliedAsset extends BaseAsset {
+  currentATokenBalance: number;
+  balanceUSD: number;
+  formattedBalance: string;
+  formattedBalanceUSD: string;
+  usageAsCollateralEnabled: boolean;
+}
+
+interface BorrowedAsset extends BaseAsset {
   currentStableDebt: string;
   currentVariableDebt: string;
+  totalDebt: number;
+  debtUSD: number;
+  borrowAPY: string;
+  variableBorrowAPY: string;
+  stableBorrowAPY: string;
   variableBorrowRate: string;
   stableBorrowRate: string;
-  borrowAPY?: string;
-  debtUSD?: number;
-  priceUSD?: number;
-  token: Token;
-  chain: Chain;
 }
 
-interface AvailableAsset {
-  address: string;
-  symbol: string;
-  name: string;
-  decimals: number;
-  supplyAPY?: string;
-  borrowAPY?: string;
-  canBeCollateral?: boolean;
-  canBeBorrowed?: boolean;
-  liquidityRate?: string;
-  priceUSD?: number;
-  token: Token;
-  chain: Chain;
+interface AvailableAsset extends BaseAsset {
+  borrowAPY: string;
+  canBeBorrowed: boolean;
+  liquidityRate: string;
+  totalSuppliedUSD: number;
 }
 
 interface AccountData {
-  totalCollateralBase: string;
-  totalDebtBase: string;
-  availableBorrowsBase: string;
-  currentLiquidationThreshold: number;
-  ltv: number;
-  healthFactor: string;
-  usedProvider?: string;
-  totalSuppliedUSD?: number;
-  totalBorrowedUSD?: number;
-  netWorthUSD?: number;
+  totalSuppliedUSD: number;
+  totalBorrowedUSD: number;
+  netWorthUSD: number;
+  [key: string]: unknown; // For other properties from position.accountData
 }
 
 interface MarketMetrics {
@@ -75,26 +80,100 @@ interface MarketMetrics {
   averageBorrowAPY: number;
 }
 
-interface AaveDataState {
-  suppliedAssets: SuppliedAsset[];
-  borrowedAssets: BorrowedAsset[];
-  availableAssets: AvailableAsset[];
-  accountData: AccountData | null;
-  marketMetrics: MarketMetrics | null;
-  loading: boolean;
-  error: string | null;
-  lastUpdateTime: Date | null;
-  refreshData: (force?: boolean) => Promise<void>;
-  clearError: () => void;
+interface USDPosition {
+  address: string;
+  balanceUSD?: number;
+  debtUSD?: number;
+  priceUSD: number;
 }
 
-const REFRESH_CONFIG = {
-  AUTO_REFRESH_INTERVAL: 30000,
-  MIN_MANUAL_REFRESH_INTERVAL: 2000,
-  DEBOUNCE_DELAY: 1000,
+interface USDPositions {
+  suppliedAssetsUSD: USDPosition[];
+  borrowedAssetsUSD: USDPosition[];
+  totalSuppliedUSD: number;
+  totalBorrowedUSD: number;
+  netWorthUSD: number;
+}
+
+interface RawAsset {
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+  currentATokenBalance: string;
+  currentStableDebt: string;
+  currentVariableDebt: string;
+  supplyAPY?: { aaveMethod: string };
+  variableBorrowAPY?: { aaveMethod: string };
+  stableBorrowAPY?: { aaveMethod: string };
+  canBeCollateral?: boolean;
+  usageAsCollateralEnabled?: boolean;
+  totalSupplied?: string;
+}
+
+interface Validation {
+  isValid: boolean;
+  errorMessage?: string;
+}
+
+const CHAIN_CONFIG: Record<number, Omit<ChainData, "chainId">> = {
+  1: {
+    id: "ethereum",
+    name: "Ethereum Mainnet",
+    chainName: "Ethereum",
+    symbol: "ETH",
+    currency: "ETH",
+    decimals: 18,
+  },
+  137: {
+    id: "polygon",
+    name: "Polygon",
+    chainName: "Polygon",
+    symbol: "MATIC",
+    currency: "MATIC",
+    decimals: 18,
+  },
+  42161: {
+    id: "arbitrum",
+    name: "Arbitrum",
+    chainName: "Arbitrum",
+    symbol: "ETH",
+    currency: "ETH",
+    decimals: 18,
+  },
+  10: {
+    id: "optimism",
+    name: "Optimism",
+    chainName: "Optimism",
+    symbol: "ETH",
+    currency: "ETH",
+    decimals: 18,
+  },
+  43114: {
+    id: "avalanche",
+    name: "Avalanche",
+    chainName: "Avalanche",
+    symbol: "AVAX",
+    currency: "AVAX",
+    decimals: 18,
+  },
+  8453: {
+    id: "base",
+    name: "Base",
+    chainName: "Base",
+    symbol: "ETH",
+    currency: "ETH",
+    decimals: 18,
+  },
 };
 
-export const useAaveData = (): AaveDataState => {
+const MULTIPLIERS: Record<string, number> = {
+  K: 1000,
+  M: 1000000,
+  B: 1000000000,
+};
+
+export const useAaveData = () => {
   const { evmAccount, evmNetwork, isEvmConnected } = useWalletConnection();
 
   const lastRefreshTime = useRef<number>(0);
@@ -116,7 +195,7 @@ export const useAaveData = (): AaveDataState => {
   const [marketMetrics, setMarketMetrics] = useState<MarketMetrics | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
@@ -129,145 +208,59 @@ export const useAaveData = (): AaveDataState => {
     [walletAddress, currentChainId, isEvmConnected],
   );
 
-  const chainData = useMemo(() => {
-    const chains: Record<number, Partial<Chain>> = {
-      1: {
-        id: "ethereum",
-        name: "Ethereum Mainnet",
-        chainName: "Ethereum",
-        symbol: "ETH",
-        currency: "ETH",
-        decimals: 18,
-      },
-      137: {
-        id: "polygon",
-        name: "Polygon",
-        chainName: "Polygon",
-        symbol: "MATIC",
-        currency: "MATIC",
-        decimals: 18,
-      },
-      42161: {
-        id: "arbitrum",
-        name: "Arbitrum",
-        chainName: "Arbitrum",
-        symbol: "ETH",
-        currency: "ETH",
-        decimals: 18,
-      },
-      10: {
-        id: "optimism",
-        name: "Optimism",
-        chainName: "Optimism",
-        symbol: "ETH",
-        currency: "ETH",
-        decimals: 18,
-      },
-      43114: {
-        id: "avalanche",
-        name: "Avalanche",
-        chainName: "Avalanche",
-        symbol: "AVAX",
-        currency: "AVAX",
-        decimals: 18,
-      },
-      8453: {
-        id: "base",
-        name: "Base",
-        chainName: "Base",
-        symbol: "ETH",
-        currency: "ETH",
-        decimals: 18,
-      },
-    };
-    const chain = chains[currentChainId!] || chains[1];
-    return { ...chain, chainId: currentChainId! } as Chain;
+  const chainData = useMemo((): ChainData => {
+    const chain = CHAIN_CONFIG[currentChainId ?? 1] || CHAIN_CONFIG[1];
+    return { ...chain, chainId: currentChainId ?? 1 };
   }, [currentChainId]);
 
-  const createTokenFromAsset = useCallback(
+  const parseNumber = (str: string): number => {
+    if (!str || str === "0") return 0;
+    const match = str.replace(/[$,\s]/g, "").match(/^([\d.]+)([KMB]?)$/i);
+    if (!match) return 0;
+    let num = parseFloat(match[1]);
+    if (match[2]) {
+      const multiplier = MULTIPLIERS[match[2].toUpperCase()];
+      if (multiplier) num *= multiplier;
+    }
+    return num || 0;
+  };
+
+  const createToken = useCallback(
     (asset: {
       symbol: string;
       name: string;
       address: string;
       decimals: number;
-    }): Token =>
-      ({
-        id: `${asset.symbol.toLowerCase()}-${currentChainId}`,
-        name: asset.name,
-        ticker: asset.symbol,
-        icon: "unknown.png",
-        address: asset.address,
-        decimals: asset.decimals,
-        chainId: currentChainId!,
-        native: asset.symbol.toUpperCase() === "ETH" && currentChainId === 1,
-      }) as Token,
+    }): Token => ({
+      id: `${asset.symbol.toLowerCase()}-${currentChainId}`,
+      name: asset.name,
+      ticker: asset.symbol,
+      address: asset.address,
+      decimals: asset.decimals,
+      chainId: currentChainId ?? 1,
+    }),
     [currentChainId],
   );
 
-  const validation = useMemo(() => {
-    if (!isEvmConnected)
-      return { isValid: false, errorMessage: "Please connect your EVM wallet" };
-    if (!walletAddress)
-      return { isValid: false, errorMessage: "No wallet address found" };
-    if (!currentChainId)
-      return { isValid: false, errorMessage: "Unable to detect network" };
+  const validation = useMemo((): Validation => {
+    if (!isEvmConnected || !walletAddress || !currentChainId) {
+      return { isValid: false, errorMessage: "Wallet not connected" };
+    }
     if (!AaveMethods.isChainSupported(currentChainId)) {
       return {
         isValid: false,
-        errorMessage: `Aave V3 not supported on ${AaveMethods.getNetworkName(currentChainId)}`,
+        errorMessage: `Aave not supported on ${AaveMethods.getNetworkName(currentChainId)}`,
       };
     }
     return { isValid: true };
   }, [isEvmConnected, walletAddress, currentChainId]);
 
-  const fetchMarketMetrics = useCallback(
-    async (chainId: number): Promise<MarketMetrics> => {
-      const formattedMetrics =
-        await AaveMethods.getFormattedMarketMetricsUSD(chainId);
-
-      const parseNumber = (str: string): number => {
-        if (!str || str === "0") return 0;
-        const cleaned = str.replace(/[$,\s]/g, "");
-        const match = cleaned.match(/^([\d.]+)([KMB]?)$/i);
-        if (!match) return 0;
-        let num = parseFloat(match[1]);
-        if (isNaN(num)) return 0;
-        switch (match[2].toUpperCase()) {
-          case "K":
-            num *= 1000;
-            break;
-          case "M":
-            num *= 1000000;
-            break;
-          case "B":
-            num *= 1000000000;
-            break;
-        }
-        return num;
-      };
-
-      return {
-        totalMarketSize: parseNumber(formattedMetrics.totalMarketSize),
-        totalAvailable: parseNumber(formattedMetrics.totalAvailable),
-        totalBorrows: parseNumber(formattedMetrics.totalBorrows),
-        averageSupplyAPY: parseFloat(formattedMetrics.averageSupplyAPY) || 0,
-        averageBorrowAPY: parseFloat(formattedMetrics.averageBorrowAPY) || 0,
-      };
-    },
-    [],
-  );
-
-  const fetchAaveData = useCallback(
-    async (forceRefresh = false) => {
+  const fetchData = useCallback(
+    async (force = false): Promise<void> => {
       const now = Date.now();
-      if (
-        !forceRefresh &&
-        now - lastRefreshTime.current <
-          REFRESH_CONFIG.MIN_MANUAL_REFRESH_INTERVAL
-      )
-        return;
+      if (!force && now - lastRefreshTime.current < 2000) return;
       if (!validation.isValid) {
-        setError(validation.errorMessage || "Validation failed");
+        setError(validation.errorMessage || "Invalid validation state");
         return;
       }
 
@@ -275,112 +268,157 @@ export const useAaveData = (): AaveDataState => {
       lastRefreshTime.current = now;
 
       try {
-        const completePosition = await AaveMethods.fetchCompleteUserPosition(
-          walletAddress!,
-          currentChainId!,
-        );
-
-        let userPositionsUSD = null;
-        try {
-          userPositionsUSD = await AaveMethods.fetchUserPositionsWithUSD(
+        const [position, usdPositions, metrics] = await Promise.all([
+          AaveMethods.fetchCompleteUserPosition(
             walletAddress!,
             currentChainId!,
-          );
-        } catch (error) {
-          console.warn("Failed to fetch USD positions:", error);
-        }
+          ),
+          AaveMethods.fetchUserPositionsWithUSD(
+            walletAddress!,
+            currentChainId!,
+          ).catch(() => null as USDPositions | null),
+          AaveMethods.getFormattedMarketMetrics(currentChainId!).then((m) => ({
+            totalMarketSize: parseNumber(m.totalMarketSize),
+            totalAvailable: parseNumber(m.totalAvailable),
+            totalBorrows: parseNumber(m.totalBorrows),
+            averageSupplyAPY: parseFloat(m.averageSupplyAPY) || 0,
+            averageBorrowAPY: parseFloat(m.averageBorrowAPY) || 0,
+          })),
+        ]);
 
-        const supplied = completePosition.userPositions
-          .filter((position) => Number(position.currentATokenBalance) > 0)
-          .map((asset) => {
-            const usdData = userPositionsUSD?.suppliedAssetsUSD.find(
-              (usd) =>
-                usd.address.toLowerCase() === asset.address.toLowerCase(),
+        console.log("Raw position data:", position.userPositions);
+        console.log("USD positions data:", usdPositions);
+
+        const supplied: SuppliedAsset[] = position.userPositions
+          .filter((p: RawAsset) => Number(p.currentATokenBalance) > 0)
+          .map((asset: RawAsset) => {
+            const usd = usdPositions?.suppliedAssetsUSD.find(
+              (u) => u.address.toLowerCase() === asset.address.toLowerCase(),
             );
+            const userBalance = Number(asset.currentATokenBalance);
+            const priceUSD = usd?.priceUSD || 0;
+
+            console.log(`${asset.symbol} processing:`, {
+              rawBalance: asset.currentATokenBalance,
+              numberBalance: userBalance,
+              priceUSD: priceUSD,
+              balanceUSD: userBalance * priceUSD,
+            });
+
             return {
               ...asset,
-              balanceUSD: usdData?.balanceUSD || 0,
-              priceUSD: usdData?.priceUSD || 0,
-              token: createTokenFromAsset(asset),
+              currentATokenBalance: userBalance,
+              balanceUSD: usd?.balanceUSD || userBalance * priceUSD,
+              priceUSD: priceUSD,
+              priceInUSD: priceUSD,
+              formattedBalance: userBalance.toFixed(6),
+              formattedBalanceUSD: (userBalance * priceUSD).toFixed(2),
+              token: createToken(asset),
               chain: chainData,
+              supplyAPY: asset.supplyAPY?.aaveMethod || "0.00",
+              totalSupplied: asset.totalSupplied || "0",
+              totalSupply: asset.totalSupplied || "0",
+              canBeCollateral:
+                asset.canBeCollateral !== undefined
+                  ? asset.canBeCollateral
+                  : true,
+              usageAsCollateralEnabled: asset.usageAsCollateralEnabled || false,
             };
           });
 
-        const borrowed = completePosition.userPositions
+        const borrowed: BorrowedAsset[] = position.userPositions
           .filter(
-            (position) =>
-              Number(position.currentStableDebt) > 0 ||
-              Number(position.currentVariableDebt) > 0,
+            (p: RawAsset) =>
+              Number(p.currentStableDebt) > 0 ||
+              Number(p.currentVariableDebt) > 0,
           )
-          .map((asset) => {
-            const usdData = userPositionsUSD?.borrowedAssetsUSD.find(
-              (usd) =>
-                usd.address.toLowerCase() === asset.address.toLowerCase(),
+          .map((asset: RawAsset) => {
+            const usd = usdPositions?.borrowedAssetsUSD.find(
+              (u) => u.address.toLowerCase() === asset.address.toLowerCase(),
             );
             return {
               ...asset,
-              debtUSD: usdData?.debtUSD || 0,
-              priceUSD: usdData?.priceUSD || 0,
-              borrowAPY: "0.00",
-              variableBorrowRate: "0.00",
-              stableBorrowRate: "0.00",
-              token: createTokenFromAsset(asset),
+              debtUSD: usd?.debtUSD || 0,
+              priceUSD: usd?.priceUSD || 0,
+              priceInUSD: usd?.priceUSD || 0,
+              totalDebt:
+                Number(asset.currentStableDebt) +
+                Number(asset.currentVariableDebt),
+              borrowAPY: asset.variableBorrowAPY?.aaveMethod || "0.00",
+              variableBorrowAPY: asset.variableBorrowAPY?.aaveMethod || "0.00",
+              stableBorrowAPY: asset.stableBorrowAPY?.aaveMethod || "0.00",
+              variableBorrowRate: "0",
+              stableBorrowRate: "0",
+              token: createToken(asset),
               chain: chainData,
+              supplyAPY: "0.00",
+              canBeCollateral: true,
+              totalSupplied: "0",
+              totalSupply: "0",
             };
           });
 
-        const availableAssetsWithData = [];
-        for (const asset of completePosition.availableAssets) {
-          const isInUse =
+        const available: AvailableAsset[] = [];
+        for (const asset of position.availableAssets) {
+          if (
             supplied.some((s) => s.address === asset.address) ||
-            borrowed.some((b) => b.address === asset.address);
-          if (isInUse || (asset.symbol === "GHO" && currentChainId === 1))
+            borrowed.some((b) => b.address === asset.address)
+          )
             continue;
 
           try {
-            const configData = await AaveMethods.fetchReserveConfigurationData(
+            const config = await AaveMethods.fetchReserveConfigurationData(
               asset.address,
               currentChainId!,
             );
-            availableAssetsWithData.push({
+            available.push({
               ...asset,
-              supplyAPY: configData.supplyAPY,
-              borrowAPY: "0.00",
-              canBeCollateral: configData.canBeCollateral,
+              supplyAPY: config.supplyAPY || "0.00",
+              borrowAPY: AaveMethods.calculateAPY(
+                config.variableBorrowRate || 0,
+              ),
+              canBeCollateral:
+                config.canBeCollateral !== undefined
+                  ? config.canBeCollateral
+                  : true,
               canBeBorrowed: true,
-              liquidityRate: configData.liquidityRate.toString(),
+              liquidityRate: config.liquidityRate?.toString() || "0",
+              totalSupplied: config.totalSupplied || "0",
+              totalSupply: config.totalSupplied || "0",
+              totalSuppliedUSD: 0,
               priceUSD: 0,
-              token: createTokenFromAsset(asset),
+              priceInUSD: 0,
+              token: createToken(asset),
               chain: chainData,
             });
           } catch {
-            availableAssetsWithData.push({
+            available.push({
               ...asset,
               supplyAPY: "0.00",
               borrowAPY: "0.00",
-              canBeCollateral: false,
+              canBeCollateral: true,
               canBeBorrowed: false,
               liquidityRate: "0",
+              totalSupplied: "0",
+              totalSupply: "0",
+              totalSuppliedUSD: 0,
               priceUSD: 0,
-              token: createTokenFromAsset(asset),
+              priceInUSD: 0,
+              token: createToken(asset),
               chain: chainData,
             });
           }
         }
 
-        const metrics = await fetchMarketMetrics(currentChainId!);
-
-        const enhancedAccountData = {
-          ...completePosition.accountData,
-          totalSuppliedUSD: userPositionsUSD?.totalSuppliedUSD || 0,
-          totalBorrowedUSD: userPositionsUSD?.totalBorrowedUSD || 0,
-          netWorthUSD: userPositionsUSD?.netWorthUSD || 0,
-        };
-
-        setAccountData(enhancedAccountData);
+        setAccountData({
+          ...position.accountData,
+          totalSuppliedUSD: usdPositions?.totalSuppliedUSD || 0,
+          totalBorrowedUSD: usdPositions?.totalBorrowedUSD || 0,
+          netWorthUSD: usdPositions?.netWorthUSD || 0,
+        });
         setSuppliedAssets(supplied);
         setBorrowedAssets(borrowed);
-        setAvailableAssets(availableAssetsWithData);
+        setAvailableAssets(available);
         setMarketMetrics(metrics);
         setLastUpdateTime(new Date());
         setError(null);
@@ -397,56 +435,39 @@ export const useAaveData = (): AaveDataState => {
         isManualRefresh.current = false;
       }
     },
-    [
-      validation,
-      walletAddress,
-      currentChainId,
-      chainData,
-      createTokenFromAsset,
-      fetchMarketMetrics,
-    ],
+    [validation, walletAddress, currentChainId, chainData, createToken],
   );
 
-  const handleManualRefresh = useCallback(
-    async (force = false) => {
-      const now = Date.now();
-      if (
-        !force &&
-        now - lastRefreshTime.current <
-          REFRESH_CONFIG.MIN_MANUAL_REFRESH_INTERVAL
-      ) {
-        toast.info("Please wait before refreshing again");
+  const refresh = useCallback(
+    async (force = false): Promise<void> => {
+      if (!force && Date.now() - lastRefreshTime.current < 2000) {
+        toast.info("Please wait before refreshing");
         return;
       }
       isManualRefresh.current = true;
-      await fetchAaveData(true);
+      await fetchData(true);
     },
-    [fetchAaveData],
+    [fetchData],
   );
-
-  const clearError = useCallback(() => setError(null), []);
 
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      if (validation.isValid) fetchAaveData(true);
-    }, REFRESH_CONFIG.DEBOUNCE_DELAY);
+      if (validation.isValid) fetchData(true);
+    }, 1000);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [walletData, validation.isValid, fetchAaveData]);
+  }, [walletData, validation.isValid, fetchData]);
 
   useEffect(() => {
     if (!validation.isValid) return;
     if (autoRefreshTimer.current) clearInterval(autoRefreshTimer.current);
-    autoRefreshTimer.current = setInterval(
-      () => fetchAaveData(),
-      REFRESH_CONFIG.AUTO_REFRESH_INTERVAL,
-    );
+    autoRefreshTimer.current = setInterval(() => fetchData(), 30000);
     return () => {
       if (autoRefreshTimer.current) clearInterval(autoRefreshTimer.current);
     };
-  }, [validation.isValid, fetchAaveData]);
+  }, [validation.isValid, fetchData]);
 
   useEffect(() => {
     return () => {
@@ -464,7 +485,7 @@ export const useAaveData = (): AaveDataState => {
     loading,
     error,
     lastUpdateTime,
-    refreshData: handleManualRefresh,
-    clearError,
+    refreshData: refresh,
+    clearError: () => setError(null),
   };
 };

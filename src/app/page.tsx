@@ -90,7 +90,11 @@ export default function Home() {
         <LandingBackground />
         <div className="w-full max-w-5xl mx-auto px-4 md:px-4 py-3 relative z-10">
           <div className="flex flex-col items-center">
-            <Link href="/about" target="_blank" rel="noopener noreferrer">
+            <Link
+              href="https://x.com/altverseweb3"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <button className="flex items-center gap-1 px-3 py-1 mb-4 mt-4 rounded-full bg-gray-500/10 text-gray-400/80 hover:bg-amber-500/30 hover:text-white/90 duration-300 text-xs font-semibold border border-gray-500/20 hover:border-amber-500/20">
                 <span className="opacity-70">✨</span>
                 <span>Learn More →</span>
