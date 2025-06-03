@@ -10,7 +10,8 @@ interface TokenAmountInputProps {
   readOnly?: boolean;
   placeholder?: string;
   isLoadingQuote?: boolean;
-  variant?: "source" | "destination"; // Add variant to distinguish receive amount
+  variant?: "source" | "destination";
+  onContainerClick: () => void; // Add this prop
 }
 
 export function TokenAmountInput({
@@ -21,10 +22,14 @@ export function TokenAmountInput({
   placeholder = "0",
   isLoadingQuote = false,
   variant = "source",
+  onContainerClick, // Add this parameter
 }: TokenAmountInputProps) {
   const isLoading = isLoadingQuote && readOnly;
   const sourceToken = useSourceToken();
   const [displayedAmountUsd, setDisplayedAmountUsd] = useState("$~");
+
+  // Check if source token is selected
+  const isSourceTokenSelected = sourceToken && sourceToken.address;
 
   // Create a more specific subscription to track token balance changes
   const tokenAddress = sourceToken?.address?.toLowerCase();
@@ -74,10 +79,6 @@ export function TokenAmountInput({
         return "0.000000";
       }
 
-      // We should NOT divide by 10^decimals here because the balance is already
-      // in human-readable form. The decimals parameter is just for reference, but
-      // not needed for displaying the current balance.
-
       // Handle abbreviations for large numbers
       if (numBalance >= 1_000_000_000_000) {
         // Trillion+
@@ -114,16 +115,27 @@ export function TokenAmountInput({
     }
   };
 
+  // Determine if input should be readonly:
+  // - For source variant: readonly when no token is selected OR when explicitly set to readonly
+  // - For destination variant: use the original readOnly logic
+  const shouldBeReadOnly =
+    variant === "source" ? !isSourceTokenSelected || readOnly : readOnly;
+
   // Apply faded style for:
   // - Disabled source inputs (readOnly source)
   // - Destination inputs when showing default/null value (0 or empty)
   const shouldApplyDisabledStyle =
-    readOnly &&
+    shouldBeReadOnly &&
     (variant === "source" ||
       (variant === "destination" && (Number(amount) === 0 || !amount)));
 
   return (
-    <div className="flex-1 flex flex-col items-end">
+    <div
+      className="flex-1 flex flex-col items-end"
+      onClick={() => {
+        onContainerClick();
+      }}
+    >
       <PersistentAmountDisplay
         isLoading={isLoading}
         amount={amount}
@@ -131,7 +143,8 @@ export function TokenAmountInput({
         onChange={onChange || (() => {})}
         placeholder={placeholder}
         shouldApplyDisabledStyle={shouldApplyDisabledStyle}
-        readOnly={readOnly}
+        readOnly={shouldBeReadOnly}
+        allowContainerClick={variant === "source" && !isSourceTokenSelected}
       />
       <div className="w-full flex flex-col">
         {dollarValue > 0 && (
@@ -152,7 +165,8 @@ export function TokenAmountInput({
             {/* Max button */}
             <button
               className="px-1 py-0.5 rounded-md bg-amber-500 bg-opacity-25 text-amber-500 text-xs cursor-pointer"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent container click
                 if (currentBalance && onChange) {
                   // Create a synthetic event object that mimics React.ChangeEvent<HTMLInputElement>
                   const syntheticEvent = {

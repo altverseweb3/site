@@ -319,10 +319,19 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const addCustomToken = useWeb3Store((state) => state.addCustomToken);
-  const isOpen = useUIStore((state) => state.tokenSelectOpen);
-  const setIsOpen = useUIStore((state) => state.setTokenSelectOpen);
-
+  const sourceIsOpen = useUIStore((state) => state.sourceTokenSelectOpen);
+  const destinationIsOpen = useUIStore(
+    (state) => state.destinationTokenSelectOpen,
+  );
+  const setSourceIsOpen = useUIStore((state) => state.setSourceTokenSelectOpen);
+  const setDestinationIsOpen = useUIStore(
+    (state) => state.setDestinationTokenSelectOpen,
+  );
   const chainToShow = variant === "source" ? sourceChain : destinationChain;
+
+  const isOpen = variant === "source" ? sourceIsOpen : destinationIsOpen;
+  const setIsOpen =
+    variant === "source" ? setSourceIsOpen : setDestinationIsOpen;
 
   const selectedToken = variant === "source" ? sourceToken : destinationToken;
 
@@ -501,7 +510,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
       setIsOpen(false);
     },
-    [variant, setSourceToken, setDestinationToken],
+    [variant, setSourceToken, setDestinationToken, setIsOpen],
   );
 
   const handleSearchChange = useCallback(
@@ -513,6 +522,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
+      // debugger;
       setIsOpen(open);
       if (open) {
         // Clear search query
@@ -525,7 +535,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
         lookedUpAddresses.current.clear();
       }
     },
-    [getTokensForChain, chainToShow.chainId],
+    [getTokensForChain, chainToShow.chainId, setIsOpen],
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -578,6 +588,12 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           type="button"
           className={`${buttonClass} ${selectedToken ? "py-[3px]" : "py-2"}`}
           onMouseEnter={handleMouseEnter}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation(); // Prevent event from bubbling up to AssetBox
+            // Your existing click logic here
+            // debugger;
+            setIsOpen(true);
+          }}
         >
           {buttonContent}
           <svg

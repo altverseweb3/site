@@ -10,8 +10,10 @@ interface UIStoreState {
   theme: Theme;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
-  tokenSelectOpen: boolean;
-  setTokenSelectOpen: (open: boolean) => void;
+  sourceTokenSelectOpen: boolean;
+  setSourceTokenSelectOpen: (open: boolean) => void;
+  destinationTokenSelectOpen: boolean;
+  setDestinationTokenSelectOpen: (open: boolean) => void;
 }
 
 // Safely update DOM theme
@@ -44,8 +46,14 @@ const useUIStore = create<UIStoreState>()(
         updateDOMTheme(theme);
         set({ theme });
       },
-      tokenSelectOpen: false,
-      setTokenSelectOpen: (open) => set({ tokenSelectOpen: open }),
+      sourceTokenSelectOpen: false,
+      setSourceTokenSelectOpen: (open) => {
+        return set({ sourceTokenSelectOpen: open });
+      },
+      destinationTokenSelectOpen: false,
+      setDestinationTokenSelectOpen: (open) => {
+        return set({ destinationTokenSelectOpen: open });
+      },
     }),
     {
       name: "altverse-storage-ui",
