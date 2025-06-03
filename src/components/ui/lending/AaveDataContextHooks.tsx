@@ -489,3 +489,138 @@ export const useAaveData = () => {
     clearError: () => setError(null),
   };
 };
+
+interface FlexibleAccountData {
+  totalCollateralBase?: string | number;
+  totalDebtBase?: string | number;
+  availableBorrowsBase?: string | number;
+  currentLiquidationThreshold?: number;
+  ltv?: number;
+  healthFactor?: string | number;
+  totalSuppliedUSD?: number;
+  totalBorrowedUSD?: number;
+  netWorthUSD?: number;
+  [key: string]: unknown;
+}
+
+interface FlexibleSuppliedAsset {
+  currentATokenBalance?: string | number;
+  supplyAPY?:
+    | string
+    | number
+    | {
+        aaveMethod?: string | number;
+        simple?: string | number;
+        [key: string]: unknown;
+      };
+  symbol?: string;
+  name?: string;
+  address?: string;
+  balanceUSD?: number;
+  priceUSD?: number;
+  [key: string]: unknown;
+}
+
+interface FlexibleBorrowedAsset {
+  currentStableDebt?: string | number;
+  currentVariableDebt?: string | number;
+  borrowAPY?: string | number;
+  symbol?: string;
+  name?: string;
+  address?: string;
+  debtUSD?: number;
+  totalDebt?: number;
+  [key: string]: unknown;
+}
+
+interface FlexibleMarketMetrics {
+  totalMarketSize?: number;
+  totalAvailable?: number;
+  totalBorrows?: number;
+  averageSupplyAPY?: number;
+  averageBorrowAPY?: number;
+  [key: string]: unknown;
+}
+
+interface TransformedAaveData {
+  accountData?: FlexibleAccountData | null;
+  marketMetrics?: FlexibleMarketMetrics | null;
+  suppliedAssets?: FlexibleSuppliedAsset[];
+  borrowedAssets?: FlexibleBorrowedAsset[];
+  loading?: boolean;
+  error?: string | null;
+}
+
+export const useTransformedAaveData = (): TransformedAaveData => {
+  const aaveData = useAaveData();
+
+  return useMemo(() => {
+    // Transform accountData
+    const accountData = aaveData.accountData
+      ? {
+          totalCollateralBase: String(
+            aaveData.accountData.totalCollateralBase || "0",
+          ),
+          totalDebtBase: String(aaveData.accountData.totalDebtBase || "0"),
+          availableBorrowsBase: String(
+            aaveData.accountData.availableBorrowsBase || "0",
+          ),
+          currentLiquidationThreshold: Number(
+            aaveData.accountData.currentLiquidationThreshold || 0,
+          ),
+          ltv: Number(aaveData.accountData.ltv || 0),
+          healthFactor: String(aaveData.accountData.healthFactor || "0"),
+          totalSuppliedUSD: Number(aaveData.accountData.totalSuppliedUSD || 0),
+          totalBorrowedUSD: Number(aaveData.accountData.totalBorrowedUSD || 0),
+          netWorthUSD: Number(aaveData.accountData.netWorthUSD || 0),
+        }
+      : null;
+
+    // Transform marketMetrics
+    const marketMetrics = aaveData.marketMetrics
+      ? {
+          totalMarketSize: Number(aaveData.marketMetrics.totalMarketSize || 0),
+          totalAvailable: Number(aaveData.marketMetrics.totalAvailable || 0),
+          totalBorrows: Number(aaveData.marketMetrics.totalBorrows || 0),
+          averageSupplyAPY: Number(
+            aaveData.marketMetrics.averageSupplyAPY || 0,
+          ),
+          averageBorrowAPY: Number(
+            aaveData.marketMetrics.averageBorrowAPY || 0,
+          ),
+        }
+      : null;
+
+    // Transform suppliedAssets
+    const suppliedAssets = (aaveData.suppliedAssets || []).map((asset) => ({
+      currentATokenBalance: Number(asset.currentATokenBalance || 0),
+      supplyAPY: asset.supplyAPY || "0",
+      symbol: String(asset.symbol || ""),
+      name: String(asset.name || ""),
+      address: String(asset.address || ""),
+      balanceUSD: Number(asset.balanceUSD || 0),
+      priceUSD: Number(asset.priceUSD || 0),
+    }));
+
+    // Transform borrowedAssets
+    const borrowedAssets = (aaveData.borrowedAssets || []).map((asset) => ({
+      currentStableDebt: String(asset.currentStableDebt || "0"),
+      currentVariableDebt: String(asset.currentVariableDebt || "0"),
+      borrowAPY: String(asset.borrowAPY || "0"),
+      symbol: String(asset.symbol || ""),
+      name: String(asset.name || ""),
+      address: String(asset.address || ""),
+      debtUSD: Number(asset.debtUSD || 0),
+      totalDebt: Number(asset.totalDebt || 0),
+    }));
+
+    return {
+      accountData,
+      marketMetrics,
+      suppliedAssets,
+      borrowedAssets,
+      loading: aaveData.loading || false,
+      error: aaveData.error || null,
+    };
+  }, [aaveData]);
+};

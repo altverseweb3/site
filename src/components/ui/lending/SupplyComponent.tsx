@@ -17,20 +17,36 @@ interface Asset {
   address: string;
   name?: string;
   symbol: string;
-  currentATokenBalance: number | string;
+  currentATokenBalance?: number | string;
   priceInUSD?: number | string;
+  priceUSD?: number | string; // Add this
   supplyAPY?:
     | {
         aaveMethod?: number | string;
       }
     | string
     | number;
-  usageAsCollateralEnabled: boolean;
+  usageAsCollateralEnabled?: boolean; // Make this optional
   canBeCollateral?: boolean;
   totalSupplied?: string;
   totalSupply?: string;
+  // Add these missing properties that come from your hook
+  balanceUSD?: number;
+  formattedBalance?: string;
+  formattedBalanceUSD?: string;
+  formattedSupplyAPY?: string;
+  decimals?: number;
+  liquidityRate?: string;
+  currentStableDebt?: string;
+  currentVariableDebt?: string;
+  totalDebt?: number;
+  debtUSD?: number;
+  borrowAPY?: string;
+  variableBorrowAPY?: string;
+  stableBorrowAPY?: string;
+  canBeBorrowed?: boolean;
+  totalSuppliedUSD?: number;
 }
-
 interface ProcessedAsset extends Asset {
   formattedBalance: string;
   formattedDollarAmount?: string;
@@ -38,9 +54,13 @@ interface ProcessedAsset extends Asset {
 }
 
 interface MarketMetrics {
-  totalLiquidity: number;
-  totalBorrows: number;
-  totalSupply: number;
+  totalLiquidity?: number;
+  totalBorrows?: number;
+  totalSupply?: number;
+  totalMarketSize?: number;
+  totalAvailable?: number;
+  averageSupplyAPY?: number;
+  averageBorrowAPY?: number;
 }
 
 interface AaveDataState {
@@ -48,14 +68,17 @@ interface AaveDataState {
   borrowedAssets: Asset[];
   availableAssets: Asset[];
   accountData: {
-    totalCollateralBase: string;
-    totalDebtBase: string;
-    availableBorrowsBase: string;
-    currentLiquidationThreshold: number;
-    ltv: number;
-    healthFactor: string;
+    totalCollateralBase?: string;
+    totalDebtBase?: string;
+    availableBorrowsBase?: string;
+    currentLiquidationThreshold?: number;
+    ltv?: number;
+    healthFactor?: string;
+    totalSuppliedUSD?: number;
+    totalBorrowedUSD?: number;
+    netWorthUSD?: number;
   } | null;
-  marketMetrics: MarketMetrics;
+  marketMetrics: MarketMetrics | null;
   loading: boolean;
   error: string | null;
   lastUpdateTime: Date | null;

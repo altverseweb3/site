@@ -68,7 +68,7 @@ interface SupplyBorrowMetricsHeadersProps {
   onTabChange: (button: string) => void;
   aaveData: {
     accountData?: FlexibleAccountData | null;
-    marketMetrics?: FlexibleMarketMetrics | null;
+    marketMetrics?: FlexibleMarketMetrics | null | undefined;
     suppliedAssets?: FlexibleSuppliedAsset[];
     borrowedAssets?: FlexibleBorrowedAsset[];
     loading?: boolean;

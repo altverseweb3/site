@@ -1,6 +1,9 @@
 "use client";
 
-import { useAaveData } from "@/components/ui/lending/AaveDataContextHooks";
+import {
+  useAaveData,
+  useTransformedAaveData,
+} from "@/components/ui/lending/AaveDataContextHooks";
 import BorrowComponent from "@/components/ui/lending/BorrowComponent";
 import PoweredByAave from "@/components/ui/lending/PoweredByAave";
 import SupplyBorrowMetricsHeaders from "@/components/ui/lending/SupplyBorrowMetricsHeaders";
@@ -11,8 +14,11 @@ import React, { useState } from "react";
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
 
-  // Get all Aave data from the hook
+  // Get original Aave data for SupplyComponent
   const aaveData = useAaveData();
+
+  // Get transformed data for SupplyBorrowMetricsHeaders
+  const transformedAaveData = useTransformedAaveData();
 
   return (
     <div className="flex h-full w-full items-start justify-center sm:pt-[6vh] pt-[2vh] min-h-[500px]">
@@ -20,7 +26,7 @@ const BorrowLendComponent: React.FC = () => {
         <SupplyBorrowMetricsHeaders
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          aaveData={aaveData} // Pass the complete Aave data
+          aaveData={transformedAaveData}
         />
 
         {activeTab === "supply" ? (
