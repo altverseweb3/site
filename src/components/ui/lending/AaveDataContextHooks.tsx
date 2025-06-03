@@ -1,4 +1,3 @@
-// hooks/useAaveData.ts
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { AaveMethods } from "@/utils/aaveMethods";
 import { useWalletConnection } from "@/utils/walletMethods";
@@ -542,7 +541,7 @@ interface FlexibleMarketMetrics {
   [key: string]: unknown;
 }
 
-interface TransformedAaveData {
+interface AaveHeaderData {
   accountData?: FlexibleAccountData | null;
   marketMetrics?: FlexibleMarketMetrics | null;
   suppliedAssets?: FlexibleSuppliedAsset[];
@@ -551,7 +550,7 @@ interface TransformedAaveData {
   error?: string | null;
 }
 
-export const useTransformedAaveData = (): TransformedAaveData => {
+export const useAaveHeaderData = (): AaveHeaderData => {
   const aaveData = useAaveData();
 
   return useMemo(() => {
@@ -576,7 +575,6 @@ export const useTransformedAaveData = (): TransformedAaveData => {
         }
       : null;
 
-    // Transform marketMetrics
     const marketMetrics = aaveData.marketMetrics
       ? {
           totalMarketSize: Number(aaveData.marketMetrics.totalMarketSize || 0),
@@ -591,7 +589,6 @@ export const useTransformedAaveData = (): TransformedAaveData => {
         }
       : null;
 
-    // Transform suppliedAssets
     const suppliedAssets = (aaveData.suppliedAssets || []).map((asset) => ({
       currentATokenBalance: Number(asset.currentATokenBalance || 0),
       supplyAPY: asset.supplyAPY || "0",
@@ -602,7 +599,6 @@ export const useTransformedAaveData = (): TransformedAaveData => {
       priceUSD: Number(asset.priceUSD || 0),
     }));
 
-    // Transform borrowedAssets
     const borrowedAssets = (aaveData.borrowedAssets || []).map((asset) => ({
       currentStableDebt: String(asset.currentStableDebt || "0"),
       currentVariableDebt: String(asset.currentVariableDebt || "0"),

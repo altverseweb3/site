@@ -81,13 +81,11 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   onTabChange,
   aaveData,
 }) => {
-  // Calculate user metrics from real Aave data
   const userMetrics = useMemo((): UserMetrics => {
     const accountData = aaveData.accountData || null;
     const suppliedAssets = aaveData.suppliedAssets || [];
     const borrowedAssets = aaveData.borrowedAssets || [];
 
-    // Helper function to get APY value from various possible structures
     const getAPYValue = (asset: FlexibleSuppliedAsset): number => {
       const supplyAPY = asset.supplyAPY;
       if (typeof supplyAPY === "number") return supplyAPY;
@@ -112,18 +110,15 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       };
     }
 
-    // Calculate net worth (collateral - debt)
     const netWorth =
       Number(accountData.totalCollateralBase || 0) -
       Number(accountData.totalDebtBase || 0);
 
-    // Calculate weighted average APY
     let totalSupplyValue = 0;
     let weightedSupplyAPY = 0;
     let totalBorrowValue = 0;
     let weightedBorrowAPY = 0;
 
-    // Calculate supply-side weighted APY
     suppliedAssets.forEach((asset: FlexibleSuppliedAsset) => {
       const value = Number(asset.currentATokenBalance || 0);
       const apy = getAPYValue(asset);
@@ -131,7 +126,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       weightedSupplyAPY += value * apy;
     });
 
-    // Calculate borrow-side weighted APY
     borrowedAssets.forEach((asset: FlexibleBorrowedAsset) => {
       const stableDebt = Number(asset.currentStableDebt || 0);
       const variableDebt = Number(asset.currentVariableDebt || 0);
@@ -146,10 +140,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     const avgBorrowAPY =
       totalBorrowValue > 0 ? weightedBorrowAPY / totalBorrowValue : 0;
 
-    // Net APY calculation (supply earnings - borrow costs)
     const netAPY = avgSupplyAPY - avgBorrowAPY;
 
-    // Health factor logic - if net worth is 0, health should be 0
     const hf = netWorth === 0 ? 0 : Number(accountData.healthFactor || 0);
     let healthFactorColor = "text-green-400";
     if (netWorth === 0) healthFactorColor = "text-gray-400";
@@ -191,12 +183,10 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     };
   }, [aaveData.marketMetrics]);
 
-  // Only extract simple values needed for rendering
   const loading = aaveData.loading || false;
   const error = aaveData.error || null;
   const accountData = aaveData.accountData || null;
 
-  // First card metrics (user's position)
   const metricsDataHealth: MetricItem[] = [
     {
       label: "Net Worth",
@@ -219,7 +209,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     },
   ];
 
-  // Second card metrics (market data)
   const marketMetricsData: MetricItem[] = [
     {
       label: "Market Size",
@@ -246,7 +235,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     // Add your logic for showing risk details here
   };
 
-  // Show loading state
   if (loading && !accountData) {
     const loadingMetrics: MetricItem[] = [
       { label: "Net Worth", value: "...", prefix: "$", color: "text-gray-400" },
