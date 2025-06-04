@@ -29,7 +29,7 @@ const useWeb3Store = create<Web3StoreState>()(
 
       // Transaction details state
       transactionDetails: {
-        slippage: "3.25%", // Default slippage value
+        slippage: "auto", // Default slippage value
         receiveAddress: null,
         gasDrop: 0,
       },

@@ -30,13 +30,14 @@ export function TokenAmountInput({
   const tokenAddress = sourceToken?.address?.toLowerCase();
   const chainId = sourceToken?.chainId;
 
+  // Get the required wallet separately to use for conditional rendering
+  const requiredWallet = useWeb3Store((state) => {
+    return state.getWalletBySourceChain();
+  });
+
   // This will re-render when the specific token balance changes
   const tokenBalance = useWeb3Store((state) => {
-    if (!tokenAddress || !chainId) return null;
-
-    // Create a wallet key that matches the one used in updateTokenBalances
-    const requiredWallet = state.getWalletBySourceChain();
-    if (!requiredWallet) return null;
+    if (!tokenAddress || !chainId || !requiredWallet) return null;
 
     const walletKey = `${chainId}-${requiredWallet.address.toLowerCase()}`;
     const balances = state.tokenBalancesByWallet[walletKey];
@@ -113,9 +114,13 @@ export function TokenAmountInput({
     }
   };
 
-  // Only apply the faded style for disabled source inputs
-  // For destination/receive inputs, we want them to look normal even when readOnly
-  const shouldApplyDisabledStyle = readOnly && variant === "source";
+  // Apply faded style for:
+  // - Disabled source inputs (readOnly source)
+  // - Destination inputs when showing default/null value (0 or empty)
+  const shouldApplyDisabledStyle =
+    readOnly &&
+    (variant === "source" ||
+      (variant === "destination" && (Number(amount) === 0 || !amount)));
 
   return (
     <div className="flex-1 flex flex-col items-end">
@@ -129,15 +134,17 @@ export function TokenAmountInput({
         readOnly={readOnly}
       />
       <div className="w-full flex flex-col">
-        <span className="text-zinc-400 text-sm numeric-input">
-          {displayedAmountUsd}
-        </span>
-        {variant === "source" && (
+        {dollarValue > 0 && (
+          <span className="text-zinc-400 text-sm numeric-input">
+            {displayedAmountUsd}
+          </span>
+        )}
+        {variant === "source" && requiredWallet && (
           <div className="flex justify-end w-full mt-2 gap-2">
             {/* Balance display */}
             <div className="flex items-center px-1 py-0.5 rounded-md bg-amber-500 bg-opacity-25">
               <Wallet size={14} className="text-amber-500 mr-1" />
-              <span className="text-amber-500 text-xs">
+              <span className="text-amber-500 text-xs numeric-input">
                 {currentBalance ? formatBalance(currentBalance) : "0.000"}
               </span>
             </div>
