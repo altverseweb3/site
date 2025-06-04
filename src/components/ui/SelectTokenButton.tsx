@@ -67,7 +67,11 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             <TokenImage token={token} chain={chain} />
 
             <div className="flex flex-col">
-              <div className="font-medium text-[#FAFAFA]">{token.name}</div>
+              <div className="font-medium text-[#FAFAFA]">
+                {token.name.length > 32
+                  ? token.name.slice(0, 32) + "..."
+                  : token.name}
+              </div>
               <div className="flex items-center text-[0.75rem] text-[#FAFAFA55]">
                 <span className="numeric-input flex items-center w-16">
                   {token.ticker}
@@ -108,7 +112,7 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             </div>
           </div>
           <div className="text-right">
-            <div className="font-medium text-[#FAFAFA] numeric-input">
+            <div className="font-regular text-[#FAFAFA] numeric-input">
               {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
