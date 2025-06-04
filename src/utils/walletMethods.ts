@@ -20,7 +20,7 @@ import {
 } from "@/utils/mayanSwapMethods";
 import { Quote } from "@mayanfinance/swap-sdk";
 import { toast } from "sonner";
-import { useWalletProviderAndSigner } from "@/utils/mayanSwapMethods";
+import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 
