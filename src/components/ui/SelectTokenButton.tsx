@@ -29,6 +29,7 @@ import { useDebounce } from "use-debounce";
 import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
 import { getTokenMetadata } from "@/utils/tokenApiMethods";
 import useUIStore from "@/store/uiStore";
+import { parseDecimalNumber } from "@/utils/tokenMethods";
 
 interface TokenListItemProps {
   token: Token;
@@ -59,6 +60,22 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
       },
       [onCopy, token.address, token.id],
     );
+
+    const FormattedNumber = ({ value }: { value: string | number }) => {
+      const { hasSubscript, subscriptCount, remainingDigits } =
+        parseDecimalNumber(value);
+
+      if (hasSubscript) {
+        return (
+          <span>
+            0.0<sub>{subscriptCount}</sub>
+            {remainingDigits}
+          </span>
+        );
+      }
+
+      return <span>{remainingDigits}</span>;
+    };
 
     return (
       <div className="px-2 py-0.5 cursor-pointer group" onClick={handleClick}>
@@ -116,7 +133,7 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
               {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
-              {token.userBalance}
+              <FormattedNumber value={token.userBalance || "0"} />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 import chains from "@/config/chains";
 import { Token } from "@/types/web3";
 import { getChainById } from "@/config/chains";
+import { FormattedNumberParts } from "@/types/ui";
 
 interface TokenDataItem {
   extract_time: number;
@@ -206,5 +207,64 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
     byChainId: tokensByChainId,
     byChainIdAndAddress: tokensByChainIdAndAddress,
     allTokensList: allTokensList,
+  };
+};
+
+export const parseDecimalNumber = (
+  value: string | number,
+  maxDigits: number = 6,
+): FormattedNumberParts => {
+  const originalValue = value.toString();
+
+  if (!value || isNaN(parseFloat(originalValue))) {
+    return {
+      hasSubscript: false,
+      subscriptCount: 0,
+      remainingDigits: originalValue,
+      originalValue,
+    };
+  }
+
+  const num = parseFloat(originalValue);
+
+  // Return empty string for zero values
+  if (num === 0) {
+    return {
+      hasSubscript: false,
+      subscriptCount: 0,
+      remainingDigits: "",
+      originalValue,
+    };
+  }
+
+  const numStr = num.toString();
+  const match = numStr.match(/^0\.0+/);
+
+  if (match) {
+    const zeroCount = match[0].length - 2; // Subtract "0."
+
+    // Only use subscript notation if more than 4 zeros
+    if (zeroCount > 4) {
+      let remainingDigits = numStr.slice(match[0].length);
+
+      // Limit to maxDigits characters
+      if (remainingDigits.length > maxDigits) {
+        remainingDigits = remainingDigits.slice(0, maxDigits);
+      }
+
+      return {
+        hasSubscript: true,
+        subscriptCount: zeroCount,
+        remainingDigits,
+        originalValue,
+      };
+    }
+  }
+
+  return {
+    hasSubscript: false,
+    subscriptCount: 0,
+    remainingDigits: numStr,
+    originalValue,
   };
 };
