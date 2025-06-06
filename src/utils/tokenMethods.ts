@@ -212,7 +212,6 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
 
 export const parseDecimalNumber = (
   value: string | number,
-  maxDigits: number = 6,
 ): FormattedNumberParts => {
   const originalValue = value.toString();
 
@@ -247,10 +246,8 @@ export const parseDecimalNumber = (
     if (zeroCount > 4) {
       let remainingDigits = numStr.slice(match[0].length);
 
-      // Limit to maxDigits characters
-      if (remainingDigits.length > maxDigits) {
-        remainingDigits = remainingDigits.slice(0, maxDigits);
-      }
+      // Limit to 2 decimal places for subscripted numbers
+      remainingDigits = remainingDigits.slice(0, 2);
 
       return {
         hasSubscript: true,
@@ -261,10 +258,13 @@ export const parseDecimalNumber = (
     }
   }
 
+  // For regular numbers, limit to 4 decimal places
+  const formattedNum = parseFloat(num.toFixed(4)).toString();
+
   return {
     hasSubscript: false,
     subscriptCount: 0,
-    remainingDigits: numStr,
+    remainingDigits: formattedNum,
     originalValue,
   };
 };
