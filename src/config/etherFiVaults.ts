@@ -74,7 +74,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/eth",
       withdrawal: "https://www.ether.fi/app/liquid/eth",
     },
-    vaultIcon: "/images/etherFi/liquid-eth-icon.png",
+    vaultIcon: "/images/etherFi/vaults/liquideth.svg",
   },
 
   2: {
@@ -105,7 +105,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/btc",
       withdrawal: "https://www.ether.fi/app/liquid/btc",
     },
-    vaultIcon: "/images/etherFi/liquid-btc-icon.png",
+    vaultIcon: "/images/etherFi/vaults/liquidbtc.svg",
   },
 
   3: {
@@ -136,7 +136,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/usd",
       withdrawal: "https://www.ether.fi/app/liquid/usd",
     },
-    vaultIcon: "/images/etherFi/usdc-icon.png",
+    vaultIcon: "/images/etherFi/vaults/usdc.svg",
   },
 
   4: {
@@ -167,7 +167,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/eigen",
       withdrawal: "https://www.ether.fi/app/eigen",
     },
-    vaultIcon: "/images/etherFi/eigenlayer-icon.svg",
+    vaultIcon: "/images/etherFi/vaults/eigen.png",
   },
 
   5: {
@@ -198,7 +198,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
       withdrawal: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
     },
-    vaultIcon: "/images/etherFi/ultrayieldstable.png",
+    vaultIcon: "/images/etherFi/vaults/ultrayield-stablecoin.png",
   },
 
   6: {
@@ -229,7 +229,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/move-eth",
       withdrawal: "https://www.ether.fi/app/liquid/move-eth",
     },
-    vaultIcon: "/images/etherFi/liquidmove.png",
+    vaultIcon: "/images/etherFi/vaults/liquidmove.png",
   },
 
   7: {
@@ -260,7 +260,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/bera-eth",
       withdrawal: "https://www.ether.fi/app/liquid/bera-eth",
     },
-    vaultIcon: "/images/etherFi/beraeth.svg",
+    vaultIcon: "/images/etherFi/vaults/beraeth.svg",
   },
 
   8: {
@@ -291,7 +291,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/bera-btc",
       withdrawal: "https://www.ether.fi/app/liquid/bera-btc",
     },
-    vaultIcon: "/images/etherFi/beraeth.svg",
+    vaultIcon: "/images/etherFi/vaults/beraeth.svg",
   },
 };
 
