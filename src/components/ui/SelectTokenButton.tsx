@@ -670,7 +670,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
                 style={{ backgroundColor: chainToShow.backgroundColor }}
               >
                 <Image
-                  src={`/tokens/mono/${chainToShow.icon}`}
+                  src={`${chainToShow.icon}`}
                   alt={chainToShow.symbol}
                   width={20}
                   height={20}
