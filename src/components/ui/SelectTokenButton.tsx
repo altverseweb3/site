@@ -28,6 +28,7 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { useDebounce } from "use-debounce";
 import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
 import { getTokenMetadata } from "@/utils/tokenApiMethods";
+import useUIStore from "@/store/uiStore";
 
 interface TokenListItemProps {
   token: Token;
@@ -66,7 +67,11 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             <TokenImage token={token} chain={chain} />
 
             <div className="flex flex-col">
-              <div className="font-medium text-[#FAFAFA]">{token.name}</div>
+              <div className="font-medium text-[#FAFAFA]">
+                {token.name.length > 32
+                  ? token.name.slice(0, 32) + "..."
+                  : token.name}
+              </div>
               <div className="flex items-center text-[0.75rem] text-[#FAFAFA55]">
                 <span className="numeric-input flex items-center w-16">
                   {token.ticker}
@@ -107,7 +112,7 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             </div>
           </div>
           <div className="text-right">
-            <div className="font-medium text-[#FAFAFA] numeric-input">
+            <div className="font-regular text-[#FAFAFA] numeric-input">
               {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
@@ -301,7 +306,6 @@ interface SelectTokenButtonProps {
 export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   variant,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 150);
   const [copiedAddresses, setCopiedAddresses] = useState<
@@ -319,8 +323,19 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const addCustomToken = useWeb3Store((state) => state.addCustomToken);
-
+  const sourceIsOpen = useUIStore((state) => state.sourceTokenSelectOpen);
+  const destinationIsOpen = useUIStore(
+    (state) => state.destinationTokenSelectOpen,
+  );
+  const setSourceIsOpen = useUIStore((state) => state.setSourceTokenSelectOpen);
+  const setDestinationIsOpen = useUIStore(
+    (state) => state.setDestinationTokenSelectOpen,
+  );
   const chainToShow = variant === "source" ? sourceChain : destinationChain;
+
+  const isOpen = variant === "source" ? sourceIsOpen : destinationIsOpen;
+  const setIsOpen =
+    variant === "source" ? setSourceIsOpen : setDestinationIsOpen;
 
   const selectedToken = variant === "source" ? sourceToken : destinationToken;
 
@@ -499,7 +514,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
       setIsOpen(false);
     },
-    [variant, setSourceToken, setDestinationToken],
+    [variant, setSourceToken, setDestinationToken, setIsOpen],
   );
 
   const handleSearchChange = useCallback(
@@ -511,6 +526,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
+      // debugger;
       setIsOpen(open);
       if (open) {
         // Clear search query
@@ -523,7 +539,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
         lookedUpAddresses.current.clear();
       }
     },
-    [getTokensForChain, chainToShow.chainId],
+    [getTokensForChain, chainToShow.chainId, setIsOpen],
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -576,6 +592,12 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           type="button"
           className={`${buttonClass} ${selectedToken ? "py-[3px]" : "py-2"}`}
           onMouseEnter={handleMouseEnter}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation(); // Prevent event from bubbling up to AssetBox
+            // Your existing click logic here
+            // debugger;
+            setIsOpen(true);
+          }}
         >
           {buttonContent}
           <svg
