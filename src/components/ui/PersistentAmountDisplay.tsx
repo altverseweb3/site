@@ -32,6 +32,9 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
 
+  // Check if amount is zero or empty (handles various representations)
+  const isZeroAmount = !amount || Number(amount) === 0;
+
   // Dynamic text size based on content length
   const getTextSizeClass = (length: number) => {
     if (length < 10) return "text-3xl";
@@ -123,9 +126,10 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
   // Dynamic text size class based on current content length
   const textSizeClass = getTextSizeClass(contentLength);
 
-  // Base styles with dynamic text size - force same color for both variants
+  // Base styles with dynamic text size and conditional opacity
   const commonClass = `
     w-full 
+    text-amber-500
     bg-transparent 
     ${textSizeClass}
     focus:outline-none 
@@ -135,10 +139,9 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
     [&::-webkit-outer-spin-button]:appearance-none 
     [&::-webkit-inner-spin-button]:appearance-none
     ${allowContainerClick ? "pointer-events-none" : ""}
-    text-white
-    placeholder:text-white
+    ${isZeroAmount ? "text-zinc-400" : "text-white"}    
+    placeholder:text-zinc-400
     placeholder:opacity-100
-    opacity-100
     transition-font-size
     duration-200
   `;
@@ -153,12 +156,11 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
     const numAmount = Number(amount);
     // Show 0 decimal places for zero values, 3 decimal places for non-zero values
     const decimalPlaces = numAmount === 0 ? 0 : 3;
-
     return (
       <div
         ref={containerRef}
         style={containerStyle}
-        className="flex items-center justify-end"
+        className={`flex items-center justify-end text-zinc-400`}
       >
         <div ref={tickerRef} className={isLoading ? "animate-pulse" : ""}>
           <NumberTicker
