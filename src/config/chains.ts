@@ -102,26 +102,6 @@ export const chains: Record<string, Chain> = {
     nativeAddress: "0x4200000000000000000000000000000000000006",
     walletType: WalletType.REOWN_EVM,
   },
-  sui: {
-    id: "sui",
-    name: "sui",
-    chainName: "Sui Mainnet",
-    mayanName: "sui",
-    alchemyNetworkName: Network.ETH_MAINNET,
-    symbol: "SUI",
-    currency: "Sui",
-    icon: "/tokens/mono/SUI.svg",
-    backgroundColor: "#4BA2FF",
-    fontColor: "#FAFAFA",
-    rpcUrl: "https://sui-mainnet-endpoint.blockvision.org",
-    explorerUrl: "https://suiscan.xyz/mainnet/home",
-    chainId: 0, // Sui does not have a chainId
-    decimals: 9,
-    l2: false,
-    gasDrop: 0.01,
-    nativeAddress: "0x2::sui::SUI",
-    walletType: WalletType.SUIET_SUI,
-  },
   polygon: {
     id: "polygon",
     name: "polygon",
@@ -182,6 +162,26 @@ export const chains: Record<string, Chain> = {
     nativeAddress: "0x0000000000000000000000000000000000000000",
     walletType: WalletType.REOWN_EVM,
   },
+  sui: {
+    id: "sui",
+    name: "sui",
+    chainName: "Sui Mainnet",
+    mayanName: "sui",
+    alchemyNetworkName: Network.ETH_MAINNET,
+    symbol: "SUI",
+    currency: "Sui",
+    icon: "/tokens/mono/SUI.svg",
+    backgroundColor: "#4BA2FF",
+    fontColor: "#FAFAFA",
+    rpcUrl: "https://sui-mainnet-endpoint.blockvision.org",
+    explorerUrl: "https://suiscan.xyz/mainnet/home",
+    chainId: 0, // Sui does not have a chainId
+    decimals: 9,
+    l2: false,
+    gasDrop: 0.01,
+    nativeAddress: "0x2::sui::SUI",
+    walletType: WalletType.SUIET_SUI,
+  },
   solana: {
     id: "solana",
     name: "solana",
@@ -231,7 +231,7 @@ export const getCompositeKey = (
   chainName: string,
   tokenAddress: string,
 ): string => {
-  return `${chainName.toLowerCase()}-${tokenAddress.toLowerCase()}`;
+  return `${chains[chainName.toLowerCase()]?.chainId || 0}-${tokenAddress.toLowerCase()}`;
 };
 
 export default chains;

@@ -48,12 +48,6 @@ export interface DepositAsset {
   imagePath: string;
 }
 
-// Cross-chain asset configuration for native assets
-export interface CrossChainAsset {
-  chain: string;
-  symbol: string;
-}
-
 // Shared lens address for all vaults
 const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
 
@@ -163,46 +157,6 @@ export const DEPOSIT_ASSETS: Record<string, DepositAsset> = {
   },
 };
 
-// Cross-chain native assets configuration
-export const CROSS_CHAIN_ASSETS: Record<string, CrossChainAsset> = {
-  sol: {
-    chain: "Solana",
-    symbol: "SOL",
-  },
-  sui: {
-    chain: "Sui",
-    symbol: "SUI",
-  },
-  arb: {
-    chain: "Arbitrum",
-    symbol: "ARB",
-  },
-  op: {
-    chain: "Optimism",
-    symbol: "OP",
-  },
-  base: {
-    chain: "Base",
-    symbol: "BASE",
-  },
-  uni: {
-    chain: "Unichain",
-    symbol: "UNI",
-  },
-  pol: {
-    chain: "Polygon",
-    symbol: "POL",
-  },
-  bnb: {
-    chain: "BNB Chain",
-    symbol: "BNB",
-  },
-  avax: {
-    chain: "Avalanche",
-    symbol: "AVAX",
-  },
-};
-
 // Complete EtherFi vaults configuration
 export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
   1: {
@@ -220,7 +174,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["wETH", "eETH", "weETH", "SOL", "SUI"],
+      deposit: ["wETH", "eETH", "weETH"],
       receive: {
         name: "liquidETH",
         symbol: "liquidETH",
@@ -251,7 +205,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["LBTC", "wBTC", "cbBTC", "eBTC", "SOL", "SUI"],
+      deposit: ["LBTC", "wBTC", "cbBTC", "eBTC"],
       receive: {
         name: "liquidBTC",
         symbol: "liquidBTC",
@@ -282,7 +236,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["USDC", "DAI", "USDT", "USDe", "deUSD", "sdeUSD", "SOL", "SUI"],
+      deposit: ["USDC", "DAI", "USDT", "USDe", "deUSD", "sdeUSD"],
       receive: {
         name: "liquidUSD",
         symbol: "liquidUSD",
@@ -313,7 +267,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["EIGEN", "SOL", "SUI"],
+      deposit: ["EIGEN"],
       receive: {
         name: "eEIGEN",
         symbol: "eEIGEN",
@@ -344,7 +298,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["USDC", "DAI", "USDT", "SOL", "SUI"],
+      deposit: ["USDC", "DAI", "USDT"],
       receive: {
         name: "UltraUSD",
         symbol: "UltraUSD",
@@ -375,7 +329,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["wETH", "SOL", "SUI"],
+      deposit: ["wETH"],
       receive: {
         name: "LiquidMoveETH",
         symbol: "LiquidMoveETH",
@@ -406,7 +360,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["wETH", "eETH", "weETH", "stETH", "wstETH", "SOL", "SUI"],
+      deposit: ["wETH", "eETH", "weETH", "stETH", "wstETH"],
       receive: {
         name: "BeraETH",
         symbol: "BeraETH",
@@ -437,7 +391,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       lens: SHARED_LENS_ADDRESS,
     },
     supportedAssets: {
-      deposit: ["wBTC", "LBTC", "cbBTC", "eBTC", "SOL", "SUI"],
+      deposit: ["wBTC", "LBTC", "cbBTC", "eBTC"],
       receive: {
         name: "BeraBTC",
         symbol: "BeraBTC",
@@ -454,26 +408,12 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
   },
 };
 
-// Common assets supported across multiple vaults
-export const COMMON_CROSS_CHAIN_ASSETS = [
-  "SOL",
-  "SUI",
-  "ARB",
-  "OP",
-  "BASE",
-  "UNI",
-  "POL",
-  "BNB",
-  "AVAX",
-];
-
 // Asset categories for easy filtering
 export const ASSET_CATEGORIES = {
   ETH_VARIANTS: ["wETH", "eETH", "weETH", "stETH", "wstETH"],
   BTC_VARIANTS: ["LBTC", "wBTC", "cbBTC", "eBTC"],
   USD_STABLECOINS: ["USDC", "DAI", "USDT", "USDe", "deUSD", "sdeUSD"],
   GOVERNANCE_TOKENS: ["EIGEN"],
-  CROSS_CHAIN: COMMON_CROSS_CHAIN_ASSETS,
 };
 
 export default ETHERFI_VAULTS;
