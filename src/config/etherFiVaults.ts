@@ -1,5 +1,4 @@
 export interface EtherFiVault {
-  // Basic vault information
   id: number;
   name: string;
   description: string;
@@ -9,7 +8,7 @@ export interface EtherFiVault {
     | "Strategy Vault"
     | "Governance Restaking"
     | "Partner Vault";
-  chain: "Ethereum";
+  chain: "ethereum";
 
   // Contract addresses
   addresses: {
@@ -37,7 +36,7 @@ export interface EtherFiVault {
     withdrawal: string; // Same as analytics for withdrawals
   };
 
-  // Vault Icon
+  // Vault Icon for Table UI
   vaultIcon: string;
 }
 
@@ -58,106 +57,106 @@ export interface CrossChainAsset {
 // Shared lens address for all vaults
 const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
 
-// Ethereum deposit assets configuration
+// ethereum deposit assets configuration
 export const DEPOSIT_ASSETS: Record<string, DepositAsset> = {
   eth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x0000000000000000000000000000000000000000", // Native ETH
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eth.png",
   },
   weth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/weth.png",
   },
   eeth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eeth.png",
   },
   weeth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/weeth.png",
   },
   steth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/steth.png",
   },
   wsteth: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/wsteth.png",
   },
   lbtc: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x8236a87084f8B84306f72007F36F2618A5634494",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/lbtc.png",
   },
   wbtc: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/wbtc.png",
   },
   cbbtc: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/cbbtc.png",
   },
   ebtc: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/ebtc.png",
   },
   usdc: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xA0b86a33E6441521e0040C7201e7fe5F9e08Da09",
     decimals: 6,
     imagePath: "/public/images/etherfi/ethereum-assets/usdc.png",
   },
   dai: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/dai.png",
   },
   usdt: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     decimals: 6,
     imagePath: "/public/images/etherfi/ethereum-assets/usdt.png",
   },
   usde: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x4c9EdD5852cd905f086C759E8383e09bff1E68B3",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/usde.png",
   },
   deusd: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x15700B564Ca08D9439C58cA5053166E8317aa138",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/deusd.png",
   },
   sdeusd: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/sdeusd.png",
   },
   eigen: {
-    chain: "Ethereum",
+    chain: "ethereum",
     contractAddress: "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eigen.png",
@@ -213,7 +212,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "Liquid ETH vault provides staking rewards plus additional yield from ETH delegation strategies.",
     ecosystem: "Ether.fi",
     type: "Featured",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
       teller: "0x9AA79C84b79816ab920bBcE20f8f74557B514734",
@@ -244,7 +243,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "Liquid BTC vault uses wrapped BTC to generate yield through lending and options strategies.",
     ecosystem: "Ether.fi",
     type: "Featured",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0x5f46d540b6eD704C3c8789105F30E075AA900726",
       teller: "0x8Ea0B382D054dbEBeB1d0aE47ee4AC433C730353",
@@ -275,7 +274,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "Market-Neutral USD vault focuses on stable returns using conservative stablecoin strategies.",
     ecosystem: "Ether.fi",
     type: "Strategy Vault",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       teller: "0x4DE413a26fC24c3FC27Cc983be70aA9c5C299387",
@@ -306,7 +305,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "EIGEN Restaking vault allows users to earn rewards by staking EIGEN tokens.",
     ecosystem: "Ether.fi",
     type: "Governance Restaking",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0xE77076518A813616315EaAba6cA8e595E845EeE9",
       teller: "0x63b2B0528376d1B34Ed8c9FF61Bd67ab2C8c2Bb0",
@@ -337,7 +336,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "Ultra Yield Stablecoin Vault uses aggressive yet secure strategies to maximize stablecoin returns.",
     ecosystem: "Ether.fi",
     type: "Partner Vault",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
       teller: "0xc8c58d1567e1db8c02542e6df5241A0d71f91Fe2",
@@ -368,7 +367,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "Liquid Move ETH vault combines ETH staking with automated trading strategies.",
     ecosystem: "Ether.fi",
     type: "Partner Vault",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
       teller: "0x63ede83cbB1c8D90bA52E9497e6C1226a673e884",
@@ -399,7 +398,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "The Bera ETH Vault focuses on low-risk strategies with consistent returns for ETH holders.",
     ecosystem: "Ether.fi",
     type: "Partner Vault",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
       teller: "0xCbc0D2838256919e55eB302Ce8c46d7eE0E9d807",
@@ -430,7 +429,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       "The Bera BTC Vault focuses on low-risk strategies with consistent returns for BTC holders.",
     ecosystem: "Bera", // Note: Different ecosystem
     type: "Partner Vault",
-    chain: "Ethereum",
+    chain: "ethereum",
     addresses: {
       vault: "0xC673ef7791724f0dcca38adB47Fbb3AEF3DB6C80",
       teller: "0x07951756b68427e7554AB4c9091344cB8De1Ad5a",
@@ -454,61 +453,6 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     vaultIcon: "/images/etherFi/vaults/beraeth.svg",
   },
 };
-
-// Helper functions for easy access to vault data
-
-/**
- * Get a specific vault by ID
- */
-export const getVaultById = (id: number): EtherFiVault | undefined => {
-  return ETHERFI_VAULTS[id];
-};
-
-/**
- * Get vaults by type
- */
-export const getVaultsByType = (type: EtherFiVault["type"]): EtherFiVault[] => {
-  return Object.values(ETHERFI_VAULTS).filter((vault) => vault.type === type);
-};
-
-/**
- * Get vaults that support a specific deposit asset
- */
-export const getVaultsBySupportedAsset = (asset: string): EtherFiVault[] => {
-  return Object.values(ETHERFI_VAULTS).filter((vault) =>
-    vault.supportedAssets.deposit.includes(asset),
-  );
-};
-
-/**
- * Get vault address mappings (for backward compatibility)
- */
-export const getVaultAddressMappings = () => {
-  const vaultAddresses: Record<number, string> = {};
-  const tellerAddresses: Record<number, string> = {};
-  const accountantAddresses: Record<number, string> = {};
-
-  Object.values(ETHERFI_VAULTS).forEach((vault) => {
-    vaultAddresses[vault.id] = vault.addresses.vault;
-    tellerAddresses[vault.id] = vault.addresses.teller;
-    accountantAddresses[vault.id] = vault.addresses.accountant;
-  });
-
-  return {
-    VAULT_ID_TO_ADDRESS: vaultAddresses,
-    VAULT_ID_TO_TELLER: tellerAddresses,
-    VAULT_ID_TO_ACCOUNTANT: accountantAddresses,
-    LENS_ADDRESS: SHARED_LENS_ADDRESS,
-  };
-};
-
-// Export the address mappings for backward compatibility
-export const {
-  VAULT_ID_TO_ADDRESS,
-  VAULT_ID_TO_TELLER,
-  VAULT_ID_TO_ACCOUNTANT,
-  LENS_ADDRESS,
-} = getVaultAddressMappings();
 
 // Common assets supported across multiple vaults
 export const COMMON_CROSS_CHAIN_ASSETS = [

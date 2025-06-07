@@ -225,4 +225,11 @@ export const getMainnetChains = (): Chain[] => {
   return chainList.filter((chain) => !chain.testnet);
 };
 
+export const getCompositeKey = (
+  chainName: string,
+  tokenAddress: string,
+): string => {
+  return `${chainName.toLowerCase()}-${tokenAddress.toLowerCase()}`;
+};
+
 export default chains;
