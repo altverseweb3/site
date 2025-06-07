@@ -269,4 +269,11 @@ export const parseDecimalNumber = (
     remainingDigits: formattedNum,
     originalValue,
   };
+}
+
+export const getCompositeKey = (
+  chainName: string,
+  tokenAddress: string,
+): string => {
+  return `${chains[chainName.toLowerCase()].id || "ethereum"}-${tokenAddress.toLowerCase()}`;
 };
