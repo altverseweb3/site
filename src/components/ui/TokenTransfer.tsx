@@ -80,7 +80,7 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
     const calculateUsdValue = (token: Token | null, amount: string) => {
       if (!token?.chainId || !token?.address) return 0;
 
-      const compositeKey = `${token.chainId}-${token.address}`;
+      const compositeKey = `${token.stringChainId}-${token.address}`;
       const tokenValue = tokensByCompositeKey[compositeKey];
 
       if (!tokenValue?.priceUsd) return 0;
