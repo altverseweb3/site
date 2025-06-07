@@ -63,7 +63,7 @@ export const loadTokensForChain = async (
 
     const numericChainId = chainConfig.chainId;
     const isSuiChain = fetchChainId === "sui";
-
+    const chainId = chainConfig.id;
     // load standard ERC20s (and Sui tokens)
     let tokensForChain: Token[] = [];
     tokensForChain = data.map((item) => {
@@ -97,6 +97,7 @@ export const loadTokensForChain = async (
         address: contractAddress,
         decimals: tokenDecimals,
         chainId: numericChainId,
+        stringChainId: chainId,
         isWalletToken: false,
         native: isNativeToken,
       };
@@ -131,6 +132,7 @@ export const loadTokensForChain = async (
           address: nativeAddress,
           decimals: 18,
           chainId: numericChainId,
+          stringChainId: chainId,
           isWalletToken: false,
           native: true,
         };
@@ -185,7 +187,7 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
         }
 
         chainTokens.forEach((token) => {
-          const compositeKey = `${token.chainId}-${token.address.toLowerCase()}`;
+          const compositeKey = `${token.stringChainId}-${token.address.toLowerCase()}`;
 
           tokensByCompositeKey[compositeKey] = token;
 
@@ -207,4 +209,11 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
     byChainIdAndAddress: tokensByChainIdAndAddress,
     allTokensList: allTokensList,
   };
+};
+
+export const getCompositeKey = (
+  chainName: string,
+  tokenAddress: string,
+): string => {
+  return `${chains[chainName.toLowerCase()].id || "ethereum"}-${tokenAddress.toLowerCase()}`;
 };
