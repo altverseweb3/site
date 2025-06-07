@@ -49,6 +49,8 @@ export interface DepositAsset {
   contractAddress: string;
   decimals: number;
   imagePath: string;
+  priceUrl?: string;
+  stable: boolean;
 }
 
 // Complete EtherFi vaults configuration
@@ -340,108 +342,138 @@ export const DEPOSIT_ASSETS: Record<string, DepositAsset> = {
     contractAddress: "0x0000000000000000000000000000000000000000", // Native ETH
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/eth",
+    stable: false,
   },
   weth: {
     chain: "ethereum",
     contractAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/weth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/weth",
+    stable: false,
   },
   eeth: {
     chain: "ethereum",
     contractAddress: "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eeth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/eeth",
+    stable: false,
   },
   weeth: {
     chain: "ethereum",
     contractAddress: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/weeth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/weeth",
+    stable: false,
   },
   steth: {
     chain: "ethereum",
     contractAddress: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/steth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/steth",
+    stable: false,
   },
   wsteth: {
     chain: "ethereum",
     contractAddress: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/wsteth.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/wsteth",
+    stable: false,
   },
   lbtc: {
     chain: "ethereum",
     contractAddress: "0x8236a87084f8B84306f72007F36F2618A5634494",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/lbtc.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/lbtc",
+    stable: false,
   },
   wbtc: {
     chain: "ethereum",
     contractAddress: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/wbtc.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/wbtc",
+    stable: false,
   },
   cbbtc: {
     chain: "ethereum",
     contractAddress: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
     decimals: 8,
     imagePath: "/public/images/etherfi/ethereum-assets/cbbtc.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/cbbtc",
+    stable: false,
   },
   ebtc: {
     chain: "ethereum",
     contractAddress: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/ebtc.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/wbtc",
+    stable: false,
   },
   usdc: {
     chain: "ethereum",
     contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     decimals: 6,
     imagePath: "/public/images/etherfi/ethereum-assets/usdc.png",
+    stable: true,
   },
   dai: {
     chain: "ethereum",
     contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/dai.png",
+    stable: true,
   },
   usdt: {
     chain: "ethereum",
     contractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     decimals: 6,
     imagePath: "/public/images/etherfi/ethereum-assets/usdt.png",
+    stable: true,
   },
   usde: {
     chain: "ethereum",
     contractAddress: "0x4c9EdD5852cd905f086C759E8383e09bff1E68B3",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/usde.png",
+    stable: true,
   },
   deusd: {
     chain: "ethereum",
     contractAddress: "0x15700B564Ca08D9439C58cA5053166E8317aa138",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/deusd.png",
+    stable: true,
   },
   sdeusd: {
     chain: "ethereum",
     contractAddress: "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/sdeusd.png",
+    stable: true,
   },
   eigen: {
     chain: "ethereum",
     contractAddress: "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/eigen.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/eigen",
+    stable: false,
   },
   ethfi: {
     chain: "ethereum",
     contractAddress: "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb",
     decimals: 18,
     imagePath: "/public/images/etherfi/ethereum-assets/ethfi.png",
+    priceUrl: "https://www.ether.fi/api/dapp/pricing/ethfi",
+    stable: false,
   },
 };
 
