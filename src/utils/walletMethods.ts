@@ -809,7 +809,7 @@ export function useTokenTransfer(
 
         // Set referrer
         const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
-        const referrerBps = 50;
+        const referrerBps = 0;
 
         if (options.type === "swap" && sourceToken && destinationToken) {
           quotes = await getMayanQuote({
@@ -1123,7 +1123,7 @@ export function useTokenTransfer(
 
       // Set referrer
       const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
-      const referrerBps = 50;
+      const referrerBps = 0;
 
       // Refresh quote if needed
       if (!quoteData || quoteData.length === 0) {
