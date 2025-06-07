@@ -41,8 +41,168 @@ export interface EtherFiVault {
   vaultIcon: string;
 }
 
+// Deposit asset configuration for tokens with contract addresses
+export interface DepositAsset {
+  chain: string;
+  contractAddress: string;
+  decimals: number;
+  imagePath: string;
+}
+
+// Cross-chain asset configuration for native assets
+export interface CrossChainAsset {
+  chain: string;
+  symbol: string;
+}
+
 // Shared lens address for all vaults
 const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
+
+// Ethereum deposit assets configuration
+export const DEPOSIT_ASSETS: Record<string, DepositAsset> = {
+  eth: {
+    chain: "Ethereum",
+    contractAddress: "0x0000000000000000000000000000000000000000", // Native ETH
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/eth.png",
+  },
+  weth: {
+    chain: "Ethereum",
+    contractAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/weth.png",
+  },
+  eeth: {
+    chain: "Ethereum",
+    contractAddress: "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/eeth.png",
+  },
+  weeth: {
+    chain: "Ethereum",
+    contractAddress: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/weeth.png",
+  },
+  steth: {
+    chain: "Ethereum",
+    contractAddress: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/steth.png",
+  },
+  wsteth: {
+    chain: "Ethereum",
+    contractAddress: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/wsteth.png",
+  },
+  lbtc: {
+    chain: "Ethereum",
+    contractAddress: "0x8236a87084f8B84306f72007F36F2618A5634494",
+    decimals: 8,
+    imagePath: "/public/images/etherfi/ethereum-assets/lbtc.png",
+  },
+  wbtc: {
+    chain: "Ethereum",
+    contractAddress: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    decimals: 8,
+    imagePath: "/public/images/etherfi/ethereum-assets/wbtc.png",
+  },
+  cbbtc: {
+    chain: "Ethereum",
+    contractAddress: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+    decimals: 8,
+    imagePath: "/public/images/etherfi/ethereum-assets/cbbtc.png",
+  },
+  ebtc: {
+    chain: "Ethereum",
+    contractAddress: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/ebtc.png",
+  },
+  usdc: {
+    chain: "Ethereum",
+    contractAddress: "0xA0b86a33E6441521e0040C7201e7fe5F9e08Da09",
+    decimals: 6,
+    imagePath: "/public/images/etherfi/ethereum-assets/usdc.png",
+  },
+  dai: {
+    chain: "Ethereum",
+    contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/dai.png",
+  },
+  usdt: {
+    chain: "Ethereum",
+    contractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    decimals: 6,
+    imagePath: "/public/images/etherfi/ethereum-assets/usdt.png",
+  },
+  usde: {
+    chain: "Ethereum",
+    contractAddress: "0x4c9EdD5852cd905f086C759E8383e09bff1E68B3",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/usde.png",
+  },
+  deusd: {
+    chain: "Ethereum",
+    contractAddress: "0x15700B564Ca08D9439C58cA5053166E8317aa138",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/deusd.png",
+  },
+  sdeusd: {
+    chain: "Ethereum",
+    contractAddress: "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/sdeusd.png",
+  },
+  eigen: {
+    chain: "Ethereum",
+    contractAddress: "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
+    decimals: 18,
+    imagePath: "/public/images/etherfi/ethereum-assets/eigen.png",
+  },
+};
+
+// Cross-chain native assets configuration
+export const CROSS_CHAIN_ASSETS: Record<string, CrossChainAsset> = {
+  sol: {
+    chain: "Solana",
+    symbol: "SOL",
+  },
+  sui: {
+    chain: "Sui",
+    symbol: "SUI",
+  },
+  arb: {
+    chain: "Arbitrum",
+    symbol: "ARB",
+  },
+  op: {
+    chain: "Optimism",
+    symbol: "OP",
+  },
+  base: {
+    chain: "Base",
+    symbol: "BASE",
+  },
+  uni: {
+    chain: "Unichain",
+    symbol: "UNI",
+  },
+  pol: {
+    chain: "Polygon",
+    symbol: "POL",
+  },
+  bnb: {
+    chain: "BNB Chain",
+    symbol: "BNB",
+  },
+  avax: {
+    chain: "Avalanche",
+    symbol: "AVAX",
+  },
+};
 
 // Complete EtherFi vaults configuration
 export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
@@ -321,13 +481,6 @@ export const getVaultsBySupportedAsset = (asset: string): EtherFiVault[] => {
 };
 
 /**
- * Get image path for a deposit asset
- */
-export const getDepositAssetImage = (asset: string): string | undefined => {
-  return DEPOSIT_ASSET_IMAGES[asset];
-};
-
-/**
  * Get vault address mappings (for backward compatibility)
  */
 export const getVaultAddressMappings = () => {
@@ -356,33 +509,6 @@ export const {
   VAULT_ID_TO_ACCOUNTANT,
   LENS_ADDRESS,
 } = getVaultAddressMappings();
-
-// Deposit asset image paths mapping
-export const DEPOSIT_ASSET_IMAGES: Record<string, string> = {
-  // ETH variants
-  wETH: "/images/etherFi/eth-icon-2.png",
-  eETH: "/images/etherFi/eeth-icon.png",
-  weETH: "/images/etherFi/weeth-icon.png",
-  stETH: "/images/etherFi/stETH.svg",
-  wstETH: "/images/etherFi/wstETH.png",
-
-  // BTC variants
-  LBTC: "/images/etherFi/lbtc-icon.png",
-  wBTC: "/images/etherFi/wbtc.png",
-  cbBTC: "/images/etherFi/cbbtc-icon.png",
-  eBTC: "/images/etherFi/ebtc-icon.png",
-
-  // USD stablecoins
-  USDC: "/images/etherFi/usdc-icon.png",
-  DAI: "/images/etherFi/dai-icon.png",
-  USDT: "/images/etherFi/usdt-icon.png",
-  USDe: "/images/etherFi/usde-icon.png",
-  deUSD: "/images/etherFi/deUSD.png",
-  sdeUSD: "/images/etherFi/sdeUSD.png",
-
-  // Governance tokens
-  EIGEN: "/images/etherFi/eigenlayer-token.svg",
-};
 
 // Common assets supported across multiple vaults
 export const COMMON_CROSS_CHAIN_ASSETS = [
