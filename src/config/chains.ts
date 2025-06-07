@@ -231,7 +231,7 @@ export const getCompositeKey = (
   chainName: string,
   tokenAddress: string,
 ): string => {
-  return `${chainName.toLowerCase()}-${tokenAddress.toLowerCase()}`;
+  return `${chains[chainName.toLowerCase()]?.chainId || 0}-${tokenAddress.toLowerCase()}`;
 };
 
 export default chains;
