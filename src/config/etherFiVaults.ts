@@ -82,7 +82,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "liquidETH",
         symbol: "liquidETH",
-        imagePath: "/images/etherFi/liquideth-icon.svg",
+        imagePath: "/images/etherFi/liquid.svg",
       },
     },
     links: {
@@ -123,7 +123,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "liquidBTC",
         symbol: "liquidBTC",
-        imagePath: "/images/etherFi/liquidbtc-icon.svg",
+        imagePath: "/images/etherFi/liquid.svg",
       },
     },
     links: {
@@ -164,7 +164,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "liquidUSD",
         symbol: "liquidUSD",
-        imagePath: "/images/etherFi/usdc-icon.png",
+        imagePath: "/images/etherFi/liquid.svg",
       },
     },
     links: {
@@ -205,7 +205,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "eEIGEN",
         symbol: "eEIGEN",
-        imagePath: "/images/etherFi/eeigen-icon.svg",
+        imagePath: "/images/etherFi/ethereum-assets/eeigen.png",
       },
     },
     links: {
@@ -247,7 +247,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "UltraUSD",
         symbol: "UltraUSD",
-        imagePath: "/images/etherFi/ultrayieldstable.png",
+        imagePath: "/images/etherFi/liquid.svg",
       },
     },
     links: {
@@ -288,7 +288,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "LiquidMoveETH",
         symbol: "LiquidMoveETH",
-        imagePath: "/images/etherFi/liquidmove.png",
+        imagePath: "/images/etherFi/ethereum-assets/liquidmove.png",
       },
     },
     links: {
@@ -331,7 +331,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "BeraETH",
         symbol: "BeraETH",
-        imagePath: "/images/etherFi/beraeth.svg",
+        imagePath: "/images/etherFi/ethereum-assets/beraeth.svg",
       },
     },
     links: {
@@ -372,7 +372,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "BeraBTC",
         symbol: "BeraBTC",
-        imagePath: "/images/etherFi/beraeth.svg",
+        imagePath: "/images/etherFi/ethereum-assets/beraeth.svg",
       },
     },
     links: {
@@ -505,14 +505,20 @@ export const DEPOSIT_ASSET_IMAGES: Record<string, string> = {
 
   // Governance tokens
   EIGEN: "/images/etherFi/eigenlayer-token.svg",
-
-  // Cross-chain assets
-  SOL: "/images/etherFi/solana-sol-logo.svg",
-  SUI: "/images/etherFi/sui-logo.svg",
 };
 
 // Common assets supported across multiple vaults
-export const COMMON_CROSS_CHAIN_ASSETS = ["SOL", "SUI"];
+export const COMMON_CROSS_CHAIN_ASSETS = [
+  "SOL",
+  "SUI",
+  "ARB",
+  "OP",
+  "BASE",
+  "UNI",
+  "POL",
+  "BNB",
+  "AVAX",
+];
 
 // Asset categories for easy filtering
 export const ASSET_CATEGORIES = {
