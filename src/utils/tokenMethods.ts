@@ -210,3 +210,10 @@ export const loadAllTokens = async (): Promise<StructuredTokenData> => {
     allTokensList: allTokensList,
   };
 };
+
+export const getCompositeKey = (
+  chainName: string,
+  tokenAddress: string,
+): string => {
+  return `${chains[chainName.toLowerCase()].id || "ethereum"}-${tokenAddress.toLowerCase()}`;
+};
