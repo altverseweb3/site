@@ -13,9 +13,9 @@ export interface EtherFiVault {
 
   // Contract addresses
   addresses: {
-    vault: string; // Main vault contract
-    teller: string; // Teller contract for deposits
-    accountant: string; // Accountant contract
+    vault: string;
+    teller: string;
+    accountant: string;
     lens: string; // Lens contract (same for all vaults)
   };
 
@@ -37,25 +37,8 @@ export interface EtherFiVault {
     withdrawal: string; // Same as analytics for withdrawals
   };
 
-  // Vault status and settings
-  status: {
-    isActive: boolean;
-    acceptsDeposits: boolean;
-    pausedMessage?: string;
-  };
-
-  // Rewards and incentives
-  rewards: {
-    points: string[]; // Point systems (e.g., "NA")
-    baseApy?: string; // Hardcoded APY if available
-  };
-
-  // UI configuration
-  ui: {
-    icon: string; // Path to vault icon
-    color?: string; // Accent color
-    featured: boolean; // Whether to highlight as featured
-  };
+  // Vault Icon
+  vaultIcon: string;
 }
 
 // Shared lens address for all vaults
@@ -91,17 +74,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/eth",
       withdrawal: "https://www.ether.fi/app/liquid/eth",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/liquid-eth-icon.png",
-      featured: true,
-    },
+    vaultIcon: "/images/etherFi/liquid-eth-icon.png",
   },
 
   2: {
@@ -132,17 +105,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/btc",
       withdrawal: "https://www.ether.fi/app/liquid/btc",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/liquid-btc-icon.png",
-      featured: true,
-    },
+    vaultIcon: "/images/etherFi/liquid-btc-icon.png",
   },
 
   3: {
@@ -173,17 +136,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/usd",
       withdrawal: "https://www.ether.fi/app/liquid/usd",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/usdc-icon.png",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/usdc-icon.png",
   },
 
   4: {
@@ -214,18 +167,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/eigen",
       withdrawal: "https://www.ether.fi/app/eigen",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-      baseApy: "3.1%",
-    },
-    ui: {
-      icon: "/images/etherFi/eigenlayer-icon.svg",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/eigenlayer-icon.svg",
   },
 
   5: {
@@ -256,17 +198,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
       withdrawal: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/ultrayieldstable.png",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/ultrayieldstable.png",
   },
 
   6: {
@@ -297,19 +229,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/move-eth",
       withdrawal: "https://www.ether.fi/app/liquid/move-eth",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: false, // Note: This vault has deposits disabled
-      pausedMessage: "Deposits are currently disabled for this vault.",
-    },
-    rewards: {
-      points: ["NA"],
-      baseApy: "11.0%",
-    },
-    ui: {
-      icon: "/images/etherFi/liquidmove.png",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/liquidmove.png",
   },
 
   7: {
@@ -340,17 +260,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/bera-eth",
       withdrawal: "https://www.ether.fi/app/liquid/bera-eth",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/beraeth.svg",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/beraeth.svg",
   },
 
   8: {
@@ -381,17 +291,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       analytics: "https://www.ether.fi/app/liquid/bera-btc",
       withdrawal: "https://www.ether.fi/app/liquid/bera-btc",
     },
-    status: {
-      isActive: true,
-      acceptsDeposits: true,
-    },
-    rewards: {
-      points: ["NA"],
-    },
-    ui: {
-      icon: "/images/etherFi/beraeth.svg",
-      featured: false,
-    },
+    vaultIcon: "/images/etherFi/beraeth.svg",
   },
 };
 
@@ -402,29 +302,6 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
  */
 export const getVaultById = (id: number): EtherFiVault | undefined => {
   return ETHERFI_VAULTS[id];
-};
-
-/**
- * Get all active vaults
- */
-export const getActiveVaults = (): EtherFiVault[] => {
-  return Object.values(ETHERFI_VAULTS).filter((vault) => vault.status.isActive);
-};
-
-/**
- * Get vaults that accept deposits
- */
-export const getDepositableVaults = (): EtherFiVault[] => {
-  return Object.values(ETHERFI_VAULTS).filter(
-    (vault) => vault.status.isActive && vault.status.acceptsDeposits,
-  );
-};
-
-/**
- * Get featured vaults
- */
-export const getFeaturedVaults = (): EtherFiVault[] => {
-  return Object.values(ETHERFI_VAULTS).filter((vault) => vault.ui.featured);
 };
 
 /**
