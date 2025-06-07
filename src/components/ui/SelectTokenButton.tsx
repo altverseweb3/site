@@ -28,6 +28,8 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { useDebounce } from "use-debounce";
 import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
 import { getTokenMetadata } from "@/utils/tokenApiMethods";
+import useUIStore from "@/store/uiStore";
+import { parseDecimalNumber } from "@/utils/tokenMethods";
 
 interface TokenListItemProps {
   token: Token;
@@ -59,6 +61,22 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
       [onCopy, token.address, token.id],
     );
 
+    const FormattedNumber = ({ value }: { value: string | number }) => {
+      const { hasSubscript, subscriptCount, remainingDigits } =
+        parseDecimalNumber(value);
+
+      if (hasSubscript) {
+        return (
+          <span>
+            0.0<sub>{subscriptCount}</sub>
+            {remainingDigits}
+          </span>
+        );
+      }
+
+      return <span>{remainingDigits}</span>;
+    };
+
     return (
       <div className="px-2 py-0.5 cursor-pointer group" onClick={handleClick}>
         <div className="flex items-center justify-between p-[5px] px-[9px] rounded-md w-full transition-colors duration-150 ease-in-out hover:bg-[#27272A]">
@@ -66,7 +84,11 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             <TokenImage token={token} chain={chain} />
 
             <div className="flex flex-col">
-              <div className="font-medium text-[#FAFAFA]">{token.name}</div>
+              <div className="font-medium text-[#FAFAFA]">
+                {token.name.length > 32
+                  ? token.name.slice(0, 32) + "..."
+                  : token.name}
+              </div>
               <div className="flex items-center text-[0.75rem] text-[#FAFAFA55]">
                 <span className="numeric-input flex items-center w-16">
                   {token.ticker}
@@ -107,11 +129,11 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
             </div>
           </div>
           <div className="text-right">
-            <div className="font-medium text-[#FAFAFA] numeric-input">
+            <div className="font-regular text-[#FAFAFA] numeric-input">
               {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
-              {token.userBalance}
+              <FormattedNumber value={token.userBalance || "0"} />
             </div>
           </div>
         </div>
@@ -301,7 +323,6 @@ interface SelectTokenButtonProps {
 export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   variant,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 150);
   const [copiedAddresses, setCopiedAddresses] = useState<
@@ -319,8 +340,19 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const addCustomToken = useWeb3Store((state) => state.addCustomToken);
-
+  const sourceIsOpen = useUIStore((state) => state.sourceTokenSelectOpen);
+  const destinationIsOpen = useUIStore(
+    (state) => state.destinationTokenSelectOpen,
+  );
+  const setSourceIsOpen = useUIStore((state) => state.setSourceTokenSelectOpen);
+  const setDestinationIsOpen = useUIStore(
+    (state) => state.setDestinationTokenSelectOpen,
+  );
   const chainToShow = variant === "source" ? sourceChain : destinationChain;
+
+  const isOpen = variant === "source" ? sourceIsOpen : destinationIsOpen;
+  const setIsOpen =
+    variant === "source" ? setSourceIsOpen : setDestinationIsOpen;
 
   const selectedToken = variant === "source" ? sourceToken : destinationToken;
 
@@ -499,7 +531,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
       setIsOpen(false);
     },
-    [variant, setSourceToken, setDestinationToken],
+    [variant, setSourceToken, setDestinationToken, setIsOpen],
   );
 
   const handleSearchChange = useCallback(
@@ -511,6 +543,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
+      // debugger;
       setIsOpen(open);
       if (open) {
         // Clear search query
@@ -523,7 +556,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
         lookedUpAddresses.current.clear();
       }
     },
-    [getTokensForChain, chainToShow.chainId],
+    [getTokensForChain, chainToShow.chainId, setIsOpen],
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -576,6 +609,12 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           type="button"
           className={`${buttonClass} ${selectedToken ? "py-[3px]" : "py-2"}`}
           onMouseEnter={handleMouseEnter}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation(); // Prevent event from bubbling up to AssetBox
+            // Your existing click logic here
+            // debugger;
+            setIsOpen(true);
+          }}
         >
           {buttonContent}
           <svg

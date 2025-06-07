@@ -9,6 +9,7 @@ interface PersistentAmountDisplayProps {
   placeholder?: string;
   shouldApplyDisabledStyle?: boolean;
   readOnly?: boolean;
+  allowContainerClick?: boolean; // New prop to control click passthrough
 }
 
 const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
@@ -17,8 +18,8 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
   variant,
   onChange,
   placeholder,
-  shouldApplyDisabledStyle,
   readOnly,
+  allowContainerClick = false, // Default to false
 }) => {
   // Track last displayed value for smooth ticker animations
   const [lastDisplayedAmount, setLastDisplayedAmount] = useState(0);
@@ -122,7 +123,7 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
   // Dynamic text size class based on current content length
   const textSizeClass = getTextSizeClass(contentLength);
 
-  // Base styles with dynamic text size
+  // Base styles with dynamic text size - force same color for both variants
   const commonClass = `
     w-full 
     bg-transparent 
@@ -133,7 +134,11 @@ const PersistentAmountDisplay: React.FC<PersistentAmountDisplayProps> = ({
     [appearance:textfield] 
     [&::-webkit-outer-spin-button]:appearance-none 
     [&::-webkit-inner-spin-button]:appearance-none
-    ${shouldApplyDisabledStyle ? "opacity-70" : ""}
+    ${allowContainerClick ? "pointer-events-none" : ""}
+    text-white
+    placeholder:text-white
+    placeholder:opacity-100
+    opacity-100
     transition-font-size
     duration-200
   `;
