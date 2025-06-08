@@ -269,7 +269,7 @@ export const parseDecimalNumber = (
     remainingDigits: formattedNum,
     originalValue,
   };
-}
+};
 
 export const getCompositeKey = (
   chainName: string,

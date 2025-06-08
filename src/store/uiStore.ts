@@ -34,7 +34,7 @@ const useUIStore = create<UIStoreState>()(
       activeTab: "swap",
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      theme: "light",
+      theme: "dark", // Default to dark theme
       toggleTheme: () =>
         set((state) => {
           const newTheme = state.theme === "light" ? "dark" : "light";
@@ -71,10 +71,7 @@ if (typeof window !== "undefined") {
 
   if (!storedTheme) {
     // If no stored theme, use system preference
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-      .matches
-      ? "dark"
-      : "light";
+    const systemTheme = "dark"; // Default to dark theme
     store.setTheme(systemTheme);
   } else {
     // If theme was stored, ensure DOM matches stored state
