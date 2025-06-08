@@ -146,6 +146,7 @@ TokenListItem.displayName = "TokenListItem";
 
 interface TokenListSectionProps {
   title: string;
+  className: string;
   tokens: Token[];
   onSelectToken: (token: Token) => void;
   copiedAddresses: Record<string, boolean>;
@@ -154,12 +155,22 @@ interface TokenListSectionProps {
 }
 
 const TokenListSection: React.FC<TokenListSectionProps> = React.memo(
-  ({ title, tokens, onSelectToken, copiedAddresses, onCopy, chain }) => {
+  ({
+    title,
+    className,
+    tokens,
+    onSelectToken,
+    copiedAddresses,
+    onCopy,
+    chain,
+  }) => {
     if (tokens.length === 0) return null;
 
     return (
       <div>
-        <div className="px-4 pb-2 pt-4 text-sm text-[#FAFAFA55]">{title}</div>
+        <div className={`px-4 pb-2 text-sm text-[#FAFAFA55] ${className}`}>
+          {title}
+        </div>
         <div>
           {tokens.map((token) => (
             <TokenListItem
@@ -292,6 +303,7 @@ const VirtualizedTokenList: React.FC<{
         {/* Wallet tokens section */}
         <TokenListSection
           title="your wallet"
+          className="pt-0"
           tokens={filteredWalletTokens}
           onSelectToken={onSelectToken}
           copiedAddresses={copiedAddresses}
@@ -301,6 +313,7 @@ const VirtualizedTokenList: React.FC<{
         {/* All tokens section */}
         <TokenListSection
           title="all tokens"
+          className={filteredWalletTokens.length > 0 ? "pt-3" : "pt-0"}
           tokens={filteredAllTokens}
           onSelectToken={onSelectToken}
           copiedAddresses={copiedAddresses}
