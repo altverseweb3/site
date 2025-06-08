@@ -177,7 +177,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
           >
             {/* Always render the image even during transitions */}
             <Image
-              src={`/tokens/mono/${displayedChain.icon}`}
+              src={`${displayedChain.icon}`}
               alt={displayedChain.name}
               fill
               className="object-contain"
@@ -267,7 +267,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="relative w-3.5 h-3.5">
                       <Image
-                        src={`/tokens/mono/${chain.icon}`}
+                        src={`${chain.icon}`}
                         alt={chain.name}
                         fill
                         className="object-contain"
