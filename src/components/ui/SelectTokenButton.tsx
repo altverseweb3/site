@@ -163,7 +163,7 @@ const TokenListSection: React.FC<TokenListSectionProps> = React.memo(
         <div>
           {tokens.map((token) => (
             <TokenListItem
-              key={`${token.id}-${token.chainId}-${token.address}`}
+              key={`${token.id}-${token.stringChainId}-${token.address}`}
               token={token}
               onSelect={onSelectToken}
               copiedAddresses={copiedAddresses}
@@ -407,6 +407,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           const newToken: Token = {
             id: `custom-${chainToShow.chainId}-${normalizedAddress}`,
             chainId: chainToShow.chainId,
+            stringChainId: chainToShow.id,
             name: metadata.name,
             ticker: metadata.symbol || "???",
             address: normalizedAddress,

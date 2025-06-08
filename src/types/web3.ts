@@ -37,6 +37,7 @@ export type Token = {
   address: string;
   decimals: number;
   chainId: number;
+  stringChainId: string;
   userBalance?: string;
   userBalanceUsd?: string;
   priceUsd?: string;
