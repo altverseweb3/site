@@ -1,6 +1,8 @@
 import React from "react";
 import { SelectTokenButton } from "@/components/ui/SelectTokenButton";
 import { TokenAmountInput } from "@/components/ui/TokenAmountInput";
+import useUIStore from "@/store/uiStore";
+import useWeb3Store from "@/store/web3Store";
 
 interface TokenInputGroupProps {
   variant: "source" | "destination";
@@ -23,6 +25,21 @@ export function TokenInputGroup({
   isLoadingQuote = false,
   isEnabled = true, // Default to true
 }: TokenInputGroupProps) {
+  const setSourceTokenSelectOpen = useUIStore(
+    (state) => state.setSourceTokenSelectOpen,
+  );
+  const setDestinationTokenSelectOpen = useUIStore(
+    (state) => state.setDestinationTokenSelectOpen,
+  );
+  const sourceToken = useWeb3Store((state) => state.sourceToken);
+  const destinationToken = useWeb3Store((state) => state.destinationToken);
+
+  const setIsOpen =
+    variant === "source"
+      ? setSourceTokenSelectOpen
+      : setDestinationTokenSelectOpen;
+  const allowClick = variant === "source" ? !sourceToken : !destinationToken;
+
   return (
     <div className="flex justify-between items-start gap-2 sm:gap-4 w-full">
       {showSelectToken && <SelectTokenButton variant={variant} />}
@@ -33,6 +50,11 @@ export function TokenInputGroup({
         readOnly={!isEnabled || readOnly}
         isLoadingQuote={isLoadingQuote && variant === "destination"}
         variant={variant}
+        onContainerClick={() => {
+          if (allowClick) {
+            setIsOpen(true);
+          }
+        }} // Open token selector on container click
       />
     </div>
   );
