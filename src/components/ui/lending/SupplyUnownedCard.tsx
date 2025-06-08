@@ -84,10 +84,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
         // First try to get from web3Store (preferred method like swap)
         if (tokenFromStore) {
           setFetchedToken(tokenFromStore);
-          console.log(
-            `✅ Found token from store for ${tokenAddress}:`,
-            tokenFromStore,
-          );
           return;
         }
 
@@ -95,14 +91,7 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
         const token = await getTokenByAddress(tokenAddress, currentChainId);
         if (token) {
           setFetchedToken(token);
-          console.log(
-            `✅ Found token data from files for ${tokenAddress}:`,
-            token,
-          );
         } else {
-          console.log(
-            `❌ No token data found in files for ${tokenAddress} on chain ${currentChainId}`,
-          );
           // Create a basic token object with the provided props
           setFetchedToken({
             id: `fallback-${currentChainId}-${tokenAddress}`,
@@ -119,8 +108,7 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
               subtitle === "BNB",
           });
         }
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+      } catch {
         // Set fallback token data
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,

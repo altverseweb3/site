@@ -197,8 +197,7 @@ const CollateralToggleModal: React.FC<CollateralToggleModalProps> = ({
       if (success) {
         setIsOpen(false);
       }
-    } catch (error) {
-      console.error("Collateral toggle failed:", error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }

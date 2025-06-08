@@ -120,7 +120,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({ aaveData }) => {
     }) || [];
 
   const handleBorrowAction = async (reserve: AssetData) => {
-    console.log("Borrow action for:", reserve);
     const borrowAPY =
       typeof reserve.borrowAPY === "number"
         ? reserve.borrowAPY.toFixed(2)
@@ -133,7 +132,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({ aaveData }) => {
   };
 
   const handleRepayAction = async (asset: AssetData) => {
-    console.log("Repay action for:", asset);
     toast.info(`Repay ${asset.symbol}`, {
       description: `Current debt: ${asset.formattedBalance || asset.currentStableDebt?.toString() || "N/A"}`,
     });
@@ -285,13 +283,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({ aaveData }) => {
               ) : filteredAvailableAssets &&
                 filteredAvailableAssets.length > 0 ? (
                 filteredAvailableAssets.map((reserve, index) => {
-                  console.log(
-                    `Borrow Reserve ${index} symbol:`,
-                    reserve.symbol,
-                    "borrowAPY:",
-                    reserve.borrowAPY,
-                  );
-
                   // Get the correct borrow APY
                   const borrowAPY =
                     typeof reserve.borrowAPY === "number"

@@ -200,8 +200,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
         setIsOpen(false);
         setWithdrawAmount("");
       }
-    } catch (error) {
-      console.error("Withdraw failed:", error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }

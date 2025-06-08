@@ -206,7 +206,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
       toast.error("Token information missing", {
         description: `Unable to find token contract address for ${tokenSymbol}. Address: ${tokenAddress || "undefined"}`,
       });
-      console.error("❌ Invalid token address:", { tokenAddress, tokenSymbol });
       return;
     }
 
@@ -214,10 +213,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
     if (!tokenDecimals || tokenDecimals <= 0) {
       toast.error("Token decimals missing", {
         description: `Invalid token decimals for ${tokenSymbol}: ${tokenDecimals}`,
-      });
-      console.error("❌ Invalid token decimals:", {
-        tokenDecimals,
-        tokenSymbol,
       });
       return;
     }
@@ -232,16 +227,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
           : evmNetwork.chainId
         : 1; // Default to Ethereum mainnet
 
-      console.log("🔍 Supply Modal Debug:", {
-        evmNetwork,
-        currentChainId,
-        tokenAddress,
-        tokenDecimals,
-        tokenSymbol,
-        supplyAmount,
-        isEvmConnected,
-      });
-
       // Get signer from window.ethereum
       if (!window.ethereum) {
         throw new Error("MetaMask not found");
@@ -252,10 +237,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
       );
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
-
-      console.log(
-        `🚀 Starting Aave supply: ${supplyAmount} ${tokenSymbol} on chain ${currentChainId}`,
-      );
 
       // Show initial toast
       const toastId = toast.loading(
@@ -297,7 +278,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
         });
       }
     } catch (error: unknown) {
-      console.error("Supply failed:", error);
       toast.error("Supply failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });

@@ -86,14 +86,7 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
 
         if (token) {
           setFetchedToken(token);
-          console.log(
-            `✅ Found token data from files for ${tokenAddress}:`,
-            token,
-          );
         } else {
-          console.log(
-            `❌ No token data found in files for ${tokenAddress} on chain ${currentChainId}`,
-          );
           setFetchedToken({
             id: `fallback-${currentChainId}-${tokenAddress}`,
             name: title,
@@ -109,8 +102,7 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
               subtitle === "BNB",
           });
         }
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+      } catch {
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,
           name: title,
@@ -166,10 +158,6 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
 
-      console.log(
-        `🚀 Starting repay: ${amount} ${subtitle} on chain ${currentChainId}`,
-      );
-
       // Show loading toast
       const toastId = toast.loading(`Repaying ${amount} ${subtitle}`, {
         description: "Approve token transfer and repay to Aave",
@@ -204,7 +192,6 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
         return false;
       }
     } catch (error: unknown) {
-      console.error("Repay failed:", error);
       toast.error("Repay failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });
@@ -241,10 +228,6 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
       );
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
-
-      console.log(
-        `🔄 Starting borrow swap: ${amount} ${fromAsset.symbol} debt → ${toAsset.symbol} debt`,
-      );
 
       // Show loading toast
       const toastId = toast.loading(
@@ -289,7 +272,6 @@ const BorrowOwnedCard: React.FC<BorrowOwnedCardProps> = ({
         return false;
       }
     } catch (error: unknown) {
-      console.error("Borrow swap failed:", error);
       toast.error("Borrow swap failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });

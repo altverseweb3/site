@@ -93,14 +93,7 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
 
         if (token) {
           setFetchedToken(token);
-          console.log(
-            `✅ Found token data from files for ${tokenAddress}:`,
-            token,
-          );
         } else {
-          console.log(
-            `❌ No token data found in files for ${tokenAddress} on chain ${currentChainId}`,
-          );
           setFetchedToken({
             id: `fallback-${currentChainId}-${tokenAddress}`,
             name: title,
@@ -116,8 +109,7 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
               subtitle === "BNB",
           });
         }
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+      } catch {
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,
           name: title,
@@ -173,10 +165,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
 
-      console.log(
-        `🚀 Starting withdraw: ${amount} ${subtitle} on chain ${currentChainId}`,
-      );
-
       // Show loading toast
       const toastId = toast.loading(`Withdrawing ${amount} ${subtitle}`, {
         description: "Processing withdrawal from Aave",
@@ -210,7 +198,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
         return false;
       }
     } catch (error: unknown) {
-      console.error("Withdraw failed:", error);
       toast.error("Withdraw failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });
@@ -253,10 +240,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
 
-      console.log(
-        `🔄 ${enable ? "Enabling" : "Disabling"} collateral for ${subtitle}`,
-      );
-
       // Show loading toast
       const toastId = toast.loading(
         `${enable ? "Enabling" : "Disabling"} ${subtitle} as collateral`,
@@ -295,7 +278,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
         return false;
       }
     } catch (error: unknown) {
-      console.error("Collateral toggle failed:", error);
       toast.error("Collateral toggle failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });
@@ -332,10 +314,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
       );
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
-
-      console.log(
-        `🔄 Starting asset swap: ${amount} ${fromAsset.symbol} → ${toAsset.symbol}`,
-      );
 
       // Show loading toast
       const toastId = toast.loading(
@@ -379,7 +357,6 @@ const SupplyOwnedCard: React.FC<SupplyOwnedCardProps> = ({
         return false;
       }
     } catch (error: unknown) {
-      console.error("Asset swap failed:", error);
       toast.error("Asset swap failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });

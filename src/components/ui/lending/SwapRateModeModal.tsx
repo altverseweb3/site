@@ -130,8 +130,7 @@ const SwapRateModeModal: React.FC<SwapRateModeModalProps> = ({
       if (success) {
         setIsOpen(false);
       }
-    } catch (error) {
-      console.error("Rate mode swap failed:", error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }

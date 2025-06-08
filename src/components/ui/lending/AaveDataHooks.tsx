@@ -709,18 +709,17 @@ export const useAaveUserAccount = () => {
     try {
       const market = getAaveMarket(currentChainId);
       if (!market?.POOL) {
-        throw new Error("Aave market not found");
+        setError("Aave market not found");
+        return;
       }
 
       const provider = new ethers.BrowserProvider(
         window.ethereum as ethers.Eip1193Provider,
       );
 
-      // Define fallback data providers (following example logic exactly)
       const dataProviders = [
         market.UI_POOL_DATA_PROVIDER,
         market.AAVE_PROTOCOL_DATA_PROVIDER,
-        // Add fallback providers by chain (from working example)
         currentChainId === 1
           ? "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3"
           : null,
@@ -733,12 +732,9 @@ export const useAaveUserAccount = () => {
       ].filter((addr): addr is string => typeof addr === "string");
 
       let userData = null;
-      let usedProvider = null;
 
-      // Try data providers first (following example approach)
       for (const providerAddr of dataProviders) {
         try {
-          console.log("Trying data provider:", providerAddr);
           const dataProviderContract = new ethers.Contract(
             providerAddr,
             DATA_PROVIDER_ABI,
@@ -746,50 +742,21 @@ export const useAaveUserAccount = () => {
           );
           userData =
             await dataProviderContract.getUserAccountData(walletAddress);
-          usedProvider = providerAddr;
-          console.log("Successfully got data from provider:", providerAddr);
           break;
-        } catch (err) {
-          console.log(
-            "Failed with provider:",
-            providerAddr,
-            err instanceof Error ? err.message : "Unknown error",
-          );
+        } catch {
           continue;
         }
       }
 
-      // Fallback to pool contract if data providers fail (following example)
       if (!userData) {
-        try {
-          console.log("Trying to get data directly from pool:", market.POOL);
-          const poolContract = new ethers.Contract(
-            market.POOL,
-            POOL_ABI,
-            provider,
-          );
-          userData = await poolContract.getUserAccountData(walletAddress);
-          usedProvider = "Pool Contract";
-          console.log("Successfully got data from pool contract");
-        } catch (err) {
-          console.error(
-            "Failed to get data from pool contract:",
-            err instanceof Error ? err.message : "Unknown error",
-          );
-          throw new Error(
-            "Could not fetch user data with any available provider. You may not have any positions on Aave V3 on this network.",
-          );
-        }
+        const poolContract = new ethers.Contract(
+          market.POOL,
+          POOL_ABI,
+          provider,
+        );
+        userData = await poolContract.getUserAccountData(walletAddress);
       }
 
-      console.log(
-        "User account data received from",
-        usedProvider,
-        ":",
-        userData,
-      );
-
-      // Process account data - handle both v2 and v3 response formats (following example exactly)
       const totalCollateralKey =
         userData.totalCollateralETH || userData.totalCollateralBase || "0";
       const totalDebtKey =
@@ -815,22 +782,9 @@ export const useAaveUserAccount = () => {
         netWorthUSD: totalCollateralUSD - totalDebtUSD,
       });
     } catch (err) {
-      console.error("Error fetching account data:", err);
-
-      // Provide more specific error message (following example)
-      if (
-        err instanceof Error &&
-        (err.message.includes("no positions") ||
-          err.message.includes("execution reverted"))
-      ) {
-        setError(
-          "You don't appear to have any positions on Aave V3 on this network. Try supplying or borrowing assets first.",
-        );
-      } else {
-        setError(
-          `Error fetching account data: ${err instanceof Error ? err.message : "Unknown error"}`,
-        );
-      }
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch account data",
+      );
       setAccountData(null);
     } finally {
       setLoading(false);
@@ -882,18 +836,17 @@ export const useAaveUserPositions = () => {
     try {
       const market = getAaveMarket(currentChainId);
       if (!market?.POOL || !market?.AAVE_PROTOCOL_DATA_PROVIDER) {
-        throw new Error("Aave market contracts not found");
+        setError("Aave market contracts not found");
+        return;
       }
 
       const provider = new ethers.BrowserProvider(
         window.ethereum as ethers.Eip1193Provider,
       );
 
-      // Define fallback data providers (same as account data logic)
       const dataProviders = [
         market.UI_POOL_DATA_PROVIDER,
         market.AAVE_PROTOCOL_DATA_PROVIDER,
-        // Add fallback providers by chain
         currentChainId === 1
           ? "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3"
           : null,
@@ -907,13 +860,11 @@ export const useAaveUserPositions = () => {
 
       const poolContract = new ethers.Contract(market.POOL, POOL_ABI, provider);
 
-      // Find working data provider
       let dataProviderContract = null;
       let reserveTokens = null;
 
       for (const providerAddr of dataProviders) {
         try {
-          console.log("Trying data provider for positions:", providerAddr);
           const testContract = new ethers.Contract(
             providerAddr,
             DATA_PROVIDER_ABI,
@@ -921,37 +872,27 @@ export const useAaveUserPositions = () => {
           );
           reserveTokens = await testContract.getAllReservesTokens();
           dataProviderContract = testContract;
-          console.log("Successfully got reserves from provider:", providerAddr);
           break;
-        } catch (err) {
-          console.log(
-            "Failed to get reserves from provider:",
-            providerAddr,
-            err instanceof Error ? err.message : "Unknown error",
-          );
+        } catch {
           continue;
         }
       }
 
       if (!dataProviderContract || !reserveTokens) {
-        throw new Error("Could not fetch reserves from any data provider");
+        setError("Could not fetch reserves from any data provider");
+        return;
       }
 
       const supplied: UserAssetPosition[] = [];
       const borrowed: UserAssetPosition[] = [];
 
-      console.log("Found reserves:", reserveTokens.length);
-
-      // Process each reserve to check for user positions (following example approach)
       for (const token of reserveTokens) {
         try {
-          // Get user reserve data for this specific token (following example logic)
           const userData = await dataProviderContract.getUserReserveData(
             token.tokenAddress,
             walletAddress,
           );
 
-          // First get token details to know the decimals
           const tokenDetails = await getTokenDetails(
             token.tokenAddress,
             provider,
@@ -977,13 +918,7 @@ export const useAaveUserPositions = () => {
           );
           const totalDebt = stableDebt + variableDebt;
 
-          // Only process if user has positions (following example threshold)
           if (aTokenBalance > 0.000001 || totalDebt > 0.000001) {
-            console.log(
-              `Found position for ${token.symbol}: aToken=${aTokenBalance}, debt=${totalDebt}`,
-            );
-
-            // Get additional data for this token
             const [reserveData, configData] = await Promise.all([
               poolContract.getReserveData(token.tokenAddress),
               dataProviderContract.getReserveConfigurationData(
@@ -991,19 +926,16 @@ export const useAaveUserPositions = () => {
               ),
             ]);
 
-            // Calculate APYs (following example approach)
             const supplyAPY = calculateAPY(reserveData.currentLiquidityRate);
             const variableBorrowAPY = calculateAPY(
               reserveData.currentVariableBorrowRate,
             );
 
-            // Get configuration (following example approach)
             const canBeCollateral =
               configData.usageAsCollateralEnabled && Number(configData.ltv) > 0;
             const liquidationThreshold =
               Number(configData.liquidationThreshold) / 10000;
 
-            // Get price from our realistic data
             const tokenData = getRealisticTokenData(token.symbol);
 
             if (aTokenBalance > 0.000001) {
@@ -1048,38 +980,17 @@ export const useAaveUserPositions = () => {
               });
             }
           }
-        } catch (err) {
-          // Skip tokens that fail - this is normal for tokens user doesn't have (following example comment)
-          console.log(
-            `Skipped ${token.symbol}:`,
-            err instanceof Error ? err.message : "Unknown error",
-          );
+        } catch {
           continue;
         }
       }
 
-      console.log(
-        `Found ${supplied.length} supplied assets and ${borrowed.length} borrowed assets`,
-      );
       setSuppliedAssets(supplied);
       setBorrowedAssets(borrowed);
     } catch (err) {
-      console.error("Error fetching positions:", err);
-
-      // Provide more specific error message (following example)
-      if (
-        err instanceof Error &&
-        (err.message.includes("no positions") ||
-          err.message.includes("execution reverted"))
-      ) {
-        setError(
-          "You don't appear to have any positions on Aave V3 on this network. Try supplying or borrowing assets first.",
-        );
-      } else {
-        setError(
-          `Error fetching positions: ${err instanceof Error ? err.message : "Unknown error"}`,
-        );
-      }
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch positions",
+      );
       setSuppliedAssets([]);
       setBorrowedAssets([]);
     } finally {

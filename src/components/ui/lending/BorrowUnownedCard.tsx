@@ -71,14 +71,7 @@ const BorrowUnOwnedCard: React.FC<BorrowUnOwnedCardProps> = ({
 
         if (token) {
           setFetchedToken(token);
-          console.log(
-            `✅ Found token data from files for ${tokenAddress}:`,
-            token,
-          );
         } else {
-          console.log(
-            `❌ No token data found in files for ${tokenAddress} on chain ${currentChainId}`,
-          );
           setFetchedToken({
             id: `fallback-${currentChainId}-${tokenAddress}`,
             name: title,
@@ -94,8 +87,7 @@ const BorrowUnOwnedCard: React.FC<BorrowUnOwnedCardProps> = ({
               subtitle === "BNB",
           });
         }
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+      } catch {
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,
           name: title,

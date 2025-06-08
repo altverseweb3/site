@@ -263,7 +263,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   ];
 
   const handleButtonClick = (): void => {
-    console.log(`Button clicked`);
     // Add your logic for showing risk details here
   };
 

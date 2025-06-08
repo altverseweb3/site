@@ -182,8 +182,7 @@ const RepayModal: React.FC<RepayModalProps> = ({
         setIsOpen(false);
         setRepayAmount("");
       }
-    } catch (error) {
-      console.error("Repay failed:", error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }

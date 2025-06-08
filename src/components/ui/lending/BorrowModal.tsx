@@ -235,8 +235,6 @@ const BorrowModal: React.FC<BorrowModalProps> = ({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
 
-      console.log(`Starting Aave borrow: ${borrowAmount} ${tokenSymbol}`);
-
       // Show initial toast
       const toastId = toast.loading(
         `Borrowing ${borrowAmount} ${tokenSymbol}`,
@@ -279,7 +277,6 @@ const BorrowModal: React.FC<BorrowModalProps> = ({
         });
       }
     } catch (error: unknown) {
-      console.error("Borrow failed:", error);
       toast.error("Borrow failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });

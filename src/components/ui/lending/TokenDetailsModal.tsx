@@ -128,8 +128,7 @@ export const TokenDetailsModal: React.FC<TokenDetailsModalProps> = ({
               tokenSymbol === "BNB",
           });
         }
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+      } catch {
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,
           name: tokenName,
@@ -202,21 +201,11 @@ export const TokenDetailsModal: React.FC<TokenDetailsModalProps> = ({
           eModeCategoryId: 0, // Default value
         };
 
-        console.log("🔍 TokenDetailsModal - Mapped reserve data:", {
-          symbol: detailedData.symbol,
-          supplyAPY: detailedData.supplyAPY,
-          canBeCollateral: detailedData.canBeCollateral,
-          isActive: detailedData.isActive,
-          isFrozen: detailedData.isFrozen,
-          liquidationThreshold: detailedData.liquidationThreshold,
-          maxLTV: detailedData.maxLTV,
-        });
         setReserveData(detailedData);
       } else {
         throw new Error("No reserve data found");
       }
-    } catch (err) {
-      console.error("Error fetching reserve data:", err);
+    } catch {
       setError("Failed to load token details. Please try again.");
     } finally {
       setIsLoading(false);

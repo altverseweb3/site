@@ -291,8 +291,7 @@ const AaveAssetSwapModal: React.FC<AaveAssetSwapModalProps> = ({
         setSwapAmount("");
         setToAsset(null);
       }
-    } catch (error) {
-      console.error("Asset swap failed:", error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }
