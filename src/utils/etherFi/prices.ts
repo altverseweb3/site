@@ -7,6 +7,30 @@ export interface EtherFiPriceResponse {
 }
 
 /**
+ * Fetch price using our API route to avoid CORS issues
+ */
+async function fetchPriceViaAPI(url: string): Promise<EtherFiPriceResponse> {
+  try {
+    const apiUrl = `/api/etherfi-price?url=${encodeURIComponent(url)}`;
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as EtherFiPriceResponse;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
  * Fetches the price for a single asset from EtherFi API
  */
 export async function fetchAssetPrice(symbol: string): Promise<number> {
@@ -26,17 +50,22 @@ export async function fetchAssetPrice(symbol: string): Promise<number> {
   if (asset.priceUrl) {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const response = await fetch(asset.priceUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const data: EtherFiPriceResponse = await response.json();
+        const data: EtherFiPriceResponse = await fetchPriceViaAPI(
+          asset.priceUrl,
+        );
         return data.price_usd;
       } catch (error) {
-        if (attempt === 3) {
-          console.error(`Error fetching price for ${symbol}:`, error);
-          throw error;
+        console.warn(`Attempt ${attempt} failed for ${symbol}:`, error);
+
+        if (attempt === 2) {
+          console.error(`All attempts failed for ${symbol}:`, error);
+          throw new Error(
+            `Failed to fetch price for ${symbol} after ${attempt} attempts`,
+          );
         }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Shorter wait before retry for speed
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
     }
   }

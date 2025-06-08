@@ -7,7 +7,7 @@ const PoweredByAave = () => {
       <div className="flex items-center gap-2">
         <span className="text-sm text-white">powered by</span>
         <Image
-          src="/protocols/aave.svg"
+          src="/images/protocols/aave.svg"
           alt="Aave Logo"
           height={12}
           width={40}

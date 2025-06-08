@@ -146,6 +146,21 @@ export async function getTokenBalance(
 }
 
 /**
+ * Fetch TVL using public RPC (no wallet required)
+ */
+export async function fetchVaultTVLPublic(vaultId: number): Promise<{
+  vaultId: number;
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  tvl: string;
+}> {
+  const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
+  return fetchVaultTVL(vaultId, provider);
+}
+
+/**
  * React hook for etherFi fetch functions with wallet integration
  */
 export function useEtherFiFetch() {

@@ -1,0 +1,92 @@
+"use client";
+
+import * as React from "react";
+import { ChevronDownIcon } from "lucide-react";
+import { Button } from "../Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import { ProtocolOption } from "@/types/earn";
+import Image from "next/image";
+
+interface ProtocolFilterProps {
+  protocols: ProtocolOption[];
+  selectedProtocols: string[];
+  onSelectionChange: (protocols: string[]) => void;
+  className?: string;
+}
+
+const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
+  protocols,
+  selectedProtocols,
+  onSelectionChange,
+}) => {
+  const handleCheckedChange = (protocolId: string, checked: boolean) => {
+    if (checked) {
+      onSelectionChange([...selectedProtocols, protocolId]);
+    } else {
+      onSelectionChange(selectedProtocols.filter((id) => id !== protocolId));
+    }
+  };
+
+  const selectedCount = selectedProtocols.length;
+  const displayText =
+    selectedCount === 0
+      ? "All Protocols"
+      : selectedCount === 1
+        ? protocols.find((p) => p.id === selectedProtocols[0])?.name ||
+          "1 Selected"
+        : `${selectedCount} Selected`;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className="justify-between min-w-[140px] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] bg-[#18181B]"
+        >
+          <span className="truncate">{displayText}</span>
+          <ChevronDownIcon className="h-4 w-4 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-56 bg-[#18181B] border-[#27272A]"
+        align="start"
+      >
+        {protocols.map((protocol) => (
+          <DropdownMenuCheckboxItem
+            key={protocol.id}
+            className={`text-[#FAFAFA] focus:bg-[#27272A] focus:text-[#FAFAFA] ${
+              protocol.disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            checked={selectedProtocols.includes(protocol.id)}
+            onCheckedChange={
+              protocol.disabled
+                ? undefined
+                : (checked) => handleCheckedChange(protocol.id, checked)
+            }
+            disabled={protocol.disabled}
+          >
+            <div className="flex items-center gap-2">
+              <Image
+                src={protocol.icon}
+                alt={protocol.name}
+                width={16}
+                height={16}
+                className="object-contain"
+              />
+              <span>
+                {protocol.name} {protocol.disabled && "(Coming Soon)"}
+              </span>
+            </div>
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+export default ProtocolFilter;
