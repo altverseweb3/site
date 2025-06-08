@@ -89,15 +89,12 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
                   ? token.name.slice(0, 32) + "..."
                   : token.name}
               </div>
-              <div className="flex items-center text-[0.75rem] text-[#FAFAFA55]">
+              <div className="flex items-center text-sm text-[#FAFAFA55]">
                 <span className="numeric-input flex items-center w-16">
                   {token.ticker}
                 </span>
                 <div className="flex items-center">
-                  <span
-                    className="numeric-input text-[10px] flex items-center"
-                    style={{ transform: "translateY(1px)" }}
-                  >
+                  <span className="numeric-input text-sm flex items-center">
                     {formatAddress(token.address)}
                   </span>
                   <button
