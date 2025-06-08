@@ -41,6 +41,192 @@ function normalizeSuiAddressToShort(address: string): string {
   }
 }
 
+// Add these functions to your existing tokenMethods.ts file
+
+// Cache for token data to avoid repeated loading
+let tokenDataCache: StructuredTokenData | null = null;
+
+/**
+ * Get token by ID - searches across all chains
+ */
+export const getTokenById = async (tokenId: string): Promise<Token | null> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    // Search through all tokens for the matching ID
+    const token = tokenDataCache.allTokensList.find(
+      (token) => token.id === tokenId,
+    );
+
+    if (!token) {
+      console.warn(`Token with ID ${tokenId} not found`);
+      return null;
+    }
+
+    return token;
+  } catch (error) {
+    console.error(`Error getting token by ID ${tokenId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Get token by ID for a specific chain
+ */
+export const getTokenByIdForChain = async (
+  tokenId: string,
+  chainId: number,
+): Promise<Token | null> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    // Search in specific chain tokens
+    const chainTokens = tokenDataCache.byChainId[chainId] || [];
+    const token = chainTokens.find((token) => token.id === tokenId);
+
+    if (!token) {
+      console.warn(`Token with ID ${tokenId} not found on chain ${chainId}`);
+      return null;
+    }
+
+    return token;
+  } catch (error) {
+    console.error(
+      `Error getting token by ID ${tokenId} for chain ${chainId}:`,
+      error,
+    );
+    return null;
+  }
+};
+
+/**
+ * Get token by address for a specific chain
+ */
+export const getTokenByAddress = async (
+  address: string,
+  chainId: number,
+): Promise<Token | null> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    const chainTokenMap = tokenDataCache.byChainIdAndAddress[chainId] || {};
+    const token = chainTokenMap[address.toLowerCase()];
+
+    if (!token) {
+      console.warn(
+        `Token with address ${address} not found on chain ${chainId}`,
+      );
+      return null;
+    }
+
+    return token;
+  } catch (error) {
+    console.error(
+      `Error getting token by address ${address} for chain ${chainId}:`,
+      error,
+    );
+    return null;
+  }
+};
+
+/**
+ * Search tokens by symbol across all chains
+ */
+export const getTokensBySymbol = async (symbol: string): Promise<Token[]> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    const matchingTokens = tokenDataCache.allTokensList.filter(
+      (token) => token.ticker.toLowerCase() === symbol.toLowerCase(),
+    );
+
+    return matchingTokens;
+  } catch (error) {
+    console.error(`Error getting tokens by symbol ${symbol}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Search tokens by symbol for a specific chain
+ */
+export const getTokenBySymbolForChain = async (
+  symbol: string,
+  chainId: number,
+): Promise<Token | null> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    const chainTokens = tokenDataCache.byChainId[chainId] || [];
+    const token = chainTokens.find(
+      (token) => token.ticker.toLowerCase() === symbol.toLowerCase(),
+    );
+
+    return token || null;
+  } catch (error) {
+    console.error(
+      `Error getting token by symbol ${symbol} for chain ${chainId}:`,
+      error,
+    );
+    return null;
+  }
+};
+
+/**
+ * Get all tokens for a specific chain
+ */
+export const getTokensForChain = async (chainId: number): Promise<Token[]> => {
+  try {
+    // Load token data if not cached
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+    }
+
+    return tokenDataCache.byChainId[chainId] || [];
+  } catch (error) {
+    console.error(`Error getting tokens for chain ${chainId}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Clear token data cache (useful for refreshing)
+ */
+export const clearTokenCache = (): void => {
+  tokenDataCache = null;
+};
+
+/**
+ * Preload token data (useful for app initialization)
+ */
+export const preloadTokenData = async (): Promise<void> => {
+  try {
+    if (!tokenDataCache) {
+      tokenDataCache = await loadAllTokens();
+      console.log(
+        `Preloaded ${tokenDataCache.allTokensList.length} tokens across all chains`,
+      );
+    }
+  } catch (error) {
+    console.error("Error preloading token data:", error);
+  }
+};
+
 export const loadTokensForChain = async (
   fetchChainId: string,
 ): Promise<Token[]> => {

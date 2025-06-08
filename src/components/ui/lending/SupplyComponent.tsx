@@ -1,203 +1,206 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/lending/Accordion";
-import SupplyOwnedCard from "./SupplyOwnedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositionsHeader";
 import SupplyUnOwnedCard from "./SupplyUnownedCard";
+import SupplyOwnedCard from "./SupplyOwnedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
+import { useAaveAvailableAssets } from "./AaveDataHooks";
+import { useAaveTransactions } from "./AaveTransactionHooks";
 import { toast } from "sonner";
 
-// Define specific asset interfaces
-interface Asset {
+interface AssetData {
+  symbol: string;
   address: string;
   name?: string;
-  symbol: string;
-  currentATokenBalance?: number | string;
-  priceInUSD?: number | string;
-  priceUSD?: number | string; // Add this
-  supplyAPY?:
-    | {
-        aaveMethod?: number | string;
-      }
-    | string
-    | number;
-  usageAsCollateralEnabled?: boolean; // Make this optional
-  canBeCollateral?: boolean;
-  totalSupplied?: string;
-  totalSupply?: string;
-  // Add these missing properties that come from your hook
-  balanceUSD?: number;
-  formattedBalance?: string;
-  formattedBalanceUSD?: string;
-  formattedSupplyAPY?: string;
   decimals?: number;
-  liquidityRate?: string;
+  borrowAPY?: number;
+  variableBorrowAPY?: number;
+  availableLiquidity?: string;
+  debtUSD?: number;
+  balanceUSD?: number;
+  supplyAPY?: number;
+  canBeCollateral?: boolean;
+  liquidationThreshold?: number;
+  isUsedAsCollateral?: boolean;
+  currentATokenBalance?: string;
+  totalDebt?: number;
   currentStableDebt?: string;
   currentVariableDebt?: string;
-  totalDebt?: number;
-  debtUSD?: number;
-  borrowAPY?: string;
-  variableBorrowAPY?: string;
-  stableBorrowAPY?: string;
-  canBeBorrowed?: boolean;
-  totalSuppliedUSD?: number;
+  formattedBalance?: string;
+  priceUSD: number;
+  oraclePrice?: number;
+  borrowEnabled?: boolean;
+  borrowingEnabled?: boolean;
+  balance?: string;
+  isActive?: boolean;
+  isFrozen?: boolean;
+  usageAsCollateralEnabled?: boolean;
+  totalSupplied?: string;
+  userBalance?: string;
 }
-interface ProcessedAsset extends Asset {
-  formattedBalance: string;
-  formattedDollarAmount?: string;
-  formattedSupplyAPY: string;
+
+interface AccountData {
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
+  availableBorrowsBase?: string;
+  healthFactor?: string;
+  ltv?: number;
+  currentLiquidationThreshold?: number;
 }
 
 interface MarketMetrics {
-  totalLiquidity?: number;
-  totalBorrows?: number;
-  totalSupply?: number;
   totalMarketSize?: number;
   totalAvailable?: number;
+  totalBorrows?: number;
   averageSupplyAPY?: number;
   averageBorrowAPY?: number;
 }
 
-interface AaveDataState {
-  suppliedAssets: Asset[];
-  borrowedAssets: Asset[];
-  availableAssets: Asset[];
-  accountData: {
-    totalCollateralBase?: string;
-    totalDebtBase?: string;
-    availableBorrowsBase?: string;
-    currentLiquidationThreshold?: number;
-    ltv?: number;
-    healthFactor?: string;
-    totalSuppliedUSD?: number;
-    totalBorrowedUSD?: number;
-    netWorthUSD?: number;
-  } | null;
-  marketMetrics: MarketMetrics | null;
-  loading: boolean;
-  error: string | null;
-  lastUpdateTime: Date | null;
-  refreshData: (force?: boolean) => Promise<void>;
+interface SupplyParams {
+  tokenAddress: string;
+  amount: string;
+  tokenDecimals: number;
+  tokenSymbol: string;
 }
 
 interface SupplyComponentProps {
-  aaveData: AaveDataState;
+  aaveData: {
+    suppliedAssets: AssetData[];
+    borrowedAssets: AssetData[];
+    availableAssets: AssetData[];
+    accountData: AccountData | null;
+    marketMetrics: MarketMetrics | null;
+    loading: boolean;
+    error: string | null;
+    refreshData: () => void;
+    supplyAsset: (
+      params: SupplyParams,
+    ) => Promise<{ success: boolean; txHash?: string; error?: string }>;
+    getWalletBalance: (
+      tokenAddress: string,
+      decimals: number,
+      symbol: string,
+    ) => Promise<string>;
+  };
 }
 
 const SupplyComponent: React.FC<SupplyComponentProps> = ({ aaveData }) => {
-  const { suppliedAssets, availableAssets, loading } = aaveData;
+  const {
+    suppliedAssets,
+    loading: aaveDataLoading,
+    error: aaveDataError,
+    refreshData,
+  } = aaveData;
 
-  // Memoize total supplied value to prevent unnecessary recalculations
-  const totalSuppliedValue = useMemo((): number => {
-    return suppliedAssets.reduce((sum: number, asset: Asset) => {
-      return sum + Number(asset.currentATokenBalance || 0);
-    }, 0);
-  }, [suppliedAssets]);
+  // Use the new simplified hooks
+  const {
+    assets: availableAssets,
+    loading: assetsLoading,
+    error: assetsError,
+  } = useAaveAvailableAssets();
+  const { getWalletBalance } = useAaveTransactions();
 
-  // Process supplied assets to calculate USD values and format data
-  const processedSuppliedAssets = useMemo((): ProcessedAsset[] => {
-    return suppliedAssets.map((asset: Asset): ProcessedAsset => {
-      const balance = Number(asset.currentATokenBalance || 0);
-      const priceInUSD = Number(asset.priceInUSD || 0);
-      const dollarAmount = balance * priceInUSD;
+  // Combine loading states
+  const loading = aaveDataLoading || assetsLoading;
+  const error = aaveDataError || assetsError;
 
-      // Format APY using the same logic as available assets
-      const formatSuppliedAPY = (apy: Asset["supplyAPY"]): string => {
-        let apyNum = 0;
-        if (typeof apy === "string") {
-          apyNum = parseFloat(apy);
-        } else if (typeof apy === "number") {
-          apyNum = apy;
-        } else if (typeof apy === "object" && apy?.aaveMethod) {
-          apyNum = parseFloat(String(apy.aaveMethod));
-        } else {
-          apyNum = Number(apy || 0);
+  // State to track wallet balances for available assets
+  const [walletBalances, setWalletBalances] = React.useState<
+    Record<string, string>
+  >({});
+
+  // Fetch wallet balances for available assets
+  React.useEffect(() => {
+    const fetchWalletBalances = async () => {
+      if (!availableAssets || !getWalletBalance || loading) return;
+
+      const balances: Record<string, string> = {};
+
+      for (const asset of availableAssets.slice(0, 10)) {
+        try {
+          const balance = await getWalletBalance(
+            asset.address,
+            asset.decimals || 18,
+          );
+          balances[asset.address] = balance;
+        } catch {
+          balances[asset.address] = "0";
         }
-        return apyNum.toFixed(2);
-      };
+      }
 
-      return {
-        ...asset,
-        formattedBalance: balance.toFixed(6),
-        formattedDollarAmount: dollarAmount.toFixed(2),
-        formattedSupplyAPY: formatSuppliedAPY(asset.supplyAPY),
-      };
+      setWalletBalances(balances);
+    };
+
+    const timeoutId = setTimeout(fetchWalletBalances, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [availableAssets, getWalletBalance, loading]);
+
+  const handleSupplyAction = async (reserve: AssetData) => {
+    toast.info(`Supply ${reserve.symbol}`, {
+      description: `APY: ${typeof reserve.supplyAPY === "number" ? reserve.supplyAPY.toFixed(2) : "N/A"}% • ${reserve.canBeCollateral ? "Can be collateral" : "Cannot be collateral"}`,
     });
-  }, [suppliedAssets]);
-
-  // Process available assets with total supply data
-  const processedAvailableAssets = useMemo((): ProcessedAsset[] => {
-    // Debug log to see total supply data
-    console.log(
-      "🔍 Available assets with total supply:",
-      availableAssets.map((asset: Asset) => ({
-        symbol: asset.symbol,
-        totalSupplied: asset.totalSupplied,
-        totalSupply: asset.totalSupply,
-        canBeCollateral: asset.canBeCollateral,
-      })),
-    );
-
-    return availableAssets.map((asset: Asset): ProcessedAsset => {
-      // Format total supplied with K/M/B notation
-      const formatTotalSupplied = (num: string | undefined): string => {
-        if (!num || num === "0") return "0";
-        const number = Number(num);
-        if (number >= 1e9) return (number / 1e9).toFixed(2) + "B";
-        if (number >= 1e6) return (number / 1e6).toFixed(2) + "M";
-        if (number >= 1e3) return (number / 1e3).toFixed(2) + "K";
-        return number.toFixed(2);
-      };
-
-      // Format APY with special handling for very small values
-      const formatAPY = (apy: Asset["supplyAPY"]): string => {
-        // Handle different APY formats that might come from the API
-        let apyNum = 0;
-        if (typeof apy === "string") {
-          apyNum = parseFloat(apy);
-        } else if (typeof apy === "number") {
-          apyNum = apy;
-        } else if (typeof apy === "object" && apy?.aaveMethod) {
-          apyNum = parseFloat(String(apy.aaveMethod));
-        } else {
-          apyNum = Number(apy || 0);
-        }
-
-        if (apyNum === 0) return "0.00";
-        if (apyNum > 0 && apyNum < 0.01) return "<0.01";
-        return apyNum.toFixed(2);
-      };
-
-      return {
-        ...asset,
-        formattedSupplyAPY: formatAPY(asset.supplyAPY),
-        formattedBalance: formatTotalSupplied(asset.totalSupplied),
-      };
-    });
-  }, [availableAssets]);
-
-  // Handle supply action
-  const handleSupplyAction = async (asset: Asset): Promise<void> => {
-    console.log(`Supply ${asset.symbol} - APY: ${asset.supplyAPY}%`);
-    toast.info(`Supply ${asset.symbol}`, {
-      description: `Current APY: ${Number(asset.supplyAPY || 0).toFixed(2)}% • ${
-        asset.canBeCollateral
-          ? "Can be used as collateral"
-          : "Cannot be used as collateral"
-      }`,
-    });
-    // Note: Actual supply logic would go here
-    // After supply transaction, you might want to refresh data
   };
+
+  const handleWithdrawAction = async (asset: AssetData) => {
+    toast.info(`Withdraw ${asset.symbol}`, {
+      description: `Current balance: ${asset.formattedBalance || asset.currentATokenBalance || "N/A"}`,
+    });
+    refreshData();
+  };
+
+  const handleToggleCollateralAction = async (
+    asset: AssetData,
+    enable: boolean,
+  ) => {
+    toast.info(`${enable ? "Enable" : "Disable"} ${asset.symbol} Collateral`, {
+      description: `This will ${enable ? "increase" : "decrease"} your borrowing power`,
+    });
+    refreshData();
+  };
+
+  if (error) {
+    return (
+      <div className="w-full space-y-4">
+        <div className="bg-red-900 border border-red-700 rounded p-4">
+          <h3 className="text-red-300 font-semibold mb-2">
+            Error Loading Aave Data
+          </h3>
+          <p className="text-red-200 text-sm">{error}</p>
+          <button
+            onClick={refreshData}
+            className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 text-white text-sm rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalSuppliedUSD =
+    suppliedAssets?.reduce((sum, asset) => {
+      return (
+        sum +
+        (asset.balanceUSD ||
+          (Number(asset.currentATokenBalance) || 0) * asset.priceUSD ||
+          0)
+      );
+    }, 0) || 0;
 
   return (
     <div className="w-full space-y-4">
-      {/* Your Positions Accordion */}
+      <div className="text-xs text-gray-500 p-2 bg-gray-800 rounded">
+        Available Assets: {availableAssets?.length || 0} | Supplied Assets:{" "}
+        {suppliedAssets?.length || 0} | Loading: {loading ? "Yes" : "No"} |
+        Wallet Balances: {Object.keys(walletBalances).length}
+      </div>
+
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem
           value="positions"
@@ -205,30 +208,77 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({ aaveData }) => {
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
             <SupplyYourPositionsHeader
-              totalSupplied={totalSuppliedValue}
+              totalSupplied={totalSuppliedUSD}
               loading={loading}
-              suppliedAssets={[]}
+              suppliedAssets={
+                suppliedAssets?.map((asset) => ({
+                  address: asset.address,
+                  symbol: asset.symbol,
+                  currentATokenBalance: asset.currentATokenBalance || "0",
+                  supplyAPY: {
+                    aaveMethod: asset.supplyAPY,
+                  },
+                  usageAsCollateralEnabled:
+                    asset.usageAsCollateralEnabled || false,
+                })) || []
+              }
             />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {loading && suppliedAssets.length === 0 ? (
-                Array.from({ length: 3 }).map((_, index: number) => (
-                  <div
-                    key={index}
-                    className="animate-pulse bg-gray-800 h-16 rounded mb-2"
-                  />
-                ))
-              ) : processedSuppliedAssets.length > 0 ? (
-                processedSuppliedAssets.map((asset: ProcessedAsset) => (
+              {suppliedAssets && suppliedAssets.length > 0 ? (
+                suppliedAssets.map((asset, index) => (
                   <SupplyOwnedCard
-                    key={asset.address}
-                    title={asset.name}
+                    key={asset.address || index}
+                    title={asset.name || asset.symbol}
                     subtitle={asset.symbol}
-                    balance={asset.formattedBalance}
-                    dollarAmount={asset.formattedDollarAmount || "0.00"}
-                    supplyAPY={asset.formattedSupplyAPY}
-                    isCollateral={asset.usageAsCollateralEnabled}
+                    suppliedBalance={
+                      asset.formattedBalance ||
+                      asset.currentATokenBalance?.toString() ||
+                      "0"
+                    }
+                    dollarAmount={(
+                      asset.balanceUSD ||
+                      (Number(asset.currentATokenBalance) || 0) *
+                        asset.priceUSD ||
+                      0
+                    ).toString()}
+                    supplyAPY={
+                      typeof asset.supplyAPY === "number"
+                        ? asset.supplyAPY.toFixed(2)
+                        : typeof asset.supplyAPY === "string"
+                          ? asset.supplyAPY
+                          : "0.00"
+                    }
+                    canBeCollateral={asset.canBeCollateral || false}
+                    isUsedAsCollateral={asset.usageAsCollateralEnabled || false}
+                    tokenPrice={asset.oraclePrice || asset.priceUSD || 1}
+                    liquidationThreshold={asset.liquidationThreshold || 0}
+                    totalCollateralUSD={
+                      aaveData.accountData?.totalCollateralUSD || 0
+                    }
+                    totalDebtUSD={aaveData.accountData?.totalDebtUSD || 0}
+                    healthFactor={
+                      aaveData.accountData?.healthFactor?.toString() || "∞"
+                    }
+                    tokenAddress={asset.address}
+                    decimals={asset.decimals || 18}
+                    availableSuppliedAssets={(availableAssets || []).map(
+                      (availableAsset) => ({
+                        address: availableAsset.address,
+                        symbol: availableAsset.symbol,
+                        name: availableAsset.name || availableAsset.symbol,
+                        decimals: availableAsset.decimals || 18,
+                        balance: "0",
+                        liquidationThreshold:
+                          availableAsset.liquidationThreshold,
+                        isUsedAsCollateral: false,
+                      }),
+                    )}
+                    onWithdraw={() => handleWithdrawAction(asset)}
+                    onToggleCollateral={(enable: boolean) =>
+                      handleToggleCollateralAction(asset, enable)
+                    }
                   />
                 ))
               ) : (
@@ -244,49 +294,103 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({ aaveData }) => {
         </AccordionItem>
       </Accordion>
 
-      {/* Available Assets Accordion */}
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem
           value="availablePositions"
           className="border-[1px] border-[#232326] rounded-md overflow-hidden"
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <SupplyAvailablePositionsHeader />
+            <SupplyAvailablePositionsHeader
+              loading={loading}
+              availableAssets={
+                availableAssets?.map((asset) => ({
+                  address: asset.address,
+                  symbol: asset.symbol,
+                  name: asset.name || asset.symbol,
+                  decimals: asset.decimals || 18,
+                  totalSupplied: asset.totalSupplied,
+                  supplyAPY: asset.supplyAPY,
+                  priceUSD: asset.priceUSD,
+                  oraclePrice: asset.priceUSD,
+                })) || []
+              }
+            />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {loading && availableAssets.length === 0 ? (
-                Array.from({ length: 8 }).map((_, index: number) => (
+              {loading ? (
+                Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
                     className="animate-pulse bg-gray-800 h-16 rounded mb-2"
                   />
                 ))
-              ) : processedAvailableAssets.length > 0 ? (
-                processedAvailableAssets.map((asset: ProcessedAsset) => (
-                  <SupplyUnOwnedCard
-                    key={asset.address}
-                    title={asset.name}
-                    subtitle={asset.symbol}
-                    balance={asset.formattedBalance}
-                    dollarAmount="0.00"
-                    supplyAPY={asset.formattedSupplyAPY}
-                    canBeCollateral={asset.canBeCollateral ?? true}
-                    onSupply={() => handleSupplyAction(asset)}
-                  />
-                ))
+              ) : availableAssets && availableAssets.length > 0 ? (
+                availableAssets.map((reserve, index) => {
+                  const fetchedBalance = walletBalances[reserve.address];
+                  const displayBalance = fetchedBalance || "0";
+                  const tokenPrice = reserve.priceUSD || 1;
+                  const dollarValue = (
+                    parseFloat(displayBalance) * tokenPrice
+                  ).toFixed(2);
+
+                  return (
+                    <SupplyUnOwnedCard
+                      key={reserve.address || index}
+                      title={reserve.name || reserve.symbol}
+                      subtitle={reserve.symbol}
+                      balance={displayBalance}
+                      dollarAmount={dollarValue}
+                      supplyAPY={reserve.supplyAPY.toFixed(2)}
+                      canBeCollateral={reserve.canBeCollateral}
+                      tokenPrice={tokenPrice}
+                      liquidationThreshold={reserve.liquidationThreshold}
+                      userBalance={displayBalance}
+                      healthFactor={
+                        aaveData.accountData?.healthFactor?.toString() || "∞"
+                      }
+                      tokenAddress={reserve.address}
+                      decimals={reserve.decimals}
+                      onSupply={() =>
+                        handleSupplyAction({
+                          ...reserve,
+                          priceUSD: tokenPrice,
+                        })
+                      }
+                    />
+                  );
+                })
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <div className="mb-2">No available assets found</div>
-                  <div className="text-sm">
-                    Unable to load available assets from Aave
+                  <div className="mb-2">
+                    {availableAssets?.length
+                      ? "No assets available for supply"
+                      : "No available assets found"}
                   </div>
+                  <div className="text-sm">
+                    {loading ? "Loading..." : "Unable to load Aave reserves"}
+                  </div>
+                  <button
+                    onClick={refreshData}
+                    className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                  >
+                    Refresh
+                  </button>
                 </div>
               )}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg">
+            <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-white">Loading Aave reserves...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

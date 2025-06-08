@@ -1,43 +1,45 @@
 import React from "react";
 
-interface SupplyAvailablePositionsHeaderProps {
-  totalSupplied?: number;
-  averageAPY?: number;
+interface BorrowAvailablePositionsHeaderProps {
+  totalBorrowed?: number;
+  averageBorrowAPY?: number;
   loading?: boolean;
   availableAssets?: Array<{
     address: string;
     symbol: string;
-    totalSupplied?: string | number;
-    supplyAPY?: string | number;
+    totalBorrowed?: string | number;
+    variableBorrowAPY?: string | number;
+    borrowAPY?: string | number;
     priceUSD?: number;
     oraclePrice?: number;
   }>;
 }
 
-const SupplyAvailablePositionsHeader: React.FC<
-  SupplyAvailablePositionsHeaderProps
+const BorrowAvailablePositionsHeader: React.FC<
+  BorrowAvailablePositionsHeaderProps
 > = ({
-  totalSupplied,
-  averageAPY,
+  totalBorrowed,
+  averageBorrowAPY,
   loading = false,
   availableAssets = [],
   ...props
 }) => {
   // Calculate metrics from available assets if not provided
   const calculateMetrics = () => {
-    if (!availableAssets.length) return { totalSupplied: 0, averageAPY: 0 };
+    if (!availableAssets.length)
+      return { totalBorrowed: 0, averageBorrowAPY: 0 };
 
-    let totalSuppliedCalculated = 0;
+    let totalBorrowedCalculated = 0;
     let totalWeightedAPY = 0;
     let totalValue = 0;
 
     availableAssets.forEach((asset) => {
-      const suppliedAmount = Number(asset.totalSupplied || 0);
-      const apy = Number(asset.supplyAPY || 0);
+      const borrowedAmount = Number(asset.totalBorrowed || 0);
+      const apy = Number(asset.variableBorrowAPY || asset.borrowAPY || 0);
       const price = asset.oraclePrice || asset.priceUSD || 1;
-      const value = suppliedAmount * price;
+      const value = borrowedAmount * price;
 
-      totalSuppliedCalculated += value;
+      totalBorrowedCalculated += value;
       totalWeightedAPY += value * apy;
       totalValue += value;
     });
@@ -45,18 +47,20 @@ const SupplyAvailablePositionsHeader: React.FC<
     const avgAPY = totalValue > 0 ? totalWeightedAPY / totalValue : 0;
 
     return {
-      totalSupplied: totalSuppliedCalculated,
-      averageAPY: avgAPY,
+      totalBorrowed: totalBorrowedCalculated,
+      averageBorrowAPY: avgAPY,
     };
   };
 
   const metrics = calculateMetrics();
-  const displayTotalSupplied =
-    totalSupplied !== undefined ? totalSupplied : metrics.totalSupplied;
-  const displayAverageAPY =
-    averageAPY !== undefined ? averageAPY : metrics.averageAPY;
+  const displayTotalBorrowed =
+    totalBorrowed !== undefined ? totalBorrowed : metrics.totalBorrowed;
+  const displayAverageBorrowAPY =
+    averageBorrowAPY !== undefined
+      ? averageBorrowAPY
+      : metrics.averageBorrowAPY;
 
-  const formatSupplied = (value: number): string => {
+  const formatBorrowed = (value: number): string => {
     if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
     if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
     if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
@@ -72,7 +76,7 @@ const SupplyAvailablePositionsHeader: React.FC<
           <div className="flex items-center justify-between mb-2 pr-6">
             <div className="w-40 flex-shrink-0 pl-6">
               <span className="text-base font-bold text-white">
-                available positions
+                available borrows
               </span>
             </div>
             <div className="w-6 h-6 flex items-center justify-center"></div>
@@ -88,7 +92,7 @@ const SupplyAvailablePositionsHeader: React.FC<
         <div className="hidden md:flex items-center h-[65px]">
           <div className="w-40 flex-shrink-0 pl-6">
             <span className="text-base font-bold text-white">
-              available positions
+              available borrows
             </span>
           </div>
           <div className="flex-grow flex justify-center items-center">
@@ -110,7 +114,7 @@ const SupplyAvailablePositionsHeader: React.FC<
         <div className="flex items-center justify-between mb-2 pr-6">
           <div className="w-40 flex-shrink-0 pl-6">
             <span className="text-base font-bold text-white">
-              available positions
+              available borrows
             </span>
           </div>
           {/* Space for chevron */}
@@ -122,16 +126,16 @@ const SupplyAvailablePositionsHeader: React.FC<
         {/* Second row: Info badges */}
         <div className="flex items-center justify-center gap-2 px-6">
           <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
-            <span>total supplied</span>
+            <span>total borrowed</span>
             <span className="text-white">
-              {formatSupplied(displayTotalSupplied)}
+              {formatBorrowed(displayTotalBorrowed)}
             </span>
           </div>
 
           <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
             <span>avg APY</span>
-            <span className="text-green-400">
-              {displayAverageAPY.toFixed(2)}%
+            <span className="text-red-400">
+              {displayAverageBorrowAPY.toFixed(2)}%
             </span>
           </div>
         </div>
@@ -142,7 +146,7 @@ const SupplyAvailablePositionsHeader: React.FC<
         {/* Title - fixed width with more padding */}
         <div className="w-40 flex-shrink-0 pl-6">
           <span className="text-base font-bold text-white">
-            available positions
+            available borrows
           </span>
         </div>
 
@@ -150,16 +154,16 @@ const SupplyAvailablePositionsHeader: React.FC<
         <div className="flex-grow flex justify-center items-center">
           <div className="flex items-center gap-2">
             <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
-              <span>total supplied</span>
+              <span>total borrowed</span>
               <span className="text-white">
-                {formatSupplied(displayTotalSupplied)}
+                {formatBorrowed(displayTotalBorrowed)}
               </span>
             </div>
 
             <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
               <span>avg APY</span>
-              <span className="text-green-400">
-                {displayAverageAPY.toFixed(2)}%
+              <span className="text-red-400">
+                {displayAverageBorrowAPY.toFixed(2)}%
               </span>
             </div>
           </div>
@@ -172,4 +176,4 @@ const SupplyAvailablePositionsHeader: React.FC<
   );
 };
 
-export default SupplyAvailablePositionsHeader;
+export default BorrowAvailablePositionsHeader;

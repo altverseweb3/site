@@ -105,32 +105,36 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       return {
         netWorth: "0.00",
         netAPY: "0.00",
-        healthFactor: "0.00",
-        healthFactorColor: "text-red-400",
+        healthFactor: "∞",
+        healthFactorColor: "text-gray-400",
       };
     }
 
-    const netWorth =
-      Number(accountData.totalCollateralBase || 0) -
-      Number(accountData.totalDebtBase || 0);
+    // Use USD values for net worth calculation
+    const totalCollateralUSD = Number(
+      accountData.totalCollateralUSD || accountData.totalSuppliedUSD || 0,
+    );
+    const totalDebtUSD = Number(
+      accountData.totalDebtUSD || accountData.totalBorrowedUSD || 0,
+    );
+    const netWorth = totalCollateralUSD - totalDebtUSD;
 
     let totalSupplyValue = 0;
     let weightedSupplyAPY = 0;
     let totalBorrowValue = 0;
     let weightedBorrowAPY = 0;
 
+    // Calculate weighted APYs using USD values
     suppliedAssets.forEach((asset: FlexibleSuppliedAsset) => {
-      const value = Number(asset.currentATokenBalance || 0);
+      const value = Number(asset.balanceUSD || asset.totalSuppliedUSD || 0);
       const apy = getAPYValue(asset);
       totalSupplyValue += value;
       weightedSupplyAPY += value * apy;
     });
 
     borrowedAssets.forEach((asset: FlexibleBorrowedAsset) => {
-      const stableDebt = Number(asset.currentStableDebt || 0);
-      const variableDebt = Number(asset.currentVariableDebt || 0);
-      const value = stableDebt + variableDebt;
-      const apy = Number(asset.borrowAPY || 0);
+      const value = Number(asset.debtUSD || asset.totalSuppliedUSD || 0);
+      const apy = Number(asset.borrowAPY || asset.variableBorrowAPY || 0);
       totalBorrowValue += value;
       weightedBorrowAPY += value * apy;
     });
@@ -139,20 +143,48 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       totalSupplyValue > 0 ? weightedSupplyAPY / totalSupplyValue : 0;
     const avgBorrowAPY =
       totalBorrowValue > 0 ? weightedBorrowAPY / totalBorrowValue : 0;
-
     const netAPY = avgSupplyAPY - avgBorrowAPY;
 
-    const hf = netWorth === 0 ? 0 : Number(accountData.healthFactor || 0);
+    // Parse health factor correctly
+    let hf = 0;
+    if (accountData.healthFactor) {
+      if (typeof accountData.healthFactor === "string") {
+        // Handle string values like "∞" or numeric strings
+        if (
+          accountData.healthFactor === "∞" ||
+          accountData.healthFactor === "Infinity"
+        ) {
+          hf = 999;
+        } else {
+          hf = Number(accountData.healthFactor) || 0;
+        }
+      } else {
+        hf = Number(accountData.healthFactor) || 0;
+      }
+    }
+
+    // If no debt, health factor should be infinite
+    if (totalDebtUSD === 0) {
+      hf = 999;
+    }
+
     let healthFactorColor = "text-green-400";
-    if (netWorth === 0) healthFactorColor = "text-gray-400";
+    if (totalDebtUSD === 0) healthFactorColor = "text-gray-400";
     else if (hf < 1.1) healthFactorColor = "text-red-400";
     else if (hf < 1.5) healthFactorColor = "text-orange-400";
     else if (hf < 2) healthFactorColor = "text-yellow-400";
 
+    // Format health factor with infinite symbol for values >= 1000
+    const formatHealthFactor = (value: number): string => {
+      if (!isFinite(value) || value >= 1000) return "∞";
+      if (value === 0) return "0.00";
+      return value.toFixed(2);
+    };
+
     return {
       netWorth: netWorth.toFixed(2),
       netAPY: netAPY.toFixed(2),
-      healthFactor: hf === 0 ? "0.00" : hf === Infinity ? "∞" : hf.toFixed(2),
+      healthFactor: formatHealthFactor(hf),
       healthFactorColor,
     };
   }, [aaveData.accountData, aaveData.suppliedAssets, aaveData.borrowedAssets]);
@@ -161,6 +193,13 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const formattedMarketMetrics = useMemo((): FormattedMarketMetrics => {
     const marketMetrics = aaveData.marketMetrics || null;
 
+    const formatLargeNumber = (num: number): string => {
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+      return num.toFixed(2);
+    };
+
     if (!marketMetrics) {
       return {
         marketSize: "0.00B",
@@ -168,13 +207,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         borrows: "0.00B",
       };
     }
-
-    const formatLargeNumber = (num: number): string => {
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
-      return num.toFixed(2);
-    };
 
     return {
       marketSize: formatLargeNumber(marketMetrics.totalMarketSize || 0),

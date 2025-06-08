@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
-import { SupplyModal } from "./SupplyModal";
+import { BorrowModal } from "./BorrowModal";
 import { TokenDetailsModal } from "./TokenDetailsModal";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { useWalletConnection } from "@/utils/walletMethods";
 import { getTokenByAddress } from "@/utils/tokenMethods";
 import { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
-import useWeb3Store from "@/store/web3Store";
 import { formatTokenBalance, formatCurrency } from "@/utils/formatUtils";
 import {
   Card,
@@ -18,81 +17,58 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 
-interface SupplyUnOwnedCardProps {
+interface BorrowUnOwnedCardProps {
   title?: string;
   subtitle?: string;
   balance?: string;
   dollarAmount?: string;
-  supplyAPY?: string;
-  canBeCollateral?: boolean;
-  onSupply?: () => void;
+  borrowAPY?: string;
+  availableToBorrow?: string;
+  onBorrow?: () => void;
   tokenPrice?: number;
   liquidationThreshold?: number;
-  userBalance?: string;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
   healthFactor?: string;
-  // Add these for proper token image loading
   tokenAddress?: string;
   decimals?: number;
 }
 
-const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
+const BorrowUnOwnedCard: React.FC<BorrowUnOwnedCardProps> = ({
   title = "usd coin",
   subtitle = "USDC",
   balance = "0.00",
   dollarAmount = "0.72",
-  supplyAPY = "1.97",
-  canBeCollateral = true,
-  onSupply = () => {},
+  borrowAPY = "2.45",
+  availableToBorrow = "1,000.00",
+  onBorrow = () => {},
   tokenPrice = 1,
   liquidationThreshold = 0.85,
-  userBalance = "1,547.82",
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
   healthFactor = "1.24",
   tokenAddress = "",
   decimals = 18,
 }) => {
-  // Get current chainId from connected wallet
   const { evmNetwork } = useWalletConnection();
 
   const currentChainId = evmNetwork?.chainId
     ? typeof evmNetwork.chainId === "string"
       ? parseInt(evmNetwork.chainId, 10)
       : evmNetwork.chainId
-    : 1; // Default to Ethereum mainnet
+    : 1;
 
-  // State for the fetched token data
   const [fetchedToken, setFetchedToken] = useState<Token | null>(null);
   const [isLoadingToken, setIsLoadingToken] = useState(false);
 
-  // Simplified - just use the userBalance prop without any wallet balance detection
-  const displayBalance = userBalance;
-
-  // Get token data from web3Store (same as swap interface)
-  const tokenFromStore = useWeb3Store((state) => {
-    if (!tokenAddress || !currentChainId) return null;
-
-    const compositeKey = `${currentChainId}-${tokenAddress.toLowerCase()}`;
-    return state.tokensByCompositeKey[compositeKey] || null;
-  });
-
-  // Fetch token data using only your token methods (no blockchain fallback)
   useEffect(() => {
     const fetchTokenData = async () => {
       if (!tokenAddress || !currentChainId) return;
 
       setIsLoadingToken(true);
       try {
-        // First try to get from web3Store (preferred method like swap)
-        if (tokenFromStore) {
-          setFetchedToken(tokenFromStore);
-          console.log(
-            `✅ Found token from store for ${tokenAddress}:`,
-            tokenFromStore,
-          );
-          return;
-        }
-
-        // Fallback to file-based lookup
         const token = await getTokenByAddress(tokenAddress, currentChainId);
+
         if (token) {
           setFetchedToken(token);
           console.log(
@@ -103,7 +79,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
           console.log(
             `❌ No token data found in files for ${tokenAddress} on chain ${currentChainId}`,
           );
-          // Create a basic token object with the provided props
           setFetchedToken({
             id: `fallback-${currentChainId}-${tokenAddress}`,
             name: title,
@@ -121,7 +96,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
         }
       } catch (error) {
         console.error(`Error fetching token data for ${tokenAddress}:`, error);
-        // Set fallback token data
         setFetchedToken({
           id: `error-${currentChainId}-${tokenAddress}`,
           name: title,
@@ -142,14 +116,13 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
     };
 
     fetchTokenData();
-  }, [tokenAddress, currentChainId, title, subtitle, decimals, tokenFromStore]);
+  }, [tokenAddress, currentChainId, title, subtitle, decimals]);
 
-  const handleModalSupply = async (): Promise<boolean> => {
-    onSupply();
+  const handleModalBorrow = async (): Promise<boolean> => {
+    onBorrow();
     return true;
   };
 
-  // Create Token and Chain objects for TokenImage
   const createTokenObject = (): Token => {
     return {
       id: fetchedToken?.id || `${currentChainId}-${tokenAddress}`,
@@ -157,7 +130,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
       ticker: fetchedToken?.ticker || subtitle,
       address: tokenAddress,
       decimals: fetchedToken?.decimals || decimals,
-      // Use the symbol in lowercase as the icon filename (no .png extension)
       icon: (fetchedToken?.ticker || subtitle).toLowerCase() + ".png",
       native:
         (fetchedToken?.ticker || subtitle) === "ETH" ||
@@ -169,7 +141,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
   };
 
   const createChainObject = (): Chain => {
-    // Use the proper chain configuration
     const chain = getChainByChainId(currentChainId);
     return chain;
   };
@@ -183,15 +154,12 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
         <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
           <div className="mr-3 flex-shrink-0 w-[34px] h-[34px] flex items-center justify-center">
             {isLoadingToken ? (
-              // Loading placeholder
               <div className="bg-gray-700 rounded-full p-2 w-[34px] h-[34px] flex items-center justify-center animate-pulse">
                 <span className="font-bold text-white text-sm">...</span>
               </div>
             ) : fetchedToken ? (
-              // Use TokenImage with fetched token data
               <TokenImage token={token} chain={chain} size="lg" />
             ) : (
-              // Fallback to simple circle with first letter
               <div className="bg-blue-500 rounded-full p-2 w-[34px] h-[34px] flex items-center justify-center">
                 <span className="font-bold text-white text-sm">
                   {subtitle.slice(0, 1)}
@@ -211,7 +179,7 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
 
         <CardContent className="p-3 pt-2 space-y-2">
           <div className="flex justify-between items-start">
-            <div className="text-gray-400 text-sm mt-0">supply balance</div>
+            <div className="text-gray-400 text-sm mt-0">borrow balance</div>
             <div className="text-right flex flex-col items-end">
               <div className="text-sm">{formatTokenBalance(balance)}</div>
               <div className="text-gray-400 text-xs">
@@ -221,34 +189,37 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
           </div>
 
           <div className="flex justify-between items-start">
-            <div className="text-gray-400 text-sm mt-0">supply APY</div>
-            <div className="text-sm">{supplyAPY}%</div>
+            <div className="text-gray-400 text-sm mt-0">borrow APY</div>
+            <div className="text-sm text-red-400">{borrowAPY}%</div>
           </div>
 
           <div className="flex justify-between items-start">
-            <div className="text-gray-400 text-sm mt-0">can be collateral</div>
-            {canBeCollateral && <div className="text-amber-500">✓</div>}
+            <div className="text-gray-400 text-sm mt-0">
+              available to borrow
+            </div>
+            <div className="text-sm">
+              {formatTokenBalance(availableToBorrow)}
+            </div>
           </div>
         </CardContent>
 
         <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-          <SupplyModal
+          <BorrowModal
             tokenSymbol={subtitle}
             tokenName={title}
-            balance={displayBalance}
-            supplyAPY={`${supplyAPY}%`}
-            collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
+            availableToBorrow={availableToBorrow}
+            borrowAPY={`${borrowAPY}%`}
             healthFactor={healthFactor}
             tokenPrice={tokenPrice}
             liquidationThreshold={liquidationThreshold}
-            totalCollateralUSD={0}
-            totalDebtUSD={0}
-            onSupply={handleModalSupply}
+            totalCollateralUSD={totalCollateralUSD}
+            totalDebtUSD={totalDebtUSD}
+            onBorrow={handleModalBorrow}
             tokenAddress={tokenAddress}
             tokenDecimals={decimals}
           >
-            <PrimaryButton onClick={onSupply}>supply</PrimaryButton>
-          </SupplyModal>
+            <PrimaryButton onClick={onBorrow}>borrow</PrimaryButton>
+          </BorrowModal>
           <TokenDetailsModal
             tokenAddress={tokenAddress}
             tokenSymbol={subtitle}
@@ -263,4 +234,4 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
   );
 };
 
-export default SupplyUnOwnedCard;
+export default BorrowUnOwnedCard;

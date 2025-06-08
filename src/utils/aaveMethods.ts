@@ -1,4 +1,4 @@
-// utils/aaveMethods.ts
+// utils/aaveMethods.ts DEPRECATED
 import { ethers } from "ethers";
 import * as markets from "@bgd-labs/aave-address-book";
 

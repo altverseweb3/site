@@ -1,11 +1,38 @@
 import React from "react";
 
-const BorrowYourBorrowsHeader = ({
-  balance = "$0.41",
-  apy = "3.29%",
-  collateral = "$0.41",
+interface BorrowedAsset {
+  borrowAPY?: number;
+  variableBorrowAPY?: number;
+  symbol?: string;
+  address?: string;
+  debtUSD?: number;
+}
+
+interface BorrowYourBorrowsHeaderProps {
+  totalBorrowed?: number;
+  loading?: boolean;
+  borrowedAssets?: BorrowedAsset[];
+}
+
+const BorrowYourBorrowsHeader: React.FC<BorrowYourBorrowsHeaderProps> = ({
+  totalBorrowed = 0,
+  loading = false,
+  borrowedAssets = [],
   ...props
 }) => {
+  // Calculate average borrow APY
+  const avgBorrowAPY =
+    borrowedAssets.length > 0
+      ? borrowedAssets.reduce((sum, asset) => sum + (asset.borrowAPY || 0), 0) /
+        borrowedAssets.length
+      : 0;
+
+  // Calculate borrow power used (this would need actual collateral data)
+  const borrowPowerUsed = totalBorrowed > 0 ? "75%" : "0%"; // Placeholder calculation
+
+  const balance = loading ? "Loading..." : `$${totalBorrowed.toFixed(2)}`;
+  const apy = loading ? "Loading..." : `${avgBorrowAPY.toFixed(2)}%`;
+  const collateral = loading ? "Loading..." : borrowPowerUsed;
   return (
     <div className="w-full" {...props}>
       {/* Mobile Layout - Two rows */}
