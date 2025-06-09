@@ -63,7 +63,7 @@ export const SkeletonTokenList: React.FC<SkeletonTokenListProps> = ({
       {/* Wallet section skeleton */}
       {walletItemCount > 0 && (
         <div>
-          <div className="px-4 pb-2 pt-4 text-sm text-[#FAFAFA55]">
+          <div className="px-4 pb-2 pt-0 text-sm text-[#FAFAFA55]">
             your wallet
           </div>
           <div>
@@ -78,7 +78,9 @@ export const SkeletonTokenList: React.FC<SkeletonTokenListProps> = ({
       {/* All tokens section skeleton */}
       {allItemCount > 0 && (
         <div>
-          <div className="px-4 pb-2 pt-4 text-sm text-[#FAFAFA55]">
+          <div
+            className={`px-4 pb-2 text-sm text-[#FAFAFA55] ${walletItemCount > 0 ? "pt-4" : "pt-0"}`}
+          >
             all tokens
           </div>
           <div>
