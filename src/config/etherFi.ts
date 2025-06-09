@@ -34,6 +34,7 @@ export interface EtherFiVault {
     explorer: string; // Etherscan link
     analytics: string; // EtherFi analytics page
     withdrawal: string; // Same as analytics for withdrawals
+    yield: string; // Direct API URL for APY data
   };
 
   // Vault Icon for Table UI
@@ -42,6 +43,14 @@ export interface EtherFiVault {
 
 // Shared lens address for all vaults
 const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
+
+// Fallback APY values based on EtherFi website observations (as of current date)
+// These should be updated periodically by checking the actual website
+export const FALLBACK_APY_VALUES: Record<string, number> = {
+  "0x83599937c2c9bea0e0e8ac096c6f32e86486b410": 5.3, // Bera ETH Vault (lowercase)
+  "0xe77076518a813616315eaaba6ca8e595e845eee9": 2.4, // EIGEN Restaking (lowercase)
+  "0x86b5780b606940eb59a062aa85a07959518c0161": 35.0, // ETHFI Restaking (lowercase)
+};
 
 // Deposit asset configuration for tokens with contract addresses
 export interface DepositAsset {
@@ -82,6 +91,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xf0bb20865277aBd641a307eCe5Ee04E79073416C",
       analytics: "https://www.ether.fi/app/liquid/eth",
       withdrawal: "https://www.ether.fi/app/liquid/eth",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/performance/0xf0bb20865277aBd641a307eCe5Ee04E79073416C?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/liquideth.svg",
   },
@@ -113,6 +124,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0x5f46d540b6eD704C3c8789105F30E075AA900726",
       analytics: "https://www.ether.fi/app/liquid/btc",
       withdrawal: "https://www.ether.fi/app/liquid/btc",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/performance/0x5f46d540b6eD704C3c8789105F30E075AA900726?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/liquidbtc.svg",
   },
@@ -144,6 +157,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
       analytics: "https://www.ether.fi/app/liquid/usd",
       withdrawal: "https://www.ether.fi/app/liquid/usd",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/performance/0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/usdc.svg",
   },
@@ -175,6 +190,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0x86B5780b606940Eb59A062aA85a07959518c0161",
       analytics: "https://www.ether.fi/app/ethfi",
       withdrawal: "https://www.ether.fi/app/ethfi",
+      yield: "fallback", // Seven Seas API returns 400 error
     },
     vaultIcon: "/images/etherFi/vaults/ethfi.svg",
   },
@@ -206,6 +222,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xE77076518A813616315EaAba6cA8e595E845EeE9",
       analytics: "https://www.ether.fi/app/eigen",
       withdrawal: "https://www.ether.fi/app/eigen",
+      yield: "fallback", // EtherFi API doesn't return explicit APY
     },
     vaultIcon: "/images/etherFi/vaults/eigen.png",
   },
@@ -237,6 +254,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xbc0f3B23930fff9f4894914bD745ABAbA9588265",
       analytics: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
       withdrawal: "https://www.ether.fi/app/liquid/ultra-yield-stablecoin",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/performance/0xbc0f3B23930fff9f4894914bD745ABAbA9588265?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/ultrayield-stablecoin.png",
   },
@@ -268,6 +287,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
       analytics: "https://www.ether.fi/app/liquid/move-eth",
       withdrawal: "https://www.ether.fi/app/liquid/move-eth",
+      yield:
+        "https://www.ether.fi/_next/data/vc-ap-neobank-dapp-SKPerL8zA0a1ar1PcE-Pn/app/liquid/move-eth.json?liquid=move-eth",
     },
     vaultIcon: "/images/etherFi/vaults/liquidmove.png",
   },
@@ -299,6 +320,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0x83599937c2C9bEA0E0E8ac096c6f32e86486b410",
       analytics: "https://www.ether.fi/app/liquid/bera-eth",
       withdrawal: "https://www.ether.fi/app/liquid/bera-eth",
+      yield: "fallback", // Veda API returns 0% APY
     },
     vaultIcon: "/images/etherFi/vaults/beraeth.svg",
   },
@@ -330,6 +352,8 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xC673ef7791724f0dcca38adB47Fbb3AEF3DB6C80",
       analytics: "https://www.ether.fi/app/liquid/bera-btc",
       withdrawal: "https://www.ether.fi/app/liquid/bera-btc",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/performance/0xC673ef7791724f0dcca38adB47Fbb3AEF3DB6C80?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/beraeth.svg",
   },
