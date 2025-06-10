@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { ChevronUpIcon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EarnTableRow, DashboardTableRow, EarnTableType } from "@/types/earn";
@@ -150,10 +151,8 @@ const EarnTable: React.FC<EarnTableProps> = ({
   itemsPerPage,
   totalItems,
 }) => {
-  const [sortColumn, setSortColumn] = React.useState<string | null>(null);
-  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
-    "asc",
-  );
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const handleSort = (column: string, direction: "asc" | "desc") => {
     setSortColumn(column);

@@ -16,8 +16,10 @@ import {
   EarnTableRow,
   DashboardTableRow,
   EarnFilters,
+  EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
+import { getColorFilter } from "@/utils/uiHelpers";
 import Image from "next/image";
 
 const ITEMS_PER_PAGE = 10;
@@ -47,7 +49,7 @@ const availableProtocols: ProtocolOption[] = [
 ];
 
 export default function EarnPage() {
-  const [activeTab, setActiveTab] = useState<"earn" | "dashboard">("earn");
+  const [activeTab, setActiveTab] = useState<EarnTableType>("earn");
   const [filters, setFilters] = useState<EarnFilters>({
     chains: [], // Start with empty array, meaning show all chains
     protocols: [],
@@ -175,9 +177,11 @@ export default function EarnPage() {
               <ToggleGroup
                 type="single"
                 value={activeTab}
-                onValueChange={(value: string) =>
-                  value && setActiveTab(value as "earn" | "dashboard")
-                }
+                onValueChange={(value: string) => {
+                  if (value === "earn" || value === "dashboard") {
+                    setActiveTab(value);
+                  }
+                }}
                 variant="outline"
                 className="justify-start shrink-0"
               >
@@ -204,28 +208,6 @@ export default function EarnPage() {
                 className="justify-start flex-wrap"
               >
                 {chainList.map((chain) => {
-                  // Convert hex color to CSS filter for SVG coloring
-                  const getColorFilter = (hexColor: string) => {
-                    // Remove # if present
-                    const hex = hexColor.replace("#", "");
-                    const r = parseInt(hex.substr(0, 2), 16) / 255;
-                    const g = parseInt(hex.substr(2, 2), 16) / 255;
-                    const b = parseInt(hex.substr(4, 2), 16) / 255;
-
-                    // Convert to filter values (approximate)
-                    const hue = Math.round(
-                      (Math.atan2(Math.sqrt(3) * (g - b), 2 * r - g - b) *
-                        180) /
-                        Math.PI,
-                    );
-                    const saturation = Math.round(
-                      Math.max(r, g, b) - Math.min(r, g, b) * 100,
-                    );
-                    const brightness = Math.round(((r + g + b) / 3) * 100);
-
-                    return `brightness(0) saturate(100%) invert(1) hue-rotate(${hue}deg) saturate(${saturation}%) brightness(${brightness}%)`;
-                  };
-
                   return (
                     <ToggleGroupItem
                       key={chain.id}
