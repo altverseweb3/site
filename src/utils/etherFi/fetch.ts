@@ -161,6 +161,45 @@ export async function fetchVaultTVLPublic(vaultId: number): Promise<{
 }
 
 /**
+ * Get user's vault token balance (position)
+ */
+export async function getUserVaultBalance(
+  vaultId: number,
+  userAddress: string,
+  provider: ethers.Provider,
+): Promise<{
+  vaultId: number;
+  userAddress: string;
+  balance: bigint;
+  formatted: string;
+  decimals: number;
+}> {
+  const vault = ETHERFI_VAULTS[vaultId];
+  if (!vault) {
+    throw new Error(`Vault ${vaultId} not found`);
+  }
+
+  const vaultContract = new ethers.Contract(
+    vault.addresses.vault,
+    ERC20_ABI,
+    provider,
+  );
+
+  const [balance, decimals] = await Promise.all([
+    vaultContract.balanceOf(userAddress),
+    vaultContract.decimals(),
+  ]);
+
+  return {
+    vaultId,
+    userAddress,
+    balance,
+    formatted: ethers.formatUnits(balance, decimals),
+    decimals,
+  };
+}
+
+/**
  * React hook for etherFi fetch functions with wallet integration
  */
 export function useEtherFiFetch() {
@@ -193,6 +232,16 @@ export function useEtherFiFetch() {
     getTokenBalance: async (tokenSymbol: string) => {
       const signer = await getEvmSigner();
       return getTokenBalance(tokenSymbol, signer);
+    },
+
+    getUserVaultBalance: async (vaultId: number) => {
+      const signer = await getEvmSigner();
+      const userAddress = await signer.getAddress();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return getUserVaultBalance(vaultId, userAddress, provider);
     },
   };
 }
