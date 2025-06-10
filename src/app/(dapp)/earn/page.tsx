@@ -68,7 +68,7 @@ export default function EarnPage() {
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   // Use the etherFi hook for data fetching - always fetch earn data, only require wallet for dashboard
-  const { data: earnData, loading } = useEtherFiEarnData(true);
+  const { data: earnData, loading } = useEtherFiEarnData(isEvmWalletConnected);
 
   // Filter and sort data
   const filteredData = useMemo(() => {
