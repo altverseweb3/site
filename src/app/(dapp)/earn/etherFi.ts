@@ -3,6 +3,7 @@ import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { fetchVaultTVLPublic } from "@/utils/etherFi/fetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
+import { queryAllVaultsAPY, VaultApyData } from "@/utils/etherFi/apy";
 import { chains } from "@/config/chains";
 import EtherFiModal from "@/components/ui/earning/EtherFiModal";
 
@@ -30,6 +31,17 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
         const earnRows: EarnTableRow[] = [];
         const dashboardRows: DashboardTableRow[] = [];
 
+        // Fetch APY data for all vaults first
+        const apyData = await queryAllVaultsAPY().catch(
+          () => [] as VaultApyData[],
+        );
+
+        // Create a map of vault address to APY data for quick lookup
+        const apyMap = new Map<string, VaultApyData>();
+        apyData.forEach((data) => {
+          apyMap.set(data.address.toLowerCase(), data);
+        });
+
         // Fetch all vault data in parallel for speed
         const vaultEntries = Object.entries(ETHERFI_VAULTS);
 
@@ -38,7 +50,13 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
           const vaultId = parseInt(vaultIdStr);
 
           try {
-            const apy = getHardcodedAPY(vault.type, vault.name);
+            // Get APY from our API data (which includes fallback values if needed)
+            const vaultApyData = apyMap.get(
+              vault.addresses.vault.toLowerCase(),
+            );
+            const apy = vaultApyData?.net_apy
+              ? vaultApyData.net_apy * 100 // Convert from decimal to percentage
+              : 0; // Default to 0 if no APY data available
 
             // Fetch TVL and price in parallel
             const [tvlData, firstAssetPrice] = await Promise.all([
@@ -116,24 +134,6 @@ function getAssetIcon(assetSymbol: string): string {
   const lowerSymbol = assetSymbol.toLowerCase();
   const asset = DEPOSIT_ASSETS[lowerSymbol];
   return asset?.imagePath || "/images/etherFi/ethereum-assets/eth.png";
-}
-
-function getHardcodedAPY(vaultType: string, vaultName: string): number {
-  switch (vaultType) {
-    case "Featured":
-      if (vaultName.includes("ETH")) return 5.2;
-      if (vaultName.includes("BTC")) return 4.8;
-      return 4.5;
-    case "Strategy Vault":
-      return 8.5;
-    case "Governance Restaking":
-      return 12.3;
-    case "Partner Vault":
-      if (vaultName.includes("Ultra")) return 15.2;
-      return 7.8;
-    default:
-      return 5.0;
-  }
 }
 
 export function filterEarnData(
