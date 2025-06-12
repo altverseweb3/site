@@ -53,7 +53,8 @@ export type Chain = {
   chainName: string;
   mayanName: MayanChainName;
   alchemyNetworkName: Network;
-  symbol: string;
+  symbol: string; // Native gas token (e.g., ETH, BNB, AVAX)
+  chainToken: string; // Chain-specific token for swapping (e.g., ARB, OP, BASE)
   icon: string;
   currency: string;
   backgroundColor: string;
