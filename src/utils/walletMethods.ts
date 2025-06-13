@@ -23,6 +23,9 @@ import { toast } from "sonner";
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
+import { SwapStatus } from "@/types/web3";
+import { SwapTrackingOptions } from "@/types/web3";
+import { useSwapTracking } from "@/hooks/useSwapTracking";
 
 /**
  * Creates a properly formatted CAIP network ID with correct TypeScript typing
@@ -600,14 +603,17 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
 }
 
 interface TokenTransferOptions {
-  // Transfer type - affects UI text and functionality
   type: "swap" | "bridge" | "V";
+  enableTracking?: boolean; // New option to enable automatic tracking
+  trackingOptions?: SwapTrackingOptions; // Pass through tracking configuration
   onSuccess?: (
     amount: string,
     sourceToken: Token,
-    destinationToken: Token | null,
+    destinationToken?: Token,
   ) => void;
   onError?: (error: Error) => void;
+  onSwapInitiated?: (swapId: string) => void; // New callback when swap starts
+  onTrackingComplete?: (status: SwapStatus) => void; // New callback when tracking completes
 }
 
 interface TokenTransferState {
@@ -639,7 +645,12 @@ interface TokenTransferState {
   relayerFeeUsd: number | null;
   totalFeeUsd: number | null;
 
-  handleTransfer: () => Promise<void>;
+  swapId: string | null;
+  swapStatus: SwapStatus | null;
+  isTracking: boolean;
+  trackingError: Error | null;
+
+  handleTransfer: () => Promise<string | void>;
 }
 
 // I had to include this as it appears the Mayan SDK is outdated
@@ -670,6 +681,11 @@ export function useTokenTransfer(
   const [protocolFeeUsd, setProtocolFeeUsd] = useState<number | null>(null);
   const [relayerFeeUsd, setRelayerFeeUsd] = useState<number | null>(null);
   const [totalFeeUsd, setTotalFeeUsd] = useState<number | null>(null);
+  const [swapId, setSwapId] = useState<string | null>(null);
+  const isTrackingEnabled = options.enableTracking ?? false;
+  const [progressToastId, setProgressToastId] = useState<
+    number | string | null
+  >(null);
 
   // Get relevant state from the web3 store
   const requiredWallet = useWeb3Store((state) =>
@@ -699,7 +715,142 @@ export function useTokenTransfer(
 
   // Determine if source chain requires Solana or Sui
   const wallet = useWallet();
+  const {
+    status: swapStatus,
+    isLoading: isTracking,
+    error: trackingError,
+  } = useSwapTracking(
+    isTrackingEnabled ? swapId : null, // Only track if enabled and we have an ID
+    {
+      ...options.trackingOptions,
+      onComplete: (status) => {
+        console.log("Swap tracking completed:", status); // DEBUG
 
+        // Dismiss the progress toast
+        if (progressToastId) {
+          toast.dismiss(progressToastId);
+          setProgressToastId(null);
+        }
+
+        // Show final success toast ONLY ONCE
+        toast.success(
+          `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
+          {
+            description: `${amount} ${sourceToken!.ticker} → ${receiveAmount} ${
+              options.type === "swap"
+                ? destinationToken?.ticker
+                : sourceToken!.ticker
+            }`,
+          },
+        );
+
+        // Call user's completion callback
+        options.onTrackingComplete?.(status);
+
+        // Call original success callback - but DON'T let it show another toast
+        if (options.onSuccess) {
+          options.onSuccess(amount, sourceToken!, destinationToken!);
+        }
+      },
+      onError: (error) => {
+        console.log("Swap tracking error:", error); // DEBUG
+
+        // Dismiss the progress toast
+        if (progressToastId) {
+          toast.dismiss(progressToastId);
+          setProgressToastId(null);
+        }
+
+        toast.error("Swap tracking failed", {
+          description: error.message,
+        });
+        options.onError?.(error);
+      },
+      onStatusUpdate: (status) => {
+        console.log("Swap status update:", status.clientStatus); // DEBUG
+
+        // Update the progress toast with current status
+        if (progressToastId) {
+          const statusText = getStatusDescription(status.clientStatus);
+          const stepsText = getStepsDescription(status.steps);
+
+          toast.loading(
+            `${options.type === "swap" ? "Swap" : "Bridge"} in progress...`,
+            {
+              id: progressToastId,
+              description: `${statusText}${stepsText ? ` • ${stepsText}` : ""}`,
+            },
+          );
+        }
+      },
+    },
+  );
+
+  // Helper function to get user-friendly status descriptions
+  const getStatusDescription = (clientStatus: string): string => {
+    switch (clientStatus) {
+      case "PENDING":
+        return "Waiting for confirmation";
+      case "CONFIRMING":
+        return "Confirming transaction";
+      case "CONFIRMED":
+        return "Transaction confirmed, processing swap";
+      case "BRIDGING":
+        return "Bridging tokens between chains";
+      case "SWAPPING":
+        return "Executing swap";
+      case "RELEASING":
+        return "Releasing destination tokens";
+      default:
+        return "Processing transaction";
+    }
+  };
+
+  // Helper function to get current step description
+  const getStepsDescription = (
+    steps: Array<{
+      title: string;
+      status: string;
+      type: string;
+    }>,
+  ): string => {
+    if (!steps || steps.length === 0) return "";
+
+    const completedSteps = steps.filter(
+      (step) => step.status === "COMPLETED",
+    ).length;
+    const totalSteps = steps.length;
+
+    if (completedSteps === 0) return "";
+
+    return `Step ${completedSteps}/${totalSteps}`;
+  };
+
+  // Start progress toast when tracking begins
+  useEffect(() => {
+    if (isTracking && swapId && isTrackingEnabled && !progressToastId) {
+      console.log("Starting progress toast for swap:", swapId); // DEBUG
+
+      const toastId = toast.loading(
+        `${options.type === "swap" ? "Swap" : "Bridge"} in progress...`,
+        {
+          description: "Tracking transaction progress...",
+          duration: Infinity, // Keep it open until we dismiss it
+        },
+      );
+
+      setProgressToastId(toastId);
+    }
+  }, [isTracking, swapId, isTrackingEnabled, progressToastId, options.type]);
+
+  // Clean up progress toast if tracking stops unexpectedly
+  useEffect(() => {
+    if (!isTracking && progressToastId) {
+      console.log("Cleaning up progress toast"); // DEBUG
+      toast.dismiss(progressToastId);
+      setProgressToastId(null);
+    }
+  }, [isTracking, progressToastId]);
   // HOOK CHECK: Check wallet compatibility when source chain changes
   useEffect(() => {
     if (!requiredWallet) {
@@ -1019,7 +1170,9 @@ export function useTokenTransfer(
     };
   }, [isValid, isLoadingQuote, isProcessing]);
 
-  const handleTransfer = async (): Promise<void> => {
+  const handleTransfer = async (): Promise<string | void> => {
+    // Return swap ID
+
     if (!isValid) {
       toast.warning(`Invalid ${options.type} parameters`, {
         description:
@@ -1099,16 +1252,23 @@ export function useTokenTransfer(
     }
 
     // Generate a toast ID that we'll use for both success and error cases
-    const toastId = toast.loading(
-      `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${sourceToken!.ticker}...`,
-      {
-        description: `From ${sourceChain.name} to ${
-          options.type === "swap"
-            ? destinationToken?.ticker
-            : destinationChain.name
-        }`,
-      },
-    );
+    const toastId = isTrackingEnabled
+      ? toast.loading(
+          `Initiating ${options.type === "swap" ? "swap" : "bridge"}...`,
+          {
+            description: "Please confirm the transaction in your wallet",
+          },
+        )
+      : toast.loading(
+          `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${sourceToken!.ticker}...`,
+          {
+            description: `From ${sourceChain.name} to ${
+              options.type === "swap"
+                ? destinationToken?.ticker
+                : destinationChain.name
+            }`,
+          },
+        );
 
     try {
       setIsProcessing(true);
@@ -1231,21 +1391,33 @@ export function useTokenTransfer(
         result,
       );
 
-      toast.success(
-        `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
-        {
-          id: toastId, // Update the existing toast
-          description: `Transferred ${amount} ${sourceToken!.ticker} to ${
-            options.type === "swap"
-              ? destinationToken?.ticker
-              : destinationChain.name
-          }`,
-        },
-      );
+      setSwapId(result);
+      // Call the swap initiated callback
+      options.onSwapInitiated?.(result);
 
-      if (options.onSuccess) {
-        options.onSuccess(amount, sourceToken!, destinationToken);
+      if (isTrackingEnabled) {
+        // Update toast to show tracking has started
+        toast.success("Transaction submitted successfully", {
+          id: toastId,
+          description: "Tracking swap progress...",
+        });
+        // Note: Don't call onSuccess here - wait for tracking to complete
+      } else {
+        // Original behavior - immediate success
+        toast.success(
+          `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
+          {
+            id: toastId,
+            description: `Transferred ${amount} ${sourceToken!.ticker}`,
+          },
+        );
+
+        if (options.onSuccess) {
+          options.onSuccess(amount, sourceToken!, destinationToken!);
+        }
       }
+
+      return result; // Return swap ID for parent components
     } catch (error) {
       // Make sure to dismiss the loading toast
       toast.dismiss(toastId);
@@ -1256,6 +1428,7 @@ export function useTokenTransfer(
       toast.error(`${options.type === "swap" ? "Swap" : "Bridge"} failed`, {
         description: friendlyError,
       });
+      setSwapId(null);
 
       // Still log the full error for debugging
       console.error(`${options.type} failed:`, error);
@@ -1273,10 +1446,7 @@ export function useTokenTransfer(
     amount,
     setAmount,
     handleAmountChange,
-    isProcessing: isProcessing || isChainSwitching, // Include chain switching in processing state
     isValid,
-    isButtonDisabled:
-      !isValid || isProcessing || !isWalletCompatible || isChainSwitching,
     quoteData,
     receiveAmount,
     isLoadingQuote,
@@ -1297,6 +1467,16 @@ export function useTokenTransfer(
     // Wallet compatibility
     isWalletCompatible,
 
+    swapId,
+    swapStatus,
+    isTracking,
+    trackingError,
+
+    // Enhanced processing state (includes tracking)
+    isProcessing:
+      isProcessing || isChainSwitching || (isTrackingEnabled && isTracking),
+    isButtonDisabled:
+      !isValid || isProcessing || !isWalletCompatible || isChainSwitching,
     // Actions
     handleTransfer,
   };

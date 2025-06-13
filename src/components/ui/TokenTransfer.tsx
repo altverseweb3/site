@@ -16,7 +16,7 @@ interface TokenTransferProps {
   onAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isButtonDisabled?: boolean;
   hasActiveWallet?: boolean;
-  onTransfer?: () => Promise<void>;
+  onTransfer?: () => Promise<string | void>;
   transferType: "swap" | "bridge";
   actionText?: string;
   actionIcon?: AvailableIconName;
