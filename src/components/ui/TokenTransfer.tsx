@@ -16,6 +16,7 @@ interface TokenTransferProps {
   onAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isButtonDisabled?: boolean;
   hasActiveWallet?: boolean;
+  swapAmounts?: () => Promise<void>;
   onTransfer?: () => Promise<string | void>;
   transferType: "swap" | "bridge";
   actionText?: string;
@@ -39,6 +40,7 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   onAmountChange,
   isButtonDisabled,
   hasActiveWallet = false,
+  swapAmounts,
   onTransfer,
   transferType,
   actionText,
@@ -170,6 +172,9 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
       <TokenSwitch
         onClick={() => {
           swapChains();
+          if (swapAmounts) {
+            swapAmounts();
+          }
         }}
       />
 

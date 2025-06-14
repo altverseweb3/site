@@ -19,6 +19,7 @@ const SwapComponent: React.FC = () => {
     totalFeeUsd,
     protocolFeeUsd,
     relayerFeeUsd,
+    swapAmounts,
   } = useTokenTransfer({
     type: "swap",
     enableTracking: true, // Enable automatic tracking
@@ -46,6 +47,7 @@ const SwapComponent: React.FC = () => {
       isButtonDisabled={isButtonDisabled}
       hasActiveWallet={!!requiredWallet}
       onTransfer={handleTransfer}
+      swapAmounts={swapAmounts}
       transferType="swap"
       actionIcon="Coins"
       showDestinationTokenSelector={true}
