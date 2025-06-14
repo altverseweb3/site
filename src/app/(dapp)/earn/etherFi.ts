@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
-import { fetchVaultTVLPublic } from "@/utils/etherFi/fetch";
+import {
+  fetchVaultTVLPublic,
+  getUserVaultBalance,
+} from "@/utils/etherFi/fetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
 import { queryAllVaultsAPY, VaultApyData } from "@/utils/etherFi/apy";
 import { chains } from "@/config/chains";
+import { ethers } from "ethers";
+import { useWalletByType } from "@/store/web3Store";
+import { WalletType } from "@/types/web3";
 import EtherFiModal from "@/components/ui/earning/EtherFiModal";
 
 export interface EtherFiEarnData {
@@ -19,6 +25,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
     dashboardRows: [],
   });
   const [loading, setLoading] = useState(false);
+  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,6 +112,85 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
           ...(vaultResults.filter((row) => row !== null) as EarnTableRow[]),
         );
 
+        // Fetch user positions if wallet is connected
+        if (isWalletConnected && evmWallet?.address) {
+          const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
+
+          // Create parallel promises for all user vault positions
+          const userPositionPromises = vaultEntries.map(
+            async ([vaultIdStr]) => {
+              const vaultId = parseInt(vaultIdStr);
+
+              try {
+                const userBalance = await getUserVaultBalance(
+                  vaultId,
+                  evmWallet.address,
+                  provider,
+                );
+
+                // Only include positions with non-zero balance
+                if (parseFloat(userBalance.formatted) > 0) {
+                  // Find the corresponding earn row for vault details
+                  const earnRow = earnRows.find((row) => row.id === vaultId);
+                  if (earnRow) {
+                    // Calculate USD value of the position
+                    const vault = ETHERFI_VAULTS[vaultId];
+                    let balanceUsd = 0;
+
+                    if (vault?.supportedAssets.deposit[0]) {
+                      try {
+                        const assetPrice = await fetchAssetPrice(
+                          vault.supportedAssets.deposit[0].toLowerCase(),
+                        ).catch(() => 1);
+                        balanceUsd =
+                          parseFloat(userBalance.formatted) * assetPrice;
+                      } catch (error) {
+                        console.error(
+                          `Error fetching price for vault ${vaultId}:`,
+                          error,
+                        );
+                      }
+                    }
+
+                    const dashboardRow: DashboardTableRow = {
+                      id: earnRow.id,
+                      protocol: earnRow.protocol,
+                      protocolIcon: earnRow.protocolIcon,
+                      marketVault: earnRow.marketVault,
+                      marketVaultIcon: earnRow.marketVaultIcon,
+                      assets: earnRow.assets,
+                      assetIcons: earnRow.assetIcons,
+                      supportedChains: earnRow.supportedChains,
+                      supportedChainIcons: earnRow.supportedChainIcons,
+                      apy: earnRow.apy,
+                      position: userBalance.formatted,
+                      balance: parseFloat(userBalance.formatted),
+                      balanceUsd: balanceUsd,
+                      details: earnRow.details,
+                    };
+
+                    return dashboardRow;
+                  }
+                }
+                return null;
+              } catch (error) {
+                console.error(
+                  `Error fetching user position for vault ${vaultId}:`,
+                  error,
+                );
+                return null;
+              }
+            },
+          );
+
+          const userPositionResults = await Promise.all(userPositionPromises);
+          dashboardRows.push(
+            ...(userPositionResults.filter(
+              (row) => row !== null,
+            ) as DashboardTableRow[]),
+          );
+        }
+
         if (isMounted) {
           setData({
             earnRows,
@@ -125,7 +211,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
     return () => {
       isMounted = false;
     };
-  }, [isWalletConnected]);
+  }, [isWalletConnected, evmWallet?.address]);
 
   return { data, loading };
 }

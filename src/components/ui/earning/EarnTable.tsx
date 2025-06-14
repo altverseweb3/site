@@ -253,12 +253,12 @@ const EarnTable: React.FC<EarnTableProps> = ({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                      <div className="w-8 h-8 flex items-center justify-center">
                         <Image
                           src={row.marketVaultIcon}
                           alt={row.marketVault}
-                          width={20}
-                          height={20}
+                          width={28}
+                          height={28}
                           className="object-contain"
                         />
                       </div>
