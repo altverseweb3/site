@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Wallet } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,8 +11,12 @@ import {
   DialogTitle,
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
+import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
+import DepositModal from "@/components/ui/earning/DepositModal";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
+import { useIsWalletTypeConnected } from "@/store/web3Store";
+import { WalletType } from "@/types/web3";
 
 interface EtherFiModalProps {
   isOpen: boolean;
@@ -24,9 +29,24 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
   onClose,
   data,
 }) => {
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+
+  // Check if any wallet is connected (you can modify this to check specific wallets)
+  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
+  const isWalletConnected = isEvmWalletConnected || isSuiWalletConnected;
+
   if (!data) return null;
 
   const vault = data.details as EtherFiVault;
+
+  const handleDepositClick = () => {
+    setIsDepositModalOpen(true);
+  };
+
+  const handleWalletConnectSuccess = () => {
+    setIsDepositModalOpen(true);
+  };
 
   const formatCurrency = (value: number) => {
     if (value === 0) return "$0";
@@ -178,8 +198,39 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          {/* Etherscan Link */}
+          <div className="border-t border-[#27272A] pt-4">
+            <Button
+              variant="outline"
+              onClick={() => window.open(vault.links.explorer, "_blank")}
+              className="w-full border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View on Etherscan
+            </Button>
+          </div>
+
+          {/* Main Actions */}
+          <div className="flex gap-3">
+            {isWalletConnected ? (
+              <Button
+                onClick={handleDepositClick}
+                className="flex-1 bg-green-600 text-white hover:bg-green-700"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Deposit
+              </Button>
+            ) : (
+              <ConnectWalletModal
+                trigger={
+                  <Button className="flex-1 bg-green-600 text-white hover:bg-green-700">
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Connect & Deposit
+                  </Button>
+                }
+                onSuccess={handleWalletConnectSuccess}
+              />
+            )}
             <Button
               onClick={() => window.open(vault.links.analytics, "_blank")}
               className="flex-1 bg-amber-500 text-black hover:bg-amber-600"
@@ -187,16 +238,15 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
               <ExternalLink className="h-4 w-4 mr-2" />
               Open in Ether.fi
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.open(vault.links.explorer, "_blank")}
-              className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Etherscan
-            </Button>
           </div>
         </div>
+
+        {/* Deposit Modal */}
+        <DepositModal
+          isOpen={isDepositModalOpen}
+          onClose={() => setIsDepositModalOpen(false)}
+          vault={vault}
+        />
       </DialogContent>
     </Dialog>
   );

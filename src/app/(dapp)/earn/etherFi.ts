@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { fetchVaultTVLPublic } from "@/utils/etherFi/fetch";
@@ -14,13 +14,13 @@ export interface EtherFiEarnData {
 
 // Hook-based function for component use
 export function useEtherFiEarnData(isWalletConnected: boolean) {
-  const [data, setData] = React.useState<EtherFiEarnData>({
+  const [data, setData] = useState<EtherFiEarnData>({
     earnRows: [],
     dashboardRows: [],
   });
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     const fetchData = async (): Promise<void> => {
