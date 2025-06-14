@@ -681,11 +681,17 @@ const DepositModal: React.FC<DepositModalProps> = ({
             )}
 
             <Button
-              onClick={selectedSwapChain ? handleSwapTransfer : handleDeposit}
+              onClick={
+                selectedSwapChain
+                  ? isWalletConnected
+                    ? handleSwapTransfer
+                    : connectEvmWallet // Require EVM connection for cross-chain swaps
+                  : handleDeposit
+              }
               disabled={
                 selectedSwapChain
                   ? isSwapButtonDisabled ||
-                    !isChainWalletConnected(selectedSwapChain) // Cross-chain swap
+                    !isChainWalletConnected(selectedSwapChain) // Source chain wallet must be connected
                   : !isFormValid || isLoading || (needsApproval && isFormValid) // Direct deposit
               }
               className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
@@ -698,17 +704,24 @@ const DepositModal: React.FC<DepositModalProps> = ({
               ) : (
                 <>
                   {selectedSwapChain ? (
-                    <>
-                      Cross-chain Swap{" "}
-                      {
-                        chainList.find(
-                          (chain) => chain.id === selectedSwapChain,
-                        )?.chainToken
-                      }
-                      {receiveAmount &&
-                        ` → ${receiveAmount} ${vault.supportedAssets.deposit[0]}`}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </>
+                    isWalletConnected ? (
+                      <>
+                        Cross-chain Swap{" "}
+                        {
+                          chainList.find(
+                            (chain) => chain.id === selectedSwapChain,
+                          )?.chainToken
+                        }
+                        {receiveAmount &&
+                          ` → ${receiveAmount} ${vault.supportedAssets.deposit[0]}`}
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    ) : (
+                      <>
+                        Connect EVM Wallet for Swap (Required)
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )
                   ) : (
                     <>
                       Direct Deposit {selectedAsset}
