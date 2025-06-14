@@ -202,6 +202,8 @@ export const chains: Record<string, Chain> = {
     currency: "Solana",
     icon: "/tokens/mono/SOL.svg",
     backgroundColor: "#36F295",
+    backgroundGradient:
+      "linear-gradient(90deg, #9945FF 5%, #6982DC 35%, #34C6B0 70%, #36F195 100%)",
     fontColor: "#FFFFFF",
     rpcUrl: "https://api.mainnet-beta.solana.com",
     explorerUrl: "https://explorer.solana.com/",

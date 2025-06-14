@@ -55,8 +55,11 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
   const [showRipple, setShowRipple] = useState(false);
   // State to track if chain is changing
   const [isChanging, setIsChanging] = useState(false);
-  // State for background color
+  // State for background color/gradient
   const [bgColor, setBgColor] = useState(selectedChain.backgroundColor);
+  const [bgGradient, setBgGradient] = useState(
+    selectedChain.backgroundGradient,
+  );
   // State for font color
   const [fontColor, setFontColor] = useState(
     selectedChain.fontColor || "#FFFFFF",
@@ -83,6 +86,19 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     }
   };
 
+  // Helper function to get background style
+  const getBackgroundStyle = (chain: Chain) => {
+    if (chain.backgroundGradient) {
+      return {
+        background: chain.backgroundGradient,
+        backgroundColor: chain.backgroundColor, // Fallback
+      };
+    }
+    return {
+      backgroundColor: chain.backgroundColor,
+    };
+  };
+
   // When selectedChain changes, animate the icon change:
   useEffect(() => {
     // Skip if this is just the initial render with the same chain
@@ -105,9 +121,10 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
       setIsChanging(true);
       setShowRipple(true);
 
-      // Start background color transition with original timing
+      // Start background color/gradient transition with original timing
       timersRef.current.bgTransition = setTimeout(() => {
         setBgColor(selectedChain.backgroundColor);
+        setBgGradient(selectedChain.backgroundGradient);
         setFontColor(selectedChain.fontColor || "#FFFFFF");
       }, 50);
 
@@ -133,6 +150,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     } else {
       // If just syncing state, make sure everything is set correctly
       setBgColor(selectedChain.backgroundColor);
+      setBgGradient(selectedChain.backgroundGradient);
       setFontColor(selectedChain.fontColor || "#FFFFFF");
       setDisplayedChain(selectedChain);
       setOpacity(1);
@@ -141,6 +159,12 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     // Clean up on unmount or before re-running effect
     return clearAllTimers;
   }, [selectedChain, isChanging, displayedChain.id]);
+
+  // Get current background style
+  const currentBgStyle = getBackgroundStyle({
+    backgroundColor: bgColor,
+    backgroundGradient: bgGradient,
+  } as Chain);
 
   return (
     <DropdownMenu>
@@ -152,15 +176,17 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
             width: "48px",
             height: "28px",
             padding: "0px 6px",
-            backgroundColor: bgColor,
-            transition: "background-color 600ms ease", // Original timing
+            ...currentBgStyle,
+            transition: bgGradient
+              ? "opacity 600ms ease" // For gradients, we use opacity transition
+              : "background-color 600ms ease", // For solid colors, use background-color transition
           }}
         >
           {/* Ripple effect when chain changes */}
           {showRipple && (
             <span
               className="absolute inset-0 z-0 animate-ripple rounded-lg origin-center"
-              style={{ backgroundColor: selectedChain.backgroundColor }}
+              style={getBackgroundStyle(selectedChain)}
             />
           )}
 
@@ -262,7 +288,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
                 <div className="relative w-5 h-5 mr-2 flex-shrink-0">
                   <div
                     className="absolute inset-0 rounded-full"
-                    style={{ backgroundColor: chain.backgroundColor }}
+                    style={getBackgroundStyle(chain)}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="relative w-3.5 h-3.5">
