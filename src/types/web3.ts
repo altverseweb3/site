@@ -58,6 +58,7 @@ export type Chain = {
   icon: string;
   currency: string;
   backgroundColor: string;
+  backgroundGradient?: string;
   fontColor: string;
   rpcUrl?: string;
   explorerUrl?: string;
