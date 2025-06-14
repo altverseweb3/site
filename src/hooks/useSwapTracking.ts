@@ -57,7 +57,7 @@ export function useSwapTracking(
         console.log("Tracking error:", err.message);
 
         if (hasCompletedRef.current) {
-         console.log("Already completed, ignoring error");
+          console.log("Already completed, ignoring error");
           return;
         }
 
