@@ -53,6 +53,7 @@ export function TransactionDetails({
   const [isEditingReceiveAddress, setIsEditingReceiveAddress] = useState(false);
   const [receiveAddressInput, setReceiveAddressInput] = useState("");
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [inputFontSize, setInputFontSize] = useState<number>(12);
 
   // ─── Gas Drop ─────────────────────────────────────────────────────────────
   const [isGasDropEnabled, setIsGasDropEnabled] = useState<boolean>(false);
@@ -74,6 +75,93 @@ export function TransactionDetails({
   const DEFAULT_CUSTOM_SLIPPAGE = "3.00%";
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Generate placeholder text based on wallet type
+   */
+  const getPlaceholderText = useCallback((walletType?: WalletType): string => {
+    switch (walletType) {
+      case WalletType.REOWN_EVM:
+        return "Connect Ethereum wallet";
+      case WalletType.REOWN_SOL:
+        return "Connect Solana wallet";
+      case WalletType.SUIET_SUI:
+        return "Connect Sui wallet";
+      default:
+        return "Connect wallet";
+    }
+  }, []);
+
+  /**
+   * Truncate address based on wallet type, but don't truncate placeholder text
+   */
+  const truncateAddress = useCallback(
+    (address: string, walletType?: WalletType): string => {
+      if (!address || !walletType) return address;
+
+      // Don't truncate placeholder text
+      const placeholder = getPlaceholderText(walletType);
+      if (address === placeholder) return address;
+
+      switch (walletType) {
+        case WalletType.REOWN_EVM:
+        case WalletType.SUIET_SUI:
+          // EVM and Sui addresses: 0x + first 4 + ... + last 4
+          if (address.length <= 10) return address;
+          return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        case WalletType.REOWN_SOL:
+          // Solana addresses: first 4 + ... + last 4
+          if (address.length <= 8) return address;
+          return `${address.slice(0, 4)}...${address.slice(-4)}`;
+        default:
+          return address;
+      }
+    },
+    [getPlaceholderText],
+  );
+
+  /**
+   * Calculate dynamic font size for input based on text length
+   */
+  const calculateDynamicFontSize = useCallback(
+    (text: string, containerWidth: number): number => {
+      // Base font sizes for different screen sizes
+      const baseFontSize = window.innerWidth >= 640 ? 12 : 9; // sm:text-xs vs text-[9px]
+      const minFontSize = 6;
+
+      if (!text || containerWidth <= 0) return baseFontSize;
+
+      // Approximate character width multiplier (monospace font)
+      const charWidthMultiplier = 0.6;
+      const estimatedTextWidth =
+        text.length * baseFontSize * charWidthMultiplier;
+
+      if (estimatedTextWidth <= containerWidth) {
+        return baseFontSize;
+      }
+
+      // Calculate reduced font size to fit
+      const scaleFactor = containerWidth / estimatedTextWidth;
+      const newFontSize = Math.max(minFontSize, baseFontSize * scaleFactor);
+
+      return Math.floor(newFontSize);
+    },
+    [],
+  );
+
+  /**
+   * Update input font size based on current text
+   */
+  const updateInputFontSize = useCallback(() => {
+    if (receiveAddressInputRef.current && isEditingReceiveAddress) {
+      const containerWidth = receiveAddressInputRef.current.offsetWidth;
+      const newFontSize = calculateDynamicFontSize(
+        receiveAddressInput,
+        containerWidth,
+      );
+      setInputFontSize(newFontSize);
+    }
+  }, [receiveAddressInput, isEditingReceiveAddress, calculateDynamicFontSize]);
 
   /**
    * Check if the address is valid for the given wallet type
@@ -269,6 +357,27 @@ export function TransactionDetails({
     destinationChain?.walletType,
   ]);
 
+  // Update font size when input text changes or editing starts
+  useEffect(() => {
+    if (isEditingReceiveAddress) {
+      // Small delay to ensure DOM has updated
+      const timer = setTimeout(updateInputFontSize, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [receiveAddressInput, isEditingReceiveAddress, updateInputFontSize]);
+
+  // Update font size on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (isEditingReceiveAddress) {
+        updateInputFontSize();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isEditingReceiveAddress, updateInputFontSize]);
+
   // Click‐outside handler for receive address input
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -379,10 +488,26 @@ export function TransactionDetails({
       handleSlippageModeChange("auto");
     }
   };
+  // Determine what to show as the current receiving address
+  const receivingAddress =
+    transactionDetails.receiveAddress ||
+    requiredWallet?.address ||
+    getPlaceholderText(destinationChain?.walletType);
 
+  // Get truncated address for display
+  const displayAddress = truncateAddress(
+    receivingAddress,
+    destinationChain?.walletType,
+  );
+  const isShowingPlaceholder =
+    receivingAddress === getPlaceholderText(destinationChain?.walletType);
   const startEditingReceiveAddress = useCallback(() => {
+    // If we're showing placeholder text, start with empty input
+    if (isShowingPlaceholder) {
+      setReceiveAddressInput("");
+    }
     setIsEditingReceiveAddress(true);
-  }, []);
+  }, [isShowingPlaceholder]);
 
   const handleReceiveAddressChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -391,12 +516,6 @@ export function TransactionDetails({
     // Clear error while typing
     setAddressError(null);
   };
-
-  // Determine what to show as the current receiving address
-  const receivingAddress =
-    transactionDetails.receiveAddress ||
-    requiredWallet?.address ||
-    "0x000...000";
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -489,14 +608,14 @@ export function TransactionDetails({
           {/* Receiving Address Block */}
           <div className="mt-2">
             <div className="flex items-center justify-between">
-              <div className="text-left text-amber-500 text-[12px] w-[100px]">
+              <div className="text-left text-amber-500 text-[12px] whitespace-nowrap flex-shrink-0 min-w-[85px]">
                 receiving addr.
               </div>
 
               {isEditingReceiveAddress ? (
                 <div className="flex items-center w-full ml-4">
                   <button
-                    className="ml-7 text-amber-500 hover:text-amber-400 flex-shrink-0"
+                    className="ml-2 text-amber-500 hover:text-amber-400 flex-shrink-0"
                     onClick={saveReceiveAddress}
                   >
                     <Check size={14} />
@@ -506,9 +625,10 @@ export function TransactionDetails({
                     type="text"
                     value={receiveAddressInput}
                     onChange={handleReceiveAddressChange}
-                    className={`numeric-input bg-transparent text-right text-zinc-200 sm:text-xs text-[9px] w-full outline-none ${
+                    className={`numeric-input bg-transparent text-right text-zinc-200 w-full outline-none font-mono ${
                       addressError ? "text-red-500" : ""
                     }`}
+                    style={{ fontSize: `${inputFontSize}px` }}
                     autoFocus
                   />
                 </div>
@@ -522,14 +642,18 @@ export function TransactionDetails({
                     <Edit2 size={14} />
                   </button>
                   <span
-                    className={`sm:text-xs text-[9px] font-mono text-right ${
-                      addressError ? "text-red-500" : "text-zinc-200"
+                    className={`sm:text-xs text-[9px] font-mono text-right flex-shrink-0 ${
+                      addressError
+                        ? "text-red-500"
+                        : isShowingPlaceholder
+                          ? "text-zinc-500 italic"
+                          : "text-zinc-200"
                     }`}
                   >
-                    {receivingAddress}
+                    {displayAddress}
                   </span>
                   {addressError && (
-                    <div className="relative group ml-1">
+                    <div className="relative group ml-1 flex-shrink-0">
                       <AlertCircle size={14} className="text-red-500" />
                       <div className="absolute top-full mt-1 right-0 bg-zinc-800 text-red-400 text-xs p-1 rounded-md w-48 hidden group-hover:block z-10">
                         {addressError}
