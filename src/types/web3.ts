@@ -336,3 +336,35 @@ export interface EnhancedTokenBalance extends TokenBalance {
   isNative?: boolean;
   rawAmount?: string;
 }
+
+export interface SwapStatus {
+  id: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "REFUNDED";
+  clientStatus: string;
+  trader: string;
+  sourceChain: string;
+  destChain: string;
+  fromTokenSymbol: string;
+  toTokenSymbol: string;
+  fromAmount: string;
+  toAmount: string;
+  steps: Array<{
+    title: string;
+    status: string;
+    type: string;
+  }>;
+  completedAt?: string;
+  txs: Array<{
+    txHash: string;
+    goals: string[];
+    scannerUrl: string;
+  }>;
+}
+
+export interface SwapTrackingOptions {
+  pollInterval?: number; // ms, default 5000
+  maxRetries?: number; // default 120 (10 minutes with 5s interval)
+  onStatusUpdate?: (status: SwapStatus) => void;
+  onComplete?: (status: SwapStatus) => void;
+  onError?: (error: Error) => void;
+}
