@@ -650,6 +650,7 @@ interface TokenTransferState {
   isTracking: boolean;
   trackingError: Error | null;
 
+  swapAmounts: () => Promise<void>;
   handleTransfer: () => Promise<string | void>;
 }
 
@@ -1170,9 +1171,11 @@ export function useTokenTransfer(
     };
   }, [isValid, isLoadingQuote, isProcessing]);
 
-  const handleTransfer = async (): Promise<string | void> => {
-    // Return swap ID
+  const swapAmounts = async (): Promise<void> => {
+    setAmount(receiveAmount);
+  };
 
+  const handleTransfer = async (): Promise<string | void> => {
     if (!isValid) {
       toast.warning(`Invalid ${options.type} parameters`, {
         description:
@@ -1479,6 +1482,7 @@ export function useTokenTransfer(
       !isValid || isProcessing || !isWalletCompatible || isChainSwitching,
     // Actions
     handleTransfer,
+    swapAmounts,
   };
 }
 /**
