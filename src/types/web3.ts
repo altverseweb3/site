@@ -66,7 +66,7 @@ export type Chain = {
   testnet?: boolean;
   l2: boolean;
   gasDrop: number;
-  nativeAddress?: string;
+  nativeAddress: string;
   walletType: WalletType;
 };
 
