@@ -109,13 +109,13 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         {/* Token image or fallback */}
         {imagePath ? (
-          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded">
+          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded-full overflow-hidden">
             <Image
               src={imagePath}
               alt={currentAsset.name}
               fill
               sizes="32px"
-              className="object-contain"
+              className="object-cover"
               onError={() => setHasImageError(true)}
             />
           </div>

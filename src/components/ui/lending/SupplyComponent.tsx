@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -15,59 +15,96 @@ import { AaveReserveData, useAaveFetch } from "@/utils/aave/fetch";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(false);
+  const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
   const { fetchAllReservesDataWithBackoff } = useAaveFetch();
 
-  const loadAaveReserves = async () => {
-    // Only load once per component mount
-    if (hasLoadedRef.current) {
-      console.log(
-        "Skipping Aave data fetch - already loaded once for this session",
-      );
-      return;
-    }
+  const loadAaveReserves = useCallback(
+    async (force = false) => {
+      // Skip if already loading
+      if (loading && !force) {
+        console.log("Already loading, skipping...");
+        return;
+      }
 
-    try {
-      setLoading(true);
+      // Skip if same chain and we have data (unless forced)
+      if (
+        !force &&
+        lastChainId === sourceChain.chainId &&
+        aaveReserves.length > 0
+      ) {
+        console.log("Data already loaded for this chain, skipping...");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        console.log(
+          `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
+        );
+
+        const reservesData = await fetchAllReservesDataWithBackoff();
+
+        console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
+        setAaveReserves(reservesData);
+        setLastChainId(sourceChain.chainId);
+      } catch (err) {
+        console.error("Error loading Aave reserves:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load Aave reserves",
+        );
+        // Clear data on error
+        setAaveReserves([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      loading,
+      lastChainId,
+      sourceChain.chainId,
+      aaveReserves.length,
+      fetchAllReservesDataWithBackoff,
+    ],
+  );
+
+  // Reset data when chain changes (before new data loads)
+  useEffect(() => {
+    if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
+      setAaveReserves([]);
       setError(null);
-      console.log("Fetching Aave reserves data using connected wallet...");
-
-      // Use the fetch class to get all reserves data
-      // This will automatically batch process and stop when no more active reserves found
-      const reservesData = await fetchAllReservesDataWithBackoff();
-
-      console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
-      setAaveReserves(reservesData);
-      hasLoadedRef.current = true;
-    } catch (err) {
-      console.error("Error loading Aave reserves:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to load Aave reserves",
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [sourceChain.chainId, lastChainId]);
 
+  // Add direct MetaMask chain change listener for immediate refresh
   useEffect(() => {
-    // Only load once when component mounts
-    if (!hasLoadedRef.current) {
-      loadAaveReserves();
+    const handleChainChanged = () => {
+      console.log("MetaMask chain changed, clearing data and refreshing...");
+      // Immediately clear cards and show loading state
+      setAaveReserves([]);
+      setError(null);
+      setLoading(true);
+
+      // Force refresh when MetaMask chain changes
+      setTimeout(() => {
+        loadAaveReserves(true);
+      }, 200); // Small delay to ensure store has updated
+    };
+
+    // Listen for MetaMask chain changes
+    if (typeof window !== "undefined" && window.ethereum) {
+      const ethereum = window.ethereum;
+      ethereum.on?.("chainChanged", handleChainChanged);
+
+      return () => {
+        ethereum.removeListener?.("chainChanged", handleChainChanged);
+      };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run once
-
-  // Reset when chain changes
-  useEffect(() => {
-    hasLoadedRef.current = false;
-    setAaveReserves([]);
-    setError(null);
-    // Don't auto-load, wait for user to navigate back or refresh
-  }, [sourceChain.chainId]);
+  }, [loadAaveReserves]);
 
   const handleSupply = (asset: AaveReserveData) => {
     console.log("Supply asset:", asset);
@@ -80,9 +117,12 @@ const SupplyComponent: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    hasLoadedRef.current = false;
-    loadAaveReserves();
+    console.log("Manual refresh triggered");
+    loadAaveReserves(true); // Force refresh
   };
+
+  const hasData = aaveReserves.length > 0;
+  const showEmptyState = !loading && !error && !hasData;
 
   return (
     <div className="w-full space-y-4">
@@ -104,6 +144,7 @@ const SupplyComponent: React.FC = () => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem
           value="availablePositions"
@@ -117,54 +158,46 @@ const SupplyComponent: React.FC = () => {
               {loading && (
                 <div className="text-white text-center py-8">
                   <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>
-                    Polling ALL Aave reserves from Protocol Data Provider...
-                  </div>
-                  <div className="text-sm text-gray-400 mt-1">
-                    Processing every token until completion - no early stopping
-                  </div>
+                  <div>Loading Aave reserves available for supply...</div>
                 </div>
               )}
+
               {error && (
                 <div className="text-center py-8">
-                  <div className="text-red-400 mb-4">Error: {error}</div>
+                  <div className="text-red-400 mb-4">
+                    Failed to load reserves: {error}
+                  </div>
+                  <div className="text-sm text-gray-400 mb-4">
+                    Chain: {sourceChain.name}
+                  </div>
                   <button
                     onClick={handleRefresh}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    Retry
+                    {loading ? "Loading..." : "Retry"}
                   </button>
                 </div>
               )}
-              {!loading &&
-                !error &&
-                aaveReserves.length === 0 &&
-                !hasLoadedRef.current && (
-                  <div className="text-center py-8">
-                    <div className="text-gray-400 mb-4">
-                      Ready to load Aave reserves
-                    </div>
-                    <button
-                      onClick={handleRefresh}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                    >
-                      Load Reserves
-                    </button>
+
+              {showEmptyState && (
+                <div className="text-center py-8">
+                  <div className="text-amber-500 mb-4">
+                    No active reserves found on this chain
                   </div>
-                )}
-              {!loading &&
-                !error &&
-                aaveReserves.length === 0 &&
-                hasLoadedRef.current && (
-                  <div className="text-gray-400 text-center py-4">
-                    No active reserves found
-                  </div>
-                )}
-              {!loading &&
-                !error &&
+                  <button
+                    onClick={handleRefresh}
+                    className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-700 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              )}
+
+              {hasData &&
                 aaveReserves.map((reserve) => (
                   <SupplyUnOwnedCard
-                    key={`${reserve.asset}-${reserve.name}`}
+                    key={`${reserve.asset}-${sourceChain.chainId}`}
                     asset={reserve}
                     userBalance={reserve.userBalanceFormatted || "0.00"}
                     dollarAmount={reserve.userBalanceUsd || "0.00"}
@@ -172,20 +205,6 @@ const SupplyComponent: React.FC = () => {
                     onDetails={handleDetails}
                   />
                 ))}
-              {!loading && !error && aaveReserves.length > 0 && (
-                <div className="text-center py-4">
-                  <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm"
-                  >
-                    Refresh Data
-                  </button>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Loaded {aaveReserves.length} active reserves • Chain:{" "}
-                    {sourceChain.chainId} • Complete dataset
-                  </div>
-                </div>
-              )}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>
