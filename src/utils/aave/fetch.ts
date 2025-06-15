@@ -161,37 +161,6 @@ export async function fetchAllReservesData(
 }
 
 /**
- * Get user's token balance for a specific asset
- */
-export async function getUserTokenBalance(
-  tokenAddress: string,
-  signer: ethers.Signer,
-): Promise<{
-  balance: bigint;
-  formatted: string;
-  decimals: number;
-}> {
-  const provider = signer.provider;
-  if (!provider) {
-    throw new Error("Signer must have a provider");
-  }
-
-  const userAddress = await signer.getAddress();
-  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-
-  const [balance, decimals] = await Promise.all([
-    tokenContract.balanceOf(userAddress),
-    tokenContract.decimals(),
-  ]);
-
-  return {
-    balance,
-    formatted: ethers.formatUnits(balance, decimals),
-    decimals: Number(decimals),
-  };
-}
-
-/**
  * React hook for Aave fetch functions with wallet integration
  */
 export function useAaveFetch() {
