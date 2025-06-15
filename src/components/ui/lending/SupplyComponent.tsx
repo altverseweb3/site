@@ -20,7 +20,7 @@ const SupplyComponent: React.FC = () => {
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesDataWithBackoff } = useAaveFetch();
+  const { fetchAllReservesData } = useAaveFetch();
 
   const loadAaveReserves = useCallback(
     async (force = false) => {
@@ -47,7 +47,7 @@ const SupplyComponent: React.FC = () => {
           `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
         );
 
-        const reservesData = await fetchAllReservesDataWithBackoff();
+        const reservesData = await fetchAllReservesData();
 
         console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
         setAaveReserves(reservesData);
@@ -68,9 +68,14 @@ const SupplyComponent: React.FC = () => {
       lastChainId,
       sourceChain.chainId,
       aaveReserves.length,
-      fetchAllReservesDataWithBackoff,
+      fetchAllReservesData,
     ],
   );
+
+  // Load data when component mounts or chain changes
+  useEffect(() => {
+    loadAaveReserves();
+  }, [loadAaveReserves, sourceChain.chainId]);
 
   // Reset data when chain changes (before new data loads)
   useEffect(() => {
@@ -79,32 +84,6 @@ const SupplyComponent: React.FC = () => {
       setError(null);
     }
   }, [sourceChain.chainId, lastChainId]);
-
-  // Add direct MetaMask chain change listener for immediate refresh
-  useEffect(() => {
-    const handleChainChanged = () => {
-      console.log("MetaMask chain changed, clearing data and refreshing...");
-      // Immediately clear cards and show loading state
-      setAaveReserves([]);
-      setError(null);
-      setLoading(true);
-
-      // Force refresh when MetaMask chain changes
-      setTimeout(() => {
-        loadAaveReserves(true);
-      }, 200); // Small delay to ensure store has updated
-    };
-
-    // Listen for MetaMask chain changes
-    if (typeof window !== "undefined" && window.ethereum) {
-      const ethereum = window.ethereum;
-      ethereum.on?.("chainChanged", handleChainChanged);
-
-      return () => {
-        ethereum.removeListener?.("chainChanged", handleChainChanged);
-      };
-    }
-  }, [loadAaveReserves]);
 
   const handleSupply = (asset: AaveReserveData) => {
     console.log("Supply asset:", asset);
@@ -158,7 +137,10 @@ const SupplyComponent: React.FC = () => {
               {loading && (
                 <div className="text-white text-center py-8">
                   <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading Aave reserves available for supply...</div>
+                  <div>Loading Aave reserves for {sourceChain.name}...</div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    Chain ID: {sourceChain.chainId}
+                  </div>
                 </div>
               )}
 
@@ -168,7 +150,7 @@ const SupplyComponent: React.FC = () => {
                     Failed to load reserves: {error}
                   </div>
                   <div className="text-sm text-gray-400 mb-4">
-                    Chain: {sourceChain.name}
+                    Chain: {sourceChain.name} ({sourceChain.chainId})
                   </div>
                   <button
                     onClick={handleRefresh}
@@ -182,12 +164,12 @@ const SupplyComponent: React.FC = () => {
 
               {showEmptyState && (
                 <div className="text-center py-8">
-                  <div className="text-amber-500 mb-4">
-                    No active reserves found on this chain
+                  <div className="text-gray-400 mb-4">
+                    No active reserves found on {sourceChain.name}
                   </div>
                   <button
                     onClick={handleRefresh}
-                    className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-700 transition-colors"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
                     Refresh
                   </button>

@@ -71,7 +71,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Alternative: Fetch with exponential backoff for better error handling
  */
-export async function fetchAllReservesDataWithBackoff(
+export async function fetchAllReservesData(
   signer: ethers.Signer,
 ): Promise<AaveReserveData[]> {
   const provider = signer.provider;
@@ -267,9 +267,9 @@ export function useAaveFetch() {
   const { getEvmSigner } = useWalletProviderAndSigner();
 
   return {
-    fetchAllReservesDataWithBackoff: async () => {
+    fetchAllReservesData: async () => {
       const signer = await getEvmSigner();
-      return fetchAllReservesDataWithBackoff(signer);
+      return fetchAllReservesData(signer);
     },
   };
 }
