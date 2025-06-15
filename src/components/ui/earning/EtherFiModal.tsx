@@ -31,10 +31,13 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 }) => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
 
-  // Check if any wallet is connected (you can modify this to check specific wallets)
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
   const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
-  const isWalletConnected = isEvmWalletConnected || isSuiWalletConnected;
+  const isSolanaWalletConnected = useIsWalletTypeConnected(
+    WalletType.REOWN_SOL,
+  );
+  const isWalletConnected =
+    isEvmWalletConnected || isSuiWalletConnected || isSolanaWalletConnected;
 
   if (!data) return null;
 
@@ -225,7 +228,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 trigger={
                   <Button className="flex-1 bg-green-600 text-white hover:bg-green-700">
                     <Wallet className="h-4 w-4 mr-2" />
-                    Connect & Deposit
+                    Connect
                   </Button>
                 }
                 onSuccess={handleWalletConnectSuccess}

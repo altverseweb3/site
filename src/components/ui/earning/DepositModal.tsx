@@ -25,9 +25,13 @@ import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { useEtherFiFetch } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
 import { useIsWalletTypeConnected } from "@/store/web3Store";
-import { useChainSwitch } from "@/utils/walletMethods";
-import { WalletType } from "@/types/web3";
-import { chainList, getChainById } from "@/config/chains";
+import { useChainSwitch, useTokenTransfer } from "@/utils/walletMethods";
+import { WalletType, Token, Chain } from "@/types/web3";
+import { chainList, getChainById, chains } from "@/config/chains";
+import { useAppKit } from "@reown/appkit/react";
+import useWeb3Store from "@/store/web3Store";
+import { ConnectButton } from "@suiet/wallet-kit";
+import { useRef } from "react";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -53,7 +57,149 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const { getTokenBalance } = useEtherFiFetch();
   const { approveToken, depositTokens } = useEtherFiInteract();
   const { switchToChain } = useChainSwitch();
+  const { open: openAppKit } = useAppKit();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
+  const isSolanaWalletConnected = useIsWalletTypeConnected(
+    WalletType.REOWN_SOL,
+  );
+
+  const isChainWalletConnected = (chainId: string) => {
+    const chain = getChainById(chainId);
+    if (!chain) return false;
+
+    switch (chain.walletType) {
+      case WalletType.REOWN_EVM:
+        return isWalletConnected;
+      case WalletType.SUIET_SUI:
+        return isSuiWalletConnected;
+      case WalletType.REOWN_SOL:
+        return isSolanaWalletConnected;
+      default:
+        return false;
+    }
+  };
+
+  // Refs for wallet connection
+  const suiButtonRef = useRef<HTMLDivElement>(null);
+
+  const connectSuiWallet = () => {
+    if (!suiButtonRef.current) {
+      console.error("SUI button ref is null or undefined.");
+      return;
+    }
+
+    const suietButton = suiButtonRef.current.querySelector("button");
+    if (!suietButton) {
+      console.error(
+        "Could not find the SUI button element inside the hidden div.",
+      );
+      return;
+    }
+
+    suietButton.click();
+  };
+
+  const connectSolanaWallet = async () => {
+    openAppKit({ view: "Connect", namespace: "solana" });
+  };
+
+  const connectEvmWallet = async () => {
+    openAppKit({ view: "Connect", namespace: "eip155" });
+  };
+
+  // Helper to create token objects for swapping
+  const createNativeToken = (chain: Chain): Token => ({
+    id: chain.chainToken.toLowerCase(),
+    name: chain.chainToken,
+    ticker: chain.chainToken,
+    icon: chain.icon,
+    address: chain.nativeAddress,
+    decimals: chain.decimals,
+    chainId: chain.chainId,
+    stringChainId: chain.chainId.toString(),
+    native: true,
+  });
+
+  // Helper to create destination token from vault's first deposit asset
+  const createDestinationToken = (assetSymbol: string): Token => {
+    const assetInfo = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
+    return {
+      id: assetSymbol.toLowerCase(),
+      name: assetSymbol,
+      ticker: assetSymbol,
+      icon: assetInfo.imagePath,
+      address: assetInfo.contractAddress,
+      decimals: assetInfo.decimals,
+      chainId: 1, // EtherFi vaults are on Ethereum
+      stringChainId: "1",
+      native: assetSymbol.toLowerCase() === "eth",
+    };
+  };
+
+  // Token transfer hook for swap functionality
+  const {
+    amount: swapAmount,
+    handleAmountChange: handleSwapAmountChange,
+    isButtonDisabled: isSwapButtonDisabled,
+    handleTransfer: handleSwapTransfer,
+    receiveAmount,
+    isLoadingQuote,
+    totalFeeUsd,
+  } = useTokenTransfer({
+    type: "swap",
+    onSuccess: (amount, sourceToken, destinationToken) => {
+      console.log(
+        `Swap succeeded: ${amount} ${sourceToken?.ticker} → ${destinationToken?.ticker}`,
+      );
+      // After successful swap, we can proceed with the deposit
+      // The swapped tokens should now be available in the user's wallet
+    },
+    onError: (error) => {
+      console.error("Swap failed:", error);
+    },
+  });
+
+  // Helper to determine if we should use direct deposit vs cross-chain swap
+  const isDirectDeposit = (chainId: string) => {
+    const selectedChain = getChainById(chainId);
+    // Direct deposit ONLY for Ethereum mainnet
+    return selectedChain?.id === "ethereum";
+  };
+
+  // Configure cross-chain swap for any non-Ethereum chain (including EVM chains like ARB, OP, etc.)
+  const configureSwapForChain = useCallback(
+    (chainId: string) => {
+      const selectedChain = getChainById(chainId);
+      if (!selectedChain || !vault) return;
+
+      // All non-Ethereum chains use cross-chain swap
+      if (selectedChain.id !== "ethereum") {
+        // Set up source chain and token
+        const sourceChain = selectedChain;
+        const sourceToken = createNativeToken(selectedChain);
+
+        // Set up destination chain and token (first deposit asset from vault)
+        const destinationChain = chains.ethereum; // EtherFi vaults are on Ethereum
+        const firstDepositAsset = vault.supportedAssets.deposit[0];
+
+        // Create destination token from vault's first deposit asset
+        const destinationToken = createDestinationToken(firstDepositAsset);
+
+        // Update Web3 store with swap configuration
+        const store = useWeb3Store.getState();
+        store.setSourceChain(sourceChain);
+        store.setDestinationChain(destinationChain);
+        store.setSourceToken(sourceToken);
+        store.setDestinationToken(destinationToken);
+
+        console.log(
+          `Configured swap: ${sourceToken.ticker} (${sourceChain.chainName}) → ${destinationToken.ticker} (${destinationChain.chainName})`,
+        );
+      }
+    },
+    [vault],
+  );
 
   // Simple function to fetch balance for an asset
   const fetchBalance = useCallback(
@@ -171,8 +317,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
     return asset?.imagePath || "/images/etherFi/ethereum-assets/eth.png";
   };
 
-  const isFormValid =
-    (selectedAsset || selectedSwapChain) && amount && parseFloat(amount) > 0;
+  // Form validation - distinguish between direct deposits and cross-chain swaps
+  const isFormValid = selectedSwapChain
+    ? swapAmount && parseFloat(swapAmount) > 0 // Cross-chain swap
+    : selectedAsset && amount && parseFloat(amount) > 0; // Direct deposit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -201,39 +349,42 @@ const DepositModal: React.FC<DepositModalProps> = ({
               onValueChange={async (value) => {
                 // Check if it's a vault-supported asset or a chain
                 if (vault.supportedAssets.deposit.includes(value)) {
-                  // Direct deposit asset selected
+                  // Direct deposit asset selected (only allowed on Ethereum)
                   setSelectedAsset(value);
                   setSelectedSwapChain("");
                   if (value && isWalletConnected) {
                     fetchBalance(value);
                   }
                 } else {
-                  // Swap chain selected - filter out non-EVM chains for now
+                  // Chain selected - determine if direct deposit or cross-chain swap
                   const selectedChain = getChainById(value);
-                  if (
-                    selectedChain &&
-                    selectedChain.walletType === WalletType.REOWN_EVM
-                  ) {
-                    setSelectedSwapChain(value);
-                    setSelectedAsset("");
+                  if (selectedChain) {
+                    if (isDirectDeposit(value)) {
+                      // Ethereum - use direct deposit
+                      setSelectedAsset("");
+                      setSelectedSwapChain("");
+                      // Will show direct deposit assets in dropdown
+                    } else {
+                      // All other chains - use cross-chain swap
+                      setSelectedSwapChain(value);
+                      setSelectedAsset("");
 
-                    // Trigger chain switch if wallet is connected
-                    if (isWalletConnected) {
+                      // Configure cross-chain swap for any non-Ethereum chain
+                      configureSwapForChain(value);
+                    }
+
+                    // Handle chain switching for EVM chains
+                    if (
+                      selectedChain.walletType === WalletType.REOWN_EVM &&
+                      isWalletConnected
+                    ) {
                       try {
                         await switchToChain(selectedChain);
                         console.log(`Switched to ${selectedChain.chainName}`);
                       } catch (error) {
                         console.error("Failed to switch chain:", error);
-                        // Could show a toast notification here
                       }
                     }
-                  } else if (
-                    selectedChain &&
-                    (selectedChain.id === "sui" ||
-                      selectedChain.id === "solana")
-                  ) {
-                    // For now, ignore Sui and Solana as requested
-                    console.log(`${selectedChain.chainName} not supported yet`);
                   }
                 }
               }}
@@ -276,10 +427,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-[#27272A] border-[#3F3F46]">
-                {/* Direct Deposit Assets */}
                 <SelectGroup>
                   <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
-                    Direct Deposit
+                    Direct Deposit (Ethereum)
                   </SelectLabel>
                   {vault.supportedAssets.deposit.map((asset) => (
                     <SelectItem
@@ -303,15 +453,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
                 <SelectSeparator className="bg-[#3F3F46]" />
 
-                {/* Swap from Chains */}
+                {/* Cross-chain Swap from all other chains (excluding Ethereum) */}
                 <SelectGroup>
                   <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
-                    Swap from
+                    Cross-chain Swap from
                   </SelectLabel>
                   {chainList
-                    .filter(
-                      (chain) => chain.id !== "sui" && chain.id !== "solana",
-                    )
+                    .filter((chain) => chain.id !== "ethereum") // Exclude Ethereum from swap options
                     .map((chain) => (
                       <SelectItem
                         key={`swap-${chain.id}`}
@@ -355,20 +503,35 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         )?.chainToken
                       }{" "}
                       → {vault.supportedAssets.deposit[0]}
+                      {receiveAmount && (
+                        <span className="text-green-500 ml-2">
+                          ≈ {receiveAmount} {vault.supportedAssets.deposit[0]}
+                        </span>
+                      )}
+                      {totalFeeUsd && (
+                        <span className="text-amber-500 ml-2">
+                          (Fee: ${totalFeeUsd})
+                        </span>
+                      )}
                     </span>
                   ) : isLoadingBalance ? (
                     <span>Loading balance...</span>
-                  ) : isWalletConnected ? (
+                  ) : selectedAsset && isWalletConnected ? (
                     <span>
                       Balance: {balances[selectedAsset] || "0.00"}{" "}
                       {selectedAsset}
                     </span>
+                  ) : selectedAsset && !isWalletConnected ? (
+                    <span className="text-[#71717A]">
+                      Connect EVM wallet to see balance
+                    </span>
                   ) : (
                     <span className="text-[#71717A]">
-                      Connect wallet to see balance
+                      Select asset or chain
                     </span>
                   )}
                 </div>
+                {/* Show Max button for direct deposits when EVM wallet is connected */}
                 {isWalletConnected &&
                   selectedAsset &&
                   balances[selectedAsset] && (
@@ -379,14 +542,68 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       Max
                     </button>
                   )}
+
+                {/* Show Connect EVM button when asset is selected but EVM wallet isn't connected */}
+                {selectedAsset && !isWalletConnected && (
+                  <button
+                    onClick={connectEvmWallet}
+                    className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
+                  >
+                    Connect EVM
+                  </button>
+                )}
+
+                {/* Show wallet connection buttons for swap chains when not connected */}
+                {selectedSwapChain &&
+                  !isChainWalletConnected(selectedSwapChain) &&
+                  (() => {
+                    const chain = getChainById(selectedSwapChain);
+                    if (chain?.walletType === WalletType.SUIET_SUI) {
+                      return (
+                        <button
+                          onClick={connectSuiWallet}
+                          className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors"
+                        >
+                          Connect SUI
+                        </button>
+                      );
+                    } else if (chain?.walletType === WalletType.REOWN_SOL) {
+                      return (
+                        <button
+                          onClick={connectSolanaWallet}
+                          className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30 transition-colors"
+                        >
+                          Connect Solana
+                        </button>
+                      );
+                    } else if (chain?.walletType === WalletType.REOWN_EVM) {
+                      return (
+                        <button
+                          onClick={connectEvmWallet}
+                          className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
+                        >
+                          Connect EVM
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
               </div>
             </div>
             <div className="relative">
               <Input
                 type="number"
                 placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={selectedSwapChain ? swapAmount : amount} // Cross-chain swap uses swapAmount, direct deposit uses amount
+                onChange={(e) => {
+                  if (selectedSwapChain) {
+                    // Cross-chain swap - use swap handler
+                    handleSwapAmountChange(e);
+                  } else {
+                    // Direct deposit - use regular amount state
+                    setAmount(e.target.value);
+                  }
+                }}
                 className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A]"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -464,32 +681,37 @@ const DepositModal: React.FC<DepositModalProps> = ({
             )}
 
             <Button
-              onClick={handleDeposit}
+              onClick={selectedSwapChain ? handleSwapTransfer : handleDeposit}
               disabled={
-                !isFormValid || isLoading || (needsApproval && isFormValid)
+                selectedSwapChain
+                  ? isSwapButtonDisabled ||
+                    !isChainWalletConnected(selectedSwapChain) // Cross-chain swap
+                  : !isFormValid || isLoading || (needsApproval && isFormValid) // Direct deposit
               }
               className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
             >
-              {isLoading ? (
+              {(selectedSwapChain ? isLoadingQuote : isLoading) ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                  Processing...
+                  {selectedSwapChain ? "Getting Quote..." : "Processing..."}
                 </div>
               ) : (
                 <>
                   {selectedSwapChain ? (
                     <>
-                      Swap & Deposit{" "}
+                      Cross-chain Swap{" "}
                       {
                         chainList.find(
                           (chain) => chain.id === selectedSwapChain,
                         )?.chainToken
                       }
+                      {receiveAmount &&
+                        ` → ${receiveAmount} ${vault.supportedAssets.deposit[0]}`}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   ) : (
                     <>
-                      Deposit {selectedAsset}
+                      Direct Deposit {selectedAsset}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}
@@ -511,6 +733,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
               Your deposit will start earning yield immediately.
             </p>
           </div>
+        </div>
+
+        {/* Hidden SUI wallet connect button */}
+        <div
+          ref={suiButtonRef}
+          className="absolute opacity-0 pointer-events-auto -z-10"
+        >
+          <ConnectButton />
         </div>
       </DialogContent>
     </Dialog>
