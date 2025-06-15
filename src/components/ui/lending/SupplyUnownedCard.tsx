@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/Card";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
+import { SupplyModal } from "./SupplyModal";
 
 interface SupplyUnOwnedCardProps {
   asset?: AaveReserveData;
@@ -158,9 +159,28 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-        <PrimaryButton onClick={() => onSupply(currentAsset)}>
-          supply
-        </PrimaryButton>
+        <SupplyModal
+          tokenSymbol={currentAsset.symbol}
+          tokenName={currentAsset.name}
+          tokenIcon={currentAsset.tokenIcon}
+          chainId={currentAsset.chainId}
+          balance={userBalance}
+          supplyAPY={supplyAPY}
+          collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
+          healthFactor="0"
+          tokenPrice={1}
+          liquidationThreshold={0.85}
+          totalCollateralUSD={0}
+          totalDebtUSD={0}
+          tokenAddress={currentAsset.asset}
+          tokenDecimals={currentAsset.decimals}
+          onSupply={async () => {
+            onSupply(currentAsset);
+            return true;
+          }}
+        >
+          <PrimaryButton>supply</PrimaryButton>
+        </SupplyModal>
         <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
       </CardFooter>
     </Card>

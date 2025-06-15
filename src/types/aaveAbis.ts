@@ -106,6 +106,18 @@ export const POOL_DATA_PROVIDER_ABI = [
   },
 ] as const;
 
+export const POOL_ABI = [
+  "function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external",
+  "function withdraw(address asset, uint256 amount, address to) external returns (uint256)",
+  "function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf) external",
+  "function repay(address asset, uint256 amount, uint256 rateMode, address onBehalfOf) external returns (uint256)",
+  "function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external",
+  "function swapBorrowRateMode(address asset, uint256 rateMode) external",
+  "function getUserAccountData(address user) external view returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)",
+  "function getReservesList() external view returns (address[])",
+  "function getReserveData(address asset) external view returns (uint256 configuration, uint128 liquidityIndex, uint128 currentLiquidationRate, uint128 variableBorrowIndex, uint128 currentVariableBorrowRate, uint128 currentStableBorrowRate, uint40 lastUpdateTimestamp, uint16 id, address aTokenAddress, address stableDebtTokenAddress, address variableDebtTokenAddress, address interestRateStrategyAddress, uint128 accruedToTreasury, uint128 unbacked, uint128 isolationModeTotalDebt)",
+];
+
 export const ERC20_ABI = [
   {
     inputs: [],
@@ -142,4 +154,26 @@ export const ERC20_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      { internalType: "address", name: "spender", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "owner", type: "address" },
+      { internalType: "address", name: "spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
+
+export const DATA_PROVIDER_ABI = POOL_DATA_PROVIDER_ABI;
