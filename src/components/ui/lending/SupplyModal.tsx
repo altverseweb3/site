@@ -237,7 +237,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
       }
 
       const provider = new ethers.BrowserProvider(
-        window.ethereum as ethers.Eip1193Provider,
+        window.ethereum as unknown as ethers.Eip1193Provider,
       );
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
