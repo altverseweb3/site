@@ -164,7 +164,7 @@ export class AaveTransactions {
   ): Promise<boolean> {
     try {
       const provider = new ethers.BrowserProvider(
-        window.ethereum as ethers.Eip1193Provider,
+        window.ethereum as unknown as ethers.Eip1193Provider,
       );
       const tokenContract = new ethers.Contract(
         tokenAddress,
