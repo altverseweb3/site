@@ -1,6 +1,23 @@
 // aaveAbis.ts - ABI definitions for Aave contracts
 export const POOL_DATA_PROVIDER_ABI = [
   {
+    inputs: [{ internalType: "address", name: "asset", type: "address" }],
+    name: "getReserveCaps",
+    outputs: [
+      { internalType: "uint256", name: "borrowCap", type: "uint256" },
+      { internalType: "uint256", name: "supplyCap", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "asset", type: "address" }],
+    name: "getDebtCeiling",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "getAllReservesTokens",
     outputs: [
@@ -62,6 +79,7 @@ export const POOL_DATA_PROVIDER_ABI = [
       },
       { internalType: "uint256", name: "liquidityIndex", type: "uint256" },
       { internalType: "uint256", name: "variableBorrowIndex", type: "uint256" },
+
       { internalType: "uint40", name: "lastUpdateTimestamp", type: "uint40" },
     ],
     stateMutability: "view",

@@ -20,7 +20,7 @@ const SupplyComponent: React.FC = () => {
   const hasLoadedRef = useRef(false);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesData } = useAaveFetch();
+  const { fetchAllReservesDataWithBackoff } = useAaveFetch();
 
   const loadAaveReserves = async () => {
     // Only load once per component mount
@@ -38,7 +38,7 @@ const SupplyComponent: React.FC = () => {
 
       // Use the fetch class to get all reserves data
       // This will automatically batch process and stop when no more active reserves found
-      const reservesData = await fetchAllReservesData();
+      const reservesData = await fetchAllReservesDataWithBackoff();
 
       console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
       setAaveReserves(reservesData);
