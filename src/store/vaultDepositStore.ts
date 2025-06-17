@@ -117,13 +117,13 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
 
       // Step 1 (Swap) actions
       startSwapStep: (processId, swapTrackingId) => {
-        get().updateProcessState(processId, "STEP_1_PENDING", {
+        get().updateProcessState(processId, "SWAP_PENDING", {
           swapTrackingId,
         });
       },
 
       completeSwapStep: (processId, swapResult) => {
-        get().updateProcessState(processId, "STEP_1_COMPLETE", {
+        get().updateProcessState(processId, "SWAP_COMPLETE", {
           swapTransactionHash: swapResult.transactionHash,
           actualTargetAmount: swapResult.actualAmount,
           swapCompletedAt: swapResult.completedAt,
@@ -139,7 +139,7 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
 
       // Step 2 (Deposit) actions
       startDepositStep: (processId) => {
-        get().updateProcessState(processId, "STEP_2_PENDING");
+        get().updateProcessState(processId, "DEPOSIT_PENDING");
       },
 
       completeDepositStep: (processId, depositResult) => {
@@ -186,8 +186,8 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
           // TODO: Add on-chain verification logic here
           // For now, we'll just log recovery attempts
           if (
-            process.state === "STEP_1_PENDING" ||
-            process.state === "STEP_2_PENDING"
+            process.state === "SWAP_PENDING" ||
+            process.state === "DEPOSIT_PENDING"
           ) {
             console.log(
               `Recovering process ${process.id} in state ${process.state}`,
@@ -229,9 +229,9 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
             (process) =>
               String(process.vault.id) === String(vaultId) &&
               process.userAddress.toLowerCase() === userAddress.toLowerCase() &&
-              (process.state === "STEP_1_PENDING" ||
-                process.state === "STEP_1_COMPLETE" ||
-                process.state === "STEP_2_PENDING"),
+              (process.state === "SWAP_PENDING" ||
+                process.state === "SWAP_COMPLETE" ||
+                process.state === "DEPOSIT_PENDING"),
           ) || null
         );
       },
@@ -274,19 +274,19 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
               total: totalSteps,
               description: "Ready to start",
             };
-          case "STEP_1_PENDING":
+          case "SWAP_PENDING":
             return {
               current: 0,
               total: totalSteps,
               description: "Swapping tokens...",
             };
-          case "STEP_1_COMPLETE":
+          case "SWAP_COMPLETE":
             return {
               current: 1,
               total: totalSteps,
               description: "Swap complete, ready to deposit",
             };
-          case "STEP_2_PENDING":
+          case "DEPOSIT_PENDING":
             return {
               current: 1,
               total: totalSteps,

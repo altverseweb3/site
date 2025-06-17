@@ -52,9 +52,9 @@ export interface ProtocolOption {
 // Process state machine
 export type VaultDepositState =
   | "IDLE"
-  | "STEP_1_PENDING" // Swap transaction submitted, waiting for completion
-  | "STEP_1_COMPLETE" // Swap completed, user has target tokens, ready for deposit
-  | "STEP_2_PENDING" // Vault deposit transaction submitted
+  | "SWAP_PENDING" // Swap transaction submitted, waiting for completion
+  | "SWAP_COMPLETE" // Swap completed, user has target tokens, ready for deposit
+  | "DEPOSIT_PENDING" // Vault deposit transaction submitted
   | "COMPLETED" // Both steps complete, funds in vault
   | "CANCELLED" // User cancelled after step 1
   | "FAILED"; // Process failed at any step
