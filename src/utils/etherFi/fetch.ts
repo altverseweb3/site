@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { useCallback } from "react"; // Add this import
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
 import { ERC20_ABI, TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
@@ -205,8 +206,8 @@ export async function getUserVaultBalance(
 export function useEtherFiFetch() {
   const { getEvmSigner } = useWalletProviderAndSigner();
 
-  return {
-    fetchVaultTVL: async (vaultId: number) => {
+  const fetchVaultTVLMemoized = useCallback(
+    async (vaultId: number) => {
       const signer = await getEvmSigner();
       const provider = signer.provider;
       if (!provider) {
@@ -214,8 +215,11 @@ export function useEtherFiFetch() {
       }
       return fetchVaultTVL(vaultId, provider);
     },
+    [getEvmSigner],
+  );
 
-    checkIfTellerPaused: async (vaultId: number) => {
+  const checkIfTellerPausedMemoized = useCallback(
+    async (vaultId: number) => {
       const signer = await getEvmSigner();
       const provider = signer.provider;
       if (!provider) {
@@ -223,18 +227,27 @@ export function useEtherFiFetch() {
       }
       return checkIfTellerPaused(vaultId, provider);
     },
+    [getEvmSigner],
+  );
 
-    getTokenAllowance: async (tokenSymbol: string, vaultId: number) => {
+  const getTokenAllowanceMemoized = useCallback(
+    async (tokenSymbol: string, vaultId: number) => {
       const signer = await getEvmSigner();
       return getTokenAllowance(tokenSymbol, vaultId, signer);
     },
+    [getEvmSigner],
+  );
 
-    getTokenBalance: async (tokenSymbol: string) => {
+  const getTokenBalanceMemoized = useCallback(
+    async (tokenSymbol: string) => {
       const signer = await getEvmSigner();
       return getTokenBalance(tokenSymbol, signer);
     },
+    [getEvmSigner],
+  );
 
-    getUserVaultBalance: async (vaultId: number) => {
+  const getUserVaultBalanceMemoized = useCallback(
+    async (vaultId: number) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
       const provider = signer.provider;
@@ -243,5 +256,14 @@ export function useEtherFiFetch() {
       }
       return getUserVaultBalance(vaultId, userAddress, provider);
     },
+    [getEvmSigner],
+  );
+
+  return {
+    fetchVaultTVL: fetchVaultTVLMemoized,
+    checkIfTellerPaused: checkIfTellerPausedMemoized,
+    getTokenAllowance: getTokenAllowanceMemoized,
+    getTokenBalance: getTokenBalanceMemoized,
+    getUserVaultBalance: getUserVaultBalanceMemoized,
   };
 }

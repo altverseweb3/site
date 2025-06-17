@@ -1,5 +1,6 @@
 // utils/reownEthersUtils.ts
 
+import { useCallback } from "react";
 import { ethers } from "ethers";
 import { useAppKitProvider } from "@reown/appkit/react";
 import { getSafeProvider, getSafeSolanaProvider } from "@/utils/providerUtils";
@@ -17,15 +18,13 @@ export function useWalletProviderAndSigner() {
   /**
    * Get EVM signer from wallet provider
    */
-  const getEvmSigner = async () => {
+  const getEvmSigner = useCallback(async () => {
     if (!evmProvider) {
       console.error("No EVM wallet provider available from Reown");
       throw new Error("No EVM wallet provider available");
     }
-
     try {
       const safeProvider = getSafeProvider(evmProvider);
-
       // Create ethers provider and signer
       const ethersProvider = new ethers.BrowserProvider(safeProvider);
       return await ethersProvider.getSigner();
@@ -33,21 +32,19 @@ export function useWalletProviderAndSigner() {
       console.error("Error getting EVM signer from wallet provider:", error);
       throw error;
     }
-  };
+  }, [evmProvider]); // Dependency on evmProvider
 
   /**
    * Get Solana wallet interface for signing
    * Returns an object with methods for signing Solana transactions
    */
-  const getSolanaSigner = async () => {
+  const getSolanaSigner = useCallback(async () => {
     if (!solanaProvider) {
       console.error("No Solana wallet provider available from Reown");
       throw new Error("No Solana wallet provider available");
     }
-
     try {
       const safeProvider = getSafeSolanaProvider(solanaProvider);
-
       if (!safeProvider) {
         throw new Error("Failed to get safe Solana provider");
       }
@@ -76,7 +73,6 @@ export function useWalletProviderAndSigner() {
           if (typeof safeProvider.signTransaction !== "function") {
             throw new Error("Solana provider does not support signTransaction");
           }
-
           return safeProvider.signTransaction(
             transaction,
           ) as Promise<Transaction>;
@@ -88,7 +84,6 @@ export function useWalletProviderAndSigner() {
               "Solana provider does not support signAllTransactions",
             );
           }
-
           return safeProvider.signAllTransactions(transactions) as Promise<
             Transaction[]
           >;
@@ -98,7 +93,6 @@ export function useWalletProviderAndSigner() {
           if (typeof safeProvider.signMessage !== "function") {
             throw new Error("Solana provider does not support signMessage");
           }
-
           return safeProvider.signMessage(message, "utf8");
         },
       };
@@ -106,13 +100,12 @@ export function useWalletProviderAndSigner() {
       console.error("Error getting Solana signer from wallet provider:", error);
       throw error;
     }
-  };
+  }, [solanaProvider]); // Dependency on solanaProvider
 
   /**
    * Get appropriate signer based on active wallet type
    * This is the main function to use for getting a signer for transactions
    */
-
   return {
     evmProvider,
     solanaProvider,
