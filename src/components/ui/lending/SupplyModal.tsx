@@ -16,10 +16,11 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { AaveTransactions, SupportedChainId } from "@/utils/aave/interact";
+import { AaveTransactions } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
+import { SupportedChainId } from "@/config/chains";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (

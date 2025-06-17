@@ -1,10 +1,8 @@
 // Aave Data Provider - For fetching information from contracts
 import { ethers } from "ethers";
-import { AaveConfig, SupportedChainId } from "./aaveConfig";
-
-// Re-export for convenience
-export type { SupportedChainId };
+import { AaveSDK } from "./aaveSDK";
 import { ERC20_ABI, POOL_ABI } from "../../types/aaveAbis";
+import { SupportedChainId } from "@/config/chains";
 
 export interface UserAccountData {
   totalCollateralBase: string;
@@ -86,14 +84,11 @@ export class AaveTransactions {
         `🏦 Starting supply transaction for ${amount} ${tokenSymbol}`,
       );
 
-      if (!AaveConfig.isChainSupported(chainId)) {
+      if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
-      const poolAddress = AaveConfig.getPoolAddress(chainId);
-      if (!poolAddress) {
-        throw new Error(`Pool address not found for chain ${chainId}`);
-      }
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
 
       // Convert amount to wei
       const amountWei = ethers.parseUnits(amount, tokenDecimals);
@@ -192,8 +187,7 @@ export class AaveTransactions {
     tokenDecimals: number,
   ): Promise<string> {
     try {
-      const poolAddress = AaveConfig.getPoolAddress(chainId);
-      if (!poolAddress) return "0";
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
 
       const provider = new ethers.BrowserProvider(
         window.ethereum as unknown as ethers.Eip1193Provider,
