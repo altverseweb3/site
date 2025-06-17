@@ -166,6 +166,7 @@ export function useEtherFiInteract() {
       amount: string,
     ) => {
       const signer = await getEvmSigner();
+      debugger;
       return depositTokens(tokenSymbol, vaultId, amount, signer);
     },
   };
