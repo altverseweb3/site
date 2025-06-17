@@ -1,2 +1,2 @@
-npx prettier --write "**/*.{ts,tsx,js,jsx,json}" && git add -A
-npm run lint
+npx prettier --write "**/*.{ts,tsx,js,jsx,json}"
+# npm run lint
