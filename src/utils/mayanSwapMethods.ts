@@ -112,10 +112,9 @@ export async function executeEvmSwap({
   overrides?: Overrides | null;
   payload?: Uint8Array | Buffer | null;
 }): Promise<string> {
+  /* // Uncomment to simulate swaps without wasting tokens
   // Simulate some delay like a real transaction
   await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  // Return a real swap ID for testing tracking
   const TEST_SWAP_IDS = [
     "0x9b162bb9b21433a926fc88b1c94686baa593ea382a95a46b9087406418abee3c",
     "0x26a3c6f7d46dc6cb1011f6f49c9e7da4217590d5305feca2c64b3995f605a4a6",
@@ -130,58 +129,60 @@ export async function executeEvmSwap({
     "0xb460f92687a3f19b2391a405cebd1fa368ddde03883d8d9be0719c027eca6da8",
   ];
   return TEST_SWAP_IDS[Math.floor(Math.random() * TEST_SWAP_IDS.length)];
-  // try {
-  //   // Check if the quote is valid
-  //   if (!quote) {
-  //     throw new Error("Invalid quote");
-  //   }
+  */
 
-  //   // Native tokens (ETH, AVAX, etc.) don't need approval
-  //   const isNativeToken =
-  //     !sourceToken ||
-  //     sourceToken === "0x0000000000000000000000000000000000000000";
+  try {
+    // Check if the quote is valid
+    if (!quote) {
+      throw new Error("Invalid quote");
+    }
 
-  //   // For non-native tokens, check and approve allowance
-  //   if (!isNativeToken) {
-  //     const forwarderAddress = addresses.MAYAN_FORWARDER_CONTRACT;
-  //     console.log("Mayan Forwarder address:", forwarderAddress);
+    // Native tokens (ETH, AVAX, etc.) don't need approval
+    const isNativeToken =
+      !sourceToken ||
+      sourceToken === "0x0000000000000000000000000000000000000000";
 
-  //     // Ensure token is approved for spending
-  //     await approveTokenSpending(
-  //       sourceToken,
-  //       amount,
-  //       forwarderAddress,
-  //       signer,
-  //       tokenDecimals,
-  //     );
-  //   }
+    // For non-native tokens, check and approve allowance
+    if (!isNativeToken) {
+      const forwarderAddress = addresses.MAYAN_FORWARDER_CONTRACT;
+      console.log("Mayan Forwarder address:", forwarderAddress);
 
-  //   console.log("Executing EVM swap...");
+      // Ensure token is approved for spending
+      await approveTokenSpending(
+        sourceToken,
+        amount,
+        forwarderAddress,
+        signer,
+        tokenDecimals,
+      );
+    }
 
-  //   // Execute the swap with no permit
-  //   const result = await swapFromEvm(
-  //     quote,
-  //     swapperAddress,
-  //     destinationAddress,
-  //     referrerAddresses,
-  //     signer,
-  //     null, // No permit - using traditional approval only
-  //     overrides,
-  //     payload,
-  //   );
+    console.log("Executing EVM swap...");
 
-  //   // Handle result based on type
-  //   if (typeof result === "string") {
-  //     // For gasless transactions, result is the order hash
-  //     return result;
-  //   } else {
-  //     // For normal transactions, result is the TransactionResponse object
-  //     return result.hash;
-  //   }
-  // } catch (error) {
-  //   console.error("Error executing EVM swap:", error);
-  //   throw error;
-  // }
+    // Execute the swap with no permit
+    const result = await swapFromEvm(
+      quote,
+      swapperAddress,
+      destinationAddress,
+      referrerAddresses,
+      signer,
+      null, // No permit - using traditional approval only
+      overrides,
+      payload,
+    );
+
+    // Handle result based on type
+    if (typeof result === "string") {
+      // For gasless transactions, result is the order hash
+      return result;
+    } else {
+      // For normal transactions, result is the TransactionResponse object
+      return result.hash;
+    }
+  } catch (error) {
+    console.error("Error executing EVM swap:", error);
+    throw error;
+  }
 }
 
 /**
