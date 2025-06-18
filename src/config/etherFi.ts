@@ -47,9 +47,10 @@ const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
 // Fallback APY values based on EtherFi website observations (as of current date)
 // These should be updated periodically by checking the actual website
 export const FALLBACK_APY_VALUES: Record<string, number> = {
-  "0x83599937c2c9bea0e0e8ac096c6f32e86486b410": 5.3, // Bera ETH Vault (lowercase)
-  "0xe77076518a813616315eaaba6ca8e595e845eee9": 2.4, // EIGEN Restaking (lowercase)
-  "0x86b5780b606940eb59a062aa85a07959518c0161": 35.0, // ETHFI Restaking (lowercase)
+  "0x83599937c2c9bea0e0e8ac096c6f32e86486b410": 3.2, // Bera ETH Vault (lowercase)
+  "0xe77076518a813616315eaaba6ca8e595e845eee9": 3.0, // EIGEN Restaking (lowercase)
+  "0x86b5780b606940eb59a062aa85a07959518c0161": 25.0, // ETHFI Restaking (lowercase)
+  "0xca8711daf13d852ed2121e4be3894dae366039e4": 11.0, // Liquid Move ETH (lowercase)
 };
 
 // Deposit asset configuration for tokens with contract addresses
@@ -287,8 +288,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://etherscan.io/address/0xca8711dAF13D852ED2121E4bE3894Dae366039E4",
       analytics: "https://www.ether.fi/app/liquid/move-eth",
       withdrawal: "https://www.ether.fi/app/liquid/move-eth",
-      yield:
-        "https://www.ether.fi/_next/data/vc-ap-neobank-dapp-SKPerL8zA0a1ar1PcE-Pn/app/liquid/move-eth.json?liquid=move-eth",
+      yield: "fallback", // EtherFi website shows hardcoded 11% APY
     },
     vaultIcon: "/images/etherFi/vaults/liquidmove.png",
   },
@@ -356,6 +356,103 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
         "https://api.sevenseas.capital/etherfi/ethereum/performance/0xC673ef7791724f0dcca38adB47Fbb3AEF3DB6C80?&aggregation_period=14",
     },
     vaultIcon: "/images/etherFi/vaults/beraeth.svg",
+  },
+
+  10: {
+    id: 10,
+    name: " Symbiotic Restaking",
+    description: "TBA",
+    ecosystem: "Ether.fi",
+    type: "Featured",
+    chain: "ethereum",
+    addresses: {
+      vault: "0x7223442cad8e9cA474fC40109ab981608F8c4273",
+      teller: "0x929B44db23740E65dF3A81eA4aAB716af1b88474",
+      accountant: "0x126af21dc55C300B7D0bBfC4F3898F558aE8156b",
+      lens: SHARED_LENS_ADDRESS,
+    },
+    supportedAssets: {
+      deposit: ["ETH", "wETH", "eETH", "weETH", "wstETH", "rETH"],
+      receive: {
+        name: "weETHs",
+        symbol: "weETHs",
+        imagePath: "/images/etherFi/ethereum-assets/weETHs.png",
+      },
+    },
+    links: {
+      explorer:
+        "https://etherscan.io/address/0x7223442cad8e9cA474fC40109ab981608F8c4273",
+      analytics: "https://www.ether.fi/app/weeths",
+      withdrawal: "https://www.ether.fi/app/weeths",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/apy/0x917ceE801a67f933F2e6b33fC0cD1ED2d5909D88",
+    },
+    vaultIcon: "/images/etherFi/vaults/weETHs.png",
+  },
+
+  11: {
+    id: 11,
+    name: "Bitcoin LRT",
+    description:
+      "Bitcoin LRT vault providing restaked BTC yield through various Bitcoin strategies.",
+    ecosystem: "Ethereum",
+    type: "Featured",
+    chain: "ethereum",
+    addresses: {
+      vault: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
+      teller: "0x6Ee3aaCcf9f2321E49063C4F8da775DdBd407268",
+      accountant: "0x1B293DC39F94157fA0D1D36d7e0090C8B8B8c13F",
+      lens: SHARED_LENS_ADDRESS,
+    },
+    supportedAssets: {
+      deposit: ["wBTC", "LBTC"],
+      receive: {
+        name: "eBTC",
+        symbol: "eBTC",
+        imagePath: "/images/etherFi/ethereum-assets/ebtc.png",
+      },
+    },
+    links: {
+      explorer:
+        "https://etherscan.io/address/0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
+      analytics: "https://www.ether.fi/app/liquid/ebtc",
+      withdrawal: "https://www.ether.fi/app/liquid/ebtc",
+      yield: "fallback",
+    },
+    vaultIcon: "/images/etherFi/ethereum-assets/ebtc.png",
+  },
+
+  12: {
+    id: 12,
+    name: "Ethena USD LRT",
+    description:
+      "Ethena USD LRT vault combining staking and shorting ETH strategies for stablecoin yield.",
+    ecosystem: "Ethereum",
+    type: "Featured",
+    chain: "ethereum",
+    addresses: {
+      vault: "0x939778D83b46B456224A33Fb59630B11DEC56663",
+      teller: "0xCc9A7620D0358a521A068B444846E3D5DebEa8fA",
+      accountant: "0xEB440B36f61Bf62E0C54C622944545f159C3B790",
+      lens: SHARED_LENS_ADDRESS,
+    },
+    supportedAssets: {
+      deposit: ["USDC", "DAI", "USDT", "USDe"],
+      receive: {
+        name: "eUSD",
+        symbol: "eUSD",
+        imagePath: "/images/etherFi/ethereum-assets/eusd.png",
+      },
+    },
+    links: {
+      explorer:
+        "https://etherscan.io/address/0x939778D83b46B456224A33Fb59630B11DEC56663",
+      analytics: "https://www.ether.fi/app/liquid/eusd",
+      withdrawal: "https://www.ether.fi/app/liquid/eusd",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/apy/0x939778D83b46B456224A33Fb59630B11DEC56663",
+    },
+    vaultIcon: "/images/etherFi/vaults/eusd.png",
   },
 };
 

@@ -45,7 +45,16 @@ export async function fetchVaultAPY(vaultId: number): Promise<VaultApyData> {
         net_apy: fallbackAPY / 100,
       };
     } else {
-      throw new Error(`No fallback APY configured for vault ${vault.name}`);
+      // Return TBD case for vaults with no configured fallback APY
+      return {
+        vaultId,
+        name: vault.name,
+        address: vault.addresses.vault,
+        source: "TBD",
+        overall_apy: null,
+        fee: 0,
+        net_apy: null,
+      };
     }
   }
 
@@ -76,22 +85,47 @@ export async function fetchFromSevenSeasAPI(
     }
 
     const data = await response.json();
-    const overallApy = data.Response?.apy;
-    const fee = data.Response?.fees || 0;
+
+    let overallApy: number | undefined;
+    let fee = 0;
+
+    // Handle different APY response formats - the stake vaults follow a different format
+
+    if (Array.isArray(data.Response)) {
+      // New format: Response is an array with nested strategy objects
+      const latestData = data.Response[0];
+      if (latestData?.apy) {
+        // Extract APY from strategy objects (karak, symbiotic, etc.)
+        const apyObj = latestData.apy;
+        const strategies = Object.keys(apyObj);
+        if (strategies.length > 0) {
+          // Use the first strategy's APY value
+          overallApy = apyObj[strategies[0]];
+        }
+      }
+      // No fees in new format
+      fee = 0;
+    } else {
+      // Old format: Response is an object with direct apy field
+      overallApy = data.Response?.apy;
+      fee = data.Response?.fees || 0;
+    }
 
     // Validate APY
     const isValidApy = overallApy !== undefined && overallApy > 0.001;
 
-    return {
+    const result = {
       vaultId,
       name: vault.name,
       address: vault.addresses.vault,
       source: "Seven Seas API",
-      overall_apy: isValidApy ? overallApy : null,
+      overall_apy: isValidApy && overallApy !== undefined ? overallApy : null,
       fee: fee,
-      net_apy: isValidApy ? overallApy - fee : null,
+      net_apy: isValidApy && overallApy !== undefined ? overallApy - fee : null,
       timestamp: data.Response?.timestamp,
     };
+
+    return result;
   } catch (error) {
     throw new Error(
       `Seven Seas API error: ${error instanceof Error ? error.message : "Unknown error"}`,
