@@ -74,10 +74,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
     state.getWalletBySourceChain(),
   );
 
-  // ✅ FIXED: Use ref to store current active process ID to avoid closure issues
   const activeProcessIdRef = useRef<string | null>(null);
 
-  // Store integration
+  // Vault Deposit Store integration
   const {
     createProcess,
     updateProcessState,
@@ -92,15 +91,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   const activeProcess = useActiveVaultDepositProcess();
 
-  // ✅ FIXED: Keep ref in sync with active process
   useEffect(() => {
-    // Only update ref if there's a new active process or if we need to clear it
+    // We Only update ref if there's a new active process or if we need to clear it
     if (activeProcess?.id !== activeProcessIdRef.current) {
       activeProcessIdRef.current = activeProcess?.id || null;
-      console.log(
-        "🔄 Updated activeProcessIdRef to:",
-        activeProcessIdRef.current,
-      );
+      console.log("Updated activeProcessIdRef to:", activeProcessIdRef.current);
     }
 
     // Show toast and clear ref when process is cancelled
@@ -111,7 +106,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           activeProcessIdRef.current = null;
           console.log("🧹 Cleared activeProcessIdRef for cancelled process");
         }
-      }, 500); // Quick cleanup for cancelled state
+      }, 500);
     }
 
     // Clear ref when process is completed or failed
@@ -123,7 +118,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         if (activeProcessIdRef.current === activeProcess.id) {
           activeProcessIdRef.current = null;
           console.log(
-            "🧹 Cleared activeProcessIdRef for completed/failed process",
+            "Cleared activeProcessIdRef for completed/failed process",
           );
         }
       }, 2000); // Give a bit more time for the user to see the final state
@@ -193,7 +188,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     };
   };
 
-  // Token transfer hook for swap functionality - FIXED with proper state transitions
+  // Token transfer hook for swap functionality -
   const {
     amount: swapAmount,
     handleAmountChange: handleSwapAmountChange,
@@ -206,16 +201,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
     type: "swap",
     enableTracking: true,
     onSuccess: (amount, sourceToken, destinationToken) => {
-      console.log("🎉 TOKEN TRANSFER onSuccess called:", {
+      console.log("TOKEN TRANSFER onSuccess called:", {
         amount,
         sourceToken: sourceToken?.ticker,
         destinationToken: destinationToken?.ticker,
         activeProcessId: activeProcessIdRef.current,
       });
 
-      // ✅ FIXED: Use ref to get current active process ID and verify state
+      // Use ref to get current active process ID and verify state
       if (activeProcessIdRef.current) {
-        // Get current process state from store (processes is a Record, not array)
+        // Get current process state from store
         const currentProcess =
           useVaultDepositStore.getState().processes[activeProcessIdRef.current];
         console.log("🔍 Current process found:", {
@@ -225,43 +220,41 @@ const DepositModal: React.FC<DepositModalProps> = ({
         });
 
         if (currentProcess && currentProcess.state === "IDLE") {
-          console.log("🚀 Starting swap step tracking - transaction approved");
+          console.log("Starting swap step tracking - transaction approved");
           startSwapStep(activeProcessIdRef.current, "swap-tracking-id");
         } else {
-          console.log("⚠️ Process not in IDLE state:", {
+          console.log("Process not in IDLE state:", {
             processState: currentProcess?.state,
             processId: activeProcessIdRef.current,
             processExists: !!currentProcess,
           });
         }
       } else {
-        console.log("⚠️ No active process ID found in ref");
+        console.log("No active process ID found in ref");
       }
     },
     onTrackingComplete: (status: SwapStatus) => {
-      console.log("🏁 TOKEN TRANSFER onTrackingComplete called:", {
+      console.log("TOKEN TRANSFER onTrackingComplete called:", {
         status,
         activeProcessId: activeProcessIdRef.current,
         isSuccess: status.status === "COMPLETED",
         actualAmount: status.toAmount,
       });
 
-      // ✅ FIXED: Use ref to get current active process ID
+      // Use ref to get current active process ID
       if (activeProcessIdRef.current) {
-        console.log(
-          "🔄 Calling onSwapTrackingComplete - transaction completed",
-        );
+        console.log("Calling onSwapTrackingComplete - transaction completed");
         onSwapTrackingComplete(status, activeProcessIdRef.current);
       } else {
         console.warn(
-          "⚠️ No active process ID found in ref for onTrackingComplete",
+          "No active process ID found in ref for onTrackingComplete",
         );
       }
     },
     onError: (error) => {
-      console.error("❌ TOKEN TRANSFER onError called:", error);
+      console.error("TOKEN TRANSFER onError called:", error);
       if (activeProcessIdRef.current) {
-        console.log("🔄 Updating process state to FAILED...");
+        console.log("Updating process state to FAILED...");
         updateProcessState(activeProcessIdRef.current, "FAILED", {
           errorMessage: `Swap failed: ${error}`,
         });
@@ -282,10 +275,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
     const selectedChain = getChainById(selectedSwapChain);
     if (!selectedChain) return;
 
-    // ✅ FIXED: Clear any stale process reference before creating new one
+    // Clear any stale process reference before creating new one
     activeProcessIdRef.current = null;
 
-    // ✅ FIXED: Cancel any existing active process to avoid conflicts (but only if not already completed/failed/cancelled)
+    // Cancel any existing active process to avoid conflicts (but only if not already completed/failed/cancelled)
     if (
       activeProcess &&
       activeProcess.state !== "COMPLETED" &&
@@ -293,7 +286,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       activeProcess.state !== "CANCELLED"
     ) {
       console.log(
-        "🧹 Cancelling existing process before starting new one:",
+        "Cancelling existing process before starting new one:",
         activeProcess.id,
       );
       cancelProcess(activeProcess.id);
@@ -311,10 +304,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
       sourceAmount: swapAmount,
     });
 
-    // ✅ FIXED: Immediately update ref with new process ID
+    // Immediately update ref with new process ID
     activeProcessIdRef.current = processId;
 
-    console.log("✨ Created NEW cross-chain deposit process:", processId);
+    console.log("Created NEW cross-chain deposit process:", processId);
 
     // Trigger the swap - this will automatically update the process via onSuccess/onTrackingComplete
     await handleSwapTransfer();
@@ -323,7 +316,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const handleDirectDeposit = async () => {
     if (!selectedAsset || !amount || !vault || !requiredWallet?.address) return;
 
-    // ✅ FIXED: Clear any stale process reference and cancel existing process (but only if not already completed/failed/cancelled)
+    // Clear any stale process reference and cancel existing process (but only if not already completed/failed/cancelled)
     activeProcessIdRef.current = null;
     if (
       activeProcess &&
@@ -332,7 +325,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       activeProcess.state !== "CANCELLED"
     ) {
       console.log(
-        "🧹 Cancelling existing process before direct deposit:",
+        "Cancelling existing process before direct deposit:",
         activeProcess.id,
       );
       cancelProcess(activeProcess.id);
@@ -351,7 +344,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     startDepositStep(processId);
 
     try {
-      console.log("🚀 Starting direct deposit:", {
+      console.log("Starting direct deposit:", {
         selectedAsset,
         vaultId: vault.id,
         amount,
@@ -359,17 +352,17 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
       const result = await depositTokens(selectedAsset, vault.id, amount);
 
-      console.log("📋 Direct deposit result:", result);
+      console.log("Direct deposit result:", result);
 
       if (result.success) {
         // Complete the deposit step with correct property names
         completeDepositStep(processId, {
-          transactionHash: result.hash || "", // Use result.hash instead of result.transactionHash
-          vaultShares: "0", // Default to "0" since shares aren't returned
+          transactionHash: result.hash || "",
+          vaultShares: "0", // TODO: Fetch actual vault shares if possible
           completedAt: new Date(),
         });
 
-        console.log("✅ Direct deposit completed successfully");
+        console.log("Direct deposit completed successfully");
         await fetchBalance(selectedAsset);
       } else {
         // Handle deposit failure
@@ -383,7 +376,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         }
       }
     } catch (error) {
-      console.error("❌ Direct deposit error:", error);
+      console.error("Direct deposit error:", error);
       failDepositStep(
         processId,
         error instanceof Error ? error.message : "Unknown error",
@@ -407,29 +400,29 @@ const DepositModal: React.FC<DepositModalProps> = ({
     }
   };
 
-  // ✅ FIXED: Handle process completion for cross-chain deposits - only trigger on SWAP_COMPLETE
+  // Handle process completion for cross-chain deposits - only trigger on SWAP_COMPLETE
   useEffect(() => {
     if (!activeProcess) return;
 
-    console.log("🔄 Cross-chain deposit useEffect:", {
+    console.log("Cross-chain deposit useEffect:", {
       state: activeProcess.state,
       type: activeProcess.type,
       hasTargetAmount: !!activeProcess.actualTargetAmount,
       targetAmount: activeProcess.actualTargetAmount,
     });
 
-    // ✅ FIXED: Only trigger when swap is actually complete (not just when amount exists)
+    // Only trigger when swap is actually complete (not just when amount exists)
     if (
       activeProcess.state === "SWAP_COMPLETE" &&
       activeProcess.type === "CROSS_CHAIN"
     ) {
-      console.log("🎯 TRIGGERING VAULT DEPOSIT - Swap completed!");
+      console.log("TRIGGERING VAULT DEPOSIT - Swap completed!");
 
       const performVaultDeposit = async () => {
-        console.log("🚀 Starting cross-chain vault deposit...");
+        console.log("Starting cross-chain vault deposit...");
 
         if (!activeProcess.actualTargetAmount || !activeProcess.vault) {
-          console.error("❌ Missing required data:", {
+          console.error("Missing required data:", {
             actualTargetAmount: activeProcess.actualTargetAmount,
             vault: !!activeProcess.vault,
           });
@@ -443,7 +436,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         startDepositStep(activeProcess.id);
 
         try {
-          console.log("💰 Calling depositTokens for cross-chain:", {
+          console.log("Calling depositTokens for cross-chain:", {
             targetAsset: activeProcess.targetAsset,
             vaultId: activeProcess.vault.id,
             amount: activeProcess.actualTargetAmount,
@@ -455,7 +448,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
             activeProcess.actualTargetAmount,
           );
 
-          console.log("📋 Cross-chain deposit result:", result);
+          console.log("Cross-chain deposit result:", result);
 
           if (result.success) {
             completeDepositStep(activeProcess.id, {
@@ -464,16 +457,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
               completedAt: new Date(),
             });
 
-            console.log("✅ Cross-chain vault deposit completed successfully");
+            console.log("Cross-chain vault deposit completed successfully");
           } else {
-            console.error("❌ Cross-chain deposit failed:", result.message);
+            console.error("Cross-chain deposit failed:", result.message);
             failDepositStep(
               activeProcess.id,
               result.message || "Vault deposit failed",
             );
           }
         } catch (error) {
-          console.error("💥 Cross-chain vault deposit error:", error);
+          console.error("Cross-chain vault deposit error:", error);
           failDepositStep(
             activeProcess.id,
             error instanceof Error ? error.message : "Unknown error",
@@ -501,23 +494,21 @@ const DepositModal: React.FC<DepositModalProps> = ({
       const selectedChain = getChainById(chainId);
       if (!selectedChain || !vault) return;
 
-      if (selectedChain.id !== "ethereum") {
-        const sourceChain = selectedChain;
-        const sourceToken = createNativeToken(selectedChain);
-        const destinationChain = chains.ethereum;
-        const firstDepositAsset = vault.supportedAssets.deposit[0];
-        const destinationToken = createDestinationToken(firstDepositAsset);
+      const sourceChain = selectedChain;
+      const sourceToken = createNativeToken(selectedChain);
+      const destinationChain = chains.ethereum;
+      const firstDepositAsset = vault.supportedAssets.deposit[0];
+      const destinationToken = createDestinationToken(firstDepositAsset);
 
-        const store = useWeb3Store.getState();
-        store.setSourceChain(sourceChain);
-        store.setDestinationChain(destinationChain);
-        store.setSourceToken(sourceToken);
-        store.setDestinationToken(destinationToken);
+      const store = useWeb3Store.getState();
+      store.setSourceChain(sourceChain);
+      store.setDestinationChain(destinationChain);
+      store.setSourceToken(sourceToken);
+      store.setDestinationToken(destinationToken);
 
-        console.log(
-          `Configured swap: ${sourceToken.ticker} (${sourceChain.chainName}) → ${destinationToken.ticker} (${destinationChain.chainName})`,
-        );
-      }
+      console.log(
+        `Configured swap: ${sourceToken.ticker} (${sourceChain.chainName}) → ${destinationToken.ticker} (${destinationChain.chainName})`,
+      );
     },
     [vault],
   );
@@ -569,7 +560,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
       setAmount("");
       setNeedsApproval(false);
 
-      // ✅ FIXED: Clean up any active processes when modal closes
       if (
         activeProcess &&
         activeProcess.state !== "COMPLETED" &&
@@ -577,7 +567,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         activeProcess.state !== "CANCELLED"
       ) {
         console.log(
-          "🧹 Modal closing - cancelling incomplete process:",
+          "Modal closing - cancelling incomplete process:",
           activeProcess.id,
         );
         cancelProcess(activeProcess.id);
@@ -614,7 +604,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     ? getProcessProgress(activeProcess.id)
     : null;
 
-  // ✅ FIXED: Determine current step state for UI with proper state mapping
+  // Determine current step state for UI with proper state mapping
   const getStepState = (
     stepNumber: number,
   ): "pending" | "active" | "completed" | "failed" => {
@@ -654,6 +644,37 @@ const DepositModal: React.FC<DepositModalProps> = ({
       }
     }
     return "pending";
+  };
+
+  const formatErrorMessage = (error: string | Error | unknown): string => {
+    let errorString = "";
+
+    // Convert error to string
+    if (error instanceof Error) {
+      errorString = error.message;
+    } else if (typeof error === "string") {
+      errorString = error;
+    } else {
+      errorString = "An unexpected error occurred";
+    }
+
+    // Check if it's likely hex data (starts with 0x and is very long)
+    if (errorString.startsWith("0x") && errorString.length > 100) {
+      return "Transaction failed due to invalid data format";
+    }
+
+    // Check if it's just a long hex string without 0x
+    if (/^[0-9a-fA-F]+$/.test(errorString) && errorString.length > 100) {
+      return "Transaction failed due to invalid data format";
+    }
+
+    // Truncate extremely long error messages
+    const MAX_LENGTH = 300;
+    if (errorString.length > MAX_LENGTH) {
+      return errorString.substring(0, MAX_LENGTH) + "...";
+    }
+
+    return errorString;
   };
 
   const StepIndicator = ({
@@ -710,8 +731,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
           {/* Process Progress - shown when there's an active process (not cancelled) */}
           {activeProcess && activeProcess.state !== "CANCELLED" && (
             <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
-              <div className="text-sm font-medium text-[#FAFAFA] mb-3">
-                {processProgress?.description || "Processing..."}
+              <div className="text-sm text-wrap font-medium text-[#FAFAFA] mb-3 break-all">
+                {formatErrorMessage(processProgress?.description) ||
+                  "Processing..."}
               </div>
 
               <div className="space-y-3">
