@@ -34,7 +34,6 @@ export async function fetchVaultAPY(vaultId: number): Promise<VaultApyData> {
     const fallbackAPY =
       FALLBACK_APY_VALUES[vault.addresses.vault.toLowerCase()];
     if (fallbackAPY) {
-      console.log(`✅ Using fallback APY for ${vault.name}: ${fallbackAPY}%`);
       return {
         vaultId,
         name: vault.name,

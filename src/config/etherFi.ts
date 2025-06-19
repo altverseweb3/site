@@ -454,6 +454,39 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     },
     vaultIcon: "/images/etherFi/vaults/eusd.png",
   },
+
+  13: {
+    id: 13,
+    name: "King Karak LRT",
+    description:
+      "King Karak LRT vault providing restaked ETH yield through Karak network strategies.",
+    ecosystem: "Ethereum",
+    type: "Featured",
+    chain: "ethereum",
+    addresses: {
+      vault: "0x7223442cad8e9cA474fC40109ab981608F8c4273",
+      teller: "0x929B44db23740E65dF3A81eA4aAB716af1b88474",
+      accountant: "0x126af21dC55C300B7D0bBfC4F3898F558aE8156b", // TODO: Update with correct accountant address
+      lens: SHARED_LENS_ADDRESS,
+    },
+    supportedAssets: {
+      deposit: ["wETH", "eETH", "weETH", "wstETH", "rETH"],
+      receive: {
+        name: "weETHk",
+        symbol: "weETHk",
+        imagePath: "/images/etherFi/ethereum-assets/weETHs.png",
+      },
+    },
+    links: {
+      explorer:
+        "https://etherscan.io/address/0x7223442cad8e9cA474fC40109ab981608F8c4273",
+      analytics: "https://www.ether.fi/app/weethk",
+      withdrawal: "https://www.ether.fi/app/weethk",
+      yield:
+        "https://api.sevenseas.capital/etherfi/ethereum/apy/0x7223442cad8e9cA474fC40109ab981608F8c4273",
+    },
+    vaultIcon: "/images/etherFi/vaults/weETHs.png",
+  },
 };
 
 // ethereum deposit assets configuration
