@@ -1404,7 +1404,9 @@ export function useTokenTransfer(
           id: toastId,
           description: "Tracking swap progress...",
         });
-        // Note: Don't call onSuccess here - wait for tracking to complete
+        if (options.onSuccess) {
+          options.onSuccess(amount, sourceToken!, destinationToken!);
+        }
       } else {
         // Original behavior - immediate success
         toast.success(
@@ -1414,10 +1416,6 @@ export function useTokenTransfer(
             description: `Transferred ${amount} ${sourceToken!.ticker}`,
           },
         );
-
-        if (options.onSuccess) {
-          options.onSuccess(amount, sourceToken!, destinationToken!);
-        }
       }
 
       return result; // Return swap ID for parent components

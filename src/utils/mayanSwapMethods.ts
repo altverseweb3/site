@@ -112,6 +112,25 @@ export async function executeEvmSwap({
   overrides?: Overrides | null;
   payload?: Uint8Array | Buffer | null;
 }): Promise<string> {
+  /* // Uncomment to simulate swaps without wasting tokens
+  // Simulate some delay like a real transaction
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  const TEST_SWAP_IDS = [
+    "0x9b162bb9b21433a926fc88b1c94686baa593ea382a95a46b9087406418abee3c",
+    "0x26a3c6f7d46dc6cb1011f6f49c9e7da4217590d5305feca2c64b3995f605a4a6",
+    "0x7d58dc0dc2555831149814dac5557f4fbfa0dc1ee65c97ed0d87cd85a01e45dc",
+    "0x56ec01849d303794d4ff53a9f73f24019d6667efcfd5c78e0ec5b1fdbc953049",
+    "0x2d6ff5bcd031279eb85abacc6b604fb39e48d559fb0f0b1100197cbec7c0ba83",
+    "0x8b70ff7b7e10ab3a7d4d10d1f2e4e32bf00b0d42e9dd95e37c29fb35fbc20bae",
+    "0x8c18ea99573501ba4cad134277b3bcca67c3e24ca21d21d6235484ec15b14c3f",
+    "5qtRox5iQeGZRwXkkZ5Bs813XGANmSEziFbzQ4yR5mpNiWmCJ3cP7BdR34BPLN3pne2ybYxYRJqUshvQHJ3ub3H9",
+    "0x95fe8ba3d794d15829eb675c1eb18e51c5d5d722bcacc7f88c43ad7ec1bfd74a",
+    "0x42c04515a7137bd7c80c4c607682876c0111597f3c1abefbeca57a51e55f3ea5",
+    "0xb460f92687a3f19b2391a405cebd1fa368ddde03883d8d9be0719c027eca6da8",
+  ];
+  return TEST_SWAP_IDS[Math.floor(Math.random() * TEST_SWAP_IDS.length)];
+  */
+
   try {
     // Check if the quote is valid
     if (!quote) {
@@ -278,7 +297,7 @@ export async function executeSuiSwap({
   swapperAddress,
   destinationAddress,
   referrerAddresses = null,
-  signTransaction, // This might need to use the wallet directly instead
+  signTransaction,
 }: {
   quote: Quote;
   swapperAddress: string;
@@ -288,9 +307,9 @@ export async function executeSuiSwap({
     evm?: string;
     sui?: string;
   } | null;
-  signTransaction: (
-    input: { transaction: SuiTransaction }, // Change parameter name from 'transactionBlock' to 'transaction'
-  ) => Promise<SignedTransaction>;
+  signTransaction: (input: {
+    transaction: SuiTransaction;
+  }) => Promise<SignedTransaction>;
 }): Promise<string> {
   try {
     if (!quote) throw new Error("Invalid quote");
@@ -325,7 +344,7 @@ export async function executeSuiSwap({
 
     // Use 'transaction' instead of 'transactionBlock' to match Suiet wallet expectation
     const signedTx = await signTransaction({
-      transaction: txBlock, // Changed from transactionBlock to transaction
+      transaction: txBlock,
     });
 
     // Execute the transaction
