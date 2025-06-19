@@ -168,7 +168,13 @@ const EarnTable: React.FC<EarnTableProps> = ({
     return `$${value.toFixed(2)}`;
   };
 
-  const formatAPY = (apy: number) => `${apy.toFixed(1)}%`;
+  const formatAPY = (apy: number) => {
+    // Handle special case for TBD (fallback vaults with no APY data)
+    if (apy === 0 || apy === null || apy === undefined) {
+      return "TBD";
+    }
+    return `${apy.toFixed(1)}%`;
+  };
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, data.length);
