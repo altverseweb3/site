@@ -41,7 +41,7 @@ import { ConnectButton } from "@suiet/wallet-kit";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
 } from "@/store/vaultDepositStore";
-
+import { GasDrop } from "@/components/ui/GasDrop";
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -73,7 +73,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
-
+  const destinationChain = useWeb3Store((state) => state.destinationChain);
   const activeProcessIdRef = useRef<string | null>(null);
 
   // Vault Deposit Store integration
@@ -1071,6 +1071,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Gas Drop - Only show for cross-chain swaps */}
+              {selectedSwapChain && (
+                <GasDrop
+                  maxGasDrop={destinationChain?.gasDrop || 0}
+                  symbol={destinationChain?.symbol || "ETH"}
+                  initialEnabled={false}
+                  initialValue={50}
+                />
+              )}
             </>
           )}
 

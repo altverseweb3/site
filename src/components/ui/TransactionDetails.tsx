@@ -7,16 +7,14 @@ import {
   Edit2,
   Check,
 } from "lucide-react";
-import { Slider } from "@/components/ui/Slider";
-import { Switch } from "@/components/ui/Switch";
 import useWeb3Store, {
   useTransactionDetails,
   useSetSlippageValue,
   useSetReceiveAddress,
-  useSetGasDrop,
   useDestinationChain,
 } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
+import { GasDrop } from "@/components/ui/GasDrop";
 
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
@@ -39,7 +37,6 @@ export function TransactionDetails({
   const transactionDetails = useTransactionDetails();
   const setSlippageValue = useSetSlippageValue();
   const setReceiveAddress = useSetReceiveAddress();
-  const setGasDrop = useSetGasDrop();
   const destinationChain = useDestinationChain();
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletByType(destinationChain.walletType),
@@ -54,17 +51,6 @@ export function TransactionDetails({
   const [receiveAddressInput, setReceiveAddressInput] = useState("");
   const [addressError, setAddressError] = useState<string | null>(null);
   const [inputFontSize, setInputFontSize] = useState<number>(12);
-
-  // ─── Gas Drop ─────────────────────────────────────────────────────────────
-  const [isGasDropEnabled, setIsGasDropEnabled] = useState<boolean>(false);
-  const [gasDropValue, setGasDropValue] = useState<number>(50);
-  // Calculate the actual gas drop amount
-  const maxGasDrop = destinationChain?.gasDrop || 0;
-  const actualGasDropAmount = (gasDropValue / 100) * maxGasDrop;
-  // Format the gas drop display amount to 4 decimal places
-  const formattedGasDropAmount = actualGasDropAmount.toFixed(4);
-  // Get the destination chain symbol for display
-  const gasDropSymbol = destinationChain?.symbol || "ETH";
 
   // Ref for click‐outside on receive address input
   const receiveAddressInputRef = useRef<HTMLInputElement>(null);
@@ -402,13 +388,6 @@ export function TransactionDetails({
     }
   }, [isOpen]);
 
-  // Update the gas drop in the store when relevant values change
-  useEffect(() => {
-    // Set gas drop to 0 if switch is off
-    const dropValue = isGasDropEnabled ? Number(formattedGasDropAmount) : 0;
-    setGasDrop(dropValue);
-  }, [isGasDropEnabled, formattedGasDropAmount, setGasDrop]);
-
   // ─── Event handlers ─────────────────────────────────────────────────────────
 
   const toggleDetails = () => {
@@ -675,43 +654,14 @@ export function TransactionDetails({
           </div>
 
           {/* ─── Gas Drop ─────────────────────────── */}
-          <div className="mt-2 grid grid-cols-2 items-center text-[12px] gap-y-2">
-            <div className="text-left text-zinc-400">gas drop</div>
-            <div className="flex justify-end">
-              <Switch
-                checked={isGasDropEnabled}
-                onCheckedChange={(checked) => {
-                  setIsGasDropEnabled(checked);
-                  if (!checked) {
-                    setGasDrop(0);
-                  }
-                }}
-                className="data-[state=checked]:bg-sky-500 data-[state=unchecked]:bg-zinc-800 focus-visible:ring-sky-400"
-              />
-            </div>
-          </div>
 
-          {isGasDropEnabled && (
-            <div className="mt-2 flex items-center space-x-4">
-              <div className="flex-1">
-                <Slider
-                  value={[gasDropValue]}
-                  onValueChange={(val) => setGasDropValue(val[0])}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="w-full 
-                      [&_.bg-primary]:bg-sky-500 
-                      [&_[role=slider]]:border-zinc-900 
-                      [&_[role=slider]]:bg-sky-500
-                      "
-                />
-              </div>
-              <div className="text-right numeric-input text-zinc-200 sm:text-xs text-[9px] w-[80px] text-right">
-                {formattedGasDropAmount} {gasDropSymbol}
-              </div>
-            </div>
-          )}
+          <GasDrop
+            className="mt-2"
+            maxGasDrop={destinationChain?.gasDrop || 0}
+            symbol={destinationChain?.symbol || "ETH"}
+            initialEnabled={false}
+            initialValue={50}
+          />
         </div>
       </div>
     </div>
