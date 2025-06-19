@@ -115,7 +115,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
     // Show toast and clear ref when process is cancelled
     if (activeProcess && activeProcess.state === "CANCELLED") {
-      toast.info("Process cancelled - swapped tokens kept in your wallet");
+      toast.info("Process cancelled");
       setTimeout(() => {
         if (activeProcessIdRef.current === activeProcess.id) {
           activeProcessIdRef.current = null;
@@ -328,6 +328,12 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const handleDirectDeposit = async () => {
     if (!selectedAsset || !amount || !vault || !requiredWallet?.address) return;
 
+    // Reset approval state at the start of a new deposit
+    setNeedsApproval(false);
+    console.log(
+      "🔄 Starting new direct deposit, called setNeedsApproval(false)",
+    );
+
     // Clear any stale process reference and cancel existing process (but only if not already completed/failed/cancelled)
     activeProcessIdRef.current = null;
     if (
@@ -351,6 +357,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
       targetAsset: selectedAsset,
       depositAmount: amount,
     });
+
+    // Update the ref with new process ID
+    activeProcessIdRef.current = processId;
 
     // Start deposit step immediately for direct deposits
     startDepositStep(processId);
@@ -377,38 +386,134 @@ const DepositModal: React.FC<DepositModalProps> = ({
         console.log("Direct deposit completed successfully");
         await fetchBalance(selectedAsset);
       } else {
-        // Handle deposit failure
-        failDepositStep(processId, result.message || "Deposit failed");
+        // Check if it's an approval issue
+        console.log("Deposit failed, checking if approval needed:", {
+          message: result.message,
+          includesAllowance: result.message?.includes("Insufficient allowance"),
+          includesApproval: result.message?.includes("approval"),
+        });
 
         if (
           result.message &&
-          result.message.includes("Insufficient allowance")
+          (result.message.includes("Insufficient allowance") ||
+            result.message.includes("approval") ||
+            result.message.includes("allowance"))
         ) {
+          console.log(
+            "✅ Approval needed, setting needsApproval=true and state=IDLE",
+          );
           setNeedsApproval(true);
+          console.log("🔄 Called setNeedsApproval(true)");
+          // Don't mark as failed - just pause the process and wait for approval
+          updateProcessState(processId, "IDLE", {
+            errorMessage: "Approval required before deposit can proceed",
+          });
+          console.log("🔄 Called updateProcessState to IDLE");
+        } else {
+          // Handle other deposit failures
+          console.log(
+            "❌ Other deposit failure, marking as failed:",
+            result.message,
+          );
+          failDepositStep(processId, result.message || "Deposit failed");
         }
       }
     } catch (error) {
       console.error("Direct deposit error:", error);
-      failDepositStep(
-        processId,
-        error instanceof Error ? error.message : "Unknown error",
-      );
+
+      // Check if error message indicates approval issue
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.log("Deposit error caught, checking if approval needed:", {
+        errorMessage,
+        includesAllowance: errorMessage.includes("allowance"),
+        includesApproval: errorMessage.includes("approval"),
+      });
+
+      if (
+        errorMessage.includes("allowance") ||
+        errorMessage.includes("approval") ||
+        errorMessage.includes("ERC20: insufficient allowance")
+      ) {
+        console.log(
+          "✅ Approval needed from error, setting needsApproval=true and state=IDLE",
+        );
+        setNeedsApproval(true);
+        console.log("🔄 Called setNeedsApproval(true) from catch block");
+        updateProcessState(processId, "IDLE", {
+          errorMessage: "Approval required before deposit can proceed",
+        });
+        console.log("🔄 Called updateProcessState to IDLE from catch block");
+      } else {
+        console.log("❌ Other error, marking as failed:", errorMessage);
+        failDepositStep(processId, errorMessage);
+      }
     }
   };
 
   const handleApprove = async () => {
     if (!selectedAsset || !amount || !vault) return;
 
+    console.log("🔄 Starting approval process for:", {
+      selectedAsset,
+      amount,
+      vaultId: vault.id,
+    });
+
     try {
       const result = await approveToken(selectedAsset, vault.id, amount);
+      console.log("Approval result:", result);
+
       if (result.success) {
         setNeedsApproval(false);
-        console.log("Approval successful:", result.message);
+        console.log("✅ Approval successful, called setNeedsApproval(false)");
+
+        // After successful approval, automatically retry the deposit
+        if (activeProcessIdRef.current) {
+          console.log("Auto-retrying deposit after successful approval");
+
+          // Update process to deposit pending
+          startDepositStep(activeProcessIdRef.current);
+
+          try {
+            const depositResult = await depositTokens(
+              selectedAsset,
+              vault.id,
+              amount,
+            );
+
+            if (depositResult.success) {
+              completeDepositStep(activeProcessIdRef.current, {
+                transactionHash: depositResult.hash || "",
+                vaultShares: "0",
+                completedAt: new Date(),
+              });
+
+              console.log("Auto-retry deposit completed successfully");
+              await fetchBalance(selectedAsset);
+            } else {
+              failDepositStep(
+                activeProcessIdRef.current,
+                depositResult.message || "Deposit failed after approval",
+              );
+            }
+          } catch (error) {
+            console.error("Auto-retry deposit error:", error);
+            failDepositStep(
+              activeProcessIdRef.current,
+              error instanceof Error ? error.message : "Unknown error",
+            );
+          }
+        }
       } else {
-        console.error("Approval failed:", result.message);
+        console.error("❌ Approval failed:", result.message);
+        toast.error(`Approval failed: ${result.message}`);
       }
     } catch (error) {
-      console.error("Approval error:", error);
+      console.error("❌ Approval error:", error);
+      toast.error(
+        `Approval error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -1284,24 +1389,41 @@ const DepositModal: React.FC<DepositModalProps> = ({
             activeProcess.state !== "COMPLETED" &&
             activeProcess.state !== "FAILED" &&
             activeProcess.state !== "CANCELLED" ? (
-              <div className="text-center py-4 text-[#A1A1AA]">
-                <div className="animate-spin w-6 h-6 border-2 border-amber-500/20 border-t-amber-500 rounded-full mx-auto mb-2" />
-                Processing your deposit...
-              </div>
-            ) : (
               <>
-                {needsApproval && isFormValid && (
+                {/* Show approval button if needed - this takes priority */}
+                {needsApproval ? (
                   <Button
                     onClick={handleApprove}
                     className="w-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
                   >
                     <>
-                      Approve {selectedAsset}
+                      Approve {selectedAsset} to Continue
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   </Button>
+                ) : (
+                  /* Show processing state only when not waiting for approval */
+                  <div className="text-center py-4 text-[#A1A1AA]">
+                    <div className="animate-spin w-6 h-6 border-2 border-amber-500/20 border-t-amber-500 rounded-full mx-auto mb-2" />
+                    {activeProcess.state === "DEPOSIT_PENDING"
+                      ? "Processing deposit..."
+                      : activeProcess.state === "SWAP_PENDING"
+                        ? "Processing swap..."
+                        : "Processing your deposit..."}
+                  </div>
                 )}
 
+                {/* Debug info */}
+                {process.env.NODE_ENV === "development" && (
+                  <div className="text-xs text-gray-500 p-2 bg-gray-800 rounded">
+                    Debug: needsApproval={needsApproval.toString()}, state=
+                    {activeProcess.state}, processId={activeProcess.id}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Regular deposit/swap buttons when no active process */}
                 <Button
                   onClick={
                     selectedSwapChain
@@ -1314,7 +1436,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     selectedSwapChain
                       ? isSwapButtonDisabled ||
                         !isChainWalletConnected(selectedSwapChain)
-                      : !isFormValid || (needsApproval && isFormValid)
+                      : !isFormValid
                   }
                   className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
                 >
