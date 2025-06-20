@@ -464,78 +464,81 @@ export function useChainSwitch() {
   // Get the wallet connection hook for access to both wallet types
   const { evmNetwork, solanaNetwork } = useWalletConnection();
 
-  const switchToChain = async (chain: Chain): Promise<boolean> => {
-    setError(null);
+  const switchToChain = useCallback(
+    async (chain: Chain): Promise<boolean> => {
+      setError(null);
 
-    try {
-      setIsLoading(true);
+      try {
+        setIsLoading(true);
 
-      // For Sui wallets, just update the store with the chain ID
-      if (chain.walletType === WalletType.SUIET_SUI) {
+        // For Sui wallets, just update the store with the chain ID
+        if (chain.walletType === WalletType.SUIET_SUI) {
+          useWeb3Store
+            .getState()
+            .updateWalletChainId(requiredWallet!.type, chain.chainId);
+        }
+
+        // For EVM and Solana wallets, proceed with regular network switching
+        const isSolanaChain = chain.walletType === WalletType.REOWN_SOL;
+        const isEvmChain = chain.walletType === WalletType.REOWN_EVM;
+        const namespace = isSolanaChain ? "solana" : "eip155";
+
+        // Create properly typed CAIP network ID
+        const caipNetworkId = createCaipNetworkId(
+          namespace as "eip155" | "solana" | "bip122" | "polkadot",
+          chain.chainId,
+        );
+
+        // Create a proper Reown network definition
+        const reownNetwork = defineChain({
+          id: chain.chainId,
+          caipNetworkId: caipNetworkId,
+          chainNamespace: namespace as ChainNamespace,
+          name: chain.name,
+          nativeCurrency: {
+            decimals: chain.decimals,
+            name: chain.currency,
+            symbol: chain.symbol,
+          },
+          rpcUrls: {
+            default: {
+              http: [chain.rpcUrl || ""],
+            },
+          },
+          blockExplorers: chain.explorerUrl
+            ? {
+                default: {
+                  name: chain.name,
+                  url: chain.explorerUrl,
+                },
+              }
+            : undefined,
+        });
+
+        // Use the appropriate network switcher
+        if (isSolanaChain) {
+          await solanaNetwork.switchNetwork(reownNetwork);
+        } else if (isEvmChain) {
+          await evmNetwork.switchNetwork(reownNetwork);
+        }
+
         useWeb3Store
           .getState()
           .updateWalletChainId(requiredWallet!.type, chain.chainId);
+
+        return true;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        const errorMsg = `Error switching chains: ${message}`;
+        setError(errorMsg);
+        return false;
+      } finally {
+        setIsLoading(false);
       }
-
-      // For EVM and Solana wallets, proceed with regular network switching
-      const isSolanaChain = chain.walletType === WalletType.REOWN_SOL;
-      const isEvmChain = chain.walletType === WalletType.REOWN_EVM;
-      const namespace = isSolanaChain ? "solana" : "eip155";
-
-      // Create properly typed CAIP network ID
-      const caipNetworkId = createCaipNetworkId(
-        namespace as "eip155" | "solana" | "bip122" | "polkadot",
-        chain.chainId,
-      );
-
-      // Create a proper Reown network definition
-      const reownNetwork = defineChain({
-        id: chain.chainId,
-        caipNetworkId: caipNetworkId,
-        chainNamespace: namespace as ChainNamespace,
-        name: chain.name,
-        nativeCurrency: {
-          decimals: chain.decimals,
-          name: chain.currency,
-          symbol: chain.symbol,
-        },
-        rpcUrls: {
-          default: {
-            http: [chain.rpcUrl || ""],
-          },
-        },
-        blockExplorers: chain.explorerUrl
-          ? {
-              default: {
-                name: chain.name,
-                url: chain.explorerUrl,
-              },
-            }
-          : undefined,
-      });
-
-      // Use the appropriate network switcher
-      if (isSolanaChain) {
-        await solanaNetwork.switchNetwork(reownNetwork);
-      } else if (isEvmChain) {
-        await evmNetwork.switchNetwork(reownNetwork);
-      }
-
-      useWeb3Store
-        .getState()
-        .updateWalletChainId(requiredWallet!.type, chain.chainId);
-
-      return true;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      const errorMsg = `Error switching chains: ${message}`;
-      setError(errorMsg);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [setError, setIsLoading, requiredWallet, solanaNetwork, evmNetwork],
+  );
 
   /**
    * Switch to the source chain specified in the store
