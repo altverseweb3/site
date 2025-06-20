@@ -1164,7 +1164,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               className="rounded-full"
                             />
                             <span>
-                              {chain.chainName} ({chain.chainToken})
+                              {chain.chainName} ({chain.symbol})
                             </span>
                           </div>
                         </SelectItem>
@@ -1358,7 +1358,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       {
                         chainList.find(
                           (chain) => chain.id === selectedSwapChain,
-                        )?.chainToken
+                        )?.symbol
                       }{" "}
                       → {vault.supportedAssets.deposit[0]}
                       {receiveAmount && (
