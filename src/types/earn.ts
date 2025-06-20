@@ -52,12 +52,13 @@ export interface ProtocolOption {
 // Process state machine
 export type VaultDepositState =
   | "IDLE"
-  | "SWAP_PENDING" // Swap transaction submitted, waiting for completion
-  | "SWAP_COMPLETE" // Swap completed, user has target tokens, ready for deposit
-  | "DEPOSIT_PENDING" // Vault deposit transaction submitted
-  | "COMPLETED" // Both steps complete, funds in vault
-  | "CANCELLED" // User cancelled after step 1
-  | "FAILED"; // Process failed at any step
+  | "SWAP_PENDING"
+  | "SWAP_COMPLETE"
+  | "APPROVAL_PENDING"
+  | "DEPOSIT_PENDING"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "FAILED";
 
 // Process type - direct deposit vs cross-chain swap
 export type VaultDepositType = "DIRECT" | "CROSS_CHAIN";
