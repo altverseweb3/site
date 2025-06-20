@@ -17,6 +17,8 @@ import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
 import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
+import { useChainSwitch } from "@/utils/walletMethods";
+import { getChainById } from "@/config/chains";
 
 interface EtherFiModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
   const isSolanaWalletConnected = useIsWalletTypeConnected(
     WalletType.REOWN_SOL,
   );
+  const { switchToChain } = useChainSwitch();
+
   const isWalletConnected =
     isEvmWalletConnected || isSuiWalletConnected || isSolanaWalletConnected;
 
@@ -43,7 +47,13 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
   const vault = data.details as EtherFiVault;
 
-  const handleDepositClick = () => {
+  const handleDepositClick = async () => {
+    const ethereumChain = getChainById("ethereum");
+    if (!ethereumChain) {
+      throw new Error("Ethereum chain not found");
+    }
+
+    await switchToChain(ethereumChain);
     setIsDepositModalOpen(true);
   };
 
