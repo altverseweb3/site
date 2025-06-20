@@ -284,7 +284,13 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
             return {
               current: 1,
               total: totalSteps,
-              description: "Swap complete, ready to deposit",
+              description: "Swap complete, checking allowance...",
+            };
+          case "APPROVAL_PENDING": // Add this case
+            return {
+              current: 1,
+              total: totalSteps,
+              description: "Waiting for token approval...",
             };
           case "DEPOSIT_PENDING":
             return {
