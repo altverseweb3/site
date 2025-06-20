@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { ethers } from "ethers";
 import {
   ArrowRight,
   Info,
@@ -15,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/StyledDialog";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -29,7 +29,7 @@ import {
   SelectGroup,
 } from "@/components/ui/Select";
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
-import { useEtherFiFetch } from "@/utils/etherFi/fetch";
+import { useEtherFiFetch, getTokenAllowance } from "@/utils/etherFi/fetch";
 import {
   fetchNativeBalanceForChain,
   NativeBalance,
@@ -48,6 +48,7 @@ import useVaultDepositStore, {
 } from "@/store/vaultDepositStore";
 import { GasDrop } from "@/components/ui/GasDrop";
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -59,6 +60,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   onClose,
   vault,
 }) => {
+  // Form state
   const [selectedAsset, setSelectedAsset] = useState<string>("");
   const [selectedSwapChain, setSelectedSwapChain] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
@@ -68,14 +70,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
   >({});
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [needsApproval, setNeedsApproval] = useState(false);
-  const [justFetchedBalance, setJustFetchedBalance] = useState(false);
-  const [isNetworkSwitching, setIsNetworkSwitching] = useState(false);
 
+  // Integration hooks
   const { getTokenBalance } = useEtherFiFetch();
   const { approveToken, depositTokens } = useEtherFiInteract();
   const { switchToChain } = useChainSwitch();
   const { open: openAppKit } = useAppKit();
+
+  // Wallet connection states
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
   const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
   const isSolanaWalletConnected = useIsWalletTypeConnected(
@@ -85,7 +87,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     state.getWalletBySourceChain(),
   );
   const destinationChain = useWeb3Store((state) => state.destinationChain);
-  const activeProcessIdRef = useRef<string | null>(null);
 
   // Wallet hooks for address retrieval
   const { getEvmSigner, getSolanaSigner } = useWalletProviderAndSigner();
@@ -105,41 +106,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
   } = useVaultDepositStore();
 
   const activeProcess = useActiveVaultDepositProcess();
+  const suiButtonRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // We Only update ref if there's a new active process or if we need to clear it
-    if (activeProcess?.id !== activeProcessIdRef.current) {
-      activeProcessIdRef.current = activeProcess?.id || null;
-      console.log("Updated activeProcessIdRef to:", activeProcessIdRef.current);
-    }
-
-    // Show toast and clear ref when process is cancelled
-    if (activeProcess && activeProcess.state === "CANCELLED") {
-      toast.info("Process cancelled");
-      setTimeout(() => {
-        if (activeProcessIdRef.current === activeProcess.id) {
-          activeProcessIdRef.current = null;
-          console.log("🧹 Cleared activeProcessIdRef for cancelled process");
-        }
-      }, 500);
-    }
-
-    // Clear ref when process is completed or failed
-    if (
-      activeProcess &&
-      (activeProcess.state === "COMPLETED" || activeProcess.state === "FAILED")
-    ) {
-      setTimeout(() => {
-        if (activeProcessIdRef.current === activeProcess.id) {
-          activeProcessIdRef.current = null;
-          console.log(
-            "Cleared activeProcessIdRef for completed/failed process",
-          );
-        }
-      }, 2000); // Give a bit more time for the user to see the final state
-    }
-  }, [activeProcess?.id, activeProcess?.state, activeProcess]);
-
+  // Wallet connection helpers
   const isChainWalletConnected = useCallback(
     (chainId: string) => {
       const chain = getChainById(chainId);
@@ -159,9 +128,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     [isWalletConnected, isSuiWalletConnected, isSolanaWalletConnected],
   );
 
-  // Refs for wallet connection
-  const suiButtonRef = useRef<HTMLDivElement>(null);
-
   const connectSuiWallet = () => {
     if (!suiButtonRef.current) return;
     const suietButton = suiButtonRef.current.querySelector("button");
@@ -177,7 +143,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     openAppKit({ view: "Connect", namespace: "eip155" });
   };
 
-  // Helper to create token objects for swapping
+  // Token creation helpers
   const createNativeToken = (chain: Chain): Token => ({
     id: chain.chainToken.toLowerCase(),
     name: chain.chainToken,
@@ -190,7 +156,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     native: true,
   });
 
-  // Helper to create destination token from vault's first deposit asset
   const createDestinationToken = (assetSymbol: string): Token => {
     const assetInfo = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
     return {
@@ -200,13 +165,190 @@ const DepositModal: React.FC<DepositModalProps> = ({
       icon: assetInfo.imagePath,
       address: assetInfo.contractAddress,
       decimals: assetInfo.decimals,
-      chainId: 1, // EtherFi vaults are on Ethereum
+      chainId: 1,
       stringChainId: "1",
       native: assetSymbol.toLowerCase() === "eth",
     };
   };
 
-  // Token transfer hook for swap functionality -
+  // ===== UNIFIED APPROVAL AND RETRY FUNCTION =====
+  const handleApprovalAndRetry = useCallback(
+    async (
+      processId: string,
+      assetSymbol: string,
+      vaultId: number,
+      depositAmount: string,
+    ): Promise<boolean> => {
+      try {
+        console.log("🔄 Starting approval process for:", {
+          assetSymbol,
+          depositAmount,
+          vaultId,
+        });
+
+        // Update process to show approval is needed
+        updateProcessState(processId, "APPROVAL_PENDING", {
+          errorMessage: "Approval required - please approve the transaction",
+        });
+
+        const approvalResult = await approveToken(
+          assetSymbol,
+          vaultId,
+          depositAmount,
+        );
+
+        if (approvalResult.success) {
+          console.log("✅ Approval successful, proceeding with deposit");
+
+          // Move to deposit pending and continue
+          startDepositStep(processId);
+
+          // Continue with deposit immediately after approval
+          const depositResult = await depositTokens(
+            assetSymbol,
+            vaultId,
+            depositAmount,
+          );
+
+          if (depositResult.success) {
+            completeDepositStep(processId, {
+              transactionHash: depositResult.hash || "",
+              vaultShares: "0",
+              completedAt: new Date(),
+            });
+            console.log("✅ Deposit completed successfully after approval");
+            return true;
+          } else {
+            console.error(
+              "❌ Deposit failed after approval:",
+              depositResult.message,
+            );
+            failDepositStep(
+              processId,
+              depositResult.message || "Deposit failed after approval",
+            );
+            return false;
+          }
+        } else {
+          console.error("❌ Approval failed:", approvalResult.message);
+          failDepositStep(
+            processId,
+            `Approval failed: ${approvalResult.message}`,
+          );
+          return false;
+        }
+      } catch (error) {
+        console.error("❌ Approval error:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        failDepositStep(processId, `Approval error: ${errorMessage}`);
+        return false;
+      }
+    },
+    [
+      updateProcessState,
+      approveToken,
+      startDepositStep,
+      depositTokens,
+      completeDepositStep,
+      failDepositStep,
+    ],
+  );
+
+  // ===== UNIFIED VAULT DEPOSIT FUNCTION =====
+  const performVaultDeposit = useCallback(
+    async (
+      processId: string,
+      assetSymbol: string,
+      vaultId: number,
+      depositAmount: string,
+    ): Promise<boolean> => {
+      try {
+        console.log("🔄 Starting vault deposit process:", {
+          assetSymbol,
+          vaultId,
+          depositAmount,
+        });
+
+        // Get signer for allowance check
+        const signer = await getEvmSigner();
+
+        // Convert deposit amount to BigInt for comparison
+        const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
+        if (!asset) {
+          throw new Error(`Asset ${assetSymbol} not found`);
+        }
+
+        const depositAmountBigInt = ethers.parseUnits(
+          depositAmount,
+          asset.decimals,
+        );
+        console.log(
+          "💰 Deposit amount in wei:",
+          depositAmountBigInt.toString(),
+        );
+
+        // Check current allowance
+        console.log("🔍 Checking current token allowance...");
+        const { allowance, formatted: allowanceFormatted } =
+          await getTokenAllowance(assetSymbol, vaultId, signer);
+
+        console.log("📊 Allowance check result:", {
+          current: allowanceFormatted,
+          currentWei: allowance.toString(),
+          required: depositAmount,
+          requiredWei: depositAmountBigInt.toString(),
+          sufficient: allowance >= depositAmountBigInt,
+        });
+
+        // If allowance is insufficient, handle approval first
+        if (allowance < depositAmountBigInt) {
+          console.log("⚠️ Insufficient allowance, requesting approval");
+          const approvalSuccess = await handleApprovalAndRetry(
+            processId,
+            assetSymbol,
+            vaultId,
+            depositAmount,
+          );
+          return approvalSuccess;
+        }
+
+        // Allowance is sufficient, proceed with deposit
+        console.log("✅ Sufficient allowance, proceeding with deposit");
+
+        const result = await depositTokens(assetSymbol, vaultId, depositAmount);
+
+        if (result.success) {
+          completeDepositStep(processId, {
+            transactionHash: result.hash || "",
+            vaultShares: "0",
+            completedAt: new Date(),
+          });
+          console.log("✅ Vault deposit completed successfully");
+          return true;
+        } else {
+          console.error("❌ Deposit failed:", result.message);
+          failDepositStep(processId, result.message || "Deposit failed");
+          return false;
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        console.error("❌ Vault deposit error:", errorMessage);
+        failDepositStep(processId, errorMessage);
+        return false;
+      }
+    },
+    [
+      getEvmSigner,
+      handleApprovalAndRetry,
+      depositTokens,
+      completeDepositStep,
+      failDepositStep,
+    ],
+  );
+
+  // Token transfer hook for swap functionality
   const {
     amount: swapAmount,
     handleAmountChange: handleSwapAmountChange,
@@ -219,83 +361,107 @@ const DepositModal: React.FC<DepositModalProps> = ({
     type: "swap",
     enableTracking: true,
     onSuccess: (amount, sourceToken, destinationToken) => {
-      console.log("TOKEN TRANSFER onSuccess called:", {
+      console.log("🔄 TOKEN TRANSFER onSuccess called:", {
         amount,
         sourceToken: sourceToken?.ticker,
         destinationToken: destinationToken?.ticker,
-        activeProcessId: activeProcessIdRef.current,
+        activeProcessId: activeProcess?.id,
+        activeProcessState: activeProcess?.state,
       });
 
-      // Use ref to get current active process ID and verify state
-      if (activeProcessIdRef.current) {
-        // Get current process state from store
-        const currentProcess =
-          useVaultDepositStore.getState().processes[activeProcessIdRef.current];
-        console.log("🔍 Current process found:", {
-          processId: activeProcessIdRef.current,
-          processState: currentProcess?.state,
-          processExists: !!currentProcess,
-        });
+      // Get the current active process from store to ensure we have latest state
+      const currentActiveProcess =
+        useVaultDepositStore.getState().processes[
+          useVaultDepositStore.getState().activeProcessId || ""
+        ];
 
-        if (currentProcess && currentProcess.state === "IDLE") {
-          console.log("Starting swap step tracking - transaction approved");
-          startSwapStep(activeProcessIdRef.current, "swap-tracking-id");
-        } else {
-          console.log("Process not in IDLE state:", {
-            processState: currentProcess?.state,
-            processId: activeProcessIdRef.current,
-            processExists: !!currentProcess,
-          });
-        }
+      if (currentActiveProcess && currentActiveProcess.state === "IDLE") {
+        console.log(
+          "✅ Starting swap step tracking - transaction approved",
+          currentActiveProcess.id,
+        );
+        startSwapStep(currentActiveProcess.id, "swap-tracking-id");
       } else {
-        console.log("No active process ID found in ref");
+        console.warn("⚠️ Process not in IDLE state for swap start:", {
+          processId: currentActiveProcess?.id,
+          state: currentActiveProcess?.state,
+          exists: !!currentActiveProcess,
+        });
       }
     },
     onTrackingComplete: (status: SwapStatus) => {
-      console.log("TOKEN TRANSFER onTrackingComplete called:", {
-        status,
-        activeProcessId: activeProcessIdRef.current,
+      console.log("🏁 TOKEN TRANSFER onTrackingComplete called:", {
+        status: status.status,
+        statusObject: status,
+        activeProcessId: activeProcess?.id,
         isSuccess: status.status === "COMPLETED",
         actualAmount: status.toAmount,
+        completedAt: status.completedAt,
+        txHash: status.txs?.[0]?.txHash,
       });
 
-      // Use ref to get current active process ID
-      if (activeProcessIdRef.current) {
-        console.log("Calling onSwapTrackingComplete - transaction completed");
-        onSwapTrackingComplete(status, activeProcessIdRef.current);
-      } else {
-        console.warn(
-          "No active process ID found in ref for onTrackingComplete",
+      // Get the current active process from store to ensure we have latest state
+      const currentActiveProcess =
+        useVaultDepositStore.getState().processes[
+          useVaultDepositStore.getState().activeProcessId || ""
+        ];
+
+      if (currentActiveProcess) {
+        console.log("📝 Current process state before completion:", {
+          id: currentActiveProcess.id,
+          state: currentActiveProcess.state,
+          type: currentActiveProcess.type,
+        });
+
+        console.log(
+          "🚀 Calling onSwapTrackingComplete with status:",
+          status.status,
         );
+        onSwapTrackingComplete(status, currentActiveProcess.id);
+
+        // Force check the state after completion
+        setTimeout(() => {
+          const updatedProcess =
+            useVaultDepositStore.getState().processes[currentActiveProcess.id];
+          console.log("📊 Process state after onSwapTrackingComplete:", {
+            id: updatedProcess?.id,
+            state: updatedProcess?.state,
+            actualTargetAmount: updatedProcess?.actualTargetAmount,
+          });
+        }, 100);
+      } else {
+        console.error("❌ No active process found for onTrackingComplete");
       }
     },
     onError: (error) => {
-      console.error("TOKEN TRANSFER onError called:", error);
-      if (activeProcessIdRef.current) {
+      console.error("❌ TOKEN TRANSFER onError called:", error);
+
+      // Get the current active process from store
+      const currentActiveProcess =
+        useVaultDepositStore.getState().processes[
+          useVaultDepositStore.getState().activeProcessId || ""
+        ];
+
+      if (currentActiveProcess) {
         console.log("Updating process state to FAILED...");
-        updateProcessState(activeProcessIdRef.current, "FAILED", {
+        updateProcessState(currentActiveProcess.id, "FAILED", {
           errorMessage: `Swap failed: ${error}`,
         });
       }
     },
   });
 
-  // Enhanced deposit handlers with store integration
+  // ===== MAIN DEPOSIT HANDLERS =====
   const handleStartCrossChainDeposit = async () => {
     if (!vault || !requiredWallet?.address || !selectedSwapChain) return;
 
     const selectedChain = getChainById(selectedSwapChain);
     if (!selectedChain) return;
 
-    // Clear any stale process reference before creating new one
-    activeProcessIdRef.current = null;
-
-    // Cancel any existing active process to avoid conflicts (but only if not already completed/failed/cancelled)
+    // Cancel any existing active process
     if (
       activeProcess &&
-      activeProcess.state !== "COMPLETED" &&
-      activeProcess.state !== "FAILED" &&
-      activeProcess.state !== "CANCELLED"
+      !["COMPLETED", "FAILED", "CANCELLED"].includes(activeProcess.state)
     ) {
       console.log(
         "Cancelling existing process before starting new one:",
@@ -310,37 +476,25 @@ const DepositModal: React.FC<DepositModalProps> = ({
       vault,
       type: "CROSS_CHAIN",
       targetAsset: vault.supportedAssets.deposit[0],
-      depositAmount: receiveAmount || "0", // Expected amount after swap
+      depositAmount: receiveAmount || "0",
       sourceChain: selectedChain,
       sourceToken: createNativeToken(selectedChain),
       sourceAmount: swapAmount,
     });
 
-    // Immediately update ref with new process ID
-    activeProcessIdRef.current = processId;
-
     console.log("Created NEW cross-chain deposit process:", processId);
 
-    // Trigger the swap - this will automatically update the process via onSuccess/onTrackingComplete
+    // Trigger the swap
     await handleSwapTransfer();
   };
 
   const handleDirectDeposit = async () => {
     if (!selectedAsset || !amount || !vault || !requiredWallet?.address) return;
 
-    // Reset approval state at the start of a new deposit
-    setNeedsApproval(false);
-    console.log(
-      "🔄 Starting new direct deposit, called setNeedsApproval(false)",
-    );
-
-    // Clear any stale process reference and cancel existing process (but only if not already completed/failed/cancelled)
-    activeProcessIdRef.current = null;
+    // Cancel any existing active process
     if (
       activeProcess &&
-      activeProcess.state !== "COMPLETED" &&
-      activeProcess.state !== "FAILED" &&
-      activeProcess.state !== "CANCELLED"
+      !["COMPLETED", "FAILED", "CANCELLED"].includes(activeProcess.state)
     ) {
       console.log(
         "Cancelling existing process before direct deposit:",
@@ -358,254 +512,129 @@ const DepositModal: React.FC<DepositModalProps> = ({
       depositAmount: amount,
     });
 
-    // Update the ref with new process ID
-    activeProcessIdRef.current = processId;
+    console.log("Starting direct deposit:", {
+      selectedAsset,
+      vaultId: vault.id,
+      amount,
+    });
 
-    // Start deposit step immediately for direct deposits
+    // Start deposit step
     startDepositStep(processId);
 
-    try {
-      console.log("Starting direct deposit:", {
-        selectedAsset,
-        vaultId: vault.id,
-        amount,
-      });
-
-      const result = await depositTokens(selectedAsset, vault.id, amount);
-
-      console.log("Direct deposit result:", result);
-
-      if (result.success) {
-        // Complete the deposit step with correct property names
-        completeDepositStep(processId, {
-          transactionHash: result.hash || "",
-          vaultShares: "0", // TODO: Fetch actual vault shares if possible
-          completedAt: new Date(),
-        });
-
-        console.log("Direct deposit completed successfully");
-        await fetchBalance(selectedAsset);
-      } else {
-        // Check if it's an approval issue
-        console.log("Deposit failed, checking if approval needed:", {
-          message: result.message,
-          includesAllowance: result.message?.includes("Insufficient allowance"),
-          includesApproval: result.message?.includes("approval"),
-        });
-
-        if (
-          result.message &&
-          (result.message.includes("Insufficient allowance") ||
-            result.message.includes("approval") ||
-            result.message.includes("allowance"))
-        ) {
-          console.log(
-            "✅ Approval needed, setting needsApproval=true and state=IDLE",
-          );
-          setNeedsApproval(true);
-          console.log("🔄 Called setNeedsApproval(true)");
-          // Don't mark as failed - just pause the process and wait for approval
-          updateProcessState(processId, "IDLE", {
-            errorMessage: "Approval required before deposit can proceed",
-          });
-          console.log("🔄 Called updateProcessState to IDLE");
-        } else {
-          // Handle other deposit failures
-          console.log(
-            "❌ Other deposit failure, marking as failed:",
-            result.message,
-          );
-          failDepositStep(processId, result.message || "Deposit failed");
-        }
-      }
-    } catch (error) {
-      console.error("Direct deposit error:", error);
-
-      // Check if error message indicates approval issue
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      console.log("Deposit error caught, checking if approval needed:", {
-        errorMessage,
-        includesAllowance: errorMessage.includes("allowance"),
-        includesApproval: errorMessage.includes("approval"),
-      });
-
-      if (
-        errorMessage.includes("allowance") ||
-        errorMessage.includes("approval") ||
-        errorMessage.includes("ERC20: insufficient allowance")
-      ) {
-        console.log(
-          "✅ Approval needed from error, setting needsApproval=true and state=IDLE",
-        );
-        setNeedsApproval(true);
-        console.log("🔄 Called setNeedsApproval(true) from catch block");
-        updateProcessState(processId, "IDLE", {
-          errorMessage: "Approval required before deposit can proceed",
-        });
-        console.log("🔄 Called updateProcessState to IDLE from catch block");
-      } else {
-        console.log("❌ Other error, marking as failed:", errorMessage);
-        failDepositStep(processId, errorMessage);
-      }
-    }
-  };
-
-  const handleApprove = async () => {
-    if (!selectedAsset || !amount || !vault) return;
-
-    console.log("🔄 Starting approval process for:", {
+    // Perform vault deposit with unified logic
+    const success = await performVaultDeposit(
+      processId,
       selectedAsset,
+      vault.id,
       amount,
-      vaultId: vault.id,
-    });
+    );
 
-    try {
-      const result = await approveToken(selectedAsset, vault.id, amount);
-      console.log("Approval result:", result);
-
-      if (result.success) {
-        setNeedsApproval(false);
-        console.log("✅ Approval successful, called setNeedsApproval(false)");
-
-        // After successful approval, automatically retry the deposit
-        if (activeProcessIdRef.current) {
-          console.log("Auto-retrying deposit after successful approval");
-
-          // Update process to deposit pending
-          startDepositStep(activeProcessIdRef.current);
-
-          try {
-            const depositResult = await depositTokens(
-              selectedAsset,
-              vault.id,
-              amount,
-            );
-
-            if (depositResult.success) {
-              completeDepositStep(activeProcessIdRef.current, {
-                transactionHash: depositResult.hash || "",
-                vaultShares: "0",
-                completedAt: new Date(),
-              });
-
-              console.log("Auto-retry deposit completed successfully");
-              await fetchBalance(selectedAsset);
-            } else {
-              failDepositStep(
-                activeProcessIdRef.current,
-                depositResult.message || "Deposit failed after approval",
-              );
-            }
-          } catch (error) {
-            console.error("Auto-retry deposit error:", error);
-            failDepositStep(
-              activeProcessIdRef.current,
-              error instanceof Error ? error.message : "Unknown error",
-            );
-          }
-        }
-      } else {
-        console.error("❌ Approval failed:", result.message);
-        toast.error(`Approval failed: ${result.message}`);
-      }
-    } catch (error) {
-      console.error("❌ Approval error:", error);
-      toast.error(
-        `Approval error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+    if (success) {
+      await fetchBalance(selectedAsset);
     }
   };
 
-  // Handle process completion for cross-chain deposits - only trigger on SWAP_COMPLETE
-  useEffect(() => {
-    if (!activeProcess) return;
+  // ===== CROSS-CHAIN POST-SWAP HANDLING =====
+  const performCrossChainVaultDeposit = useCallback(
+    async (process: typeof activeProcess) => {
+      if (!process) return;
 
-    console.log("Cross-chain deposit useEffect:", {
-      state: activeProcess.state,
-      type: activeProcess.type,
-      hasTargetAmount: !!activeProcess.actualTargetAmount,
-      targetAmount: activeProcess.actualTargetAmount,
-    });
+      let isCancelled = false;
 
-    // Only trigger when swap is actually complete (not just when amount exists)
-    if (
-      activeProcess.state === "SWAP_COMPLETE" &&
-      activeProcess.type === "CROSS_CHAIN"
-    ) {
-      console.log("TRIGGERING VAULT DEPOSIT - Swap completed!");
-
-      const performVaultDeposit = async () => {
-        console.log("Starting cross-chain vault deposit...");
-
-        if (!activeProcess.actualTargetAmount || !activeProcess.vault) {
-          console.error("Missing required data:", {
-            actualTargetAmount: activeProcess.actualTargetAmount,
-            vault: !!activeProcess.vault,
+      try {
+        // Validate required data
+        if (!process.actualTargetAmount || !process.vault) {
+          console.error("❌ Missing required data for vault deposit:", {
+            actualTargetAmount: process.actualTargetAmount,
+            vault: !!process.vault,
           });
           failDepositStep(
-            activeProcess.id,
+            process.id,
             "Missing required data for vault deposit",
           );
           return;
         }
 
-        startDepositStep(activeProcess.id);
+        if (isCancelled) return;
 
-        try {
-          console.log("Calling depositTokens for cross-chain:", {
-            targetAsset: activeProcess.targetAsset,
-            vaultId: activeProcess.vault.id,
-            amount: activeProcess.actualTargetAmount,
-          });
-
-          const result = await depositTokens(
-            activeProcess.targetAsset,
-            activeProcess.vault.id,
-            activeProcess.actualTargetAmount,
-          );
-
-          console.log("Cross-chain deposit result:", result);
-
-          if (result.success) {
-            completeDepositStep(activeProcess.id, {
-              transactionHash: result.hash || "",
-              vaultShares: "0",
-              completedAt: new Date(),
-            });
-
-            console.log("Cross-chain vault deposit completed successfully");
-          } else {
-            console.error("Cross-chain deposit failed:", result.message);
-            failDepositStep(
-              activeProcess.id,
-              result.message || "Vault deposit failed",
-            );
-          }
-        } catch (error) {
-          console.error("Cross-chain vault deposit error:", error);
-          failDepositStep(
-            activeProcess.id,
-            error instanceof Error ? error.message : "Unknown error",
-          );
+        // Switch to Ethereum network
+        console.log("🔄 Switching to Ethereum network...");
+        const ethereumChain = getChainById("ethereum");
+        if (!ethereumChain) {
+          throw new Error("Ethereum chain not found");
         }
+
+        await switchToChain(ethereumChain);
+        console.log("✅ Successfully switched to Ethereum");
+
+        if (isCancelled) return;
+
+        // Small delay to ensure chain switch is settled
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Start deposit step
+        console.log("🏦 Starting vault deposit step for cross-chain");
+        startDepositStep(process.id);
+
+        // Perform vault deposit with unified logic
+        console.log("💰 Performing vault deposit:", {
+          targetAsset: process.targetAsset,
+          vaultId: process.vault.id,
+          depositAmount: process.depositAmount,
+          actualTargetAmount: process.actualTargetAmount,
+        });
+
+        const success = await performVaultDeposit(
+          process.id,
+          process.targetAsset,
+          process.vault.id,
+          process.depositAmount,
+        );
+
+        if (success) {
+          console.log("🎉 Cross-chain vault deposit completed successfully");
+        }
+      } catch (error) {
+        if (isCancelled) return;
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        console.error("❌ Cross-chain vault deposit error:", errorMessage);
+        failDepositStep(process.id, errorMessage);
+      }
+
+      return () => {
+        isCancelled = true;
       };
+    },
+    [failDepositStep, startDepositStep, switchToChain, performVaultDeposit],
+  );
 
-      const timeoutId = setTimeout(performVaultDeposit, 1000);
-      return () => clearTimeout(timeoutId);
+  useEffect(() => {
+    console.log("🔄 Cross-chain useEffect triggered:", {
+      hasActiveProcess: !!activeProcess,
+      processId: activeProcess?.id,
+      state: activeProcess?.state,
+      type: activeProcess?.type,
+      shouldProceed:
+        activeProcess?.state === "SWAP_COMPLETE" &&
+        activeProcess?.type === "CROSS_CHAIN",
+    });
+
+    if (
+      !activeProcess ||
+      activeProcess.state !== "SWAP_COMPLETE" ||
+      activeProcess.type !== "CROSS_CHAIN"
+    ) {
+      return;
     }
-  }, [
-    activeProcess?.state,
-    activeProcess?.id,
-    activeProcess?.type,
-    activeProcess,
-    startDepositStep,
-    completeDepositStep,
-    failDepositStep,
-    depositTokens,
-  ]);
 
-  // Configure cross-chain swap for any non-Ethereum chain
+    console.log(
+      "✅ Cross-chain swap completed, starting vault deposit process",
+    );
+    performCrossChainVaultDeposit(activeProcess);
+  }, [activeProcess, performCrossChainVaultDeposit]);
+
+  // ===== SWAP CONFIGURATION =====
   const configureSwapForChain = useCallback(
     (chainId: string) => {
       const selectedChain = getChainById(chainId);
@@ -630,6 +659,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     [vault],
   );
 
+  // ===== BALANCE FETCHING =====
   const fetchNativeBalance = useCallback(
     async (chainId: string) => {
       const chain = getChainById(chainId);
@@ -639,7 +669,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
       try {
         let walletAddress = "";
 
-        // Get wallet address based on chain type
         if (chain.walletType === WalletType.REOWN_EVM && isWalletConnected) {
           const signer = await getEvmSigner();
           walletAddress = await signer.getAddress();
@@ -697,29 +726,24 @@ const DepositModal: React.FC<DepositModalProps> = ({
     ],
   );
 
-  // Simple function to fetch balance for an asset
   const fetchBalance = useCallback(
     async (assetSymbol: string) => {
       if (!assetSymbol || !isWalletConnected) return;
 
       setIsLoadingBalance(true);
       try {
-        // Get a fresh signer and ensure we're stable on Ethereum
         const signer = await getEvmSigner();
 
-        // Wait for network to be stable on Ethereum
+        // Wait for network stability on Ethereum
         let isStable = false;
         let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max
+        const maxAttempts = 50;
 
         while (!isStable && attempts < maxAttempts) {
           const network = await signer.provider?.getNetwork();
-
           if (network?.chainId === BigInt(1)) {
-            // Check stability by waiting a bit and checking again
             await new Promise((resolve) => setTimeout(resolve, 100));
             const networkCheck = await signer.provider?.getNetwork();
-
             if (networkCheck?.chainId === BigInt(1)) {
               isStable = true;
               console.log(
@@ -732,7 +756,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
             );
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
-
           attempts++;
         }
 
@@ -761,36 +784,31 @@ const DepositModal: React.FC<DepositModalProps> = ({
     [isWalletConnected, getTokenBalance, getEvmSigner],
   );
 
-  // Handle client-side mounting to prevent hydration mismatch
+  // ===== INITIALIZATION EFFECTS =====
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Initialize selected asset when modal opens
   useEffect(() => {
     if (!isMounted) return;
 
     if (isOpen && vault && vault.supportedAssets.deposit.length > 0) {
       const firstAsset = vault.supportedAssets.deposit[0];
       setSelectedAsset(firstAsset);
-      setSelectedSwapChain(""); // ← Add this line
+      setSelectedSwapChain("");
       setAmount("");
-      setNeedsApproval(false);
     } else if (!isOpen) {
+      // Reset form state
       setSelectedAsset("");
       setSelectedSwapChain("");
       setBalances({});
       setNativeBalances({});
       setAmount("");
-      setNeedsApproval(false);
-      setJustFetchedBalance(false);
-      setIsNetworkSwitching(false);
 
+      // Cancel incomplete processes
       if (
         activeProcess &&
-        activeProcess.state !== "COMPLETED" &&
-        activeProcess.state !== "FAILED" &&
-        activeProcess.state !== "CANCELLED"
+        !["COMPLETED", "FAILED", "CANCELLED"].includes(activeProcess.state)
       ) {
         console.log(
           "Modal closing - cancelling incomplete process:",
@@ -798,59 +816,38 @@ const DepositModal: React.FC<DepositModalProps> = ({
         );
         cancelProcess(activeProcess.id);
       }
-
-      // Clear ref when modal closes
-      activeProcessIdRef.current = null;
     }
   }, [isOpen, vault, isMounted, activeProcess, cancelProcess]);
 
-  // Fetch balance when asset is selected and wallet is connected
   useEffect(() => {
-    // Don't fetch balance if we have a swap chain selected, are network switching, or just fetched
-    if (
-      selectedAsset &&
-      isWalletConnected &&
-      isMounted &&
-      !justFetchedBalance &&
-      !selectedSwapChain &&
-      !isNetworkSwitching
-    ) {
+    if (selectedAsset && isWalletConnected && isMounted && !selectedSwapChain) {
       fetchBalance(selectedAsset);
-    }
-    // Reset the flag after the effect runs
-    if (justFetchedBalance) {
-      setJustFetchedBalance(false);
     }
   }, [
     selectedAsset,
     isWalletConnected,
     isMounted,
     fetchBalance,
-    justFetchedBalance,
     selectedSwapChain,
-    isNetworkSwitching,
   ]);
 
-  // Don't render on server to prevent hydration mismatch
-  if (!isMounted) return null;
-  if (!vault) return null;
+  // Don't render on server
+  if (!isMounted || !vault) return null;
 
   const getAssetIcon = (assetSymbol: string) => {
     const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
     return asset?.imagePath || "/images/etherFi/ethereum-assets/eth.png";
   };
 
-  // Form validation - distinguish between direct deposits and cross-chain swaps
   const isFormValid = selectedSwapChain
     ? swapAmount && parseFloat(swapAmount) > 0
     : selectedAsset && amount && parseFloat(amount) > 0;
 
-  // Get process progress for UI
   const processProgress = activeProcess
     ? getProcessProgress(activeProcess.id)
     : null;
 
-  // Determine current step state for UI with proper state mapping
+  // ===== UI HELPER FUNCTIONS =====
   const getStepState = (
     stepNumber: number,
   ): "pending" | "active" | "completed" | "failed" => {
@@ -860,10 +857,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
     const isDirect = activeProcess.type === "DIRECT";
 
     if (isDirect) {
-      // Direct deposit only has step 2
+      // Direct deposit only has step 2 (vault deposit)
       if (stepNumber === 1) return "pending";
       if (stepNumber === 2) {
-        if (state === "DEPOSIT_PENDING") return "active";
+        if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
+          return "active";
         if (state === "COMPLETED") return "completed";
         if (state === "FAILED") return "failed";
         return "pending";
@@ -871,19 +869,27 @@ const DepositModal: React.FC<DepositModalProps> = ({
     } else {
       // Cross-chain has both steps
       if (stepNumber === 1) {
+        // Swap step
         if (state === "IDLE") return "pending";
         if (state === "SWAP_PENDING") return "active";
         if (
-          state === "SWAP_COMPLETE" ||
-          state === "DEPOSIT_PENDING" ||
-          state === "COMPLETED"
+          [
+            "SWAP_COMPLETE",
+            "APPROVAL_PENDING",
+            "DEPOSIT_PENDING",
+            "COMPLETED",
+          ].includes(state)
         )
           return "completed";
         if (state === "FAILED") return "failed";
         return "pending";
       }
       if (stepNumber === 2) {
-        if (state === "DEPOSIT_PENDING") return "active";
+        // Deposit step
+        if (["IDLE", "SWAP_PENDING", "SWAP_COMPLETE"].includes(state))
+          return "pending";
+        if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
+          return "active";
         if (state === "COMPLETED") return "completed";
         if (state === "FAILED") return "failed";
         return "pending";
@@ -895,7 +901,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const formatErrorMessage = (error: string | Error | unknown): string => {
     let errorString = "";
 
-    // Convert error to string
     if (error instanceof Error) {
       errorString = error.message;
     } else if (typeof error === "string") {
@@ -904,17 +909,15 @@ const DepositModal: React.FC<DepositModalProps> = ({
       errorString = "An unexpected error occurred";
     }
 
-    // Check if it's likely hex data (starts with 0x and is very long)
+    // Handle hex data
     if (errorString.startsWith("0x") && errorString.length > 100) {
       return "Transaction failed due to invalid data format";
     }
 
-    // Check if it's just a long hex string without 0x
     if (/^[0-9a-fA-F]+$/.test(errorString) && errorString.length > 100) {
       return "Transaction failed due to invalid data format";
     }
 
-    // Truncate extremely long error messages
     const MAX_LENGTH = 300;
     if (errorString.length > MAX_LENGTH) {
       return errorString.substring(0, MAX_LENGTH) + "...";
@@ -947,7 +950,15 @@ const DepositModal: React.FC<DepositModalProps> = ({
         {icons[state]}
         <div>
           <div
-            className={`text-sm font-medium ${state === "completed" ? "text-green-500" : state === "failed" ? "text-red-500" : state === "active" ? "text-amber-500" : "text-gray-400"}`}
+            className={`text-sm font-medium ${
+              state === "completed"
+                ? "text-green-500"
+                : state === "failed"
+                  ? "text-red-500"
+                  : state === "active"
+                    ? "text-amber-500"
+                    : "text-gray-400"
+            }`}
           >
             {title}
           </div>
@@ -957,6 +968,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     );
   };
 
+  // ===== RENDER =====
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
@@ -974,7 +986,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Process Progress - shown when there's an active process (not cancelled) */}
+          {/* Process Progress */}
           {activeProcess && activeProcess.state !== "CANCELLED" && (
             <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
               <div className="text-sm text-wrap font-medium text-[#FAFAFA] mb-3 break-all">
@@ -997,7 +1009,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 />
               </div>
 
-              {/* Show cancel option for completed swaps */}
               {activeProcess.state === "SWAP_COMPLETE" && (
                 <div className="mt-3 pt-3 border-t border-[#3F3F46]">
                   <Button
@@ -1013,13 +1024,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
             </div>
           )}
 
-          {/* Only show form inputs when no active process or process failed/completed/cancelled */}
+          {/* Form - only show when no active process or process completed/failed/cancelled */}
           {(!activeProcess ||
             ["FAILED", "COMPLETED", "CANCELLED"].includes(
               activeProcess.state,
             )) && (
             <>
-              {/* Smart Asset/Chain Selection */}
+              {/* Asset/Chain Selection */}
               <div>
                 <label className="text-sm font-medium text-[#A1A1AA] mb-3 block">
                   Select Asset
@@ -1031,36 +1042,25 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       setSelectedAsset(value);
                       setSelectedSwapChain("");
 
-                      // Switch to Ethereum network for ERC20 asset balance fetching
                       if (isWalletConnected) {
                         try {
-                          setIsNetworkSwitching(true);
                           const ethereumChain = getChainById("ethereum");
                           if (ethereumChain) {
                             await switchToChain(ethereumChain);
                             console.log("Switched to Ethereum for ERC20 asset");
-
-                            // Immediately fetch balance after network switch is complete
-                            if (value) {
-                              setJustFetchedBalance(true);
-                              await fetchBalance(value);
-                            }
+                            if (value) await fetchBalance(value);
                           }
                         } catch (error) {
                           console.error("Failed to switch to Ethereum:", error);
-                        } finally {
-                          setIsNetworkSwitching(false);
                         }
                       }
                     } else {
                       const selectedChain = getChainById(value);
                       if (selectedChain) {
-                        // Allow all chains (including Ethereum) as swap sources
                         setSelectedSwapChain(value);
                         setSelectedAsset("");
                         configureSwapForChain(value);
                         if (isChainWalletConnected(value)) {
-                          // Immediately fetch native balance for faster max button display
                           fetchNativeBalance(value);
                         }
 
@@ -1229,7 +1229,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       )}
                     </div>
 
-                    {/* Wallet connection and Max buttons */}
+                    {/* Max and Connect buttons */}
                     {selectedSwapChain &&
                       nativeBalances[selectedSwapChain] &&
                       !nativeBalances[selectedSwapChain].error && (
@@ -1249,6 +1249,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                           Max
                         </button>
                       )}
+
                     {isWalletConnected &&
                       selectedAsset &&
                       balances[selectedAsset] && (
@@ -1384,91 +1385,58 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
           {/* Actions */}
           <div className="space-y-3">
-            {/* Show process-specific actions */}
+            {/* Show processing state for active processes */}
             {activeProcess &&
-            activeProcess.state !== "COMPLETED" &&
-            activeProcess.state !== "FAILED" &&
-            activeProcess.state !== "CANCELLED" ? (
-              <>
-                {/* Show approval button if needed - this takes priority */}
-                {needsApproval ? (
-                  <Button
-                    onClick={handleApprove}
-                    className="w-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    <>
-                      Approve {selectedAsset} to Continue
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </>
-                  </Button>
-                ) : (
-                  /* Show processing state only when not waiting for approval */
-                  <div className="text-center py-4 text-[#A1A1AA]">
-                    <div className="animate-spin w-6 h-6 border-2 border-amber-500/20 border-t-amber-500 rounded-full mx-auto mb-2" />
-                    {activeProcess.state === "DEPOSIT_PENDING"
-                      ? "Processing deposit..."
-                      : activeProcess.state === "SWAP_PENDING"
-                        ? "Processing swap..."
-                        : "Processing your deposit..."}
-                  </div>
-                )}
-
-                {/* Debug info */}
-                {process.env.NODE_ENV === "development" && (
-                  <div className="text-xs text-gray-500 p-2 bg-gray-800 rounded">
-                    Debug: needsApproval={needsApproval.toString()}, state=
-                    {activeProcess.state}, processId={activeProcess.id}
-                  </div>
-                )}
-              </>
+            !["COMPLETED", "FAILED", "CANCELLED"].includes(
+              activeProcess.state,
+            ) ? (
+              <div className="text-center py-4 text-[#A1A1AA]">
+                <div className="animate-spin w-6 h-6 border-2 border-amber-500/20 border-t-amber-500 rounded-full mx-auto mb-2" />
+                {activeProcess.state === "DEPOSIT_PENDING"
+                  ? "Processing deposit..."
+                  : activeProcess.state === "SWAP_PENDING"
+                    ? "Processing swap..."
+                    : activeProcess.state === "APPROVAL_PENDING"
+                      ? "Waiting for approval..."
+                      : "Processing your deposit..."}
+              </div>
             ) : (
-              <>
-                {/* Regular deposit/swap buttons when no active process */}
-                <Button
-                  onClick={
-                    selectedSwapChain
-                      ? isWalletConnected
-                        ? handleStartCrossChainDeposit
-                        : connectEvmWallet
-                      : handleDirectDeposit
-                  }
-                  disabled={
-                    selectedSwapChain
-                      ? isSwapButtonDisabled ||
-                        !isChainWalletConnected(selectedSwapChain)
-                      : !isFormValid
-                  }
-                  className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
-                >
-                  {(selectedSwapChain ? isLoadingQuote : false) ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                      {selectedSwapChain ? "Getting Quote..." : "Processing..."}
-                    </div>
-                  ) : (
-                    <>
-                      {selectedSwapChain ? (
-                        isWalletConnected ? (
-                          <>
-                            Start Cross-chain Deposit
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </>
-                        ) : (
-                          <>
-                            Connect EVM Wallet for Swap (Required)
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </>
-                        )
-                      ) : (
-                        <>
-                          Direct Deposit {selectedAsset}
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
-                      )}
-                    </>
-                  )}
-                </Button>
-              </>
+              /* Regular deposit/swap buttons when no active process */
+              <Button
+                onClick={
+                  selectedSwapChain
+                    ? handleStartCrossChainDeposit
+                    : handleDirectDeposit
+                }
+                disabled={
+                  selectedSwapChain
+                    ? isSwapButtonDisabled ||
+                      !isChainWalletConnected(selectedSwapChain)
+                    : !isFormValid
+                }
+                className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
+              >
+                {isLoadingQuote ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    Getting Quote...
+                  </div>
+                ) : (
+                  <>
+                    {selectedSwapChain ? (
+                      <>
+                        Start Cross-chain Deposit
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    ) : (
+                      <>
+                        Direct Deposit {selectedAsset}
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </>
+                )}
+              </Button>
             )}
 
             <Button
