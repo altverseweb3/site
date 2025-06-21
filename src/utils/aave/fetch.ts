@@ -2,7 +2,7 @@
 import { ethers } from "ethers";
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
 import * as markets from "@bgd-labs/aave-address-book";
-import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveAbis";
+import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
 import { loadTokensForChain } from "@/utils/tokenMethods";
 import { Token } from "@/types/web3";
 

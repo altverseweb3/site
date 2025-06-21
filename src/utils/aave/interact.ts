@@ -1,7 +1,7 @@
 // Aave Data Provider - For fetching information from contracts
 import { ethers } from "ethers";
 import { AaveSDK } from "./aaveSDK";
-import { ERC20_ABI, POOL_ABI } from "../../types/aaveAbis";
+import { ERC20_ABI, POOL_ABI } from "../../types/aaveV3Abis";
 import { SupportedChainId } from "@/config/chains";
 
 export interface UserAccountData {

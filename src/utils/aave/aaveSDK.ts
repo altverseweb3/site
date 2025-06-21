@@ -80,24 +80,6 @@ export class AaveSDK {
   }
 
   /**
-   * Get chain name for a given chain ID
-   */
-  static getChainName(chainId: SupportedChainId): string {
-    const chainNames: Record<SupportedChainId, string> = {
-      1: "Ethereum",
-      137: "Polygon",
-      42161: "Arbitrum",
-      10: "Optimism",
-      43114: "Avalanche",
-      8453: "Base",
-      100: "Gnosis",
-      56: "BNB Chain",
-      11155111: "Sepolia",
-    };
-    return chainNames[chainId];
-  }
-
-  /**
    * Check if the chain supports a specific feature
    */
   static hasWethGateway(chainId: SupportedChainId): boolean {

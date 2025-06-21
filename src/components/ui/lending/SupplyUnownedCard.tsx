@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, FC } from "react";
 import Image from "next/image";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
 import {
@@ -12,6 +12,7 @@ import {
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { SupplyModal } from "./SupplyModal";
+import { chainNames } from "@/config/chains";
 
 interface SupplyUnOwnedCardProps {
   asset?: AaveReserveData;
@@ -21,7 +22,7 @@ interface SupplyUnOwnedCardProps {
   onDetails?: (asset: AaveReserveData) => void;
 }
 
-const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
+const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   asset,
   userBalance = "0",
   dollarAmount = "0.00",
@@ -62,18 +63,6 @@ const SupplyUnOwnedCard: React.FC<SupplyUnOwnedCardProps> = ({
   const supplyAPY = currentAsset.supplyAPY
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
-
-  // Get chain names for image path
-  const chainNames: Record<number, string> = {
-    1: "ethereum",
-    137: "polygon",
-    42161: "arbitrum",
-    10: "optimism",
-    43114: "avalanche",
-    8453: "base",
-    100: "gnosis",
-    56: "bsc",
-  };
 
   const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
   const tokenIcon = currentAsset.symbol.charAt(0).toUpperCase();

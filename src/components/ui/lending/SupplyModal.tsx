@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import { AlertCircle, Info, ArrowRight } from "lucide-react";
 import {
@@ -20,7 +19,8 @@ import { AaveTransactions } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
-import { SupportedChainId } from "@/config/chains";
+import { chainNames, SupportedChainId } from "@/config/chains";
+import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (
@@ -72,7 +72,7 @@ interface SupplyModalProps {
   totalCollateralUSD?: number; // Current total collateral in USD
   totalDebtUSD?: number; // Current total debt in USD
   onSupply?: (amount: string) => Promise<boolean>;
-  children: React.ReactNode; // The trigger element
+  children: ReactNode; // The trigger element
   isLoading?: boolean; // Loading state from parent
   tokenAddress?: string; // Token contract address
   tokenDecimals?: number; // Token decimals
@@ -80,7 +80,7 @@ interface SupplyModalProps {
   liquidationBonus?: number; // Liquidation bonus for this asset
 }
 
-const SupplyModal: React.FC<SupplyModalProps> = ({
+const SupplyModal: FC<SupplyModalProps> = ({
   tokenSymbol = "USDC",
   tokenName = "USD Coin",
   tokenIcon = "usdc.png",
@@ -101,26 +101,14 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
   tokenAddress = "", // Token contract address
   tokenDecimals = 18, // Token decimals
 }) => {
-  const [supplyAmount, setSupplyAmount] = React.useState("");
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
-  const [hasImageError, setHasImageError] = React.useState(false);
+  const [supplyAmount, setSupplyAmount] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
-
-  // Chain name mapping (same as SupplyUnownedCard)
-  const chainNames: Record<number, string> = {
-    1: "ethereum",
-    137: "polygon",
-    42161: "arbitrum",
-    10: "optimism",
-    43114: "avalanche",
-    8453: "base",
-    100: "gnosis",
-    56: "bsc",
-  };
 
   const chainName = chainNames[chainId] || "ethereum";
   const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
@@ -136,12 +124,12 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
   const imagePath = getImagePath();
 
   // Handle client-side mounting to prevent hydration mismatch
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMounted(true);
   }, []);
 
   // Reset form when modal opens/closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isMounted) return;
 
     if (isOpen) {
@@ -298,13 +286,11 @@ const SupplyModal: React.FC<SupplyModalProps> = ({
     const isNativeToken = ["ETH", "MATIC", "AVAX", "BNB"].includes(
       tokenSymbol.toUpperCase(),
     );
-    const adjustedMax = isNativeToken
-      ? Math.max(0, maxBalance - 0.01)
-      : maxBalance;
+    const adjustedMax = isNativeToken ? Math.max(0, maxBalance) : maxBalance;
     setSupplyAmount(adjustedMax.toString());
   };
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Allow only valid number input
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
