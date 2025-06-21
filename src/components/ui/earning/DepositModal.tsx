@@ -360,6 +360,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   } = useTokenTransfer({
     type: "swap",
     enableTracking: true,
+    pauseQuoting: !!selectedSwapChain,
     onSuccess: (amount, sourceToken, destinationToken) => {
       console.log("🔄 TOKEN TRANSFER onSuccess called:", {
         amount,
