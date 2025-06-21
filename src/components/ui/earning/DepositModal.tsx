@@ -356,7 +356,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     handleTransfer: handleSwapTransfer,
     receiveAmount,
     isLoadingQuote,
-    totalFeeUsd,
   } = useTokenTransfer({
     type: "swap",
     enableTracking: true,
@@ -1083,7 +1082,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   }}
                 >
                   <SelectTrigger className="bg-[#27272A] border-[#3F3F46] text-[#FAFAFA]">
-                    <SelectValue placeholder="Select asset or chain">
+                    <SelectValue>
                       {selectedAsset && (
                         <div className="flex items-center gap-2">
                           <Image
@@ -1166,7 +1165,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               className="rounded-full"
                             />
                             <span>
-                              {chain.chainName} ({chain.chainToken})
+                              {chain.chainName} ({chain.symbol})
                             </span>
                           </div>
                         </SelectItem>
@@ -1183,87 +1182,44 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     Amount
                   </label>
                   <div className="flex items-center gap-2">
-                    <div className="text-xs text-amber-500">
-                      {selectedSwapChain ? (
-                        <span className="text-[#A1A1AA]">
-                          Will swap{" "}
-                          {
-                            chainList.find(
-                              (chain) => chain.id === selectedSwapChain,
-                            )?.chainToken
-                          }{" "}
-                          → {vault.supportedAssets.deposit[0]}
-                          {receiveAmount && (
-                            <span className="text-green-500 ml-2">
-                              ≈ {receiveAmount}{" "}
-                              {vault.supportedAssets.deposit[0]}
+                    {/* Balance display - always show when asset is selected */}
+                    {(selectedAsset || selectedSwapChain) && (
+                      <div className="text-xs text-amber-500">
+                        {isLoadingBalance && <span>Loading balance...</span>}
+
+                        {!isLoadingBalance &&
+                          selectedSwapChain &&
+                          nativeBalances[selectedSwapChain] && (
+                            <span>
+                              Balance:{" "}
+                              {
+                                nativeBalances[selectedSwapChain]
+                                  .balanceFormatted
+                              }{" "}
+                              {nativeBalances[selectedSwapChain].symbol}
                             </span>
                           )}
-                          {totalFeeUsd && (
-                            <span className="text-amber-500 ml-2">
-                              (Fee: ${totalFeeUsd})
+
+                        {!isLoadingBalance &&
+                          selectedAsset &&
+                          isWalletConnected && (
+                            <span>
+                              Balance: {balances[selectedAsset] || "0.00"}{" "}
+                              {selectedAsset}
                             </span>
                           )}
-                        </span>
-                      ) : isLoadingBalance ? (
-                        <span>Loading balance...</span>
-                      ) : selectedSwapChain &&
-                        nativeBalances[selectedSwapChain] ? (
-                        <span>
-                          Balance:{" "}
-                          {nativeBalances[selectedSwapChain].balanceFormatted}{" "}
-                          {nativeBalances[selectedSwapChain].symbol}
-                        </span>
-                      ) : selectedAsset && isWalletConnected ? (
-                        <span>
-                          Balance: {balances[selectedAsset] || "0.00"}{" "}
-                          {selectedAsset}
-                        </span>
-                      ) : selectedAsset && !isWalletConnected ? (
-                        <span className="text-[#71717A]">
-                          Connect EVM wallet to see balance
-                        </span>
-                      ) : (
-                        <span className="text-[#71717A]">
-                          Select asset or chain
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Max and Connect buttons */}
-                    {selectedSwapChain &&
-                      nativeBalances[selectedSwapChain] &&
-                      !nativeBalances[selectedSwapChain].error && (
-                        <button
-                          onClick={() => {
-                            const balance =
-                              nativeBalances[selectedSwapChain]
-                                .balanceFormatted;
-                            if (selectedSwapChain) {
-                              handleSwapAmountChange({
-                                target: { value: balance },
-                              } as React.ChangeEvent<HTMLInputElement>);
-                            }
-                          }}
-                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
-                        >
-                          Max
-                        </button>
-                      )}
+                        {!isLoadingBalance &&
+                          selectedAsset &&
+                          !isWalletConnected && (
+                            <span className="text-[#71717A]">
+                              Connect EVM wallet to see balance
+                            </span>
+                          )}
+                      </div>
+                    )}
 
-                    {isWalletConnected &&
-                      selectedAsset &&
-                      balances[selectedAsset] && (
-                        <button
-                          onClick={() =>
-                            setAmount(balances[selectedAsset] || "0")
-                          }
-                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
-                        >
-                          Max
-                        </button>
-                      )}
-
+                    {/* Connect wallet buttons */}
                     {selectedAsset && !isWalletConnected && (
                       <button
                         onClick={connectEvmWallet}
@@ -1272,7 +1228,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         Connect EVM
                       </button>
                     )}
-
                     {selectedSwapChain &&
                       !isChainWalletConnected(selectedSwapChain) &&
                       (() => {
@@ -1307,6 +1262,40 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         }
                         return null;
                       })()}
+
+                    {/* Max button */}
+                    {selectedSwapChain &&
+                      nativeBalances[selectedSwapChain] &&
+                      !nativeBalances[selectedSwapChain].error && (
+                        <button
+                          onClick={() => {
+                            const balance =
+                              nativeBalances[selectedSwapChain]
+                                .balanceFormatted;
+                            if (selectedSwapChain) {
+                              handleSwapAmountChange({
+                                target: { value: balance },
+                              } as React.ChangeEvent<HTMLInputElement>);
+                            }
+                          }}
+                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
+                        >
+                          Max
+                        </button>
+                      )}
+
+                    {isWalletConnected &&
+                      selectedAsset &&
+                      balances[selectedAsset] && (
+                        <button
+                          onClick={() =>
+                            setAmount(balances[selectedAsset] || "0")
+                          }
+                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
+                        >
+                          Max
+                        </button>
+                      )}
                   </div>
                 </div>
                 <div className="relative">
@@ -1361,6 +1350,26 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     ) : null}
                   </div>
                 </div>
+
+                {/* Will swap text under amount input */}
+                {selectedSwapChain && (
+                  <div className="flex justify-end mt-2">
+                    <div className="text-xs text-[#A1A1AA]">
+                      Will swap{" "}
+                      {
+                        chainList.find(
+                          (chain) => chain.id === selectedSwapChain,
+                        )?.symbol
+                      }{" "}
+                      → {vault.supportedAssets.deposit[0]}
+                      {receiveAmount && (
+                        <span className="text-green-500 ml-2">
+                          ≈ {receiveAmount} {vault.supportedAssets.deposit[0]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Gas Drop - Only show for cross-chain swaps */}
