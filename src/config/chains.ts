@@ -1,5 +1,6 @@
 // src/config/chains.ts
 import { Chain, Network, WalletType } from "@/types/web3";
+import * as markets from "@bgd-labs/aave-address-book";
 
 export const chains: Record<string, Chain> = {
   ethereum: {
@@ -238,5 +239,78 @@ export const getTestnetChains = (): Chain[] => {
 export const getMainnetChains = (): Chain[] => {
   return chainList.filter((chain) => !chain.testnet);
 };
+
+export interface ChainConfig {
+  poolAddress: string;
+  dataProviderAddress: string;
+  uiDataProviderAddress?: string;
+  addressesProviderAddress: string;
+  wethGatewayAddress?: string;
+}
+
+export const chainNames: Record<number, string> = {
+  1: "ethereum",
+  137: "polygon",
+  42161: "arbitrum",
+  10: "optimism",
+  43114: "avalanche",
+  8453: "base",
+  100: "gnosis",
+  56: "bsc",
+};
+
+export type SupportedChainId =
+  | 1
+  | 137
+  | 42161
+  | 10
+  | 43114
+  | 8453
+  | 100
+  | 56
+  | 11155111;
+
+/**
+ * Get chain name for a given chain ID
+ */
+export function getChainName(chainId: SupportedChainId): string {
+  const chainNames: Record<SupportedChainId, string> = {
+    1: "Ethereum",
+    137: "Polygon",
+    42161: "Arbitrum",
+    10: "Optimism",
+    43114: "Avalanche",
+    8453: "Base",
+    100: "Gnosis",
+    56: "BNB Chain",
+    11155111: "Sepolia",
+  };
+  return chainNames[chainId];
+}
+
+export function getAaveMarket(chainId: number) {
+  switch (chainId) {
+    case 1:
+      return markets.AaveV3Ethereum;
+    case 137:
+      return markets.AaveV3Polygon;
+    case 42161:
+      return markets.AaveV3Arbitrum;
+    case 10:
+      return markets.AaveV3Optimism;
+    case 43114:
+      return markets.AaveV3Avalanche;
+    case 8453:
+      return markets.AaveV3Base;
+    case 100:
+      return markets.AaveV3Gnosis;
+    case 56:
+      return markets.AaveV3BNB;
+    case 11155111:
+      return markets.AaveV3Sepolia;
+    default:
+      throw new Error(`Aave V3 not supported on chain ${chainId}`);
+  }
+}
 
 export default chains;
