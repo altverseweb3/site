@@ -143,18 +143,61 @@ const DepositModal: React.FC<DepositModalProps> = ({
     openAppKit({ view: "Connect", namespace: "eip155" });
   };
 
-  // Token creation helpers
-  const createNativeToken = (chain: Chain): Token => ({
-    id: chain.chainToken.toLowerCase(),
-    name: chain.chainToken,
-    ticker: chain.chainToken,
-    icon: chain.icon,
-    address: chain.nativeAddress,
-    decimals: chain.decimals,
-    chainId: chain.chainId,
-    stringChainId: chain.chainId.toString(),
-    native: true,
-  });
+  // Token creation helpers - create all available tokens for a chain
+  const createChainTokens = (chain: Chain): Token[] => {
+    const tokens: Token[] = [];
+
+    // Always add native gas token
+    tokens.push({
+      id: `${chain.id}-native-gas`,
+      name: chain.nativeGasToken.symbol,
+      ticker: chain.nativeGasToken.symbol,
+      icon: chain.icon,
+      address: chain.nativeGasToken.address,
+      decimals: chain.nativeGasToken.decimals,
+      chainId: chain.chainId,
+      stringChainId: chain.chainId.toString(),
+      isNativeGas: true,
+      isNativeWrapped: false,
+      isL2Token: false,
+    });
+
+    // Add native wrapped token if available
+    if (chain.nativeWrappedToken) {
+      tokens.push({
+        id: `${chain.id}-native-wrapped`,
+        name: chain.nativeWrappedToken.symbol,
+        ticker: chain.nativeWrappedToken.symbol,
+        icon: chain.icon,
+        address: chain.nativeWrappedToken.address,
+        decimals: chain.nativeWrappedToken.decimals,
+        chainId: chain.chainId,
+        stringChainId: chain.chainId.toString(),
+        isNativeGas: false,
+        isNativeWrapped: true,
+        isL2Token: false,
+      });
+    }
+
+    // Add L2 token if available
+    if (chain.l2Token) {
+      tokens.push({
+        id: `${chain.id}-l2-token`,
+        name: chain.l2Token.symbol,
+        ticker: chain.l2Token.symbol,
+        icon: chain.icon,
+        address: chain.l2Token.address,
+        decimals: chain.l2Token.decimals,
+        chainId: chain.chainId,
+        stringChainId: chain.chainId.toString(),
+        isNativeGas: false,
+        isNativeWrapped: false,
+        isL2Token: true,
+      });
+    }
+
+    return tokens;
+  };
 
   const createDestinationToken = (assetSymbol: string): Token => {
     const assetInfo = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
@@ -167,7 +210,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
       decimals: assetInfo.decimals,
       chainId: 1,
       stringChainId: "1",
-      native: assetSymbol.toLowerCase() === "eth",
+      isNativeGas: false,
+      isNativeWrapped: false,
+      isL2Token: false,
     };
   };
 
@@ -478,7 +523,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       targetAsset: vault.supportedAssets.deposit[0],
       depositAmount: receiveAmount || "0",
       sourceChain: selectedChain,
-      sourceToken: createNativeToken(selectedChain),
+      sourceToken: useWeb3Store.getState().sourceToken as Token,
       sourceAmount: swapAmount,
     });
 
@@ -641,7 +686,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       if (!selectedChain || !vault) return;
 
       const sourceChain = selectedChain;
-      const sourceToken = createNativeToken(selectedChain);
+      const sourceToken = createChainTokens(selectedChain)[0]; // Default to first available token
       const destinationChain = chains.ethereum;
       const firstDepositAsset = vault.supportedAssets.deposit[0];
       const destinationToken = createDestinationToken(firstDepositAsset);
@@ -703,7 +748,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           [chainId]: {
             chainId,
             chainName: chain?.chainName || "",
-            symbol: chain?.symbol || "",
+            symbol: chain?.nativeGasToken.symbol || "",
             balance: "0",
             balanceFormatted: "0.00",
             decimals: chain?.decimals || 18,
@@ -1165,7 +1210,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               className="rounded-full"
                             />
                             <span>
-                              {chain.chainName} ({chain.symbol})
+                              {chain.chainName} ({chain.nativeGasToken.symbol})
                             </span>
                           </div>
                         </SelectItem>
@@ -1327,11 +1372,15 @@ const DepositModal: React.FC<DepositModalProps> = ({
                           className="rounded-full"
                         />
                         <span className="text-sm text-[#A1A1AA]">
-                          {
-                            chainList.find(
-                              (chain) => chain.id === selectedSwapChain,
-                            )?.chainToken
-                          }
+                          {(() => {
+                            const chain = chainList.find(
+                              (c) => c.id === selectedSwapChain,
+                            );
+                            return (
+                              chain?.l2Token?.symbol ||
+                              chain?.nativeGasToken.symbol
+                            );
+                          })()}
                         </span>
                       </>
                     ) : selectedAsset ? (
@@ -1359,7 +1408,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       {
                         chainList.find(
                           (chain) => chain.id === selectedSwapChain,
-                        )?.symbol
+                        )?.nativeGasToken.symbol
                       }{" "}
                       → {vault.supportedAssets.deposit[0]}
                       {receiveAmount && (
@@ -1376,7 +1425,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               {selectedSwapChain && (
                 <GasDrop
                   maxGasDrop={destinationChain?.gasDrop || 0}
-                  symbol={destinationChain?.symbol || "ETH"}
+                  symbol={destinationChain.nativeGasToken.symbol}
                   initialEnabled={false}
                   initialValue={50}
                 />

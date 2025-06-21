@@ -38,8 +38,14 @@ export const TokenImage: React.FC<TokenImageProps> = ({
       return null;
     }
 
-    if (token.native) {
-      return `/tokens/native/pngs/${token.icon}`;
+    if (token.isNativeGas) {
+      return `/tokens/native-gas/${chain.chainId}.png`;
+    }
+    if (token.isNativeWrapped) {
+      return `/tokens/native-wrapped/${chain.chainId}.png`;
+    }
+    if (token.isL2Token) {
+      return `/tokens/l2/${chain.chainId}.png`;
     }
     return `/tokens/${chain.id}/pngs/${token.icon}`;
   };

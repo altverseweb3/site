@@ -44,7 +44,9 @@ export type Token = {
   isWalletToken?: boolean;
   customToken?: boolean;
   alwaysLoadPrice?: boolean;
-  native?: boolean;
+  isNativeGas?: boolean;
+  isNativeWrapped?: boolean;
+  isL2Token?: boolean;
 };
 
 export type Chain = {
@@ -53,8 +55,21 @@ export type Chain = {
   chainName: string;
   mayanName: MayanChainName;
   alchemyNetworkName: Network;
-  symbol: string; // Native gas token (e.g., ETH, BNB, AVAX)
-  chainToken: string; // Chain-specific token for swapping (e.g., ARB, OP, BASE)
+  nativeGasToken: {
+    symbol: string;
+    address: string;
+    decimals: number;
+  };
+  nativeWrappedToken?: {
+    symbol: string;
+    address: string;
+    decimals: number;
+  };
+  l2Token?: {
+    symbol: string;
+    address: string;
+    decimals: number;
+  };
   icon: string;
   currency: string;
   backgroundColor: string;
@@ -67,7 +82,6 @@ export type Chain = {
   testnet?: boolean;
   l2: boolean;
   gasDrop: number;
-  nativeAddress: string;
   walletType: WalletType;
 };
 

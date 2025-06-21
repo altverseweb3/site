@@ -658,7 +658,7 @@ export function TransactionDetails({
           <GasDrop
             className="mt-2"
             maxGasDrop={destinationChain?.gasDrop || 0}
-            symbol={destinationChain?.symbol || "ETH"}
+            symbol={destinationChain?.nativeGasToken.symbol}
             initialEnabled={false}
             initialValue={50}
           />
