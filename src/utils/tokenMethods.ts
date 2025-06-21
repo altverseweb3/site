@@ -70,8 +70,6 @@ export const loadTokensForChain = async (
     tokensForChain = data.map((item) => {
       let contractAddress: string;
       let tokenDecimals: number;
-      let isNativeToken = false;
-
       if (item.contract_address === "native") {
         // Handle native tokens for Solana and EVM (but not Sui)
         if (numericChainId === 101) {
@@ -80,14 +78,12 @@ export const loadTokensForChain = async (
           contractAddress = "0x0000000000000000000000000000000000000000"; // EVM native
         }
         tokenDecimals = 18;
-        isNativeToken = true;
       } else {
         // For all other tokens (including Sui tokens and Sui native)
         contractAddress = isSuiChain
           ? normalizeSuiAddressToShort(item.contract_address)
           : item.contract_address;
         tokenDecimals = item.metadata.decimals;
-        isNativeToken = false;
       }
 
       return {
@@ -100,7 +96,9 @@ export const loadTokensForChain = async (
         chainId: numericChainId,
         stringChainId: chainId,
         isWalletToken: false,
-        native: isNativeToken,
+        isNativeGas: false,
+        isNativeWrapped: false,
+        isL2Token: false,
       };
     });
 
@@ -135,7 +133,9 @@ export const loadTokensForChain = async (
           chainId: numericChainId,
           stringChainId: chainId,
           isWalletToken: false,
-          native: true,
+          isNativeGas: true,
+          isNativeWrapped: false,
+          isL2Token: false,
         };
       });
 
@@ -151,7 +151,12 @@ export const loadTokensForChain = async (
         // Update the existing token to mark it as native
         tokensForChain = tokensForChain.map((token) =>
           token.address === nativeTokenAddress
-            ? { ...token, native: true }
+            ? {
+                ...token,
+                isNativeGas: true,
+                isNativeWrapped: false,
+                isL2Token: false,
+              }
             : token,
         );
         return tokensForChain;
