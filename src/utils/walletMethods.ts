@@ -604,6 +604,7 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
 
 interface TokenTransferOptions {
   type: "swap" | "bridge" | "V";
+  pauseQuoting?: boolean;
   enableTracking?: boolean; // New option to enable automatic tracking
   trackingOptions?: SwapTrackingOptions; // Pass through tracking configuration
   onSuccess?: (
@@ -920,6 +921,11 @@ export function useTokenTransfer(
 
   // Update this useEffect to include fee calculation
   useEffect(() => {
+    if (options.pauseQuoting === false) {
+      failQuote();
+      return;
+    }
+
     let timeoutId: NodeJS.Timeout;
 
     const fetchQuote = async () => {
@@ -1149,6 +1155,7 @@ export function useTokenTransfer(
     getGasDrop,
     refreshTrigger,
     isValid,
+    options.pauseQuoting,
   ]);
 
   useEffect(() => {
