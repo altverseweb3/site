@@ -1,10 +1,11 @@
 // aaveFetch.ts - Essential Aave fetch functionality using wallet provider
 import { ethers } from "ethers";
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
-import * as markets from "@bgd-labs/aave-address-book";
 import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
 import { loadTokensForChain } from "@/utils/tokenMethods";
 import { Token } from "@/types/web3";
+import { getAaveMarket } from "@/config/chains";
+import { chainNames } from "@/config/aave";
 
 // Types
 export interface AaveReserveData {
@@ -26,32 +27,6 @@ export interface AaveReserveData {
   userBalanceUsd?: string;
   tokenIcon?: string; // Just the icon filename
   chainId?: number; // For image path
-}
-
-// Helper function to get the correct market based on chain ID
-function getAaveMarket(chainId: number) {
-  switch (chainId) {
-    case 1:
-      return markets.AaveV3Ethereum;
-    case 137:
-      return markets.AaveV3Polygon;
-    case 42161:
-      return markets.AaveV3Arbitrum;
-    case 10:
-      return markets.AaveV3Optimism;
-    case 43114:
-      return markets.AaveV3Avalanche;
-    case 8453:
-      return markets.AaveV3Base;
-    case 100:
-      return markets.AaveV3Gnosis;
-    case 56:
-      return markets.AaveV3BNB;
-    case 11155111:
-      return markets.AaveV3Sepolia;
-    default:
-      throw new Error(`Aave V3 not supported on chain ${chainId}`);
-  }
 }
 
 function rayToPercentage(rayValue: string): string {
@@ -85,17 +60,6 @@ export async function fetchAllReservesData(
 
   console.log(`Fetching Aave reserves for chain ${chainId} with backoff...`);
 
-  // Get chain name for token lookup
-  const chainNames: Record<number, string> = {
-    1: "ethereum",
-    137: "polygon",
-    42161: "arbitrum",
-    10: "optimism",
-    43114: "avalanche",
-    8453: "base",
-    100: "gnosis",
-    56: "bsc",
-  };
   const chainName = chainNames[chainId] || "ethereum";
 
   // Load tokens for this chain once

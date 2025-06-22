@@ -249,21 +249,7 @@ export interface ChainConfig {
   wethGatewayAddress?: string;
 }
 
-export function getChainName(chainId: SupportedChainId): string {
-  const chainNames: Record<SupportedChainId, string> = {
-    1: "Ethereum",
-    137: "Polygon",
-    42161: "Arbitrum",
-    10: "Optimism",
-    43114: "Avalanche",
-    8453: "Base",
-    100: "Gnosis",
-    56: "BNB Chain",
-    11155111: "Sepolia",
-  };
-  return chainNames[chainId];
-}
-
+// Helper function to get the correct market based on chain ID
 export function getAaveMarket(chainId: number) {
   switch (chainId) {
     case 1:
@@ -287,6 +273,21 @@ export function getAaveMarket(chainId: number) {
     default:
       throw new Error(`Aave V3 not supported on chain ${chainId}`);
   }
+}
+
+export function getChainName(chainId: SupportedChainId): string {
+  const chainNames: Record<SupportedChainId, string> = {
+    1: "Ethereum",
+    137: "Polygon",
+    42161: "Arbitrum",
+    10: "Optimism",
+    43114: "Avalanche",
+    8453: "Base",
+    100: "Gnosis",
+    56: "BNB Chain",
+    11155111: "Sepolia",
+  };
+  return chainNames[chainId];
 }
 
 export default chains;
