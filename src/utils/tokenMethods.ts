@@ -65,44 +65,33 @@ export const loadTokensForChain = async (
     const numericChainId = chainConfig.chainId;
     const isSuiChain = fetchChainId === "sui";
     const chainId = chainConfig.id;
-    // load standard ERC20s (and Sui tokens)
-    let tokensForChain: Token[] = [];
-    tokensForChain = data.map((item) => {
-      let contractAddress: string;
-      let tokenDecimals: number;
-      if (item.contract_address === "native") {
-        // Handle native tokens for Solana and EVM (but not Sui)
-        if (numericChainId === 101) {
-          contractAddress = "11111111111111111111111111111111"; // Solana native
-        } else {
-          contractAddress = "0x0000000000000000000000000000000000000000"; // EVM native
-        }
-        tokenDecimals = 18;
-      } else {
-        // For all other tokens (including Sui tokens and Sui native)
-        contractAddress = isSuiChain
+
+    // Load standard tokens - filter out native tokens since they're handled separately
+    const tokensForChain: Token[] = data
+      .filter((item) => item.contract_address !== "native") // Skip native tokens
+      .map((item) => {
+        // All remaining tokens have real contract addresses
+        const contractAddress = isSuiChain
           ? normalizeSuiAddressToShort(item.contract_address)
           : item.contract_address;
-        tokenDecimals = item.metadata.decimals;
-      }
 
-      return {
-        id: item.id,
-        name: item.name.toLowerCase(),
-        ticker: item.symbol.toUpperCase(),
-        icon: item.local_image,
-        address: contractAddress,
-        decimals: tokenDecimals,
-        chainId: numericChainId,
-        stringChainId: chainId,
-        isWalletToken: false,
-        isNativeGas: false,
-        isNativeWrapped: false,
-        isL2Token: false,
-      };
-    });
+        return {
+          id: item.id,
+          name: item.name.toLowerCase(),
+          ticker: item.symbol.toUpperCase(),
+          icon: item.local_image,
+          address: contractAddress,
+          decimals: item.metadata.decimals,
+          chainId: numericChainId,
+          stringChainId: chainId,
+          isWalletToken: false,
+          isNativeGas: false,
+          isNativeWrapped: false,
+          isL2Token: false,
+        };
+      });
 
-    // load native asset (and filter existing native asset if already present)
+    // Load native assets (gas, wrapped, L2)
     const nativeResponse = await fetch(`/tokens/native/data.json`);
 
     if (!nativeResponse.ok) {
@@ -110,60 +99,112 @@ export const loadTokensForChain = async (
       return tokensForChain; // Return what we have so far
     }
 
-    const nativeData: TokenDataItem[] = await nativeResponse.json();
+    const nativeData = await nativeResponse.json();
 
-    const nativeToken = nativeData
-      .filter((item) => item.id === fetchChainId)
-      .map((item) => {
-        // For Sui, the native token should already be included in the main token data
-        // with the actual address, so we might not need to add it separately
-        // But if it's here, normalize the address
-        let nativeAddress = item.contract_address;
-        if (isSuiChain && nativeAddress.startsWith("0x")) {
-          nativeAddress = normalizeSuiAddressToShort(nativeAddress);
-        }
+    // Find the chain's native token data
+    const chainNativeData = nativeData.find(
+      (item: TokenDataItem) => item.id === fetchChainId,
+    );
 
-        return {
-          id: item.id,
-          name: item.name.toLowerCase(),
-          ticker: item.symbol.toUpperCase(),
-          icon: item.local_image,
-          address: nativeAddress,
-          decimals: 18,
-          chainId: numericChainId,
-          stringChainId: chainId,
-          isWalletToken: false,
-          isNativeGas: true,
-          isNativeWrapped: false,
-          isL2Token: false,
-        };
-      });
-
-    // For Sui, check if native token is already included in the main tokens
-    // to avoid duplicates (since Sui native has an actual address, not "native")
-    if (isSuiChain && nativeToken.length > 0) {
-      const nativeTokenAddress = nativeToken[0].address;
-      const alreadyExists = tokensForChain.some(
-        (token) => token.address === nativeTokenAddress,
-      );
-
-      if (alreadyExists) {
-        // Update the existing token to mark it as native
-        tokensForChain = tokensForChain.map((token) =>
-          token.address === nativeTokenAddress
-            ? {
-                ...token,
-                isNativeGas: true,
-                isNativeWrapped: false,
-                isL2Token: false,
-              }
-            : token,
-        );
-        return tokensForChain;
-      }
+    if (!chainNativeData) {
+      console.warn(`No native token data found for chain ${fetchChainId}`);
+      return tokensForChain;
     }
 
-    return tokensForChain.concat(nativeToken);
+    const nativeTokens: Token[] = [];
+
+    // Helper function to create a native token
+    const createNativeToken = (
+      tokenData: TokenDataItem,
+      isGas: boolean,
+      isWrapped: boolean,
+      isL2: boolean,
+      suffix: string = "",
+    ): Token => {
+      let tokenAddress = tokenData.contract_address;
+
+      // Normalize Sui addresses if needed
+      if (isSuiChain && tokenAddress.startsWith("0x")) {
+        tokenAddress = normalizeSuiAddressToShort(tokenAddress);
+      }
+
+      return {
+        id: `${chainNativeData.id}${suffix}`,
+        name: tokenData.name.toLowerCase(),
+        ticker: tokenData.symbol.toUpperCase(),
+        icon: tokenData.local_image,
+        address: tokenAddress,
+        decimals: tokenData.metadata.decimals,
+        chainId: numericChainId,
+        stringChainId: chainId,
+        isWalletToken: false,
+        isNativeGas: isGas,
+        isNativeWrapped: isWrapped,
+        isL2Token: isL2,
+      };
+    };
+
+    // Add native gas token
+    if (chainNativeData.native_gas) {
+      nativeTokens.push(
+        createNativeToken(
+          chainNativeData.native_gas,
+          true,
+          false,
+          false,
+          "-gas",
+        ),
+      );
+    }
+
+    // Add native wrapped token
+    if (chainNativeData.native_wrapped) {
+      nativeTokens.push(
+        createNativeToken(
+          chainNativeData.native_wrapped,
+          false,
+          true,
+          false,
+          "-wrapped",
+        ),
+      );
+    }
+
+    // Add L2 token
+    if (chainNativeData.l_two_token) {
+      nativeTokens.push(
+        createNativeToken(
+          chainNativeData.l_two_token,
+          false,
+          false,
+          true,
+          "-l2",
+        ),
+      );
+    }
+
+    // Handle potential duplicates (especially for Sui)
+    nativeTokens.forEach((nativeToken) => {
+      const existingTokenIndex = tokensForChain.findIndex(
+        (token) =>
+          token.address.toLowerCase() === nativeToken.address.toLowerCase(),
+      );
+
+      if (existingTokenIndex !== -1) {
+        // Update the existing token with the native flags
+        tokensForChain[existingTokenIndex] = {
+          ...tokensForChain[existingTokenIndex],
+          isNativeGas: nativeToken.isNativeGas,
+          isNativeWrapped: nativeToken.isNativeWrapped,
+          isL2Token: nativeToken.isL2Token,
+        };
+      } else {
+        // Add the native token
+        tokensForChain.push(nativeToken);
+      }
+    });
+
+    return tokensForChain;
   } catch (error) {
     console.error(`Error loading tokens for chain ${fetchChainId}:`, error);
     return [];
