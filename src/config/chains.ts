@@ -1,6 +1,7 @@
 // src/config/chains.ts
 import { Chain, Network, WalletType } from "@/types/web3";
 import * as markets from "@bgd-labs/aave-address-book";
+import { SupportedChainId } from "./aave";
 
 export const chains: Record<string, Chain> = {
   ethereum: {
@@ -248,31 +249,6 @@ export interface ChainConfig {
   wethGatewayAddress?: string;
 }
 
-export const chainNames: Record<number, string> = {
-  1: "ethereum",
-  137: "polygon",
-  42161: "arbitrum",
-  10: "optimism",
-  43114: "avalanche",
-  8453: "base",
-  100: "gnosis",
-  56: "bsc",
-};
-
-export type SupportedChainId =
-  | 1
-  | 137
-  | 42161
-  | 10
-  | 43114
-  | 8453
-  | 100
-  | 56
-  | 11155111;
-
-/**
- * Get chain name for a given chain ID
- */
 export function getChainName(chainId: SupportedChainId): string {
   const chainNames: Record<SupportedChainId, string> = {
     1: "Ethereum",

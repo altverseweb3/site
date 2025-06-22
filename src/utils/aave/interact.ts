@@ -2,7 +2,7 @@
 import { ethers } from "ethers";
 import { AaveSDK } from "./aaveSDK";
 import { ERC20_ABI, POOL_ABI } from "../../types/aaveV3Abis";
-import { SupportedChainId } from "@/config/chains";
+import { SupportedChainId } from "@/config/aave";
 
 export interface UserAccountData {
   totalCollateralBase: string;
