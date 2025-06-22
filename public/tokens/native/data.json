@@ -194,7 +194,7 @@
     "native_gas": {
       "extract_time": 0,
       "symbol": "BNB",
-      "name": "binance coin",
+      "name": "binance-smart-chain",
       "contract_address": "0x0000000000000000000000000000000000000000",
       "local_image": "native-gas/binance.png",
       "metadata": {
