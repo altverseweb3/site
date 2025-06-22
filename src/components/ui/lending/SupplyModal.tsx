@@ -19,8 +19,8 @@ import { AaveTransactions } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
-import { chainNames, SupportedChainId } from "@/config/chains";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
+import { chainNames, SupportedChainId } from "@/config/aave";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (

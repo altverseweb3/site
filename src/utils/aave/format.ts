@@ -34,13 +34,6 @@ export const formatPercentage = (
   return `${value.toFixed(decimals)}%`;
 };
 
-export const formatLargeNumber = (num: number): string => {
-  if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
-  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-  if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
-  return num.toString();
-};
-
 export const truncateAddress = (
   address: string,
   start: number = 6,

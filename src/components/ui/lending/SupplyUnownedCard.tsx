@@ -12,7 +12,7 @@ import {
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { SupplyModal } from "./SupplyModal";
-import { chainNames } from "@/config/chains";
+import { chainNames } from "@/config/aave";
 
 interface SupplyUnOwnedCardProps {
   asset?: AaveReserveData;
