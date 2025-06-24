@@ -395,7 +395,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Bitcoin LRT",
     description:
       "Bitcoin LRT vault providing restaked BTC yield through various Bitcoin strategies.",
-    ecosystem: "Ethereum",
+    ecosystem: "Ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -427,7 +427,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Ethena USD LRT",
     description:
       "Ethena USD LRT vault combining staking and shorting ETH strategies for stablecoin yield.",
-    ecosystem: "Ethereum",
+    ecosystem: "Ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -460,7 +460,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "King Karak LRT",
     description:
       "King Karak LRT vault providing restaked ETH yield through Karak network strategies.",
-    ecosystem: "Ethereum",
+    ecosystem: "Ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
