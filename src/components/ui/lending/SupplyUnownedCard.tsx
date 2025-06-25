@@ -1,5 +1,5 @@
-import React from "react";
-import { DollarSign } from "lucide-react";
+import { useState, FC } from "react";
+import Image from "next/image";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
 import {
   Card,
@@ -9,29 +9,117 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
+import { AaveReserveData } from "@/utils/aave/fetch";
+import { formatBalance, formatAPY } from "@/utils/aave/format";
+import { SupplyModal } from "./SupplyModal";
+import { chainNames } from "@/config/aave";
 
-const SupplyUnOwnedCard = ({
-  title = "usd coin",
-  subtitle = "USDC",
-  balance = "0.0049170",
-  dollarAmount = "0.72",
-  supplyAPY = "1.97",
-  canBeCollateral = true,
+interface SupplyUnOwnedCardProps {
+  asset?: AaveReserveData;
+  userBalance?: string; // Optional user balance for this asset
+  dollarAmount?: string; // Optional USD value of user balance
+  onSupply?: (asset: AaveReserveData) => void;
+  onDetails?: (asset: AaveReserveData) => void;
+}
+
+const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
+  asset,
+  userBalance = "0",
+  dollarAmount = "0.00",
   onSupply = () => {},
   onDetails = () => {},
 }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  // Default asset for demo purposes
+  const defaultAsset: AaveReserveData = {
+    asset: "0x0000000000000000000000000000000000000000",
+    name: "Sample Token",
+    symbol: "SAMP",
+    decimals: 18,
+    aTokenAddress: "0x0000000000000000000000000000000000000000",
+    currentLiquidityRate: "0",
+    totalSupply: "0",
+    formattedSupply: "0",
+    isActive: true,
+    supplyAPY: "0.00",
+    canBeCollateral: true,
+    isIsolationModeAsset: false,
+    debtCeiling: 0,
+    userBalance: "0",
+    userBalanceFormatted: "0.00",
+    userBalanceUsd: "0.00",
+    tokenIcon: "unknown.png",
+    chainId: 1,
+  };
+
+  const currentAsset = asset || defaultAsset;
+
+  // Determine collateral status and isolation mode
+  const canBeCollateral = currentAsset.canBeCollateral ?? true;
+  const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
+
+  const formattedBalance = formatBalance(userBalance);
+  const supplyAPY = currentAsset.supplyAPY
+    ? currentAsset.supplyAPY
+    : formatAPY(currentAsset.currentLiquidityRate);
+
+  const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
+  const tokenIcon = currentAsset.symbol.charAt(0).toUpperCase();
+
+  // Simple image path logic
+  const getImagePath = () => {
+    if (
+      !currentAsset.tokenIcon ||
+      currentAsset.tokenIcon === "unknown.png" ||
+      hasImageError
+    ) {
+      return null;
+    }
+    return `/tokens/${chainName}/pngs/${currentAsset.tokenIcon}`;
+  };
+
+  const imagePath = getImagePath();
+
+  // Determine what to display for collateral status
+  const getCollateralIndicator = () => {
+    if (isIsolationMode && canBeCollateral) {
+      return (
+        <div className="text-amber-500 font-bold text-sm">isolation mode</div>
+      );
+    } else if (canBeCollateral) {
+      return <div className="text-amber-500">✓</div>;
+    } else {
+      return <div className="text-amber-500">✗</div>;
+    }
+  };
+
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
-        <div className="bg-blue-500 rounded-full p-2 mr-3 flex-shrink-0">
-          <DollarSign size={18} color="white" />
-        </div>
+        {/* Token image or fallback */}
+        {imagePath ? (
+          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded-full overflow-hidden">
+            <Image
+              src={imagePath}
+              alt={currentAsset.name}
+              fill
+              sizes="32px"
+              className="object-cover"
+              onError={() => setHasImageError(true)}
+            />
+          </div>
+        ) : (
+          <div className="bg-blue-500 rounded-full p-2 mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center">
+            <span className="text-white text-sm font-bold">{tokenIcon}</span>
+          </div>
+        )}
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {title}
+            {currentAsset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {subtitle}
+            {currentAsset.symbol}
           </CardDescription>
         </div>
       </CardHeader>
@@ -39,9 +127,9 @@ const SupplyUnOwnedCard = ({
       <CardContent className="p-3 pt-2 space-y-2">
         {/* Balance row */}
         <div className="flex justify-between items-start">
-          <div className="text-gray-400 text-sm mt-0">supply balance</div>
+          <div className="text-gray-400 text-sm mt-0">wallet balance</div>
           <div className="text-right flex flex-col items-end">
-            <div className="text-sm">{balance}</div>
+            <div className="text-sm">{formattedBalance}</div>
             <div className="text-gray-400 text-xs">${dollarAmount}</div>
           </div>
         </div>
@@ -49,19 +137,40 @@ const SupplyUnOwnedCard = ({
         {/* APY row */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">supply APY</div>
-          <div className="text-sm">{supplyAPY}%</div>
+          <div className="text-sm text-green-400">{supplyAPY}%</div>
         </div>
 
         {/* Collateral indicator row */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">can be collateral</div>
-          {canBeCollateral && <div className="text-amber-500">✓</div>}
+          {getCollateralIndicator()}
         </div>
       </CardContent>
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-        <PrimaryButton onClick={onSupply}>supply</PrimaryButton>
-        <GrayButton onClick={onDetails}>details</GrayButton>
+        <SupplyModal
+          tokenSymbol={currentAsset.symbol}
+          tokenName={currentAsset.name}
+          tokenIcon={currentAsset.tokenIcon}
+          chainId={currentAsset.chainId}
+          balance={userBalance}
+          supplyAPY={supplyAPY}
+          collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
+          healthFactor="0"
+          tokenPrice={1}
+          liquidationThreshold={0.85}
+          totalCollateralUSD={0}
+          totalDebtUSD={0}
+          tokenAddress={currentAsset.asset}
+          tokenDecimals={currentAsset.decimals}
+          onSupply={async () => {
+            onSupply(currentAsset);
+            return true;
+          }}
+        >
+          <PrimaryButton>supply</PrimaryButton>
+        </SupplyModal>
+        <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
       </CardFooter>
     </Card>
   );
