@@ -12,6 +12,7 @@
     "postinstall": "chmod +x .husky/pre-push && chmod +x .husky/pre-commit"
   },
   "dependencies": {
+    "@bgd-labs/aave-address-book": "^4.22.3",
     "@mayanfinance/swap-sdk": "10.5.0",
     "@mysten/sui": "1.16.2",
     "@radix-ui/react-accordion": "^1.2.7",
@@ -35,6 +36,7 @@
     "clsx": "^2.1.1",
     "cobe": "^0.6.3",
     "dotted-map": "^2.2.3",
+    "ethers": "^6.14.4",
     "lucide-react": "^0.474.0",
     "motion": "^12.4.7",
     "next": "^15.2.4",
