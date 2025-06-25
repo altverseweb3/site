@@ -5,9 +5,9 @@ TEMP_DIR=$(mktemp -d)
 git clone https://x-access-token:${GITHUB_TOKEN_FETCHER_TOKEN}@github.com/altverseweb3/token-fetcher.git "$TEMP_DIR/token-fetcher"
 
 # Remove existing tokens except mono and branded (directories and files)
-echo "Removing existing tokens content except mono and branded..."
+echo "Removing existing tokens content except mono, branded, and natives..."
 for item in public/tokens/*; do
-  if [[ "$item" != "public/tokens/mono" && "$item" != "public/tokens/branded" ]]; then
+  if [[ "$item" != "public/tokens/mono" && "$item" != "public/tokens/branded" && "$item" != "public/tokens/native" ]]; then
     rm -rf "$item"
   fi
 done
