@@ -157,6 +157,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
         const dashboardRows: DashboardTableRow[] = [];
         if (isWalletConnected && evmWallet?.address) {
           const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
+          const vaultEntries = Object.entries(ETHERFI_VAULTS);
 
           // Create parallel promises for all user vault positions
           const userPositionPromises = vaultEntries.map(
@@ -173,7 +174,9 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
                 // Only include positions with non-zero balance
                 if (parseFloat(userBalance.formatted) > 0) {
                   // Find the corresponding earn row for vault details
-                  const earnRow = earnRows.find((row) => row.id === vaultId);
+                  const earnRow = data.earnRows.find(
+                    (row) => row.id === vaultId,
+                  );
                   if (earnRow) {
                     // Calculate USD value of the position
                     const vault = ETHERFI_VAULTS[vaultId];
@@ -256,7 +259,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
     return () => {
       isMounted = false;
     };
-  }, [isWalletConnected, evmWallet?.address, data.earnRows.length]);
+  }, [isWalletConnected, evmWallet?.address, data.earnRows]);
 
   return {
     data,
