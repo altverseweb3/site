@@ -68,7 +68,11 @@ export default function EarnPage() {
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   // Use the etherFi hook for data fetching - always fetch earn data, only require wallet for dashboard
-  const { data: earnData, loading } = useEtherFiEarnData(isEvmWalletConnected);
+  const {
+    data: earnData,
+    loading,
+    userPositionsLoading,
+  } = useEtherFiEarnData(isEvmWalletConnected);
 
   // Filter and sort data
   const filteredData = useMemo(() => {
@@ -272,7 +276,8 @@ export default function EarnPage() {
                 }
               />
             </div>
-          ) : loading ? (
+          ) : (activeTab === "earn" && loading) ||
+            (activeTab === "dashboard" && userPositionsLoading) ? (
             <div className="text-center py-16">
               <div className="text-[#A1A1AA]">
                 Loading {activeTab === "earn" ? "opportunities" : "positions"}

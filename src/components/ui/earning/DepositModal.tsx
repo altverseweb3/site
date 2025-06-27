@@ -53,12 +53,14 @@ interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
   vault: EtherFiVault | null;
+  apy?: number;
 }
 
 const DepositModal: React.FC<DepositModalProps> = ({
   isOpen,
   onClose,
   vault,
+  apy,
 }) => {
   // Form state
   const [selectedAsset, setSelectedAsset] = useState<string>("");
@@ -1389,7 +1391,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
             <Info className="h-4 w-4 text-green-500" />
             <span className="text-sm text-[#FAFAFA]">
               Current APY:{" "}
-              <span className="text-green-500 font-semibold">5.2%</span>
+              <span className="text-green-500 font-semibold">
+                {apy && apy > 0 ? `${apy.toFixed(1)}%` : "TBD"}
+              </span>
             </span>
           </div>
 

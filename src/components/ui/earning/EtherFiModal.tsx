@@ -259,6 +259,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
           isOpen={isDepositModalOpen}
           onClose={() => setIsDepositModalOpen(false)}
           vault={vault}
+          apy={data.apy}
         />
       </DialogContent>
     </Dialog>
