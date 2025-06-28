@@ -10,10 +10,12 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
+
+import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { chainNames } from "@/config/aave";
-import { CollateralModal } from "./SupplyCollateralModal";
+import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 
 interface SupplyOwnedCardProps {
   asset?: AaveReserveData;
@@ -29,6 +31,10 @@ interface SupplyOwnedCardProps {
     asset: AaveReserveData,
     enabled: boolean,
   ) => Promise<boolean>;
+  onWithdrawComplete?: (
+    asset: AaveReserveData,
+    amount: string,
+  ) => Promise<boolean>;
 }
 
 const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
@@ -40,8 +46,8 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   onSwitch = () => {},
-  onWithdraw = () => {},
   onCollateralChange = async () => true,
+  onWithdrawComplete = async () => true,
 }) => {
   const [hasImageError, setHasImageError] = useState(false);
   const [collateral, setCollateral] = useState(isCollateral);
@@ -110,9 +116,23 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
     }
   };
 
+  // Handle withdraw completion
+  const handleWithdrawComplete = async (amount: string) => {
+    try {
+      const success = await onWithdrawComplete(currentAsset, amount);
+      if (success) {
+        // Optionally trigger a refresh of the component data
+        console.log(`Successfully withdrew ${amount} ${currentAsset.symbol}`);
+      }
+      return success;
+    } catch (error) {
+      console.error("Error completing withdrawal:", error);
+      return false;
+    }
+  };
+
   // Handle simple toggle for switch component (opens modal)
   const handleToggle = () => {
-    // For now, just do nothing - the modal will handle the actual toggle
     // The switch component is now just for display and triggers the modal
   };
 
@@ -233,9 +253,29 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
         <PrimaryButton onClick={() => onSwitch(currentAsset)}>
           switch
         </PrimaryButton>
-        <BlueButton onClick={() => onWithdraw(currentAsset)}>
-          withdraw
-        </BlueButton>
+
+        {/* Wrap withdraw button in WithdrawModal */}
+        <WithdrawModal
+          tokenSymbol={currentAsset.symbol}
+          tokenName={currentAsset.name}
+          tokenIcon={currentAsset.tokenIcon}
+          chainId={currentAsset.chainId}
+          suppliedBalance={suppliedBalance}
+          suppliedBalanceUSD={suppliedBalanceUSD}
+          supplyAPY={supplyAPY}
+          isCollateral={collateral}
+          healthFactor={healthFactor}
+          tokenPrice={1} // You might want to pass real price data
+          liquidationThreshold={0.85} // You might want to get this from asset data
+          totalCollateralUSD={totalCollateralUSD}
+          totalDebtUSD={totalDebtUSD}
+          onWithdraw={handleWithdrawComplete}
+          tokenAddress={currentAsset.asset}
+          tokenDecimals={currentAsset.decimals}
+          aTokenAddress={currentAsset.aTokenAddress}
+        >
+          <BlueButton>withdraw</BlueButton>
+        </WithdrawModal>
       </CardFooter>
     </Card>
   );

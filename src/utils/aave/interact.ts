@@ -79,6 +79,22 @@ export interface CollateralParams {
   signer: ethers.Signer;
 }
 
+export interface WithdrawResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
+export interface WithdrawParams {
+  tokenAddress: string;
+  amount: string;
+  tokenDecimals: number;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
 export interface CollateralParams {
   tokenAddress: string;
   useAsCollateral: boolean;
@@ -105,6 +121,83 @@ export interface WithdrawParams {
 }
 
 export class AaveTransactions {
+  static async withdrawAsset(params: WithdrawParams): Promise<WithdrawResult> {
+    const {
+      tokenAddress,
+      amount,
+      tokenDecimals,
+      tokenSymbol,
+      userAddress,
+      chainId,
+      signer,
+    } = params;
+
+    try {
+      console.log(
+        `🏦 Starting withdrawal transaction for ${amount} ${tokenSymbol}`,
+      );
+
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+
+      // Convert amount to wei
+      const amountWei = ethers.parseUnits(amount, tokenDecimals);
+      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
+
+      // Create pool contract
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
+
+      // Execute withdrawal transaction
+      // Note: Aave withdraw function takes (asset, amount, to)
+      // If amount is uint256.max, it withdraws the full balance
+      console.log(`📤 Executing withdrawal transaction...`);
+      const withdrawTx = await poolContract.withdraw(
+        tokenAddress,
+        amountWei,
+        userAddress, // to address (where to send the withdrawn tokens)
+      );
+
+      console.log(`⏳ Withdrawal transaction sent: ${withdrawTx.hash}`);
+      await withdrawTx.wait();
+      console.log(`✅ Withdrawal transaction confirmed`);
+
+      return {
+        success: true,
+        txHash: withdrawTx.hash,
+      };
+    } catch (error) {
+      console.error("❌ Withdrawal transaction failed:", error);
+
+      // Handle specific error cases
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (error.message.includes("health factor")) {
+          errorMessage =
+            "Withdrawal would put your account at risk of liquidation";
+        } else if (error.message.includes("insufficient balance")) {
+          errorMessage =
+            "Insufficient supplied balance to withdraw this amount";
+        } else if (error.message.includes("withdraw amount exceeds")) {
+          errorMessage = "Withdrawal amount exceeds available balance";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
   static async withdrawAsset(params: WithdrawParams): Promise<WithdrawResult> {
     const {
       tokenAddress,
