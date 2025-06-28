@@ -54,10 +54,25 @@ export interface SupplyResult {
   error?: string;
 }
 
+export interface CollateralResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
 export interface SupplyParams {
   tokenAddress: string;
   amount: string;
   tokenDecimals: number;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
+export interface CollateralParams {
+  tokenAddress: string;
+  useAsCollateral: boolean;
   tokenSymbol: string;
   userAddress: string;
   chainId: SupportedChainId;
@@ -148,6 +163,69 @@ export class AaveTransactions {
     }
   }
 
+  static async setUserUseReserveAsCollateral(
+    params: CollateralParams,
+  ): Promise<CollateralResult> {
+    const { tokenAddress, useAsCollateral, tokenSymbol, chainId, signer } =
+      params;
+
+    try {
+      console.log(
+        `🛡️ ${useAsCollateral ? "Enabling" : "Disabling"} ${tokenSymbol} as collateral`,
+      );
+
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+
+      // Create pool contract
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
+
+      // Execute collateral toggle transaction
+      console.log(`📤 Executing collateral toggle transaction...`);
+      const collateralTx = await poolContract.setUserUseReserveAsCollateral(
+        tokenAddress,
+        useAsCollateral,
+      );
+
+      console.log(`⏳ Collateral transaction sent: ${collateralTx.hash}`);
+      await collateralTx.wait();
+      console.log(`✅ Collateral transaction confirmed`);
+
+      return {
+        success: true,
+        txHash: collateralTx.hash,
+      };
+    } catch (error) {
+      console.error("❌ Collateral transaction failed:", error);
+
+      // Handle specific error cases
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (error.message.includes("health factor")) {
+          errorMessage =
+            "Transaction would put your account at risk of liquidation";
+        } else if (error.message.includes("not enough collateral")) {
+          errorMessage =
+            "Cannot disable collateral - would cause insufficient collateral";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
   /**
    * Check if user has sufficient balance
    */
@@ -203,6 +281,83 @@ export class AaveTransactions {
     } catch (error) {
       console.error("Error getting allowance:", error);
       return "0";
+    }
+  }
+
+  /**
+   * Get user account data (health factor, total collateral, etc.)
+   */
+  static async getUserAccountData(
+    userAddress: string,
+    chainId: SupportedChainId,
+  ): Promise<UserAccountData | null> {
+    try {
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as unknown as ethers.Eip1193Provider,
+      );
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, provider);
+
+      const accountData = await poolContract.getUserAccountData(userAddress);
+
+      return {
+        totalCollateralBase: accountData.totalCollateralBase.toString(),
+        totalDebtBase: accountData.totalDebtBase.toString(),
+        availableBorrowsBase: accountData.availableBorrowsBase.toString(),
+        currentLiquidationThreshold:
+          Number(accountData.currentLiquidationThreshold) / 10000, // Convert from basis points
+        ltv: Number(accountData.ltv) / 10000, // Convert from basis points
+        healthFactor: ethers.formatUnits(accountData.healthFactor, 18),
+      };
+    } catch (error) {
+      console.error("Error getting user account data:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if collateral can be safely disabled
+   */
+  static async canDisableCollateral(
+    tokenAddress: string,
+    userAddress: string,
+    chainId: SupportedChainId,
+  ): Promise<{ canDisable: boolean; reason?: string }> {
+    try {
+      // Get current account data
+      const accountData = await this.getUserAccountData(userAddress, chainId);
+      if (!accountData) {
+        return { canDisable: false, reason: "Unable to fetch account data" };
+      }
+
+      const currentHealthFactor = parseFloat(accountData.healthFactor);
+
+      // If no debt, can always disable collateral
+      if (parseFloat(accountData.totalDebtBase) === 0) {
+        return { canDisable: true };
+      }
+
+      // If health factor is very low, probably can't disable
+      if (currentHealthFactor < 1.2) {
+        return {
+          canDisable: false,
+          reason: "Health factor too low - disabling would risk liquidation",
+        };
+      }
+
+      // For more precise checking, you could simulate the transaction
+      // or calculate the exact impact of removing this collateral
+      return { canDisable: true };
+    } catch (error) {
+      console.error("Error checking collateral disable safety:", error);
+      return {
+        canDisable: false,
+        reason: "Unable to verify safety of disabling collateral",
+      };
     }
   }
 }
