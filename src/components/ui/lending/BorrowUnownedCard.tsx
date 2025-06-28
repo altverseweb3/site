@@ -1,6 +1,6 @@
-import { FC } from "react";
+import { useState, FC } from "react";
+import Image from "next/image";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
-import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
   CardHeader,
@@ -13,6 +13,7 @@ import { AaveReserveData } from "@/utils/aave/fetch";
 import { BorrowModal } from "./BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
+import TokenImage from "../TokenImage";
 
 interface BorrowUnOwnedCardProps {
   asset?: AaveReserveData;
@@ -29,12 +30,14 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   asset,
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
-  onBorrow = () => {},
-  onDetails = () => {},
+  onBorrow = () => { },
+  onDetails = () => { },
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
 }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
     asset: "0x0000000000000000000000000000000000000000",

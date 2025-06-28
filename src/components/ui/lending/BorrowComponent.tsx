@@ -10,14 +10,18 @@ import { useSourceChain } from "@/store/web3Store";
 import {
   AaveReserveData,
   AaveReservesResult,
-  UserBorrowPosition,
   useAaveFetch,
 } from "@/utils/aave/fetch";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
-import BorrowOwnedCard from "./BorrowOwnedCard";
 
-// Legacy interface for mock data compatibility (no longer used)
-// UserBorrowPosition is now imported from @/utils/aave/fetch
+// Interface for user borrowed position data
+interface UserBorrowPosition {
+  asset: AaveReserveData;
+  borrowedBalance: string;
+  borrowedBalanceUSD: string;
+  currentBorrowAPY: string;
+  borrowRateMode: "variable" | "stable";
+}
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
@@ -32,18 +36,49 @@ const BorrowComponent: React.FC = () => {
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
+  const { fetchAllReservesData } = useAaveFetch();
 
-  // Load user borrow positions using real Aave data
+  // Mock function to simulate user borrow positions
+  const getMockUserBorrowPositions = async (
+    reserves: AaveReserveData[],
+  ): Promise<UserBorrowPosition[]> => {
+    const positions: UserBorrowPosition[] = [];
+
+    // Simulate user having borrow positions in 1-2 reserves
+    const borrowReserves = reserves.slice(0, Math.min(2, reserves.length));
+
+    borrowReserves.forEach((reserve, index) => {
+      // Mock some borrowed balances
+      const mockBalance = (Math.random() * 500 + 100).toFixed(6);
+      const mockBalanceUSD = (
+        parseFloat(mockBalance) *
+        (Math.random() * 2 + 0.5)
+      ).toFixed(2);
+      const mockAPY = (Math.random() * 5 + 2).toFixed(2);
+
+      positions.push({
+        asset: reserve,
+        borrowedBalance: mockBalance,
+        borrowedBalanceUSD: mockBalanceUSD,
+        currentBorrowAPY: mockAPY,
+        borrowRateMode: index % 2 === 0 ? "variable" : "stable",
+      });
+    });
+
+    return positions;
+  };
+
+  // Move loadUserBorrowPositions to useCallback to fix dependency warning
   const loadUserBorrowPositions = useCallback(
     async (reserves: AaveReserveData[]) => {
       try {
         setBorrowPositionsLoading(true);
         console.log("Fetching user borrow positions...");
 
-        // Use real fetch function for borrow positions
-        const borrowPositions = await fetchUserBorrowPositions(reserves);
-        setUserBorrowPositions(borrowPositions);
+        // TODO: Replace with actual borrow positions fetching
+        // For now, we'll simulate some borrow positions
+        const mockBorrowPositions = await getMockUserBorrowPositions(reserves);
+        setUserBorrowPositions(mockBorrowPositions);
       } catch (err) {
         console.error("Error loading user borrow positions:", err);
         setUserBorrowPositions([]);
@@ -51,8 +86,8 @@ const BorrowComponent: React.FC = () => {
         setBorrowPositionsLoading(false);
       }
     },
-    [fetchUserBorrowPositions],
-  );
+    [],
+  ); // Empty dependency array since getMockUserBorrowPositions is defined locally
 
   const loadAaveReserves = useCallback(
     async (force = false) => {
@@ -204,147 +239,6 @@ const BorrowComponent: React.FC = () => {
   return (
     <div className="w-full space-y-4">
       <Accordion type="single" collapsible className="w-full">
-        <AccordionItem
-          value="borrowPositions"
-          className="border-[1px] border-[#232326] rounded-md overflow-hidden"
-        >
-          <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <div className="flex items-center justify-between w-full px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="text-[#FAFAFA] font-medium">Your Borrows</div>
-                {hasBorrowPositions && (
-                  <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
-                    {userBorrowPositions.length}
-                  </div>
-                )}
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ScrollBoxSupplyBorrowAssets>
-              {isLoadingBorrowPositions && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading your borrow positions...</div>
-                </div>
-              )}
-
-              {!isLoadingBorrowPositions &&
-                hasBorrowPositions &&
-                userBorrowPositions.map((borrowPosition) => (
-                  <BorrowOwnedCard
-                    key={`${borrowPosition.asset.asset}-${sourceChain.chainId}`}
-                    borrowPosition={borrowPosition}
-                    healthFactor="1.24" // You'll want to get real health factor
-                    totalCollateralUSD={0} // You'll want to get real values
-                    totalDebtUSD={0} // You'll want to get real values
-                    onRepay={async (position, amount) => {
-                      console.log("Repay", amount, "of", position.asset.symbol);
-                      // TODO: Implement repay functionality
-                      return true;
-                    }}
-                    onDetailsClick={(position) => {
-                      console.log("Details for", position.asset.symbol);
-                      // TODO: Implement details modal
-                    }}
-                  />
-                ))}
-
-              {!isLoadingBorrowPositions && !hasBorrowPositions && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrow positions found
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Borrow assets to see your positions here
-                  </div>
-                </div>
-              )}
-            </ScrollBoxSupplyBorrowAssets>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem
-          value="availableToBorrow"
-          className="border-[1px] border-[#232326] rounded-md overflow-hidden"
-        >
-          <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <div className="flex items-center justify-between w-full px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="text-[#FAFAFA] font-medium">
-                  Assets to Borrow
-                </div>
-                {borrowableReserves.length > 0 && (
-                  <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
-                    {borrowableReserves.length}
-                  </div>
-                )}
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ScrollBoxSupplyBorrowAssets>
-              {loading && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading borrowable assets...</div>
-                </div>
-              )}
-
-              {error && (
-                <div className="text-center py-8">
-                  <div className="text-red-400 mb-4">
-                    Failed to load reserves: {error}
-                  </div>
-                  <div className="text-sm text-gray-400 mb-4">
-                    Chain: {sourceChain.name}
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? "Loading..." : "Retry"}
-                  </button>
-                </div>
-              )}
-
-              {showEmptyState && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrowable assets found
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              )}
-
-              {hasData &&
-                borrowableReserves.map((reserve) => {
-                  const borrowData = calculateAvailableToBorrow(reserve);
-                  return (
-                    <BorrowUnOwnedCard
-                      key={`${reserve.asset}-${sourceChain.chainId}`}
-                      asset={reserve}
-                      availableToBorrow={borrowData.amount}
-                      availableToBorrowUSD={borrowData.amountUSD}
-                      onBorrow={handleBorrow}
-                      onDetails={handleDetails}
-                      healthFactor="1.24" // You'll want to get real health factor
-                      totalCollateralUSD={0} // You'll want to get real values
-                      totalDebtUSD={0} // You'll want to get real values
-                    />
-                  );
-                })}
-            </ScrollBoxSupplyBorrowAssets>
-          </AccordionContent>
-        </AccordionItem>
         <AccordionItem
           value="borrowPositions"
           className="border-[1px] border-[#232326] rounded-md overflow-hidden"
