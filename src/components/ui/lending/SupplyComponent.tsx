@@ -47,10 +47,14 @@ const SupplyComponent: React.FC = () => {
           `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
         );
 
-        const reservesData = await fetchAllReservesData();
+        const allReservesData = await fetchAllReservesData();
 
-        console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
-        setAaveReserves(reservesData);
+        const supplyReservesData = allReservesData.supplyAssets;
+
+        console.log(
+          `Successfully loaded ${supplyReservesData.length} Aave reserves`,
+        );
+        setAaveReserves(supplyReservesData);
         setLastChainId(sourceChain.chainId);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);

@@ -1,0 +1,209 @@
+import { useState, FC } from "react";
+import Image from "next/image";
+import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
+import { AaveReserveData } from "@/utils/aave/fetch";
+import { BorrowModal } from "./BorrowModal";
+import { chainNames } from "@/config/aave";
+
+interface BorrowUnOwnedCardProps {
+  asset?: AaveReserveData;
+  availableToBorrow?: string; // Amount user can borrow based on collateral
+  availableToBorrowUSD?: string; // USD value of borrowable amount
+  onBorrow?: (asset: AaveReserveData) => void;
+  onDetails?: (asset: AaveReserveData) => void;
+  healthFactor?: string;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
+}
+
+const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
+  asset,
+  availableToBorrow = "0.00",
+  availableToBorrowUSD = "0.00",
+  onBorrow = () => {},
+  onDetails = () => {},
+  healthFactor = "1.24",
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+}) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  // Default asset for demo purposes
+  const defaultAsset: AaveReserveData = {
+    asset: "0x0000000000000000000000000000000000000000",
+    name: "Sample Token",
+    symbol: "SAMP",
+    decimals: 18,
+    aTokenAddress: "0x0000000000000000000000000000000000000000",
+    currentLiquidityRate: "0",
+    totalSupply: "0",
+    formattedSupply: "0",
+    isActive: true,
+    supplyAPY: "0.00",
+    canBeCollateral: true,
+    isIsolationModeAsset: false,
+    debtCeiling: 0,
+    userBalance: "0",
+    userBalanceFormatted: "0.00",
+    userBalanceUsd: "0.00",
+    tokenIcon: "unknown.png",
+    chainId: 1,
+    variableBorrowRate: "",
+    stableBorrowRate: "",
+    variableBorrowAPY: "",
+    stableBorrowAPY: "",
+    stableBorrowEnabled: false,
+    borrowingEnabled: false,
+    totalBorrowed: "",
+    formattedTotalBorrowed: "",
+    availableLiquidity: "",
+    formattedAvailableLiquidity: "",
+    borrowCap: "",
+    formattedBorrowCap: "",
+    isFrozen: false,
+  };
+
+  const currentAsset = asset || defaultAsset;
+
+  // Get borrow APY (variable rate) from your enhanced data
+  const borrowAPY = currentAsset.variableBorrowAPY || "0.00";
+  const stableBorrowAPY = currentAsset.stableBorrowAPY || "0.00";
+
+  // Check if borrowing is enabled using your enhanced data
+  const borrowingEnabled = currentAsset.borrowingEnabled ?? true;
+  const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
+  const isFrozen = currentAsset.isFrozen ?? false;
+
+  const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
+  const tokenIcon = currentAsset.symbol.charAt(0).toUpperCase();
+
+  // Simple image path logic
+  const getImagePath = () => {
+    if (
+      !currentAsset.tokenIcon ||
+      currentAsset.tokenIcon === "unknown.png" ||
+      hasImageError
+    ) {
+      return null;
+    }
+    return `/tokens/${chainName}/pngs/${currentAsset.tokenIcon}`;
+  };
+
+  const imagePath = getImagePath();
+
+  // Get borrowing status display
+  const getBorrowingStatusDisplay = () => {
+    if (!borrowingEnabled || isFrozen) {
+      return { text: "Disabled", color: "text-red-500" };
+    }
+    if (isIsolationMode) {
+      return { text: "Isolation Mode", color: "text-yellow-500" };
+    }
+    if (parseFloat(currentAsset.formattedAvailableLiquidity || "0") === 0) {
+      return { text: "No Liquidity", color: "text-orange-500" };
+    }
+    return { text: "Available", color: "text-green-500" };
+  };
+
+  const borrowingStatus = getBorrowingStatusDisplay();
+
+  // Check if user can actually borrow
+  const canBorrow = borrowingEnabled && parseFloat(availableToBorrow) > 0;
+
+  return (
+    <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
+      <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
+        {/* Token image or fallback */}
+        {imagePath ? (
+          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded-full overflow-hidden">
+            <Image
+              src={imagePath}
+              alt={currentAsset.name}
+              fill
+              sizes="32px"
+              className="object-cover"
+              onError={() => setHasImageError(true)}
+            />
+          </div>
+        ) : (
+          <div className="bg-red-500 rounded-full p-2 mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center">
+            <span className="text-white text-sm font-bold">{tokenIcon}</span>
+          </div>
+        )}
+        <div>
+          <CardTitle className="text-sm font-medium leading-none">
+            {currentAsset.name}
+          </CardTitle>
+          <CardDescription className="text-gray-400 text-xs mt-1">
+            {currentAsset.symbol}
+          </CardDescription>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3 pt-2 space-y-2">
+        {/* Available to borrow row */}
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">available to borrow</div>
+          <div className="text-right flex flex-col items-end">
+            <div className="text-sm">{availableToBorrow}</div>
+            <div className="text-gray-400 text-xs">${availableToBorrowUSD}</div>
+          </div>
+        </div>
+
+        {/* Borrow APY row */}
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">variable APY</div>
+          <div className="text-sm text-red-400">{borrowAPY}%</div>
+        </div>
+
+        {/* Borrowing status row */}
+        <div className="flex justify-between items-start">
+          <div className="text-gray-400 text-sm mt-0">borrowing</div>
+          <div className={`text-sm ${borrowingStatus.color}`}>
+            {borrowingStatus.text}
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex justify-between p-3 pt-0 gap-2">
+        <BorrowModal
+          tokenSymbol={currentAsset.symbol}
+          tokenName={currentAsset.name}
+          tokenIcon={currentAsset.tokenIcon}
+          chainId={currentAsset.chainId}
+          availableToBorrow={availableToBorrow}
+          availableToBorrowUSD={availableToBorrowUSD}
+          variableBorrowAPY={borrowAPY}
+          stableBorrowAPY={stableBorrowAPY}
+          borrowingEnabled={borrowingEnabled}
+          isIsolationMode={isIsolationMode}
+          healthFactor={healthFactor}
+          tokenPrice={1}
+          totalCollateralUSD={totalCollateralUSD}
+          totalDebtUSD={totalDebtUSD}
+          tokenAddress={currentAsset.asset}
+          tokenDecimals={currentAsset.decimals}
+          onBorrow={async () => {
+            onBorrow(currentAsset);
+            return true;
+          }}
+        >
+          <PrimaryButton disabled={!canBorrow}>
+            {canBorrow ? "borrow" : "unavailable"}
+          </PrimaryButton>
+        </BorrowModal>
+        <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default BorrowUnOwnedCard;
