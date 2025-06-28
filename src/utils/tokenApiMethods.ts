@@ -1,5 +1,5 @@
-// src/utils/tokenApiMethods.ts
-import { tokenApi, ApiResponse } from "@/api/tokenApi";
+// src/utils/altverseAPIMethods.ts
+import { altverseAPI, ApiResponse } from "@/api/altverse";
 import { getChainByChainId } from "@/config/chains";
 import useWeb3Store from "@/store/web3Store";
 import {
@@ -11,7 +11,7 @@ import {
   EnhancedTokenBalance,
   TokenBalance,
 } from "@/types/web3";
-import { SuiBalanceResult } from "@/api/tokenApi";
+import { SuiBalanceResult } from "@/api/altverse";
 
 /**
  * Formats a balance from hex or large number string to a human-readable token amount
@@ -131,18 +131,18 @@ export async function getPricesAndBalancesForChain(
 
         if (chain.id === "sui") {
           // Handle Sui balances
-          balanceResponse = await tokenApi.getSuiBalances({
+          balanceResponse = await altverseAPI.getSuiBalances({
             owner: userAddress,
           });
         } else if (chain.id === "solana") {
           // Handle Solana SPL balances
-          balanceResponse = await tokenApi.getSplBalances({
+          balanceResponse = await altverseAPI.getSplBalances({
             network: networkName,
             userAddress,
           });
         } else {
           // Handle EVM balances
-          balanceResponse = await tokenApi.getBalances({
+          balanceResponse = await altverseAPI.getBalances({
             network: networkName,
             userAddress,
           });
@@ -347,7 +347,7 @@ export async function getPricesAndBalancesForChain(
         console.log(
           `Processing price batch ${i + 1}/${batches.length} for ${chainType} chain`,
         );
-        const response = await tokenApi.getTokenPrices({ addresses: batch });
+        const response = await altverseAPI.getTokenPrices({ addresses: batch });
 
         if (response.error || !response.data) {
           console.error(
@@ -560,7 +560,7 @@ export async function getTokenMetadata(
     }
 
     // Prepare and send the request
-    const response = await tokenApi.getTokenMetadata({
+    const response = await altverseAPI.getTokenMetadata({
       network: chain.alchemyNetworkName,
       contractAddress,
     });
