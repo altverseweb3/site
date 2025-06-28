@@ -924,7 +924,7 @@ export function useTokenTransfer(
 
   // Update this useEffect to include fee calculation
   useEffect(() => {
-    if (options.pauseQuoting === false) {
+    if (options.pauseQuoting === true) {
       failQuote();
       return;
     }

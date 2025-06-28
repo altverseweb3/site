@@ -47,6 +47,9 @@ export const TokenImage: React.FC<TokenImageProps> = ({
     if (token.isL2Token) {
       return `/tokens/native/l2/${chain.id}.png`;
     }
+    if (token.customToken) {
+      return token.icon;
+    }
     return `/tokens/${chain.id}/pngs/${token.icon}`;
   };
 
