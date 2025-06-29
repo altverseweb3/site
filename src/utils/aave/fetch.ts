@@ -284,17 +284,10 @@ export async function fetchUserPositions(
               reserve.decimals,
             );
 
-            // TODO: Replace this with actual price fetching
-            // For now, we'll use a mock price - you should integrate with a price oracle
-            const mockPrice = Math.random() * 2 + 0.5; // Mock price between 0.5-2.5
-            const balanceUSD = (
-              parseFloat(formattedBalance) * mockPrice
-            ).toFixed(2);
-
             return {
               asset: reserve,
               suppliedBalance: formattedBalance,
-              suppliedBalanceUSD: balanceUSD,
+              suppliedBalanceUSD: reserve.userBalanceUsd || "0",
               isCollateral: isCollateral,
               aTokenBalance: aTokenBalance,
             };
@@ -367,17 +360,11 @@ export async function fetchUserWalletBalances(
             reserve.decimals,
           );
 
-          // TODO: Replace with actual price fetching
-          const mockPrice = Math.random() * 2 + 0.5;
-          const balanceUSD = (parseFloat(formattedBalance) * mockPrice).toFixed(
-            2,
-          );
-
           return {
             ...reserve,
             userBalance: walletBalance.toString(),
             userBalanceFormatted: formattedBalance,
-            userBalanceUsd: balanceUSD,
+            userBalanceUsd: walletBalance.toString(),
           };
         } catch (error) {
           console.log(
