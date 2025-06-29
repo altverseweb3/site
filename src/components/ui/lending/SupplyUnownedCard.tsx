@@ -51,6 +51,19 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     userBalanceUsd: "0.00",
     tokenIcon: "unknown.png",
     chainId: 1,
+    variableBorrowRate: "",
+    stableBorrowRate: "",
+    variableBorrowAPY: "",
+    stableBorrowAPY: "",
+    stableBorrowEnabled: false,
+    borrowingEnabled: false,
+    totalBorrowed: "",
+    formattedTotalBorrowed: "",
+    availableLiquidity: "",
+    formattedAvailableLiquidity: "",
+    borrowCap: "",
+    formattedBorrowCap: "",
+    isFrozen: false,
   };
 
   const currentAsset = asset || defaultAsset;
