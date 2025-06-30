@@ -1,4 +1,4 @@
-// src/api/tokenApi.ts
+// src/api/altverse.ts
 import {
   Network,
   TokenAddressInfo,
@@ -66,6 +66,17 @@ export interface SuiBalanceResult {
   lockedBalance: object;
 }
 
+export interface SwapMetricsRequest {
+  swapperAddress: string; // Required: Address performing the swap
+  txHash?: string; // Optional: Transaction hash
+  swapType?: string; // Optional: Type of swap ("vanilla", "earn/etherFi", "earn/aave", "earn/pendle", "lend/aave")
+  path?: string; // Optional: Specific swap path
+  amount?: string; // Optional: Swap amount
+  tokenIn?: string; // Optional: Input token address
+  tokenOut?: string; // Optional: Output token address
+  network?: string; // Optional: Network name
+}
+
 // Endpoint-specific response types
 export interface AllowanceResponse {
   allowance: string; // Hex string
@@ -75,7 +86,12 @@ export interface PricesResponse {
   data: TokenPriceResult[];
 }
 
-export class TokenAPI {
+export interface SwapMetricsResponse {
+  success: boolean;
+  message: string;
+}
+
+export class AltverseAPI {
   private baseUrl: string;
 
   constructor(
@@ -147,12 +163,25 @@ export class TokenAPI {
   }
 
   /**
+   * Record swap metrics
+   */
+  public async recordSwap(
+    request: SwapMetricsRequest,
+  ): Promise<ApiResponse<SwapMetricsResponse>> {
+    return this.request<SwapMetricsResponse>("POST", "swap-metrics", request);
+  }
+
+  /**
    * Unified request method that handles both GET and POST requests
    */
   private async request<T>(
     method: "GET" | "POST",
     endpoint: string,
-    body?: BaseRequest | PricesRequest | SuiBalancesRequest,
+    body?:
+      | BaseRequest
+      | PricesRequest
+      | SuiBalancesRequest
+      | SwapMetricsRequest,
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}/${endpoint}`;
@@ -211,4 +240,4 @@ export class TokenAPI {
 }
 
 // Export a singleton instance
-export const tokenApi = new TokenAPI();
+export const altverseAPI = new AltverseAPI();
