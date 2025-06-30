@@ -29,6 +29,14 @@ export interface AaveReserveData {
   chainId?: number; // For image path
 }
 
+export interface UserPosition {
+  asset: AaveReserveData;
+  suppliedBalance: string;
+  suppliedBalanceUSD: string;
+  isCollateral: boolean;
+  aTokenBalance: string;
+}
+
 function rayToPercentage(rayValue: string): string {
   const RAY = Math.pow(10, 27);
   const SECONDS_PER_YEAR = 31536000;
@@ -80,7 +88,7 @@ export async function fetchAllReservesData(
 
   const reservesData: AaveReserveData[] = [];
   const BATCH_SIZE = 2; // Even smaller batches
-  const INITIAL_DELAY = 100;
+  const INITIAL_DELAY = 0;
   const MAX_RETRIES = 3;
 
   for (let i = 0; i < reserveTokens.length; i += BATCH_SIZE) {
@@ -224,6 +232,182 @@ export async function fetchAllReservesData(
   return reservesData;
 }
 
+export async function fetchUserPositions(
+  signer: ethers.Signer,
+  userAddress: string,
+  reservesData: AaveReserveData[],
+): Promise<UserPosition[]> {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer must have a provider");
+  }
+
+  const network = await provider.getNetwork();
+  const chainId = Number(network.chainId);
+  const market = getAaveMarket(chainId);
+
+  console.log(
+    `Fetching user positions for ${userAddress} on chain ${chainId}...`,
+  );
+
+  const poolDataProvider = new ethers.Contract(
+    market.AAVE_PROTOCOL_DATA_PROVIDER,
+    POOL_DATA_PROVIDER_ABI,
+    provider,
+  );
+
+  const userPositions: UserPosition[] = [];
+  const BATCH_SIZE = 5; // Larger batch for user data as it's typically faster
+  const DELAY = 100;
+
+  // Process reserves in batches to check user positions
+  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
+    const batch = reservesData.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchPromises = batch.map(async (reserve) => {
+        try {
+          // Get user reserve data using the ABI function
+          const userReserveData = await poolDataProvider.getUserReserveData(
+            reserve.asset,
+            userAddress,
+          );
+
+          const aTokenBalance = userReserveData.currentATokenBalance.toString();
+          const isCollateral = userReserveData.usageAsCollateralEnabled;
+
+          // Check if user has any supplied balance
+          if (aTokenBalance !== "0") {
+            // Format the balance using the asset's decimals
+            const formattedBalance = ethers.formatUnits(
+              aTokenBalance,
+              reserve.decimals,
+            );
+
+            return {
+              asset: reserve,
+              suppliedBalance: formattedBalance,
+              suppliedBalanceUSD: reserve.userBalanceUsd || "0",
+              isCollateral: isCollateral,
+              aTokenBalance: aTokenBalance,
+            };
+          }
+
+          return null;
+        } catch (error) {
+          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          return null;
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+
+      for (const result of batchResults) {
+        if (result !== null) {
+          userPositions.push(result);
+        }
+      }
+
+      // Delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < reservesData.length) {
+        await delay(DELAY);
+      }
+    } catch (error) {
+      console.error(`Error processing user positions batch:`, error);
+    }
+  }
+
+  console.log(`Found ${userPositions.length} user positions`);
+  return userPositions;
+}
+
+/**
+ * Fetch user's wallet balances for available reserves
+ */
+export async function fetchUserWalletBalances(
+  signer: ethers.Signer,
+  userAddress: string,
+  reservesData: AaveReserveData[],
+): Promise<AaveReserveData[]> {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer must have a provider");
+  }
+
+  console.log(`Fetching wallet balances for ${userAddress}...`);
+
+  const updatedReserves: AaveReserveData[] = [];
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
+
+  // Process reserves in batches to get wallet balances
+  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
+    const batch = reservesData.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchPromises = batch.map(async (reserve) => {
+        try {
+          // Get user's wallet balance for this token
+          const tokenContract = new ethers.Contract(
+            reserve.asset,
+            ERC20_ABI,
+            provider,
+          );
+
+          const walletBalance = await tokenContract.balanceOf(userAddress);
+          const formattedBalance = ethers.formatUnits(
+            walletBalance,
+            reserve.decimals,
+          );
+
+          return {
+            ...reserve,
+            userBalance: walletBalance.toString(),
+            userBalanceFormatted: formattedBalance,
+            userBalanceUsd: walletBalance.toString(),
+          };
+        } catch (error) {
+          console.log(
+            `Error fetching wallet balance for ${reserve.symbol}:`,
+            error,
+          );
+          // Return reserve with zero balance on error
+          return {
+            ...reserve,
+            userBalance: "0",
+            userBalanceFormatted: "0.00",
+            userBalanceUsd: "0.00",
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      updatedReserves.push(...batchResults);
+
+      // Delay between batches
+      if (i + BATCH_SIZE < reservesData.length) {
+        await delay(DELAY);
+      }
+    } catch (error) {
+      console.error(`Error processing wallet balances batch:`, error);
+      // Add reserves with zero balances on batch error
+      updatedReserves.push(
+        ...batch.map((reserve) => ({
+          ...reserve,
+          userBalance: "0",
+          userBalanceFormatted: "0.00",
+          userBalanceUsd: "0.00",
+        })),
+      );
+    }
+  }
+
+  console.log(
+    `Updated ${updatedReserves.length} reserves with wallet balances`,
+  );
+  return updatedReserves;
+}
+
 /**
  * React hook for Aave fetch functions with wallet integration
  */
@@ -234,6 +418,36 @@ export function useAaveFetch() {
     fetchAllReservesData: async () => {
       const signer = await getEvmSigner();
       return fetchAllReservesData(signer);
+    },
+
+    fetchUserPositions: async (reservesData: AaveReserveData[]) => {
+      const signer = await getEvmSigner();
+      const userAddress = await signer.getAddress();
+      return fetchUserPositions(signer, userAddress, reservesData);
+    },
+
+    fetchUserWalletBalances: async (reservesData: AaveReserveData[]) => {
+      const signer = await getEvmSigner();
+      const userAddress = await signer.getAddress();
+      return fetchUserWalletBalances(signer, userAddress, reservesData);
+    },
+
+    // Combined fetch that gets reserves and updates them with user data
+    fetchAllReservesWithUserData: async () => {
+      const signer = await getEvmSigner();
+      const userAddress = await signer.getAddress();
+
+      // First get all reserves
+      const reserves = await fetchAllReservesData(signer);
+
+      // Then update with user wallet balances
+      const reservesWithBalances = await fetchUserWalletBalances(
+        signer,
+        userAddress,
+        reserves,
+      );
+
+      return reservesWithBalances;
     },
   };
 }
