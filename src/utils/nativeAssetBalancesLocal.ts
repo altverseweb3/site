@@ -46,7 +46,7 @@ async function getEvmNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: balance.toString(),
       balanceFormatted,
       decimals: chain.decimals,
@@ -56,7 +56,7 @@ async function getEvmNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: "0",
       balanceFormatted: "0",
       decimals: chain.decimals,
@@ -86,7 +86,7 @@ async function getSolanaNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: balance.toString(),
       balanceFormatted,
       decimals: chain.decimals,
@@ -96,7 +96,7 @@ async function getSolanaNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: "0",
       balanceFormatted: "0",
       decimals: chain.decimals,
@@ -130,7 +130,7 @@ async function getSuiNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: balance.totalBalance,
       balanceFormatted,
       decimals: chain.decimals,
@@ -140,7 +140,7 @@ async function getSuiNativeBalance(
     return {
       chainId: chain.id,
       chainName: chain.chainName,
-      symbol: chain.symbol,
+      symbol: chain.nativeGasToken.symbol,
       balance: "0",
       balanceFormatted: "0",
       decimals: chain.decimals,
@@ -168,7 +168,7 @@ export async function fetchNativeBalanceForChain(
       return {
         chainId: chain.id,
         chainName: chain.chainName,
-        symbol: chain.symbol,
+        symbol: chain.nativeGasToken.symbol,
         balance: "0",
         balanceFormatted: "0",
         decimals: chain.decimals,

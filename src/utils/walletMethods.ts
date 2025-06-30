@@ -498,7 +498,7 @@ export function useChainSwitch() {
           nativeCurrency: {
             decimals: chain.decimals,
             name: chain.currency,
-            symbol: chain.symbol,
+            symbol: chain.nativeGasToken.symbol,
           },
           rpcUrls: {
             default: {
