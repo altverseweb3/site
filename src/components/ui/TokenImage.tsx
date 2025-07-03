@@ -49,6 +49,11 @@ export const TokenImage: React.FC<TokenImageProps> = ({
     if (token.isL2Token) {
       return `/tokens/native/l2/${chain.id}.png`;
     }
+
+    if (token.icon.startsWith("/images")) {
+      // If the icon path is already relative to /tokens, return it directly
+      return token.icon;
+    }
     return `/tokens/${chain.id}/pngs/${token.icon}`;
   };
 
