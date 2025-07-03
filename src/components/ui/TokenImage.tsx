@@ -37,7 +37,9 @@ export const TokenImage: React.FC<TokenImageProps> = ({
     if (!token.icon || token.icon === "unknown.png") {
       return null;
     }
-
+    if (token.customToken) {
+      return token.icon;
+    }
     if (token.isNativeGas) {
       return `/tokens/native/native-gas/${chain.id}.png`;
     }

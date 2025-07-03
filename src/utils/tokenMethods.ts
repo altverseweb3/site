@@ -3,6 +3,7 @@ import chains from "@/config/chains";
 import { Token } from "@/types/web3";
 import { getChainById } from "@/config/chains";
 import { FormattedNumberParts } from "@/types/ui";
+import { DEPOSIT_ASSETS } from "@/config/etherFi";
 
 interface TokenDataItem {
   extract_time: number;
@@ -203,7 +204,63 @@ export const loadTokensForChain = async (
         tokensForChain.push(nativeToken);
       }
     });
+    // Add deposit assets for this chain (can overwrite non-native tokens)
+    const depositAssetsForChain = Object.entries(DEPOSIT_ASSETS)
+      .filter(([, asset]) => asset.chain === fetchChainId)
+      .filter(([, asset]) => {
+        // Find existing token with same address
+        const existingToken = tokensForChain.find(
+          (token) =>
+            token.address.toLowerCase() === asset.contractAddress.toLowerCase(),
+        );
 
+        // Skip if existing token is a native gas, wrapped, or L2 token
+        if (
+          existingToken &&
+          (existingToken.isNativeGas ||
+            existingToken.isNativeWrapped ||
+            existingToken.isL2Token)
+        ) {
+          return false;
+        }
+
+        // Allow if no existing token, or existing token is a regular token
+        return true;
+      })
+      .map(([key, asset]) => {
+        // Create deposit asset token
+        return {
+          id: key,
+          name: key.toLowerCase(),
+          ticker: key.toUpperCase(),
+          icon: asset.imagePath,
+          address: asset.contractAddress,
+          decimals: asset.decimals,
+          chainId: numericChainId,
+          stringChainId: chainId,
+          isWalletToken: false,
+          isNativeGas: false,
+          isNativeWrapped: false,
+          isL2Token: false,
+          customToken: true, // Flag to indicate this is a special deposit asset
+        };
+      });
+
+    // Merge deposit assets, replacing non-native tokens
+    depositAssetsForChain.forEach((depositAsset) => {
+      const existingIndex = tokensForChain.findIndex(
+        (token) =>
+          token.address.toLowerCase() === depositAsset.address.toLowerCase(),
+      );
+
+      if (existingIndex !== -1) {
+        // Replace the existing non-native token
+        tokensForChain[existingIndex] = depositAsset;
+      } else {
+        // Add the new deposit asset
+        tokensForChain.push(depositAsset);
+      }
+    });
     return tokensForChain;
   } catch (error) {
     console.error(`Error loading tokens for chain ${fetchChainId}:`, error);
