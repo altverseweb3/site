@@ -17,10 +17,10 @@ import {
   executeEvmSwap,
   executeSolanaSwap,
   executeSuiSwap,
-} from "@/utils/mayanSwapMethods";
+} from "@/utils/swap/mayanSwapMethods";
 import { Quote } from "@mayanfinance/swap-sdk";
 import { toast } from "sonner";
-import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 import { SwapStatus } from "@/types/web3";

@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useIdleTimer } from "react-idle-timer";
 import useWeb3Store from "@/store/web3Store";
-import { getPricesAndBalances } from "@/utils/tokenApiMethods";
+import { getPricesAndBalances } from "@/utils/tokens/tokenApiMethods";
 
 /**
  * Component that initializes token data on dApp startup.

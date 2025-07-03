@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useTokenTransfer } from "@/utils/walletMethods";
+import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { TokenTransfer } from "@/components/ui/TokenTransfer";
 import useWeb3Store from "@/store/web3Store";
 

@@ -17,7 +17,7 @@ import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
 import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import { useChainSwitch } from "@/utils/walletMethods";
+import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
 
 interface EtherFiModalProps {

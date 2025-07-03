@@ -6,7 +6,7 @@ import {
   useChainSwitch,
   useWalletConnection,
   ensureCorrectWalletTypeForChain,
-} from "@/utils/walletMethods";
+} from "@/utils/swap/walletMethods";
 import useWeb3Store from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";

@@ -7,7 +7,7 @@ import { TokenSwitch } from "@/components/ui/TokenSwitch";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { AvailableIconName } from "@/types/ui";
-import { swapChains } from "@/utils/chainMethods";
+import { swapChains } from "@/utils/chains/chainMethods";
 import useWeb3Store from "@/store/web3Store";
 import { Token } from "@/types/web3";
 

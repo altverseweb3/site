@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { WalletInfo, WalletType } from "@/types/web3";
 import { cn } from "@/lib/utils";
 import { useAppKit } from "@reown/appkit/react";
-import { useWalletConnection } from "@/utils/walletMethods";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import useWeb3Store from "@/store/web3Store";
 

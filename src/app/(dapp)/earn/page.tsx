@@ -19,7 +19,7 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
-import { getColorFilter } from "@/utils/uiHelpers";
+import { getColorFilter } from "@/utils/ui/uiHelpers";
 import Image from "next/image";
 
 const ITEMS_PER_PAGE = 10;

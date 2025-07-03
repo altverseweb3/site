@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { ERC20_ABI, TELLER_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 

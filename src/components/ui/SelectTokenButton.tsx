@@ -27,9 +27,9 @@ import useWeb3Store, {
 import { TokenImage } from "@/components/ui/TokenImage";
 import { useDebounce } from "use-debounce";
 import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
-import { getTokenMetadata } from "@/utils/tokenApiMethods";
+import { getTokenMetadata } from "@/utils/tokens/tokenApiMethods";
 import useUIStore from "@/store/uiStore";
-import { parseDecimalNumber } from "@/utils/tokenMethods";
+import { parseDecimalNumber } from "@/utils/tokens/tokenMethods";
 
 interface TokenListItemProps {
   token: Token;
