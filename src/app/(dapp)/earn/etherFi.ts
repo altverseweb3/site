@@ -25,18 +25,19 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
     dashboardRows: [],
   });
   const [loading, setLoading] = useState(false);
+  const [userPositionsLoading, setUserPositionsLoading] = useState(false);
   const evmWallet = useWalletByType(WalletType.REOWN_EVM);
 
+  // Effect 1: Fetch vault data (independent of wallet connection)
   useEffect(() => {
     let isMounted = true;
 
-    const fetchData = async (): Promise<void> => {
+    const fetchVaultData = async (): Promise<void> => {
       if (!isMounted) return;
       setLoading(true);
 
       try {
         const earnRows: EarnTableRow[] = [];
-        const dashboardRows: DashboardTableRow[] = [];
 
         // Fetch APY data for all vaults first
         const apyData = await queryAllVaultsAPY().catch(
@@ -112,9 +113,51 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
           ...(vaultResults.filter((row) => row !== null) as EarnTableRow[]),
         );
 
-        // Fetch user positions if wallet is connected
+        if (isMounted) {
+          setData((prevData) => ({
+            ...prevData,
+            earnRows,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching etherFi vault data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchVaultData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Only run once on mount
+
+  // Effect 2: Fetch user positions (only when wallet connects/changes)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserPositions = async (): Promise<void> => {
+      if (!isMounted || !isWalletConnected || !evmWallet?.address) {
+        // Clear dashboard rows if wallet disconnected
+        if (isMounted) {
+          setData((prevData) => ({
+            ...prevData,
+            dashboardRows: [],
+          }));
+        }
+        return;
+      }
+
+      setUserPositionsLoading(true);
+
+      try {
+        const dashboardRows: DashboardTableRow[] = [];
         if (isWalletConnected && evmWallet?.address) {
           const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
+          const vaultEntries = Object.entries(ETHERFI_VAULTS);
 
           // Create parallel promises for all user vault positions
           const userPositionPromises = vaultEntries.map(
@@ -131,7 +174,9 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
                 // Only include positions with non-zero balance
                 if (parseFloat(userBalance.formatted) > 0) {
                   // Find the corresponding earn row for vault details
-                  const earnRow = earnRows.find((row) => row.id === vaultId);
+                  const earnRow = data.earnRows.find(
+                    (row) => row.id === vaultId,
+                  );
                   if (earnRow) {
                     // Calculate USD value of the position
                     const vault = ETHERFI_VAULTS[vaultId];
@@ -192,28 +237,35 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
         }
 
         if (isMounted) {
-          setData({
-            earnRows,
+          setData((prevData) => ({
+            ...prevData,
             dashboardRows,
-          });
+          }));
         }
       } catch (error) {
-        console.error("Error fetching etherFi earn data:", error);
+        console.error("Error fetching user positions:", error);
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setUserPositionsLoading(false);
         }
       }
     };
 
-    fetchData();
+    // Only fetch user positions if we have earn rows already loaded
+    if (data.earnRows.length > 0) {
+      fetchUserPositions();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [isWalletConnected, evmWallet?.address]);
+  }, [isWalletConnected, evmWallet?.address, data.earnRows]);
 
-  return { data, loading };
+  return {
+    data,
+    loading: loading, // Only vault data loading
+    userPositionsLoading, // Separate loading state for user positions
+  };
 }
 
 function getAssetIcon(assetSymbol: string): string {
