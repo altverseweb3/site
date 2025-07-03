@@ -18,9 +18,13 @@ import { loadAllTokens, StructuredTokenData } from "@/utils/tokenMethods";
 import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 
+const STORE_VERSION = 1;
+
 const useWeb3Store = create<Web3StoreState>()(
   persist(
     (set, get) => ({
+      version: STORE_VERSION,
+
       connectedWallets: [],
 
       // Chain selection state
@@ -626,6 +630,7 @@ const useWeb3Store = create<Web3StoreState>()(
     }),
     {
       name: "altverse-storage-web3",
+      version: STORE_VERSION,
       storage: createJSONStorage(() => {
         if (typeof window === "undefined") {
           return {
@@ -636,6 +641,23 @@ const useWeb3Store = create<Web3StoreState>()(
         }
         return localStorage;
       }),
+      migrate: (persistedState: unknown, version: number) => {
+        console.log(
+          `Checking store version. Persisted: ${version}, Current: ${STORE_VERSION}`,
+        );
+
+        // If no version exists (existing users) or version mismatch, start fresh
+        if (version !== STORE_VERSION) {
+          console.log(
+            `Store version mismatch or missing. Persisted: ${version}, Current: ${STORE_VERSION}. Starting with fresh state.`,
+          );
+          // Return undefined to trigger using the initial state
+          return undefined;
+        }
+
+        // Versions match, use the persisted state
+        return persistedState;
+      },
       partialize: (state) => {
         const serializeToken = (token: Token | null) => {
           if (!token) return null;
@@ -654,6 +676,8 @@ const useWeb3Store = create<Web3StoreState>()(
           };
         };
         return {
+          // Include version in persisted data
+          version: state.version,
           // Only persist what we need and ensure we don't store providers
           connectedWallets: state.connectedWallets.map((wallet) => ({
             type: wallet.type,

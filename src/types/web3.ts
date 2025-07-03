@@ -86,6 +86,9 @@ export type Chain = {
 };
 
 export interface Web3StoreState {
+  // Store version
+  version: number;
+
   // Wallet-related state
   connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
