@@ -29,16 +29,11 @@ import {
   SelectGroup,
 } from "@/components/ui/Select";
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
-import { useEtherFiFetch, getTokenAllowance } from "@/utils/etherFi/fetch";
-import {
-  fetchNativeBalanceForChain,
-  NativeBalance,
-} from "@/utils/nativeAssetBalancesLocal";
-import { useWallet } from "@suiet/wallet-kit";
+import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
 import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { useChainSwitch, useTokenTransfer } from "@/utils/walletMethods";
-import { WalletType, Token, Chain, SwapStatus } from "@/types/web3";
+import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
 import { useAppKit } from "@reown/appkit/react";
 import useWeb3Store from "@/store/web3Store";
@@ -48,6 +43,7 @@ import useVaultDepositStore, {
 } from "@/store/vaultDepositStore";
 import { GasDrop } from "@/components/ui/GasDrop";
 import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import TokenImage from "@/components/ui/TokenImage";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -63,21 +59,26 @@ const DepositModal: React.FC<DepositModalProps> = ({
   apy,
 }) => {
   // Form state
-  const [selectedAsset, setSelectedAsset] = useState<string>("");
   const [selectedSwapChain, setSelectedSwapChain] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
-  const [balances, setBalances] = useState<Record<string, string>>({});
-  const [nativeBalances, setNativeBalances] = useState<
-    Record<string, NativeBalance>
-  >({});
-  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [selectedSwapToken, setSelectedSwapToken] = useState<Token | null>(
+    null,
+  );
+  const [isDirectDeposit, setIsDirectDeposit] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState(false);
 
   // Integration hooks
-  const { getTokenBalance } = useEtherFiFetch();
   const { approveToken, depositTokens } = useEtherFiInteract();
   const { switchToChain } = useChainSwitch();
   const { open: openAppKit } = useAppKit();
+
+  // Web3Store functions for token management
+  const loadTokens = useWeb3Store((state) => state.loadTokens);
+  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
+  const tokenCount = useWeb3Store((state) => state.allTokensList.length);
+  const tokensByCompositeKey = useWeb3Store(
+    (state) => state.tokensByCompositeKey,
+  );
+  const tokensByChainId = useWeb3Store((state) => state.tokensByChainId);
 
   // Wallet connection states
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
@@ -91,8 +92,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const destinationChain = useWeb3Store((state) => state.destinationChain);
 
   // Wallet hooks for address retrieval
-  const { getEvmSigner, getSolanaSigner } = useWalletProviderAndSigner();
-  const { address: suiAddress } = useWallet();
+  const { getEvmSigner } = useWalletProviderAndSigner();
 
   // Vault Deposit Store integration
   const {
@@ -109,6 +109,86 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   const activeProcess = useActiveVaultDepositProcess();
   const suiButtonRef = useRef<HTMLDivElement>(null);
+
+  // Helper functions for token management
+  const getSupportedTokensForChain = useCallback(
+    (chainId: number): Token[] => {
+      const allTokens = tokensByChainId[chainId] || [];
+      return allTokens.filter(
+        (token) =>
+          token.isNativeGas === true ||
+          token.isNativeWrapped === true ||
+          token.isL2Token === true,
+      );
+    },
+    [tokensByChainId],
+  );
+
+  const getDestinationTokenForAsset = useCallback(
+    (assetSymbol: string): Token | null => {
+      // Get tokens for Ethereum (chainId: 1)
+      const ethereumTokens = tokensByChainId[1] || [];
+
+      // Find token that matches the asset symbol
+      const matchingToken = ethereumTokens.find(
+        (token) => token.ticker.toLowerCase() === assetSymbol.toLowerCase(),
+      );
+
+      return matchingToken || null;
+    },
+    [tokensByChainId],
+  );
+
+  const getNativeVaultTokenForAsset = useCallback(
+    (assetSymbol: string): Token | null => {
+      // Get tokens for Ethereum (chainId: 1) since vault assets are on Ethereum
+      const ethereumTokens = tokensByChainId[1] || [];
+
+      // Find token that matches the asset symbol and has balance data
+      const matchingToken = ethereumTokens.find(
+        (token) => token.ticker.toLowerCase() === assetSymbol.toLowerCase(),
+      );
+
+      console.log(`Looking for native vault token for ${assetSymbol}:`, {
+        found: !!matchingToken,
+        ticker: matchingToken?.ticker,
+        userBalance: matchingToken?.userBalance,
+        isWalletToken: matchingToken?.isWalletToken,
+      });
+
+      return matchingToken || null;
+    },
+    [tokensByChainId],
+  );
+
+  const getTokenByCompositeKey = useCallback(
+    (chainStringId: string, tokenAddress: string): Token | null => {
+      const compositeKey = `${chainStringId}-${tokenAddress}`;
+      return tokensByCompositeKey[compositeKey] || null;
+    },
+    [tokensByCompositeKey],
+  );
+
+  const getTokenByChainSpecificId = useCallback(
+    (chainSpecificTokenId: string): Token | null => {
+      // Parse the chain-specific token ID format: chainId-tokenAddress
+      const parts = chainSpecificTokenId.split("-");
+      if (parts.length < 2) return null;
+
+      const chainStringId = parts[0];
+      const tokenAddress = parts.slice(1).join("-"); // Handle addresses that might contain dashes
+
+      return getTokenByCompositeKey(chainStringId, tokenAddress);
+    },
+    [getTokenByCompositeKey],
+  );
+
+  const createChainSpecificTokenId = useCallback(
+    (token: Token, chainStringId: string): string => {
+      return `${chainStringId}-${token.address.toLowerCase()}`;
+    },
+    [],
+  );
 
   // Wallet connection helpers
   const isChainWalletConnected = useCallback(
@@ -143,34 +223,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   const connectEvmWallet = async () => {
     openAppKit({ view: "Connect", namespace: "eip155" });
-  };
-
-  // Token creation helpers
-  const createNativeToken = (chain: Chain): Token => ({
-    id: chain.chainToken.toLowerCase(),
-    name: chain.chainToken,
-    ticker: chain.chainToken,
-    icon: chain.icon,
-    address: chain.nativeAddress,
-    decimals: chain.decimals,
-    chainId: chain.chainId,
-    stringChainId: chain.chainId.toString(),
-    native: true,
-  });
-
-  const createDestinationToken = (assetSymbol: string): Token => {
-    const assetInfo = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
-    return {
-      id: assetSymbol.toLowerCase(),
-      name: assetSymbol,
-      ticker: assetSymbol,
-      icon: assetInfo.imagePath,
-      address: assetInfo.contractAddress,
-      decimals: assetInfo.decimals,
-      chainId: 1,
-      stringChainId: "1",
-      native: assetSymbol.toLowerCase() === "eth",
-    };
   };
 
   // ===== UNIFIED APPROVAL AND RETRY FUNCTION =====
@@ -361,7 +413,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   } = useTokenTransfer({
     type: "swap",
     enableTracking: true,
-    pauseQuoting: !!selectedSwapChain,
+    pauseQuoting: !!isDirectDeposit,
     onSuccess: (amount, sourceToken, destinationToken) => {
       console.log("🔄 TOKEN TRANSFER onSuccess called:", {
         amount,
@@ -455,9 +507,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // ===== MAIN DEPOSIT HANDLERS =====
   const handleStartCrossChainDeposit = async () => {
-    if (!vault || !requiredWallet?.address || !selectedSwapChain) return;
+    if (!vault || !requiredWallet?.address || !selectedSwapToken) return;
 
-    const selectedChain = getChainById(selectedSwapChain);
+    const selectedChain = getChainById(selectedSwapToken.stringChainId);
     if (!selectedChain) return;
 
     // Cancel any existing active process
@@ -480,7 +532,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       targetAsset: vault.supportedAssets.deposit[0],
       depositAmount: receiveAmount || "0",
       sourceChain: selectedChain,
-      sourceToken: createNativeToken(selectedChain),
+      sourceToken: selectedSwapToken,
       sourceAmount: swapAmount,
     });
 
@@ -491,7 +543,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
   };
 
   const handleDirectDeposit = async () => {
-    if (!selectedAsset || !amount || !vault || !requiredWallet?.address) return;
+    if (!isDirectDeposit || !swapAmount || !vault || !requiredWallet?.address)
+      return;
 
     // Cancel any existing active process
     if (
@@ -510,39 +563,68 @@ const DepositModal: React.FC<DepositModalProps> = ({
       userAddress: requiredWallet.address,
       vault,
       type: "DIRECT",
-      targetAsset: selectedAsset,
-      depositAmount: amount,
+      targetAsset: selectedSwapToken?.ticker || "",
+      depositAmount: swapAmount,
     });
 
     console.log("Starting direct deposit:", {
-      selectedAsset,
+      selectedSwapToken: selectedSwapToken?.ticker || "",
       vaultId: vault.id,
-      amount,
+      swapAmount,
     });
+    const ethereumChain = getChainById("ethereum");
+    if (!ethereumChain) {
+      throw new Error("Ethereum chain not found");
+    }
+
+    await switchToChain(ethereumChain);
 
     // Start deposit step
     startDepositStep(processId);
 
     // Perform vault deposit with unified logic
-    const success = await performVaultDeposit(
+    await performVaultDeposit(
       processId,
-      selectedAsset,
+      selectedSwapToken?.ticker || "",
       vault.id,
-      amount,
+      swapAmount,
     );
-
-    if (success) {
-      await fetchBalance(selectedAsset);
-    }
   };
 
   // ===== CROSS-CHAIN POST-SWAP HANDLING =====
+  const operationInProgress = useRef(false);
+  const lastProcessedId = useRef<string | null>(null);
+
+  // Create stable references for the functions that cause dependency issues
+  const performVaultDepositRef = useRef(performVaultDeposit);
+  const switchToChainRef = useRef(switchToChain);
+
+  // Update refs when functions change
+  useEffect(() => {
+    performVaultDepositRef.current = performVaultDeposit;
+  }, [performVaultDeposit]);
+
+  useEffect(() => {
+    switchToChainRef.current = switchToChain;
+  }, [switchToChain]);
+
   const performCrossChainVaultDeposit = useCallback(
     async (process: typeof activeProcess) => {
       if (!process) return;
 
-      let isCancelled = false;
+      // Prevent duplicate operations
+      if (
+        operationInProgress.current ||
+        lastProcessedId.current === process.id
+      ) {
+        console.log("🔄 Operation already in progress or already processed");
+        return;
+      }
 
+      operationInProgress.current = true;
+      lastProcessedId.current = process.id;
+
+      let isCancelled = false;
       try {
         // Validate required data
         if (!process.actualTargetAmount || !process.vault) {
@@ -556,29 +638,26 @@ const DepositModal: React.FC<DepositModalProps> = ({
           );
           return;
         }
-
         if (isCancelled) return;
 
-        // Switch to Ethereum network
+        // Switch to Ethereum network using ref
         console.log("🔄 Switching to Ethereum network...");
         const ethereumChain = getChainById("ethereum");
         if (!ethereumChain) {
           throw new Error("Ethereum chain not found");
         }
-
-        await switchToChain(ethereumChain);
+        await switchToChainRef.current(ethereumChain);
         console.log("✅ Successfully switched to Ethereum");
-
         if (isCancelled) return;
 
         // Small delay to ensure chain switch is settled
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Start deposit step
         console.log("🏦 Starting vault deposit step for cross-chain");
         startDepositStep(process.id);
 
-        // Perform vault deposit with unified logic
+        // Perform vault deposit with unified logic using ref
         console.log("💰 Performing vault deposit:", {
           targetAsset: process.targetAsset,
           vaultId: process.vault.id,
@@ -586,7 +665,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           actualTargetAmount: process.actualTargetAmount,
         });
 
-        const success = await performVaultDeposit(
+        const success = await performVaultDepositRef.current(
           process.id,
           process.targetAsset,
           process.vault.id,
@@ -602,13 +681,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
           error instanceof Error ? error.message : "Unknown error";
         console.error("❌ Cross-chain vault deposit error:", errorMessage);
         failDepositStep(process.id, errorMessage);
+      } finally {
+        operationInProgress.current = false;
       }
-
       return () => {
         isCancelled = true;
       };
     },
-    [failDepositStep, startDepositStep, switchToChain, performVaultDeposit],
+    [failDepositStep, startDepositStep],
   );
 
   useEffect(() => {
@@ -637,156 +717,86 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }, [activeProcess, performCrossChainVaultDeposit]);
 
   // ===== SWAP CONFIGURATION =====
-  const configureSwapForChain = useCallback(
-    (chainId: string) => {
-      const selectedChain = getChainById(chainId);
-      if (!selectedChain || !vault) return;
+  const configureSwapForToken = useCallback(
+    (token: Token) => {
+      if (!vault) return;
 
-      const sourceChain = selectedChain;
-      const sourceToken = createNativeToken(selectedChain);
+      const sourceChain = getChainById(token.stringChainId);
+      if (!sourceChain) {
+        console.error("Chain not found for token:", token);
+        return;
+      }
+
       const destinationChain = chains.ethereum;
       const firstDepositAsset = vault.supportedAssets.deposit[0];
-      const destinationToken = createDestinationToken(firstDepositAsset);
+      const destinationToken = getDestinationTokenForAsset(firstDepositAsset);
+
+      if (!destinationToken) {
+        console.error(
+          "No destination token found for asset:",
+          firstDepositAsset,
+        );
+        return;
+      }
 
       const store = useWeb3Store.getState();
       store.setSourceChain(sourceChain);
       store.setDestinationChain(destinationChain);
-      store.setSourceToken(sourceToken);
+      store.setSourceToken(token);
       store.setDestinationToken(destinationToken);
 
       console.log(
-        `Configured swap: ${sourceToken.ticker} (${sourceChain.chainName}) → ${destinationToken.ticker} (${destinationChain.chainName})`,
+        `Configured swap: ${token.ticker} (${sourceChain.chainName}) → ${destinationToken.ticker} (${destinationChain.chainName})`,
       );
     },
-    [vault],
+    [vault, getDestinationTokenForAsset],
   );
 
-  // ===== BALANCE FETCHING =====
-  const fetchNativeBalance = useCallback(
-    async (chainId: string) => {
-      const chain = getChainById(chainId);
-      if (!chain || !isChainWalletConnected(chainId)) return;
+  // Track the current selected token's composite key and previous balance
+  const selectedTokenCompositeKeyRef = useRef<string | null>(null);
+  const previousBalanceRef = useRef<string | null>(null);
 
-      setIsLoadingBalance(true);
-      try {
-        let walletAddress = "";
+  // Update the ref whenever selectedSwapToken changes
+  useEffect(() => {
+    if (selectedSwapToken) {
+      selectedTokenCompositeKeyRef.current = `${selectedSwapToken.stringChainId}-${selectedSwapToken.address}`;
+      previousBalanceRef.current = selectedSwapToken.userBalance || null;
+    } else {
+      selectedTokenCompositeKeyRef.current = null;
+      previousBalanceRef.current = null;
+    }
+  }, [selectedSwapToken]);
 
-        if (chain.walletType === WalletType.REOWN_EVM && isWalletConnected) {
-          const signer = await getEvmSigner();
-          walletAddress = await signer.getAddress();
-        } else if (
-          chain.walletType === WalletType.SUIET_SUI &&
-          isSuiWalletConnected &&
-          suiAddress
-        ) {
-          walletAddress = suiAddress;
-        } else if (
-          chain.walletType === WalletType.REOWN_SOL &&
-          isSolanaWalletConnected
-        ) {
-          const signer = await getSolanaSigner();
-          walletAddress = signer.publicKey;
-        }
+  // Update selected token balance when tokensByCompositeKey changes
+  useEffect(() => {
+    const currentCompositeKey = selectedTokenCompositeKeyRef.current;
 
-        if (walletAddress) {
-          const nativeBalance = await fetchNativeBalanceForChain(
-            chain,
-            walletAddress,
-          );
-          setNativeBalances((prev) => ({
-            ...prev,
-            [chainId]: nativeBalance,
-          }));
-        }
-      } catch (error) {
-        console.error(`Error fetching native balance for ${chainId}:`, error);
-        setNativeBalances((prev) => ({
-          ...prev,
-          [chainId]: {
-            chainId,
-            chainName: chain?.chainName || "",
-            symbol: chain?.symbol || "",
-            balance: "0",
-            balanceFormatted: "0.00",
-            decimals: chain?.decimals || 18,
-            address: "",
-            error: error instanceof Error ? error.message : "Unknown error",
-          },
-        }));
-      } finally {
-        setIsLoadingBalance(false);
+    if (currentCompositeKey) {
+      const updatedToken = tokensByCompositeKey[currentCompositeKey] || null;
+      if (updatedToken) {
+        setSelectedSwapToken(updatedToken);
       }
-    },
-    [
-      isWalletConnected,
-      isSuiWalletConnected,
-      isSolanaWalletConnected,
-      isChainWalletConnected,
-      getEvmSigner,
-      getSolanaSigner,
-      suiAddress,
-    ],
-  );
+    }
+  }, [tokensByCompositeKey, setSelectedSwapToken]);
 
-  const fetchBalance = useCallback(
-    async (assetSymbol: string) => {
-      if (!assetSymbol || !isWalletConnected) return;
-
-      setIsLoadingBalance(true);
-      try {
-        const signer = await getEvmSigner();
-
-        // Wait for network stability on Ethereum
-        let isStable = false;
-        let attempts = 0;
-        const maxAttempts = 50;
-
-        while (!isStable && attempts < maxAttempts) {
-          const network = await signer.provider?.getNetwork();
-          if (network?.chainId === BigInt(1)) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            const networkCheck = await signer.provider?.getNetwork();
-            if (networkCheck?.chainId === BigInt(1)) {
-              isStable = true;
-              console.log(
-                `Network stable on Ethereum, fetching balance for ${assetSymbol}`,
-              );
-            }
-          } else {
-            console.log(
-              `Waiting for Ethereum... Currently on ${network?.chainId}`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-          attempts++;
-        }
-
-        if (!isStable) {
-          console.error(
-            `Failed to get stable Ethereum connection after ${attempts} attempts`,
-          );
-          return;
-        }
-
-        const balanceData = await getTokenBalance(assetSymbol);
-        setBalances((prev) => ({
-          ...prev,
-          [assetSymbol]: balanceData.formatted,
-        }));
-      } catch (error) {
-        console.error(`Error fetching balance for ${assetSymbol}:`, error);
-        setBalances((prev) => ({
-          ...prev,
-          [assetSymbol]: "0.00",
-        }));
-      } finally {
-        setIsLoadingBalance(false);
-      }
-    },
-    [isWalletConnected, getTokenBalance, getEvmSigner],
-  );
+  // ===== TOKEN LOADING =====
+  useEffect(() => {
+    if (tokenCount === 0 && !tokensLoading) {
+      console.log("Loading tokens for DepositModal...");
+      loadTokens();
+    }
+  }, [loadTokens, tokensLoading, tokenCount]);
 
   // ===== INITIALIZATION EFFECTS =====
+  // Track previous modal state to detect opening transition
+  const prevIsOpenRef = useRef(false);
+  const getNativeVaultTokenForAssetRef = useRef(getNativeVaultTokenForAsset);
+
+  // Update function ref when it changes
+  useEffect(() => {
+    getNativeVaultTokenForAssetRef.current = getNativeVaultTokenForAsset;
+  }, [getNativeVaultTokenForAsset]);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -794,19 +804,26 @@ const DepositModal: React.FC<DepositModalProps> = ({
   useEffect(() => {
     if (!isMounted) return;
 
-    if (isOpen && vault && vault.supportedAssets.deposit.length > 0) {
-      const firstAsset = vault.supportedAssets.deposit[0];
-      setSelectedAsset(firstAsset);
-      setSelectedSwapChain("");
-      setAmount("");
-    } else if (!isOpen) {
-      // Reset form state
-      setSelectedAsset("");
-      setSelectedSwapChain("");
-      setBalances({});
-      setNativeBalances({});
-      setAmount("");
+    const wasOpen = prevIsOpenRef.current;
+    const isOpening = isOpen && !wasOpen; // Modal is transitioning from closed to open
+    const isClosing = !isOpen && wasOpen; // Modal is transitioning from open to closed
 
+    // Update the ref for next time
+    prevIsOpenRef.current = isOpen;
+
+    if (isOpening && vault && vault.supportedAssets.deposit.length > 0) {
+      // Only initialize when modal first opens
+      const firstAsset = vault.supportedAssets.deposit[0];
+      setSelectedSwapChain("ethereum");
+      setIsDirectDeposit(true);
+
+      // Set the native token for the first asset using ref
+      const nativeToken = getNativeVaultTokenForAssetRef.current(firstAsset);
+      setSelectedSwapToken(nativeToken);
+    } else if (isClosing) {
+      // Reset form state when modal closes
+      setSelectedSwapChain("");
+      setSelectedSwapToken(null);
       // Cancel incomplete processes
       if (
         activeProcess &&
@@ -821,18 +838,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     }
   }, [isOpen, vault, isMounted, activeProcess, cancelProcess]);
 
-  useEffect(() => {
-    if (selectedAsset && isWalletConnected && isMounted && !selectedSwapChain) {
-      fetchBalance(selectedAsset);
-    }
-  }, [
-    selectedAsset,
-    isWalletConnected,
-    isMounted,
-    fetchBalance,
-    selectedSwapChain,
-  ]);
-
   // Don't render on server
   if (!isMounted || !vault) return null;
 
@@ -841,9 +846,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     return asset?.imagePath || "/images/etherFi/ethereum-assets/eth.png";
   };
 
-  const isFormValid = selectedSwapChain
-    ? swapAmount && parseFloat(swapAmount) > 0
-    : selectedAsset && amount && parseFloat(amount) > 0;
+  const isFormValid = !!(swapAmount && parseFloat(swapAmount) > 0);
 
   const processProgress = activeProcess
     ? getProcessProgress(activeProcess.id)
@@ -1038,84 +1041,110 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   Select Asset
                 </label>
                 <Select
-                  value={selectedAsset || selectedSwapChain}
+                  value={
+                    selectedSwapToken
+                      ? createChainSpecificTokenId(
+                          selectedSwapToken,
+                          selectedSwapChain,
+                        )
+                      : ""
+                  }
                   onValueChange={async (value) => {
+                    console.log(
+                      "Select onValueChange called with value:",
+                      value,
+                    );
                     if (vault.supportedAssets.deposit.includes(value)) {
-                      setSelectedAsset(value);
-                      setSelectedSwapChain("");
+                      const vaultToken = getNativeVaultTokenForAsset(value);
+                      if (!vaultToken) return;
+                      setSelectedSwapChain(vaultToken.stringChainId);
+                      setSelectedSwapToken(vaultToken);
+                      setIsDirectDeposit(true);
 
+                      // Get the native vault token for balance display
                       if (isWalletConnected) {
                         try {
                           const ethereumChain = getChainById("ethereum");
                           if (ethereumChain) {
                             await switchToChain(ethereumChain);
                             console.log("Switched to Ethereum for ERC20 asset");
-                            if (value) await fetchBalance(value);
                           }
                         } catch (error) {
                           console.error("Failed to switch to Ethereum:", error);
                         }
                       }
                     } else {
-                      const selectedChain = getChainById(value);
-                      if (selectedChain) {
-                        setSelectedSwapChain(value);
-                        setSelectedAsset("");
-                        configureSwapForChain(value);
-                        if (isChainWalletConnected(value)) {
-                          fetchNativeBalance(value);
-                        }
+                      // Cross-chain token selection using chain-specific ID
+                      console.log(
+                        "Looking up token by chain-specific ID:",
+                        value,
+                      );
+                      const selectedToken = getTokenByChainSpecificId(value);
+                      console.log("Found token:", selectedToken);
 
-                        if (
-                          selectedChain.walletType === WalletType.REOWN_EVM &&
-                          isWalletConnected
-                        ) {
-                          try {
-                            await switchToChain(selectedChain);
-                            console.log(
-                              `Switched to ${selectedChain.chainName}`,
-                            );
-                          } catch (error) {
-                            console.error("Failed to switch chain:", error);
+                      if (selectedToken) {
+                        const selectedChain = getChainById(
+                          selectedToken.stringChainId,
+                        );
+                        console.log("Found chain:", selectedChain);
+
+                        if (selectedChain) {
+                          console.log("Setting cross-chain selection:", {
+                            token: selectedToken.ticker,
+                            chain: selectedChain.chainName,
+                            tokenChainId: selectedToken.stringChainId,
+                            selectedChainId: selectedChain.id,
+                          });
+
+                          setSelectedSwapToken(selectedToken);
+                          setSelectedSwapChain(selectedChain.id);
+                          configureSwapForToken(selectedToken);
+                          setIsDirectDeposit(false);
+
+                          if (
+                            selectedChain.walletType === WalletType.REOWN_EVM &&
+                            isWalletConnected
+                          ) {
+                            try {
+                              await switchToChain(selectedChain);
+                              console.log(
+                                `Switched to ${selectedChain.chainName}`,
+                              );
+                            } catch (error) {
+                              console.error("Failed to switch chain:", error);
+                            }
                           }
                         }
+                      } else {
+                        console.error(
+                          "Token not found for chain-specific ID:",
+                          value,
+                        );
                       }
                     }
                   }}
                 >
                   <SelectTrigger className="bg-[#27272A] border-[#3F3F46] text-[#FAFAFA]">
                     <SelectValue>
-                      {selectedAsset && (
+                      {selectedSwapToken && (
                         <div className="flex items-center gap-2">
-                          <Image
-                            src={getAssetIcon(selectedAsset)}
-                            alt={selectedAsset}
-                            width={16}
-                            height={16}
-                            className="rounded-full"
+                          <TokenImage
+                            token={selectedSwapToken}
+                            chain={getChainById(selectedSwapChain)}
+                            size="sm"
                           />
-                          <span>{selectedAsset}</span>
-                        </div>
-                      )}
-                      {selectedSwapChain && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-amber-500">🔄</span>
-                          <Image
-                            src={
-                              chainList.find(
-                                (chain) => chain.id === selectedSwapChain,
-                              )?.icon || ""
-                            }
-                            alt={selectedSwapChain}
-                            width={16}
-                            height={16}
-                            className="rounded-full"
-                          />
-                          <span>
-                            {chainList.find(
-                              (chain) => chain.id === selectedSwapChain,
-                            )?.chainName || selectedSwapChain}
-                          </span>
+                          {!isDirectDeposit ? (
+                            <span>
+                              {chainList.find(
+                                (chain) =>
+                                  chain.id === selectedSwapToken.stringChainId,
+                              )?.chainName ||
+                                selectedSwapToken.stringChainId}{" "}
+                              ({selectedSwapToken.ticker})
+                            </span>
+                          ) : (
+                            <span>{selectedSwapToken.ticker}</span>
+                          )}
                         </div>
                       )}
                     </SelectValue>
@@ -1151,27 +1180,64 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
                         Cross-chain Swap from
                       </SelectLabel>
-                      {chainList.map((chain) => (
-                        <SelectItem
-                          key={`swap-${chain.id}`}
-                          value={chain.id}
-                          className="text-[#FAFAFA] focus:bg-[#3F3F46] focus:text-[#FAFAFA]"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-amber-500 text-sm">🔄</span>
-                            <Image
-                              src={chain.icon}
-                              alt={chain.chainName}
-                              width={16}
-                              height={16}
-                              className="rounded-full"
-                            />
-                            <span>
-                              {chain.chainName} ({chain.symbol})
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {chainList
+                        .filter((chain) => {
+                          // Only show chains that have supported tokens
+                          const supportedTokens = getSupportedTokensForChain(
+                            chain.chainId,
+                          );
+                          return supportedTokens.length > 0;
+                        })
+                        .flatMap((chain) => {
+                          const supportedTokens = getSupportedTokensForChain(
+                            chain.chainId,
+                          );
+
+                          return supportedTokens.map((token) => {
+                            // Create a label for the token type
+                            let tokenTypeLabel = "";
+                            if (token.isNativeGas) {
+                              tokenTypeLabel = "Native";
+                            } else if (token.isNativeWrapped) {
+                              tokenTypeLabel = "Wrapped";
+                            } else if (token.isL2Token) {
+                              tokenTypeLabel = "L2 Token";
+                            }
+
+                            // Create chain-specific token ID for unique identification
+                            const chainSpecificTokenId =
+                              createChainSpecificTokenId(token, chain.id);
+
+                            return (
+                              <SelectItem
+                                key={`swap-${chainSpecificTokenId}`}
+                                value={chainSpecificTokenId}
+                                className="text-[#FAFAFA] focus:bg-[#3F3F46] focus:text-[#FAFAFA]"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <TokenImage
+                                    token={token}
+                                    chain={chain}
+                                    size="sm"
+                                  />
+                                  <Image
+                                    src={chain.icon}
+                                    alt={chain.chainName}
+                                    width={16}
+                                    height={16}
+                                    className="rounded-full stroke-amber-500"
+                                  />
+                                  <span>
+                                    {chain.chainName} ({token.ticker})
+                                  </span>
+                                  <span className="text-xs text-[#A1A1AA] ml-auto">
+                                    {tokenTypeLabel}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            );
+                          });
+                        })}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -1185,44 +1251,24 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   </label>
                   <div className="flex items-center gap-2">
                     {/* Balance display - always show when asset is selected */}
-                    {(selectedAsset || selectedSwapChain) && (
+                    {selectedSwapToken && (
                       <div className="text-xs text-amber-500">
-                        {isLoadingBalance && <span>Loading balance...</span>}
-
-                        {!isLoadingBalance &&
-                          selectedSwapChain &&
-                          nativeBalances[selectedSwapChain] && (
-                            <span>
-                              Balance:{" "}
-                              {
-                                nativeBalances[selectedSwapChain]
-                                  .balanceFormatted
-                              }{" "}
-                              {nativeBalances[selectedSwapChain].symbol}
-                            </span>
-                          )}
-
-                        {!isLoadingBalance &&
-                          selectedAsset &&
-                          isWalletConnected && (
-                            <span>
-                              Balance: {balances[selectedAsset] || "0.00"}{" "}
-                              {selectedAsset}
-                            </span>
-                          )}
-
-                        {!isLoadingBalance &&
-                          selectedAsset &&
-                          !isWalletConnected && (
-                            <span className="text-[#71717A]">
-                              Connect EVM wallet to see balance
-                            </span>
-                          )}
+                        {selectedSwapToken && (
+                          <span>
+                            Balance:{" "}
+                            {selectedSwapToken.userBalance
+                              ? parseFloat(
+                                  selectedSwapToken.userBalance,
+                                ).toFixed(6)
+                              : "0.00"}{" "}
+                            {selectedSwapToken.ticker}
+                          </span>
+                        )}
                       </div>
                     )}
 
                     {/* Connect wallet buttons */}
-                    {selectedAsset && !isWalletConnected && (
+                    {selectedSwapToken && !isWalletConnected && (
                       <button
                         onClick={connectEvmWallet}
                         className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
@@ -1230,7 +1276,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         Connect EVM
                       </button>
                     )}
-                    {selectedSwapChain &&
+                    {selectedSwapToken &&
+                      selectedSwapChain &&
                       !isChainWalletConnected(selectedSwapChain) &&
                       (() => {
                         const chain = getChainById(selectedSwapChain);
@@ -1266,104 +1313,62 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       })()}
 
                     {/* Max button */}
-                    {selectedSwapChain &&
-                      nativeBalances[selectedSwapChain] &&
-                      !nativeBalances[selectedSwapChain].error && (
-                        <button
-                          onClick={() => {
-                            const balance =
-                              nativeBalances[selectedSwapChain]
-                                .balanceFormatted;
-                            if (selectedSwapChain) {
-                              handleSwapAmountChange({
-                                target: { value: balance },
-                              } as React.ChangeEvent<HTMLInputElement>);
-                            }
-                          }}
-                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
-                        >
-                          Max
-                        </button>
-                      )}
-
-                    {isWalletConnected &&
-                      selectedAsset &&
-                      balances[selectedAsset] && (
-                        <button
-                          onClick={() =>
-                            setAmount(balances[selectedAsset] || "0")
+                    {selectedSwapToken && selectedSwapToken.userBalance && (
+                      <button
+                        onClick={() => {
+                          const balance = selectedSwapToken.userBalance || "0";
+                          if (parseFloat(balance) > 0) {
+                            handleSwapAmountChange({
+                              target: { value: balance },
+                            } as React.ChangeEvent<HTMLInputElement>);
                           }
-                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
-                        >
-                          Max
-                        </button>
-                      )}
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
+                      >
+                        Max
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="relative">
                   <Input
                     type="number"
                     placeholder="0.00"
-                    value={selectedSwapChain ? swapAmount : amount}
+                    value={swapAmount}
                     onChange={(e) => {
-                      if (selectedSwapChain) {
-                        handleSwapAmountChange(e);
-                      } else {
-                        setAmount(e.target.value);
-                      }
+                      handleSwapAmountChange(e);
                     }}
                     className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A]"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    {selectedSwapChain ? (
+                    {selectedSwapToken && (
                       <>
                         <Image
                           src={
                             chainList.find(
-                              (chain) => chain.id === selectedSwapChain,
+                              (chain) =>
+                                chain.id === selectedSwapToken.stringChainId,
                             )?.icon || ""
                           }
-                          alt={selectedSwapChain}
+                          alt={selectedSwapToken.stringChainId}
                           width={16}
                           height={16}
                           className="rounded-full"
                         />
                         <span className="text-sm text-[#A1A1AA]">
-                          {
-                            chainList.find(
-                              (chain) => chain.id === selectedSwapChain,
-                            )?.chainToken
-                          }
+                          {selectedSwapToken.ticker}
                         </span>
                       </>
-                    ) : selectedAsset ? (
-                      <>
-                        <Image
-                          src={getAssetIcon(selectedAsset)}
-                          alt={selectedAsset}
-                          width={16}
-                          height={16}
-                          className="rounded-full"
-                        />
-                        <span className="text-sm text-[#A1A1AA]">
-                          {selectedAsset}
-                        </span>
-                      </>
-                    ) : null}
+                    )}
                   </div>
                 </div>
 
                 {/* Will swap text under amount input */}
-                {selectedSwapChain && (
+                {!isDirectDeposit && selectedSwapToken && (
                   <div className="flex justify-end mt-2">
                     <div className="text-xs text-[#A1A1AA]">
-                      Will swap{" "}
-                      {
-                        chainList.find(
-                          (chain) => chain.id === selectedSwapChain,
-                        )?.symbol
-                      }{" "}
-                      → {vault.supportedAssets.deposit[0]}
+                      Will swap {selectedSwapToken.ticker} →{" "}
+                      {vault.supportedAssets.deposit[0]}
                       {receiveAmount && (
                         <span className="text-green-500 ml-2">
                           ≈ {receiveAmount} {vault.supportedAssets.deposit[0]}
@@ -1375,10 +1380,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
               </div>
 
               {/* Gas Drop - Only show for cross-chain swaps */}
-              {selectedSwapChain && (
+              {!isDirectDeposit && (
                 <GasDrop
                   maxGasDrop={destinationChain?.gasDrop || 0}
-                  symbol={destinationChain?.symbol || "ETH"}
+                  symbol={destinationChain.nativeGasToken.symbol}
                   initialEnabled={false}
                   initialValue={50}
                 />
@@ -1418,14 +1423,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
               /* Regular deposit/swap buttons when no active process */
               <Button
                 onClick={
-                  selectedSwapChain
+                  !isDirectDeposit
                     ? handleStartCrossChainDeposit
                     : handleDirectDeposit
                 }
                 disabled={
-                  selectedSwapChain
+                  !isDirectDeposit
                     ? isSwapButtonDisabled ||
-                      !isChainWalletConnected(selectedSwapChain)
+                      !isChainWalletConnected(selectedSwapChain) ||
+                      !receiveAmount ||
+                      parseFloat(receiveAmount) <= 0
                     : !isFormValid
                 }
                 className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
@@ -1437,14 +1444,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   </div>
                 ) : (
                   <>
-                    {selectedSwapChain ? (
+                    {!isDirectDeposit ? (
                       <>
                         Start Cross-chain Deposit
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     ) : (
                       <>
-                        Direct Deposit {selectedAsset}
+                        Direct Deposit {selectedSwapToken?.ticker || ""}
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     )}

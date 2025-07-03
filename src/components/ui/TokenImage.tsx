@@ -37,9 +37,22 @@ export const TokenImage: React.FC<TokenImageProps> = ({
     if (!token.icon || token.icon === "unknown.png") {
       return null;
     }
+    if (token.customToken) {
+      return token.icon;
+    }
+    if (token.isNativeGas) {
+      return `/tokens/native/native-gas/${chain.id}.png`;
+    }
+    if (token.isNativeWrapped) {
+      return `/tokens/native/native-wrapped/${chain.id}.png`;
+    }
+    if (token.isL2Token) {
+      return `/tokens/native/l2/${chain.id}.png`;
+    }
 
-    if (token.native) {
-      return `/tokens/native/pngs/${token.icon}`;
+    if (token.icon.startsWith("/images")) {
+      // If the icon path is already relative to /tokens, return it directly
+      return token.icon;
     }
     return `/tokens/${chain.id}/pngs/${token.icon}`;
   };

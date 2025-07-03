@@ -498,7 +498,7 @@ export function useChainSwitch() {
           nativeCurrency: {
             decimals: chain.decimals,
             name: chain.currency,
-            symbol: chain.symbol,
+            symbol: chain.nativeGasToken.symbol,
           },
           rpcUrls: {
             default: {
@@ -924,7 +924,7 @@ export function useTokenTransfer(
 
   // Update this useEffect to include fee calculation
   useEffect(() => {
-    if (options.pauseQuoting === false) {
+    if (options.pauseQuoting === true) {
       failQuote();
       return;
     }

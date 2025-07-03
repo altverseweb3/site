@@ -207,51 +207,84 @@ const VirtualizedTokenList: React.FC<{
     searchQuery,
   }) => {
     const { processedWalletTokens, processedAllTokens } = useMemo(() => {
-      // Find the first native token
-      const nativeToken = allTokens.find((token) => token.native === true);
-      const nativeAddress = nativeToken?.address || "";
+      // Find native gas token addresses to avoid duplicates
+      const nativeGasToken = allTokens.find(
+        (token) => token.isNativeGas === true,
+      );
+      const nativeGasAddress = nativeGasToken?.address || "";
 
-      // Keep track of whether we've already included a native token
-      let hasAddedNative = false;
+      // Keep track of whether we've already included native tokens
+      let hasAddedNativeGas = false;
+      let hasAddedNativeWrapped = false;
+      let hasAddedL2Token = false;
 
-      // Filter out duplicate native tokens - keep only one with native=true
-      // and remove tokens with address 0x0 or matching the native token address
+      // Filter out duplicate native tokens - keep only one of each type
       const filterNonDuplicates = (tokens: Token[]) =>
         tokens.filter((token) => {
-          // If this is a native token
-          if (token.native === true) {
-            // If we haven't added a native token yet, keep it and mark as added
-            if (!hasAddedNative) {
-              hasAddedNative = true;
+          // If this is a native gas token
+          if (token.isNativeGas === true) {
+            if (!hasAddedNativeGas) {
+              hasAddedNativeGas = true;
               return true;
             }
-            // Otherwise skip this native token as we already have one
             return false;
           }
 
-          // Not a native token, so check if it's not a duplicate address
+          // If this is a native wrapped token
+          if (token.isNativeWrapped === true) {
+            if (!hasAddedNativeWrapped) {
+              hasAddedNativeWrapped = true;
+              return true;
+            }
+            return false;
+          }
+
+          // If this is an L2 token
+          if (token.isL2Token === true) {
+            if (!hasAddedL2Token) {
+              hasAddedL2Token = true;
+              return true;
+            }
+            return false;
+          }
+
+          // Regular tokens - avoid duplicates with native gas
           return (
             token.address !== "0x0000000000000000000000000000000000000000" &&
-            token.address.toUpperCase() !== nativeAddress.toUpperCase()
+            token.address.toUpperCase() !== nativeGasAddress.toUpperCase()
           );
         });
 
-      // Reset this flag before processing each list
+      // Reset flags before processing each list
       const processWalletTokens = () => {
-        hasAddedNative = false;
+        hasAddedNativeGas = false;
+        hasAddedNativeWrapped = false;
+        hasAddedL2Token = false;
         return filterNonDuplicates(walletTokens);
       };
 
       const processAllTokens = () => {
-        hasAddedNative = false;
+        hasAddedNativeGas = false;
+        hasAddedNativeWrapped = false;
+        hasAddedL2Token = false;
         return filterNonDuplicates(allTokens);
       };
 
-      // Sort function to place native token first
+      // Sort function to place native gas, wrapped, and L2 tokens first
       const sortWithNativeFirst = (tokens: Token[]) => {
         return [...tokens].sort((a, b) => {
-          if (a.native === true) return -1;
-          if (b.native === true) return 1;
+          // Native gas tokens come first
+          if (a.isNativeGas && !b.isNativeGas) return -1;
+          if (!a.isNativeGas && b.isNativeGas) return 1;
+
+          // Native wrapped tokens come second
+          if (a.isNativeWrapped && !b.isNativeWrapped) return -1;
+          if (!a.isNativeWrapped && b.isNativeWrapped) return 1;
+
+          // L2 tokens come third
+          if (a.isL2Token && !b.isL2Token) return -1;
+          if (!a.isL2Token && b.isL2Token) return 1;
+
           return 0;
         });
       };
@@ -681,7 +714,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
               >
                 <Image
                   src={`${chainToShow.icon}`}
-                  alt={chainToShow.symbol}
+                  alt={chainToShow.nativeGasToken.symbol}
                   width={20}
                   height={20}
                 />
