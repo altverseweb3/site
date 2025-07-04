@@ -1393,6 +1393,8 @@ export function useTokenTransfer(
           amount,
           referrerAddresses: {
             solana: "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh",
+            evm: "0x95C0029426afa8E47a71b8E6b251f5B70511e599",
+            sui: "0xc232b25bd8796b2b1c8797f66f732fd22aa01db65102fe9f22f76b51af78476e",
           },
           signer: evmSigner,
           tokenDecimals: sourceToken!.decimals || 18,
