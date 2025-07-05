@@ -64,6 +64,23 @@ export interface SupplyParams {
   signer: ethers.Signer;
 }
 
+export interface BorrowResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
+export interface BorrowParams {
+  tokenAddress: string;
+  amount: string;
+  rateMode: number; // 1 = stable, 2 = variable
+  tokenDecimals: number;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
 export class AaveTransactions {
   /**
    * Supply asset to Aave protocol
@@ -203,6 +220,88 @@ export class AaveTransactions {
     } catch (error) {
       console.error("Error getting allowance:", error);
       return "0";
+    }
+  }
+
+  static async borrowAsset(params: BorrowParams): Promise<BorrowResult> {
+    const {
+      tokenAddress,
+      amount,
+      rateMode,
+      tokenDecimals,
+      tokenSymbol,
+      userAddress,
+      chainId,
+      signer,
+    } = params;
+
+    try {
+      console.log(
+        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === 1 ? "stable" : "variable"} rate`,
+      );
+
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+
+      // Convert amount to wei
+      const amountWei = ethers.parseUnits(amount, tokenDecimals);
+      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
+
+      // Create pool contract
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
+
+      // Execute borrow transaction
+      // Aave borrow function: borrow(asset, amount, interestRateMode, referralCode, onBehalfOf)
+      console.log(`📤 Executing borrow transaction...`);
+      const borrowTx = await poolContract.borrow(
+        tokenAddress, // asset to borrow
+        amountWei, // amount to borrow
+        rateMode, // interest rate mode (1 = stable, 2 = variable)
+        0, // referral code
+        userAddress, // on behalf of (borrower address)
+      );
+
+      console.log(`⏳ Borrow transaction sent: ${borrowTx.hash}`);
+      await borrowTx.wait();
+      console.log(`✅ Borrow transaction confirmed`);
+
+      return {
+        success: true,
+        txHash: borrowTx.hash,
+      };
+    } catch (error) {
+      console.error("❌ Borrow transaction failed:", error);
+
+      // Handle specific error cases
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (error.message.includes("health factor")) {
+          errorMessage =
+            "Borrowing would put your account at risk of liquidation";
+        } else if (error.message.includes("collateral cannot cover")) {
+          errorMessage = "Insufficient collateral to cover this borrow";
+        } else if (error.message.includes("borrow cap")) {
+          errorMessage = "Asset has reached its borrow cap";
+        } else if (error.message.includes("reserve inactive")) {
+          errorMessage = "Asset is not available for borrowing";
+        } else if (error.message.includes("stable borrowing not enabled")) {
+          errorMessage = "Stable rate borrowing is not enabled for this asset";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
     }
   }
 }
