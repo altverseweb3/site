@@ -5,6 +5,9 @@ import { TokenTransfer } from "@/components/ui/TokenTransfer";
 import useWeb3Store from "@/store/web3Store";
 
 const SwapComponent: React.FC = () => {
+  const sourceToken = useWeb3Store((state) => state.sourceToken);
+  const destinationToken = useWeb3Store((state) => state.destinationToken);
+
   // Use the shared hook with tracking enabled
   const {
     amount,
@@ -13,8 +16,6 @@ const SwapComponent: React.FC = () => {
     handleTransfer,
     receiveAmount,
     isLoadingQuote,
-    sourceToken,
-    destinationToken,
     estimatedTimeSeconds,
     totalFeeUsd,
     protocolFeeUsd,
@@ -22,6 +23,10 @@ const SwapComponent: React.FC = () => {
     swapAmounts,
   } = useTokenTransfer({
     type: "swap",
+    sourceChain: useWeb3Store((state) => state.sourceChain),
+    destinationChain: useWeb3Store((state) => state.destinationChain),
+    sourceToken: useWeb3Store((state) => state.sourceToken),
+    destinationToken: useWeb3Store((state) => state.destinationToken),
     enableTracking: true, // Enable automatic tracking
     onSuccess: (amount, sourceToken, destinationToken) => {
       // This now fires when the swap actually completes (after tracking)

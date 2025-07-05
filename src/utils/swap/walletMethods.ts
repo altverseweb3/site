@@ -618,6 +618,10 @@ interface TokenTransferOptions {
   onError?: (error: Error) => void;
   onSwapInitiated?: (swapId: string) => void; // New callback when swap starts
   onTrackingComplete?: (status: SwapStatus) => void; // New callback when tracking completes
+  sourceChain: Chain;
+  destinationChain: Chain;
+  sourceToken?: Token | null;
+  destinationToken?: Token | null;
 }
 
 interface TokenTransferState {
@@ -632,10 +636,6 @@ interface TokenTransferState {
   isButtonDisabled: boolean;
 
   isWalletCompatible: boolean;
-  sourceChain: Chain;
-  destinationChain: Chain;
-  sourceToken: Token | null;
-  destinationToken: Token | null;
   quoteData: Quote[] | null;
   receiveAmount: string;
   isLoadingQuote: boolean;
@@ -697,10 +697,6 @@ export function useTokenTransfer(
     state.getWalletBySourceChain(),
   );
 
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
-  const destinationChain = useWeb3Store((state) => state.destinationChain);
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
   // Get the transaction details for slippage
   const transactionDetails = useWeb3Store((state) => state.transactionDetails);
   const receiveAddress = useWeb3Store(
@@ -741,10 +737,10 @@ export function useTokenTransfer(
         toast.success(
           `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
           {
-            description: `${amount} ${sourceToken!.ticker} → ${receiveAmount} ${
+            description: `${amount} ${options.sourceToken!.ticker} → ${receiveAmount} ${
               options.type === "swap"
-                ? destinationToken?.ticker
-                : sourceToken!.ticker
+                ? options.destinationToken?.ticker
+                : options.sourceToken!.ticker
             }`,
           },
         );
@@ -754,7 +750,11 @@ export function useTokenTransfer(
 
         // Call original success callback - but DON'T let it show another toast
         if (options.onSuccess) {
-          options.onSuccess(amount, sourceToken!, destinationToken!);
+          options.onSuccess(
+            amount,
+            options.sourceToken!,
+            options.destinationToken!,
+          );
         }
       },
       onError: (error) => {
@@ -863,9 +863,11 @@ export function useTokenTransfer(
       return;
     }
 
-    const walletCompatible = ensureCorrectWalletTypeForChain(sourceChain);
+    const walletCompatible = ensureCorrectWalletTypeForChain(
+      options.sourceChain,
+    );
     setIsWalletCompatible(walletCompatible);
-  }, [requiredWallet, sourceChain]);
+  }, [requiredWallet, options.sourceChain]);
 
   const failQuote = () => {
     setQuoteData(null);
@@ -913,10 +915,13 @@ export function useTokenTransfer(
   };
 
   const isValidForSwap = Boolean(
-    sourceToken && destinationToken && amount && parseFloat(amount) > 0,
+    options.sourceToken &&
+      options.destinationToken &&
+      amount &&
+      parseFloat(amount) > 0,
   );
   const isValidForBridge = Boolean(
-    sourceToken && amount && parseFloat(amount) > 0,
+    options.sourceToken && amount && parseFloat(amount) > 0,
   );
 
   const isValid: boolean =
@@ -943,13 +948,16 @@ export function useTokenTransfer(
       }
 
       // For swap: Check if we have both source and destination tokens
-      if (options.type === "swap" && (!sourceToken || !destinationToken)) {
+      if (
+        options.type === "swap" &&
+        (!options.sourceToken || !options.destinationToken)
+      ) {
         failQuote();
         return;
       }
 
       // For bridge: Check if we have source token
-      if (options.type === "bridge" && !sourceToken) {
+      if (options.type === "bridge" && !options.sourceToken) {
         failQuote();
         return;
       }
@@ -971,13 +979,18 @@ export function useTokenTransfer(
         // Set referrer
         const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
         const referrerBps = 0;
+        // Use the source and destination chains and tokens from options
+        const sourceChain = options.sourceChain;
+        const destinationChain = options.destinationChain;
+        const sourceToken = options.sourceToken;
+        const destinationToken = options.destinationToken;
 
         if (options.type === "swap" && sourceToken && destinationToken) {
           quotes = await getMayanQuote({
             amount,
             sourceToken,
             destinationToken,
-            sourceChain,
+            sourceChain, // using the reference defined above
             destinationChain,
             slippageBps,
             gasDrop,
@@ -1148,10 +1161,10 @@ export function useTokenTransfer(
     };
   }, [
     amount,
-    sourceToken,
-    destinationToken,
-    sourceChain,
-    destinationChain,
+    options.sourceToken,
+    options.destinationToken,
+    options.sourceChain,
+    options.destinationChain,
     options.type,
     transactionDetails.slippage,
     getSlippageBps,
@@ -1198,7 +1211,7 @@ export function useTokenTransfer(
 
     // Check if wallet is compatible with source chain
     if (!isWalletCompatible) {
-      const requiredWalletType = sourceChain.walletType;
+      const requiredWalletType = options.sourceChain.walletType;
 
       toast.error(`${requiredWalletType} wallet required`, {
         description: `Please connect a ${requiredWalletType} wallet to continue`,
@@ -1207,14 +1220,17 @@ export function useTokenTransfer(
     }
 
     // NEW: Check if we need to switch chains for EVM wallets
-    if (sourceChain.walletType === WalletType.REOWN_EVM && requiredWallet) {
+    if (
+      options.sourceChain.walletType === WalletType.REOWN_EVM &&
+      requiredWallet
+    ) {
       // Convert both chainIds to numbers for comparison
       const currentChainId =
         typeof evmNetwork.chainId === "string"
           ? parseInt(evmNetwork.chainId, 10)
           : evmNetwork.chainId;
 
-      const targetChainId = sourceChain.chainId;
+      const targetChainId = options.sourceChain.chainId;
 
       // If we're on the wrong chain, switch to the correct one
       if (currentChainId !== targetChainId) {
@@ -1224,7 +1240,7 @@ export function useTokenTransfer(
 
         // Show a loading toast for chain switching
         const switchToastId = toast.loading(
-          `Switching to ${sourceChain.name}...`,
+          `Switching to ${options.sourceChain.name}...`,
           {
             description: "Please confirm the network switch in your wallet",
           },
@@ -1238,13 +1254,13 @@ export function useTokenTransfer(
             // Update the toast to show error instead of dismissing and creating new one
             toast.error("Failed to switch chains", {
               id: switchToastId, // Replace the loading toast
-              description: `Please manually switch to ${sourceChain.name} in your wallet`,
+              description: `Please manually switch to ${options.sourceChain.name} in your wallet`,
             });
             return;
           }
 
           // Update the toast to show success instead of dismissing and creating new one
-          toast.success(`Switched to ${sourceChain.name}`, {
+          toast.success(`Switched to ${options.sourceChain.name}`, {
             id: switchToastId, // Replace the loading toast
             description: "You can now proceed with the swap",
           });
@@ -1273,12 +1289,12 @@ export function useTokenTransfer(
           },
         )
       : toast.loading(
-          `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${sourceToken!.ticker}...`,
+          `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${options.sourceToken!.ticker}...`,
           {
-            description: `From ${sourceChain.name} to ${
+            description: `From ${options.sourceChain.name} to ${
               options.type === "swap"
-                ? destinationToken?.ticker
-                : destinationChain.name
+                ? options.destinationToken?.ticker
+                : options.destinationChain.name
             }`,
           },
         );
@@ -1298,6 +1314,11 @@ export function useTokenTransfer(
       const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
       const referrerBps = 0;
 
+      // Use the source and destination chains and tokens from options
+      const sourceChain = options.sourceChain;
+      const destinationChain = options.destinationChain;
+      const sourceToken = options.sourceToken;
+      const destinationToken = options.destinationToken;
       // Refresh quote if needed
       if (!quoteData || quoteData.length === 0) {
         // Fetch fresh quote
@@ -1465,10 +1486,6 @@ export function useTokenTransfer(
     isLoadingQuote,
 
     // Store state
-    sourceChain,
-    destinationChain,
-    sourceToken,
-    destinationToken,
     estimatedTimeSeconds,
 
     // Fee information
