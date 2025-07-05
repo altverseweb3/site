@@ -454,11 +454,11 @@ export function useWalletConnection() {
  * Uses Reown AppKit's network functions
  * Supports both EVM and Solana chains
  */
-export function useChainSwitch() {
+export function useChainSwitch(sourceChain: Chain) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
+    state.getWalletByChain(sourceChain),
   );
 
   // Get the wallet connection hook for access to both wallet types
@@ -548,8 +548,6 @@ export function useChainSwitch() {
 
     try {
       setIsLoading(true);
-      const sourceChain = useWeb3Store.getState().sourceChain;
-
       return await switchToChain(sourceChain);
     } catch (error) {
       const message =
@@ -572,7 +570,7 @@ export function useChainSwitch() {
  * Ensures the correct wallet type is active for the given chain
  * Automatically switches active wallet if needed and possible
  *
- * @param targetChain The chain we want to use
+ * @param sourceChain The chain we want to use
  * @returns True if the correct wallet type is active or was switched to, false otherwise
  */
 export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
@@ -699,19 +697,19 @@ export function useTokenTransfer(
 
   // Get relevant state from the web3 store
   const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
+    state.getWalletByChain(options.sourceChain),
   );
 
   // Get the transaction details for slippage
-  const receiveAddress = useWeb3Store(
-    (state) => state.transactionDetails.receiveAddress,
-  );
+  const receiveAddress = options.transactionDetails.receiveAddress;
 
   // Get wallet providers and signers
   const { getEvmSigner, getSolanaSigner } = useWalletProviderAndSigner();
 
   // Add the chain switch hook
-  const { switchToSourceChain, isLoading: isChainSwitching } = useChainSwitch();
+  const { switchToSourceChain, isLoading: isChainSwitching } = useChainSwitch(
+    options.sourceChain,
+  );
 
   // Get wallet connection info for chain checking
   const { evmNetwork } = useWalletConnection();

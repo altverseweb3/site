@@ -33,12 +33,14 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 }) => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
 
+  const sourceChain = getChainById("ethereum");
+
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
   const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
   const isSolanaWalletConnected = useIsWalletTypeConnected(
     WalletType.REOWN_SOL,
   );
-  const { switchToChain } = useChainSwitch();
+  const { switchToChain } = useChainSwitch(sourceChain);
 
   const isWalletConnected =
     isEvmWalletConnected || isSuiWalletConnected || isSolanaWalletConnected;

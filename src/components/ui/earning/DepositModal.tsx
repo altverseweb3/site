@@ -58,6 +58,12 @@ const DepositModal: React.FC<DepositModalProps> = ({
   vault,
   apy,
 }) => {
+  const sourceToken = useWeb3Store((state) => state.sourceToken);
+  const destinationToken = useWeb3Store((state) => state.destinationToken);
+  const sourceChain = useWeb3Store((state) => state.sourceChain);
+  const destinationChain = useWeb3Store((state) => state.destinationChain);
+  const transactionDetails = useWeb3Store((state) => state.transactionDetails);
+
   // Form state
   const [selectedSwapChain, setSelectedSwapChain] = useState<string>("");
   const [selectedSwapToken, setSelectedSwapToken] = useState<Token | null>(
@@ -68,7 +74,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // Integration hooks
   const { approveToken, depositTokens } = useEtherFiInteract();
-  const { switchToChain } = useChainSwitch();
+  const { switchToChain } = useChainSwitch(sourceChain);
   const { open: openAppKit } = useAppKit();
 
   // Web3Store functions for token management
@@ -89,11 +95,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
-  const destinationChain = useWeb3Store((state) => state.destinationChain);
-  const transactionDetails = useWeb3Store((state) => state.transactionDetails);
 
   // Wallet hooks for address retrieval
   const { getEvmSigner } = useWalletProviderAndSigner();
