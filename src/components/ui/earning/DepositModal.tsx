@@ -93,6 +93,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const destinationToken = useWeb3Store((state) => state.destinationToken);
   const sourceChain = useWeb3Store((state) => state.sourceChain);
   const destinationChain = useWeb3Store((state) => state.destinationChain);
+  const transactionDetails = useWeb3Store((state) => state.transactionDetails);
 
   // Wallet hooks for address retrieval
   const { getEvmSigner } = useWalletProviderAndSigner();
@@ -419,7 +420,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     destinationChain,
     sourceToken,
     destinationToken,
-
+    transactionDetails,
     enableTracking: true,
     pauseQuoting: !!isDirectDeposit,
     onSuccess: (amount, sourceToken, destinationToken) => {

@@ -622,6 +622,11 @@ interface TokenTransferOptions {
   destinationChain: Chain;
   sourceToken?: Token | null;
   destinationToken?: Token | null;
+  transactionDetails: {
+    slippage: "auto" | string;
+    receiveAddress: string | null;
+    gasDrop: number;
+  };
 }
 
 interface TokenTransferState {
@@ -698,7 +703,6 @@ export function useTokenTransfer(
   );
 
   // Get the transaction details for slippage
-  const transactionDetails = useWeb3Store((state) => state.transactionDetails);
   const receiveAddress = useWeb3Store(
     (state) => state.transactionDetails.receiveAddress,
   );
@@ -883,32 +887,32 @@ export function useTokenTransfer(
 
   // Convert slippage from string (e.g., "3.00%") to basis points (e.g., 300) or "auto"
   const getSlippageBps = useCallback((): "auto" | number => {
-    if (!transactionDetails.slippage) return "auto"; // Default to 'auto'
+    if (options.transactionDetails.slippage) return "auto"; // Default to 'auto'
 
-    if (transactionDetails.slippage === "auto") {
+    if (options.transactionDetails.slippage === "auto") {
       return "auto";
     }
 
     // Remove "%" and convert to number
     const slippagePercent = parseFloat(
-      transactionDetails.slippage.replace("%", ""),
+      options.transactionDetails.slippage.replace("%", ""),
     );
 
     // Convert percentage to basis points (1% = 100 bps)
     return Math.round(slippagePercent * 100);
-  }, [transactionDetails.slippage]);
+  }, [options.transactionDetails.slippage]);
 
   // Convert gasDrop from store (number) or default to 0
   const getGasDrop = useCallback((): number => {
     // if it isn't set or isn't a number, fall back to 0
     if (
-      transactionDetails.gasDrop === undefined ||
-      typeof transactionDetails.gasDrop !== "number"
+      options.transactionDetails.gasDrop === undefined ||
+      typeof options.transactionDetails.gasDrop !== "number"
     ) {
       return 0;
     }
-    return transactionDetails.gasDrop;
-  }, [transactionDetails.gasDrop]);
+    return options.transactionDetails.gasDrop;
+  }, [options.transactionDetails.gasDrop]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setAmount(e.target.value);
@@ -1166,7 +1170,7 @@ export function useTokenTransfer(
     options.sourceChain,
     options.destinationChain,
     options.type,
-    transactionDetails.slippage,
+    options.transactionDetails.slippage,
     getSlippageBps,
     getGasDrop,
     refreshTrigger,
