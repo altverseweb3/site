@@ -14,7 +14,10 @@ import {
   defaultDestinationChain,
   getChainByChainId,
 } from "@/config/chains";
-import { loadAllTokens, StructuredTokenData } from "@/utils/tokenMethods";
+import {
+  loadAllTokens,
+  StructuredTokenData,
+} from "@/utils/tokens/tokenMethods";
 import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 

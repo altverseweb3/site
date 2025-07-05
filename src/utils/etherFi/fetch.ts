@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useCallback } from "react"; // Add this import
-import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { ERC20_ABI, TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 

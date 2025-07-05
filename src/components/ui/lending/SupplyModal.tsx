@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
-import { useWalletConnection } from "@/utils/walletMethods";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";

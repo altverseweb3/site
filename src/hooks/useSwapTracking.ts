@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { SwapTracker } from "@/utils/swapTracker";
+import { SwapTracker } from "@/utils/swap/swapTracker";
 import { SwapStatus, SwapTrackingOptions } from "@/types/web3";
 
 export function useSwapTracking(

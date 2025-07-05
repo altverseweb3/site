@@ -5,7 +5,7 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { SuiClient } from "@mysten/sui/client";
 import { chains, chainList } from "@/config/chains";
 import { WalletType, Chain } from "@/types/web3";
-import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { useWallet } from "@suiet/wallet-kit";
 
 export interface NativeBalance {

@@ -32,7 +32,7 @@ import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
 import { useIsWalletTypeConnected } from "@/store/web3Store";
-import { useChainSwitch, useTokenTransfer } from "@/utils/walletMethods";
+import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
 import { useAppKit } from "@reown/appkit/react";
@@ -42,7 +42,7 @@ import useVaultDepositStore, {
   useActiveVaultDepositProcess,
 } from "@/store/vaultDepositStore";
 import { GasDrop } from "@/components/ui/GasDrop";
-import { useWalletProviderAndSigner } from "@/utils/reownEthersUtils";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import TokenImage from "@/components/ui/TokenImage";
 
 interface DepositModalProps {

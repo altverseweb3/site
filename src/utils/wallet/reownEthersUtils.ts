@@ -3,7 +3,10 @@
 import { useCallback } from "react";
 import { ethers } from "ethers";
 import { useAppKitProvider } from "@reown/appkit/react";
-import { getSafeProvider, getSafeSolanaProvider } from "@/utils/providerUtils";
+import {
+  getSafeProvider,
+  getSafeSolanaProvider,
+} from "@/utils/wallet/providerUtils";
 import { Transaction } from "@solana/web3.js";
 
 /**
