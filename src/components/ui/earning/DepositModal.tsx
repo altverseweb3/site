@@ -89,6 +89,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
+  const sourceToken = useWeb3Store((state) => state.sourceToken);
+  const destinationToken = useWeb3Store((state) => state.destinationToken);
+  const sourceChain = useWeb3Store((state) => state.sourceChain);
   const destinationChain = useWeb3Store((state) => state.destinationChain);
 
   // Wallet hooks for address retrieval
@@ -412,6 +415,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
     isLoadingQuote,
   } = useTokenTransfer({
     type: "swap",
+    sourceChain,
+    destinationChain,
+    sourceToken,
+    destinationToken,
+
     enableTracking: true,
     pauseQuoting: !!isDirectDeposit,
     onSuccess: (amount, sourceToken, destinationToken) => {
