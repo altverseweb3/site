@@ -171,6 +171,13 @@ const useWeb3Store = create<Web3StoreState>()(
         return wallets.filter((w) => w.type === walletType);
       },
 
+      getWalletByChain: (chain: Chain): WalletInfo | null => {
+        return (
+          get().connectedWallets.find((w) => w.type === chain.walletType) ||
+          null
+        );
+      },
+
       getWalletBySourceChain: () => {
         const sourceChainWalletType = get().sourceChain.walletType;
         return (

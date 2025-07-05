@@ -156,6 +156,7 @@ export interface Web3StoreState {
   isWalletTypeConnected: (walletType: WalletType) => boolean;
   getWalletByType: (walletType: WalletType) => WalletInfo | null;
   getWalletBySourceChain: () => WalletInfo | null;
+  getWalletByChain: (chain: Chain) => WalletInfo | null;
   getWalletByDestinationChain: () => WalletInfo | null;
 }
 
