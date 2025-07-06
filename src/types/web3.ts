@@ -71,6 +71,8 @@ export type Chain = {
     decimals: number;
   };
   icon: string;
+  brandedIcon: string;
+  chainTokenSymbol: string;
   currency: string;
   backgroundColor: string;
   backgroundGradient?: string;
