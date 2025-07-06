@@ -19,6 +19,7 @@ import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
+import { formatCurrency } from "@/utils/ui/uiHelpers";
 
 interface EtherFiModalProps {
   isOpen: boolean;
@@ -59,14 +60,6 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
   const handleWalletConnectSuccess = () => {
     setIsDepositModalOpen(true);
-  };
-
-  const formatCurrency = (value: number) => {
-    if (value === 0) return "$0";
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-    if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-    return `$${value.toFixed(2)}`;
   };
 
   const isDashboardRow = (

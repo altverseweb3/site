@@ -5,6 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import ProtocolFilter from "@/components/ui/earning/ProtocolFilter";
 import { Input } from "@/components/ui/Input";
 import EarnTable from "@/components/ui/earning/EarnTable";
+import EarnCards from "@/components/ui/earning/EarnCards";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { Wallet } from "lucide-react";
@@ -164,12 +165,18 @@ export default function EarnPage() {
     setCurrentPage(1);
   };
 
+  const handleTabChange = (value: string) => {
+    if (value === "earn" || value === "dashboard") {
+      setActiveTab(value);
+    }
+  };
+
   // Show wallet connection requirement only for dashboard tab
   const showWalletConnectionRequired =
     !isEvmWalletConnected && activeTab === "dashboard";
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 py-8">
       <div className="max-w-6xl mx-auto">
         {/* Main Controls */}
         <div className="mb-6">
@@ -181,11 +188,7 @@ export default function EarnPage() {
               <ToggleGroup
                 type="single"
                 value={activeTab}
-                onValueChange={(value: string) => {
-                  if (value === "earn" || value === "dashboard") {
-                    setActiveTab(value);
-                  }
-                }}
+                onValueChange={handleTabChange}
                 variant="outline"
                 className="justify-start shrink-0"
               >
@@ -291,17 +294,36 @@ export default function EarnPage() {
               </div>
             </div>
           ) : (
-            <EarnTable
-              type={activeTab}
-              data={paginatedData}
-              onSort={handleSort}
-              onDetails={handleDetails}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              itemsPerPage={ITEMS_PER_PAGE}
-              totalItems={currentData.length}
-            />
+            <>
+              {/* Mobile Cards View */}
+              <div className="block md:hidden">
+                <EarnCards
+                  type={activeTab}
+                  data={paginatedData}
+                  onDetails={handleDetails}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  totalItems={currentData.length}
+                />
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <EarnTable
+                  type={activeTab}
+                  data={paginatedData}
+                  onSort={handleSort}
+                  onDetails={handleDetails}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  totalItems={currentData.length}
+                />
+              </div>
+            </>
           )}
         </div>
 
