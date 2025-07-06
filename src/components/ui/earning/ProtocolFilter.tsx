@@ -44,7 +44,7 @@ const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild className="h-8">
         <Button
           variant="outline"
           className="justify-between min-w-[140px] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] bg-[#18181B]"
