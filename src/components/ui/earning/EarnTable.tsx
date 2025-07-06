@@ -185,7 +185,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
       <ScrollArea className="w-full h-auto">
         <div className="min-w-[900px] w-full">
           <table className="w-full min-w-[900px]">
-            <thead className="bg-[#18181B] border-b border-[#27272A]">
+            <thead className="bg-zinc-800/90 border-b border-[#27272A]">
               <tr>
                 <th className={cn(tableHeaderClass, "pl-6")}>protocol</th>
                 <th className={tableHeaderClass}>market/vault</th>
@@ -332,7 +332,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
               size="sm"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
+              className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] h-8"
             >
               previous
             </Button>
@@ -361,7 +361,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
               size="sm"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
+              className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] h-8"
             >
               next
             </Button>
