@@ -46,11 +46,13 @@ export function SwapInterface({
   detailsOpen,
   onDetailsToggle,
 }: SwapInterfaceProps) {
+  const sourceChain = useWeb3Store((state) => state.sourceChain);
+
   const {
     isLoading: isSwitchingChain,
     error: chainSwitchError,
     switchToSourceChain,
-  } = useChainSwitch();
+  } = useChainSwitch(sourceChain);
 
   // Get wallet connection information for EVM, Solana, and Sui
   const { evmNetwork, isEvmConnected } = useWalletConnection();
@@ -63,7 +65,6 @@ export function SwapInterface({
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
 
   const checkCurrentChain = async (): Promise<boolean> => {
     if (!requiredWallet) {
