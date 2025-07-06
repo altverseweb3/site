@@ -35,11 +35,12 @@ const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
   const selectedCount = selectedProtocols.length;
   const displayText =
     selectedCount === 0
-      ? "All Protocols"
+      ? "all protocols"
       : selectedCount === 1
-        ? protocols.find((p) => p.id === selectedProtocols[0])?.name ||
-          "1 Selected"
-        : `${selectedCount} Selected`;
+        ? protocols
+            .find((p) => p.id === selectedProtocols[0])
+            ?.name.toLowerCase() || "1 selected"
+        : `${selectedCount} selected`;
 
   return (
     <DropdownMenu>
@@ -79,7 +80,8 @@ const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
                 className="object-contain"
               />
               <span>
-                {protocol.name} {protocol.disabled && "(Coming Soon)"}
+                {protocol.name.toLowerCase()}{" "}
+                {protocol.disabled && "(coming soon)"}
               </span>
             </div>
           </DropdownMenuCheckboxItem>

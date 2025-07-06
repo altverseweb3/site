@@ -244,7 +244,7 @@ export default function EarnPage() {
               />
 
               <Input
-                placeholder="Filter by asset (e.g., ETH, BTC)"
+                placeholder="filter by asset (e.g., ETH, BTC)"
                 value={filters.assetFilter}
                 onChange={(e) => handleAssetFilterChange(e.target.value)}
                 className="w-full sm:w-60 border-[#27272A] bg-[#18181B] text-[#FAFAFA] placeholder:text-[#A1A1AA]"
@@ -280,14 +280,14 @@ export default function EarnPage() {
             (activeTab === "dashboard" && userPositionsLoading) ? (
             <div className="text-center py-16">
               <div className="text-[#A1A1AA]">
-                Loading {activeTab === "earn" ? "opportunities" : "positions"}
+                loading {activeTab === "earn" ? "opportunities" : "positions"}
                 ...
               </div>
             </div>
           ) : paginatedData.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-[#A1A1AA]">
-                No {activeTab === "earn" ? "opportunities" : "positions"} found
+                no {activeTab === "earn" ? "opportunities" : "positions"} found
               </div>
             </div>
           ) : (
