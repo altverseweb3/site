@@ -27,6 +27,7 @@ const SwapComponent: React.FC = () => {
     destinationChain: useWeb3Store((state) => state.destinationChain),
     sourceToken: useWeb3Store((state) => state.sourceToken),
     destinationToken: useWeb3Store((state) => state.destinationToken),
+    transactionDetails: useWeb3Store((state) => state.transactionDetails),
     enableTracking: true, // Enable automatic tracking
     onSuccess: (amount, sourceToken, destinationToken) => {
       // This now fires when the swap actually completes (after tracking)
