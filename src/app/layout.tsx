@@ -18,8 +18,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Altverse",
-  description: "",
+  title: "altverse",
+  description: "the unified crypto interface",
 };
 
 export default function RootLayout({

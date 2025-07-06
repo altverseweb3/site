@@ -47,7 +47,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({
   return (
     <th
       className={cn(
-        "px-4 py-2 text-left text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider cursor-pointer hover:text-[#FAFAFA] transition-colors",
+        "px-4 py-2 text-left text-sm font-semibold text-zinc-300 lowercase tracking-wider cursor-pointer hover:text-zinc-50 transition-colors",
         className,
       )}
       onClick={handleSort}
@@ -59,13 +59,13 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({
             <ChevronUpIcon
               className={cn(
                 "h-3 w-3",
-                sortDirection === "asc" ? "text-amber-500" : "text-[#52525B]",
+                sortDirection === "asc" ? "text-amber-500" : "text-zinc-400",
               )}
             />
             <ChevronDownIcon
               className={cn(
                 "h-3 w-3 -mt-1",
-                sortDirection === "desc" ? "text-amber-500" : "text-[#52525B]",
+                sortDirection === "desc" ? "text-amber-500" : "text-zinc-400",
               )}
             />
           </div>
@@ -178,6 +178,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, data.length);
+  const tableHeaderClass = `px-4 py-2 text-left text-sm font-semibold text-zinc-300 lowercase tracking-wider`;
 
   return (
     <div className="w-full">
@@ -186,23 +187,13 @@ const EarnTable: React.FC<EarnTableProps> = ({
           <table className="w-full min-w-[900px]">
             <thead className="bg-[#18181B] border-b border-[#27272A]">
               <tr>
-                <SortableHeader column="protocol" className="pl-6">
-                  protocol
-                </SortableHeader>
-                <SortableHeader column="marketVault">
-                  market/vault
-                </SortableHeader>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
-                  assets
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
-                  chains
-                </th>
+                <th className={cn(tableHeaderClass, "pl-6")}>protocol</th>
+                <th className={tableHeaderClass}>market/vault</th>
+                <th className={tableHeaderClass}>assets</th>
+                <th className={tableHeaderClass}>chains</th>
                 {type === "dashboard" && (
                   <>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
-                      position
-                    </th>
+                    <th className={tableHeaderClass}>position</th>
                     <SortableHeader
                       column="balance"
                       onSort={handleSort}
@@ -230,9 +221,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
                 >
                   apy
                 </SortableHeader>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider pr-6">
-                  details
-                </th>
+                <th className={tableHeaderClass}>details</th>
               </tr>
             </thead>
             <tbody className="bg-[#18181B] divide-y divide-[#27272A]">
@@ -335,7 +324,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-[#27272A]">
           <div className="text-sm text-[#A1A1AA]">
-            Showing {startItem}-{endItem} of {totalItems} results
+            showing {startItem}-{endItem} of {totalItems} results
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -345,7 +334,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
               disabled={currentPage === 1}
               className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
             >
-              Previous
+              previous
             </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -374,7 +363,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
               disabled={currentPage === totalPages}
               className="border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
             >
-              Next
+              next
             </Button>
           </div>
         </div>
