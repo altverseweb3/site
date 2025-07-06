@@ -387,3 +387,15 @@ export interface SwapTrackingOptions {
   onComplete?: (status: SwapStatus) => void;
   onError?: (error: Error) => void;
 }
+
+export interface SwapIntegration {
+  sourceChain: Chain;
+  destinationChain: Chain;
+  sourceToken: Token | null;
+  destinationToken: Token | null;
+  transactionDetails: {
+    slippage: "auto" | string;
+    receiveAddress: string | null;
+    gasDrop: number;
+  };
+}
