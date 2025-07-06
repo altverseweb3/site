@@ -183,7 +183,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
       receive: {
         name: "sETHFI",
         symbol: "sETHFI",
-        imagePath: "/images/etherFi/sethfi.png",
+        imagePath: "/images/etherFi/ethereum-assets/sethfi.png",
       },
     },
     links: {
