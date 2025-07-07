@@ -88,78 +88,60 @@ export type Chain = {
 };
 
 export interface Web3StoreState {
-  // Store version
   version: number;
-
-  // Wallet-related state
   connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
-  // Chain selection state
-  sourceChain: Chain;
-  destinationChain: Chain;
+  // Replace single state with keyed integrations
+  swapIntegrations: Record<string, SwapIntegration>;
 
-  // Token selection state - new additions
-  sourceToken: Token | null;
-  destinationToken: Token | null;
-
-  // Token data state
+  // Token management (remains the same)
   tokensByCompositeKey: Record<string, Token>;
   tokensByChainId: Record<number, Token[]>;
   tokensByAddress: Record<number, Record<string, Token>>;
   allTokensList: Token[];
   tokensLoading: boolean;
   tokensError: string | null;
+  tokenBalancesByWallet: Record<string, Record<string, string>>;
+  tokenPricesUsd: Record<string, string>;
 
-  // Transaction details
-  transactionDetails: {
-    slippage: "auto" | string;
-    receiveAddress: string | null;
-    gasDrop: number;
-  };
-
-  tokenBalancesByWallet: Record<string, Record<string, string>>; // chainId_walletAddress -> tokenAddress -> balance
-  tokenPricesUsd: Record<string, string>; // chainId_tokenAddress -> USD price
-
-  // Wallet actions
+  // Wallet actions (remain the same)
   addWallet: (wallet: WalletInfo) => void;
   removeWallet: (walletType: WalletType) => void;
   updateWalletAddress: (walletType: WalletType, address: string) => void;
   updateWalletChainId: (walletType: WalletType, chainId: number) => void;
   disconnectAll: () => void;
+  getWalletsOfType: (walletType?: WalletType) => WalletInfo[];
+  getWalletByChain: (chain: Chain) => WalletInfo | null;
+  isWalletTypeConnected: (walletType: WalletType) => boolean;
+  getWalletByType: (walletType: WalletType) => WalletInfo | null;
 
-  // Chain selection actions
-  setSourceChain: (chain: Chain) => void;
-  setDestinationChain: (chain: Chain) => void;
-  swapChains: () => void;
+  // New integration-specific actions
+  getSwapIntegration: (key: string) => SwapIntegration;
+  initializeIntegration: (key: string) => void;
+  setSourceChain: (key: string, chain: Chain) => void;
+  setDestinationChain: (key: string, chain: Chain) => void;
+  swapChains: (key: string) => void;
+  setSourceToken: (key: string, token: Token | null) => void;
+  setDestinationToken: (key: string, token: Token | null) => void;
+  setSlippageValue: (key: string, value: "auto" | string) => void;
+  setReceiveAddress: (key: string, address: string | null) => void;
+  setGasDrop: (key: string, gasDrop: number) => void;
 
-  // Token selection actions - new additions
-  setSourceToken: (token: Token | null) => void;
-  setDestinationToken: (token: Token | null) => void;
-  addCustomToken: (token: Token) => void;
+  // Helper methods for backward compatibility and convenience
+  getWalletBySourceChain: (key: string) => WalletInfo | null;
+  getWalletByDestinationChain: (key: string) => WalletInfo | null;
 
-  // Token data actions
+  // Token management (remains largely the same)
   loadTokens: () => Promise<void>;
   getTokensForChain: (chainId: number) => Token[];
-
-  // Transaction details actions
-  setSlippageValue: (value: "auto" | string) => void;
-  setReceiveAddress: (address: string | null) => void;
-  setGasDrop: (gasDrop: number) => void;
-
   updateTokenBalances: (
     chainId: number,
     userAddress: string,
     balances: TokenBalance[],
   ) => void;
   updateTokenPrices: (priceResults: TokenPriceResult[]) => void;
+  addCustomToken: (token: Token) => void;
   setTokensLoading: (loading: boolean) => void;
-
-  getWalletsOfType: (walletType: WalletType) => WalletInfo[];
-  isWalletTypeConnected: (walletType: WalletType) => boolean;
-  getWalletByType: (walletType: WalletType) => WalletInfo | null;
-  getWalletBySourceChain: () => WalletInfo | null;
-  getWalletByChain: (chain: Chain) => WalletInfo | null;
-  getWalletByDestinationChain: () => WalletInfo | null;
 }
 
 export enum Network {
@@ -401,3 +383,29 @@ export interface SwapIntegration {
     gasDrop: number;
   };
 }
+
+export type SerializedToken = {
+  id: string;
+  name: string;
+  ticker: string;
+  icon: string;
+  address: string;
+  decimals: number;
+  chainId: number;
+  userBalance?: string;
+  userBalanceUsd?: string;
+  isWalletToken?: boolean;
+  alwaysLoadPrice?: boolean;
+} | null;
+
+export type SerializedSwapIntegration = {
+  sourceChain: Chain;
+  destinationChain: Chain;
+  sourceToken: SerializedToken;
+  destinationToken: SerializedToken;
+  transactionDetails: {
+    slippage: "auto" | string;
+    receiveAddress: string | null;
+    gasDrop: number;
+  };
+};
