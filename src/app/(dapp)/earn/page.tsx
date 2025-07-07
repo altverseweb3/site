@@ -255,7 +255,7 @@ export default function EarnPage() {
                 placeholder="filter by asset (e.g., ETH, BTC)"
                 value={filters.assetFilter}
                 onChange={(e) => handleAssetFilterChange(e.target.value)}
-                className="w-full sm:w-60 border-[#27272A] bg-[#18181B] text-[#FAFAFA] placeholder:text-[#A1A1AA]"
+                className="h-8 w-full sm:w-60 border-[#27272A] bg-[#18181B] text-[#FAFAFA] placeholder:text-[#A1A1AA] focus:border-amber-500/80 focus:ring-amber-500/80 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           </div>
