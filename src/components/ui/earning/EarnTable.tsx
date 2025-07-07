@@ -307,9 +307,9 @@ const EarnTable: React.FC<EarnTableProps> = ({
                   </td>
                   <td className="px-4 py-3 pr-6">
                     <BrandedButton
-                      buttonText={type === "dashboard" ? "view" : "details"}
+                      buttonText={type === "dashboard" ? " view " : "details"}
                       onClick={() => onDetails?.(row)}
-                      className="text-xs py-1 px-2 h-8"
+                      className="text-sm h-8 px-2"
                     />
                   </td>
                 </tr>
