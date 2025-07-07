@@ -21,7 +21,7 @@ import {
 import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 
-const STORE_VERSION = 1;
+const STORE_VERSION = 2;
 
 const useWeb3Store = create<Web3StoreState>()(
   persist(
