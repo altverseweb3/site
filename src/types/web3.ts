@@ -92,7 +92,7 @@ export interface Web3StoreState {
   connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
   // Replace single state with keyed integrations
-  swapIntegrations: Record<string, SwapIntegration>;
+  swapIntegrations: Record<string, SwapStateForSection>;
 
   // Token management (remains the same)
   tokensByCompositeKey: Record<string, Token>;
@@ -116,8 +116,8 @@ export interface Web3StoreState {
   getWalletByType: (walletType: WalletType) => WalletInfo | null;
 
   // New integration-specific actions
-  getSwapIntegration: (key: string) => SwapIntegration;
-  initializeIntegration: (key: string) => void;
+  getSwapStateForSection: (key: string) => SwapStateForSection;
+  initializeSwapStateForSection: (key: string) => void;
   setSourceChain: (key: string, chain: Chain) => void;
   setDestinationChain: (key: string, chain: Chain) => void;
   swapChains: (key: string) => void;
@@ -372,7 +372,7 @@ export interface SwapTrackingOptions {
   onError?: (error: Error) => void;
 }
 
-export interface SwapIntegration {
+export interface SwapStateForSection {
   sourceChain: Chain;
   destinationChain: Chain;
   sourceToken: Token | null;
@@ -398,7 +398,7 @@ export type SerializedToken = {
   alwaysLoadPrice?: boolean;
 } | null;
 
-export type SerializedSwapIntegration = {
+export type SerializedSwapStateForSection = {
   sourceChain: Chain;
   destinationChain: Chain;
   sourceToken: SerializedToken;
