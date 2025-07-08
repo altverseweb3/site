@@ -11,6 +11,7 @@ import {
   SwapStateForSection,
   SerializedToken,
   SerializedSwapStateForSection,
+  SectionKey,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -25,8 +26,6 @@ import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 
 const STORE_VERSION = 3;
-
-export type SectionKey = "swap" | "earn" | "lend";
 
 const createDefaultSwapStateForSection = (): SwapStateForSection => ({
   sourceChain: defaultSourceChain,
@@ -53,6 +52,8 @@ const useWeb3Store = create<Web3StoreState>()(
         lend: createDefaultSwapStateForSection(),
       },
 
+      activeSwapSection: "swap" as SectionKey,
+
       // Token state (unchanged)
       tokensByCompositeKey: {},
       tokensByChainId: {},
@@ -64,17 +65,19 @@ const useWeb3Store = create<Web3StoreState>()(
       tokenPricesUsd: {},
 
       // New integration management methods
-      getSwapStateForSection: (key: string) => {
+      getSwapStateForSection: () => {
+        const key = get().activeSwapSection;
         const integration = get().swapIntegrations[key];
         if (!integration) {
           console.warn(`Integration '${key}' not found, creating default`);
-          get().initializeSwapStateForSection(key);
+          get().initializeSwapStateForSection();
           return get().swapIntegrations[key];
         }
         return integration;
       },
 
-      initializeSwapStateForSection: (key: string) => {
+      initializeSwapStateForSection: () => {
+        const key = get().activeSwapSection;
         set((state) => ({
           swapIntegrations: {
             ...state.swapIntegrations,
@@ -83,7 +86,8 @@ const useWeb3Store = create<Web3StoreState>()(
         }));
       },
 
-      setSourceChain: (key: string, chain: Chain) => {
+      setSourceChain: (chain: Chain) => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -101,7 +105,8 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      setDestinationChain: (key: string, chain: Chain) => {
+      setDestinationChain: (chain: Chain) => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -119,7 +124,8 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      swapChains: (key: string) => {
+      swapChains: () => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -147,7 +153,8 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      setSourceToken: (key: string, token: Token | null) => {
+      setSourceToken: (token: Token | null) => {
+        const key = get().activeSwapSection;
         console.log(
           `Setting source token for ${key}:`,
           token ? token.name : "null",
@@ -185,7 +192,8 @@ const useWeb3Store = create<Web3StoreState>()(
         }
       },
 
-      setDestinationToken: (key: string, token: Token | null) => {
+      setDestinationToken: (token: Token | null) => {
+        const key = get().activeSwapSection;
         console.log(
           `Setting destination token for ${key}:`,
           token ? token.name : "null",
@@ -223,7 +231,8 @@ const useWeb3Store = create<Web3StoreState>()(
         }
       },
 
-      setSlippageValue: (key: string, value: "auto" | string) => {
+      setSlippageValue: (value: "auto" | string) => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -250,7 +259,8 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      setReceiveAddress: (key: string, address: string | null) => {
+      setReceiveAddress: (address: string | null) => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -270,7 +280,8 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      setGasDrop: (key: string, gasDrop: number) => {
+      setGasDrop: (gasDrop: number) => {
+        const key = get().activeSwapSection;
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -291,8 +302,8 @@ const useWeb3Store = create<Web3StoreState>()(
       },
 
       // Helper methods for wallet lookup by integration
-      getWalletBySourceChain: (key: string) => {
-        const integration = get().getSwapStateForSection(key);
+      getWalletBySourceChain: () => {
+        const integration = get().getSwapStateForSection();
         const sourceChainWalletType = integration.sourceChain.walletType;
         return (
           get().connectedWallets.find(
@@ -301,8 +312,8 @@ const useWeb3Store = create<Web3StoreState>()(
         );
       },
 
-      getWalletByDestinationChain: (key: string) => {
-        const integration = get().getSwapStateForSection(key);
+      getWalletByDestinationChain: () => {
+        const integration = get().getSwapStateForSection();
         const destinationChainWalletType =
           integration.destinationChain.walletType;
         return (
@@ -851,15 +862,13 @@ const updateTokenCollections = (
   };
 };
 
-export const useSourceChain = (integrationKey: string): Chain => {
-  return useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).sourceChain,
-  );
+export const useSourceChain = (): Chain => {
+  return useWeb3Store((state) => state.getSwapStateForSection().sourceChain);
 };
 
-export const useDestinationChain = (integrationKey: string): Chain => {
+export const useDestinationChain = (): Chain => {
   return useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).destinationChain,
+    (state) => state.getSwapStateForSection().destinationChain,
   );
 };
 
@@ -879,15 +888,13 @@ export const useWalletsOfType = (walletType: WalletType): WalletInfo[] => {
 };
 
 // New hooks for the selected tokens
-export const useSourceToken = (integrationKey: string): Token | null => {
-  return useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).sourceToken,
-  );
+export const useSourceToken = (): Token | null => {
+  return useWeb3Store((state) => state.getSwapStateForSection().sourceToken);
 };
 
-export const useDestinationToken = (integrationKey: string): Token | null => {
+export const useDestinationToken = (): Token | null => {
   return useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).destinationToken,
+    (state) => state.getSwapStateForSection().destinationToken,
   );
 };
 
@@ -907,17 +914,16 @@ export const useTokensForChain = (chainId: number): Token[] => {
   return useWeb3Store((state) => state.tokensByChainId[chainId] || []);
 };
 
-export const useSourceChainTokens = (integrationKey: string): Token[] => {
+export const useSourceChainTokens = (): Token[] => {
   const sourceChainId = useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).sourceChain.chainId,
+    (state) => state.getSwapStateForSection().sourceChain.chainId,
   );
   return useWeb3Store((state) => state.tokensByChainId[sourceChainId] || []);
 };
 
-export const useDestinationChainTokens = (integrationKey: string): Token[] => {
+export const useDestinationChainTokens = (): Token[] => {
   const destinationChainId = useWeb3Store(
-    (state) =>
-      state.getSwapStateForSection(integrationKey).destinationChain.chainId,
+    (state) => state.getSwapStateForSection().destinationChain.chainId,
   );
   return useWeb3Store(
     (state) => state.tokensByChainId[destinationChainId] || [],
@@ -936,13 +942,17 @@ export const useTokenByAddress = (
   });
 };
 
+export const useGetWalletBySourceChain = (): WalletInfo | null => {
+  return useWeb3Store((state) => state.getWalletBySourceChain());
+};
+
 export const useLoadTokens = () => {
   return useWeb3Store((state) => state.loadTokens);
 };
 
-export const useTransactionDetails = (integrationKey: string) => {
+export const useTransactionDetails = () => {
   return useWeb3Store(
-    (state) => state.getSwapStateForSection(integrationKey).transactionDetails,
+    (state) => state.getSwapStateForSection().transactionDetails,
   );
 };
 
