@@ -27,8 +27,8 @@ const ITEMS_PER_PAGE = 10;
 
 const availableProtocols: ProtocolOption[] = [
   {
-    id: "Ether.fi",
-    name: "Ether.fi",
+    id: "ether.fi",
+    name: "ether.fi",
     icon: "/images/etherFi/vaults/ethfi.svg",
     checked: true,
     disabled: false,
