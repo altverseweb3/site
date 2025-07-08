@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { TokenTransfer } from "@/components/ui/TokenTransfer";
 import {
@@ -9,11 +9,13 @@ import {
   useDestinationChain,
   useTransactionDetails,
   useGetWalletBySourceChain,
+  useSetActiveSwapSection,
 } from "@/store/web3Store";
 
 const SwapComponent: React.FC = () => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
+  const setActiveSwapSection = useSetActiveSwapSection();
 
   // Use the shared hook with tracking enabled
   const {
@@ -48,6 +50,10 @@ const SwapComponent: React.FC = () => {
       console.log("Swap initiated with ID:", swapId);
     },
   });
+
+  useEffect(() => {
+    setActiveSwapSection("swap");
+  }, [setActiveSwapSection]);
 
   return (
     <TokenTransfer
