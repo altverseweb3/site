@@ -87,12 +87,15 @@ export type Chain = {
   walletType: WalletType;
 };
 
+export type SectionKey = "swap" | "earn" | "lend";
+
 export interface Web3StoreState {
   version: number;
   connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
   // Replace single state with keyed integrations
   swapIntegrations: Record<string, SwapStateForSection>;
+  activeSwapSection: SectionKey;
 
   // Token management (remains the same)
   tokensByCompositeKey: Record<string, Token>;
@@ -116,20 +119,20 @@ export interface Web3StoreState {
   getWalletByType: (walletType: WalletType) => WalletInfo | null;
 
   // New integration-specific actions
-  getSwapStateForSection: (key: string) => SwapStateForSection;
-  initializeSwapStateForSection: (key: string) => void;
-  setSourceChain: (key: string, chain: Chain) => void;
-  setDestinationChain: (key: string, chain: Chain) => void;
-  swapChains: (key: string) => void;
-  setSourceToken: (key: string, token: Token | null) => void;
-  setDestinationToken: (key: string, token: Token | null) => void;
-  setSlippageValue: (key: string, value: "auto" | string) => void;
-  setReceiveAddress: (key: string, address: string | null) => void;
-  setGasDrop: (key: string, gasDrop: number) => void;
+  getSwapStateForSection: () => SwapStateForSection;
+  initializeSwapStateForSection: () => void;
+  setSourceChain: (chain: Chain) => void;
+  setDestinationChain: (chain: Chain) => void;
+  swapChains: () => void;
+  setSourceToken: (token: Token | null) => void;
+  setDestinationToken: (token: Token | null) => void;
+  setSlippageValue: (value: "auto" | string) => void;
+  setReceiveAddress: (address: string | null) => void;
+  setGasDrop: (gasDrop: number) => void;
 
   // Helper methods for backward compatibility and convenience
-  getWalletBySourceChain: (key: string) => WalletInfo | null;
-  getWalletByDestinationChain: (key: string) => WalletInfo | null;
+  getWalletBySourceChain: () => WalletInfo | null;
+  getWalletByDestinationChain: () => WalletInfo | null;
 
   // Token management (remains largely the same)
   loadTokens: () => Promise<void>;
