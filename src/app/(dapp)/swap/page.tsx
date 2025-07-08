@@ -2,11 +2,18 @@
 import React from "react";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { TokenTransfer } from "@/components/ui/TokenTransfer";
-import useWeb3Store from "@/store/web3Store";
+import {
+  useSourceToken,
+  useDestinationToken,
+  useSourceChain,
+  useDestinationChain,
+  useTransactionDetails,
+  useGetWalletBySourceChain,
+} from "@/store/web3Store";
 
 const SwapComponent: React.FC = () => {
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
+  const sourceToken = useSourceToken();
+  const destinationToken = useDestinationToken();
 
   // Use the shared hook with tracking enabled
   const {
@@ -23,11 +30,11 @@ const SwapComponent: React.FC = () => {
     swapAmounts,
   } = useTokenTransfer({
     type: "swap",
-    sourceChain: useWeb3Store((state) => state.sourceChain),
-    destinationChain: useWeb3Store((state) => state.destinationChain),
-    sourceToken: useWeb3Store((state) => state.sourceToken),
-    destinationToken: useWeb3Store((state) => state.destinationToken),
-    transactionDetails: useWeb3Store((state) => state.transactionDetails),
+    sourceChain: useSourceChain(),
+    destinationChain: useDestinationChain(),
+    sourceToken: sourceToken,
+    destinationToken: destinationToken,
+    transactionDetails: useTransactionDetails(), // Use the shared transaction details
     enableTracking: true, // Enable automatic tracking
     onSuccess: (amount, sourceToken, destinationToken) => {
       // This now fires when the swap actually completes (after tracking)
@@ -42,16 +49,12 @@ const SwapComponent: React.FC = () => {
     },
   });
 
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
-
   return (
     <TokenTransfer
       amount={amount}
       onAmountChange={handleAmountChange}
       isButtonDisabled={isButtonDisabled}
-      hasActiveWallet={!!requiredWallet}
+      hasActiveWallet={!!useGetWalletBySourceChain()}
       onTransfer={handleTransfer}
       swapAmounts={swapAmounts}
       transferType="swap"

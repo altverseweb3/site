@@ -31,12 +31,18 @@ import {
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
-import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
 import { useAppKit } from "@reown/appkit/react";
-import useWeb3Store from "@/store/web3Store";
+import useWeb3Store, {
+  useSourceChain,
+  useDestinationChain,
+  useSourceToken,
+  useDestinationToken,
+  useTransactionDetails,
+  useIsWalletTypeConnected,
+} from "@/store/web3Store";
 import { ConnectButton } from "@suiet/wallet-kit";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
@@ -58,11 +64,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
   vault,
   apy,
 }) => {
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
-  const destinationChain = useWeb3Store((state) => state.destinationChain);
-  const transactionDetails = useWeb3Store((state) => state.transactionDetails);
+  const sourceToken = useSourceToken();
+  const destinationToken = useDestinationToken();
+  const sourceChain = useSourceChain();
+  const destinationChain = useDestinationChain();
+  const transactionDetails = useTransactionDetails();
 
   // Form state
   const [selectedSwapChain, setSelectedSwapChain] = useState<string>("");
