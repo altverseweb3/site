@@ -7,7 +7,7 @@ import {
   useWalletConnection,
   ensureCorrectWalletTypeForChain,
 } from "@/utils/swap/walletMethods";
-import useWeb3Store from "@/store/web3Store";
+import useWeb3Store, { useSourceChain } from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";
 import { WalletType } from "@/types/web3";
@@ -46,7 +46,7 @@ export function SwapInterface({
   detailsOpen,
   onDetailsToggle,
 }: SwapInterfaceProps) {
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
+  const sourceChain = useSourceChain();
 
   const {
     isLoading: isSwitchingChain,

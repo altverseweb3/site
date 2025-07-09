@@ -8,7 +8,10 @@ import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { AvailableIconName } from "@/types/ui";
 import { swapChains } from "@/utils/chains/chainMethods";
-import useWeb3Store from "@/store/web3Store";
+import useWeb3Store, {
+  useSourceToken,
+  useDestinationToken,
+} from "@/store/web3Store";
 import { Token } from "@/types/web3";
 
 interface TokenTransferProps {
@@ -66,8 +69,8 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   const tokensByCompositeKey = useWeb3Store(
     (state) => state.tokensByCompositeKey,
   );
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
+  const destinationToken = useDestinationToken();
+  const sourceToken = useSourceToken();
 
   useEffect(() => {
     const shouldBeEnabled =

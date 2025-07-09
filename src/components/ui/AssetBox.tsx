@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { SelectChainButton } from "@/components/ui/SelectChainButton";
 import { Chain } from "@/types/web3";
 import useUIStore from "@/store/uiStore";
-import useWeb3Store from "@/store/web3Store";
+import { useSourceToken, useDestinationToken } from "@/store/web3Store";
 
 interface AssetBoxProps {
   title: string;
@@ -33,8 +33,8 @@ export function AssetBox({
   const setDestinationTokenSelectOpen = useUIStore(
     (state) => state.setDestinationTokenSelectOpen,
   );
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
+  const sourceToken = useSourceToken();
+  const destinationToken = useDestinationToken();
 
   const setIsOpen =
     boxType === "source"

@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { chainList, defaultSourceChain } from "@/config/chains";
 import { Chain } from "@/types/web3";
-import useWeb3Store from "@/store/web3Store";
+import useWeb3Store, {
+  useSourceChain,
+  useDestinationChain,
+} from "@/store/web3Store";
 
 interface SelectChainButtonProps {
   selectedChain?: Chain;
@@ -27,8 +30,8 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
   storeType,
 }) => {
   // Get store values and setters if storeType is provided
-  const sourceChain = useWeb3Store((state) => state.sourceChain);
-  const destinationChain = useWeb3Store((state) => state.destinationChain);
+  const sourceChain = useSourceChain();
+  const destinationChain = useDestinationChain();
   const setSourceChain = useWeb3Store((state) => state.setSourceChain);
   const setDestinationChain = useWeb3Store(
     (state) => state.setDestinationChain,
