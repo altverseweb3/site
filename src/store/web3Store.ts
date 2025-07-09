@@ -8,6 +8,10 @@ import {
   WalletType,
   Token,
   Chain,
+  SwapStateForSection,
+  SerializedToken,
+  SerializedSwapStateForSection,
+  SectionKey,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -22,79 +26,305 @@ import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 import { STORE_VERSION } from "@/store/storeVersion";
 
+const createDefaultSwapStateForSection = (): SwapStateForSection => ({
+  sourceChain: defaultSourceChain,
+  destinationChain: defaultDestinationChain,
+  sourceToken: null,
+  destinationToken: null,
+  transactionDetails: {
+    slippage: "auto",
+    receiveAddress: null,
+    gasDrop: 0,
+  },
+});
+
 const useWeb3Store = create<Web3StoreState>()(
   persist(
     (set, get) => ({
       version: STORE_VERSION,
-
       connectedWallets: [],
 
-      // Chain selection state
-      sourceChain: defaultSourceChain,
-      destinationChain: defaultDestinationChain,
-
-      // Token selection state
-      sourceToken: null,
-      destinationToken: null,
-
-      // Transaction details state
-      transactionDetails: {
-        slippage: "auto", // Default slippage value
-        receiveAddress: null,
-        gasDrop: 0,
+      // Initialize with default integrations
+      swapIntegrations: {
+        swap: createDefaultSwapStateForSection(),
+        earn: createDefaultSwapStateForSection(),
+        lend: createDefaultSwapStateForSection(),
       },
 
-      // tokens
+      activeSwapSection: "swap" as SectionKey,
+
+      // Token state (unchanged)
       tokensByCompositeKey: {},
       tokensByChainId: {},
       tokensByAddress: {},
       allTokensList: [],
       tokensLoading: false,
       tokensError: null,
-
       tokenBalancesByWallet: {},
       tokenPricesUsd: {},
 
-      // Transaction details actions
-      setSlippageValue: (value: "auto" | string) => {
-        set((state) => {
-          // If value is "auto", use it directly
-          if (value === "auto") {
-            return {
-              transactionDetails: {
-                ...state.transactionDetails,
-                slippage: "auto",
-              },
-            };
-          }
+      // New integration management methods
+      getSwapStateForSection: () => {
+        const key = get().activeSwapSection;
+        const integration = get().swapIntegrations[key];
+        if (!integration) {
+          console.warn(`Integration '${key}' not found, creating default`);
+          get().initializeSwapStateForSection();
+          return get().swapIntegrations[key];
+        }
+        return integration;
+      },
 
-          // Otherwise, ensure the value has % suffix for percentage values
-          const formattedValue = value.endsWith("%") ? value : `${value}%`;
+      initializeSwapStateForSection: () => {
+        const key = get().activeSwapSection;
+        set((state) => ({
+          swapIntegrations: {
+            ...state.swapIntegrations,
+            [key]: createDefaultSwapStateForSection(),
+          },
+        }));
+      },
+
+      setActiveSwapSection: (sectionKey: SectionKey) => {
+        console.log(`Setting active swap section to: ${sectionKey}`);
+        set({ activeSwapSection: sectionKey });
+      },
+
+      setSourceChain: (chain: Chain) => {
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
           return {
-            transactionDetails: {
-              ...state.transactionDetails,
-              slippage: formattedValue,
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                sourceChain: chain,
+                sourceToken: null, // Reset token when changing chains
+              },
+            },
+          };
+        });
+      },
+
+      setDestinationChain: (chain: Chain) => {
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                destinationChain: chain,
+                destinationToken: null, // Reset token when changing chains
+              },
+            },
+          };
+        });
+      },
+
+      swapChains: () => {
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          const newSourceToken = integration.destinationToken
+            ? { ...integration.destinationToken, alwaysLoadPrice: true }
+            : null;
+
+          const newDestinationToken = integration.sourceToken
+            ? { ...integration.sourceToken, alwaysLoadPrice: true }
+            : null;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                sourceChain: integration.destinationChain,
+                destinationChain: integration.sourceChain,
+                sourceToken: newSourceToken,
+                destinationToken: newDestinationToken,
+              },
+            },
+          };
+        });
+      },
+
+      setSourceToken: (token: Token | null) => {
+        const key = get().activeSwapSection;
+        console.log(
+          `Setting source token for ${key}:`,
+          token ? token.name : "null",
+        );
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                sourceToken: token,
+              },
+            },
+          };
+        });
+
+        // Update token collections (same logic as before)
+        if (token) {
+          set((state) => {
+            const updatedToken = { ...token, alwaysLoadPrice: true };
+            const newTokensList = state.allTokensList.map((t) =>
+              t.address === token.address && t.chainId === token.chainId
+                ? updatedToken
+                : t,
+            );
+            const updatedCollections = updateTokenCollections(newTokensList);
+            return {
+              allTokensList: newTokensList,
+              ...updatedCollections,
+            };
+          });
+        }
+      },
+
+      setDestinationToken: (token: Token | null) => {
+        const key = get().activeSwapSection;
+        console.log(
+          `Setting destination token for ${key}:`,
+          token ? token.name : "null",
+        );
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                destinationToken: token,
+              },
+            },
+          };
+        });
+
+        // Update token collections (same logic as before)
+        if (token) {
+          set((state) => {
+            const updatedToken = { ...token, alwaysLoadPrice: true };
+            const newTokensList = state.allTokensList.map((t) =>
+              t.address === token.address && t.chainId === token.chainId
+                ? updatedToken
+                : t,
+            );
+            const updatedCollections = updateTokenCollections(newTokensList);
+            return {
+              allTokensList: newTokensList,
+              ...updatedCollections,
+            };
+          });
+        }
+      },
+
+      setSlippageValue: (value: "auto" | string) => {
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          const formattedValue =
+            value === "auto"
+              ? "auto"
+              : value.endsWith("%")
+                ? value
+                : `${value}%`;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                transactionDetails: {
+                  ...integration.transactionDetails,
+                  slippage: formattedValue,
+                },
+              },
             },
           };
         });
       },
 
       setReceiveAddress: (address: string | null) => {
-        set((state) => ({
-          transactionDetails: {
-            ...state.transactionDetails,
-            receiveAddress: address,
-          },
-        }));
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                transactionDetails: {
+                  ...integration.transactionDetails,
+                  receiveAddress: address,
+                },
+              },
+            },
+          };
+        });
       },
 
       setGasDrop: (gasDrop: number) => {
-        set((state) => ({
-          transactionDetails: {
-            ...state.transactionDetails,
-            gasDrop: gasDrop,
-          },
-        }));
+        const key = get().activeSwapSection;
+        set((state) => {
+          const integration = state.swapIntegrations[key];
+          if (!integration) return state;
+
+          return {
+            swapIntegrations: {
+              ...state.swapIntegrations,
+              [key]: {
+                ...integration,
+                transactionDetails: {
+                  ...integration.transactionDetails,
+                  gasDrop,
+                },
+              },
+            },
+          };
+        });
+      },
+
+      // Helper methods for wallet lookup by integration
+      getWalletBySourceChain: () => {
+        const integration = get().getSwapStateForSection();
+        const sourceChainWalletType = integration.sourceChain.walletType;
+        return (
+          get().connectedWallets.find(
+            (w) => w.type === sourceChainWalletType,
+          ) || null
+        );
+      },
+
+      getWalletByDestinationChain: () => {
+        const integration = get().getSwapStateForSection();
+        const destinationChainWalletType =
+          integration.destinationChain.walletType;
+        return (
+          get().connectedWallets.find(
+            (w) => w.type === destinationChainWalletType,
+          ) || null
+        );
       },
 
       // Wallet actions
@@ -177,24 +407,6 @@ const useWeb3Store = create<Web3StoreState>()(
         );
       },
 
-      getWalletBySourceChain: () => {
-        const sourceChainWalletType = get().sourceChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === sourceChainWalletType,
-          ) || null
-        );
-      },
-
-      getWalletByDestinationChain: () => {
-        const destinationChainWalletType = get().destinationChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === destinationChainWalletType,
-          ) || null
-        );
-      },
-
       // New method to check if a specific wallet type is connected
       isWalletTypeConnected: (walletType: WalletType): boolean => {
         return get().connectedWallets.some((w) => w.type === walletType);
@@ -205,113 +417,6 @@ const useWeb3Store = create<Web3StoreState>()(
         return (
           get().connectedWallets.find((w) => w.type === walletType) || null
         );
-      },
-
-      // Chain selection actions
-      setSourceChain: (chain: Chain) => {
-        set((state) => {
-          return {
-            sourceChain: chain,
-            destinationChain: state.destinationChain,
-            // Reset source token when changing chains
-            sourceToken: null,
-          };
-        });
-      },
-
-      setDestinationChain: (chain: Chain) => {
-        set((state) => ({
-          destinationChain: chain,
-          sourceChain: state.sourceChain,
-          // Reset destination token when changing chains
-          destinationToken: null,
-        }));
-      },
-
-      swapChains: () => {
-        set((state) => {
-          const newSourceToken = state.destinationToken
-            ? {
-                ...state.destinationToken,
-                alwaysLoadPrice: true,
-              }
-            : null;
-
-          const newDestinationToken = state.sourceToken
-            ? {
-                ...state.sourceToken,
-                alwaysLoadPrice: true,
-              }
-            : null;
-
-          return {
-            sourceChain: state.destinationChain,
-            destinationChain: state.sourceChain,
-            sourceToken: newSourceToken,
-            destinationToken: newDestinationToken,
-          };
-        });
-      },
-
-      // Token selection actions
-      setSourceToken: (token: Token | null) => {
-        console.log("Setting source token:", token ? token.name : "null");
-        set({ sourceToken: token });
-        // Update token collections to set source token to have alwaysLoadPrice to true
-        if (token) {
-          set((state) => {
-            const updatedToken = {
-              ...token,
-              alwaysLoadPrice: true,
-            };
-            const newTokensList = state.allTokensList.map((t) =>
-              t.address === token.address && t.chainId === token.chainId
-                ? updatedToken
-                : t,
-            );
-            const {
-              tokensByCompositeKey: updatedByCompositeKey,
-              tokensByChainId: updatedByChainId,
-              tokensByAddress: updatedByAddress,
-            } = updateTokenCollections(newTokensList);
-            return {
-              allTokensList: newTokensList,
-              tokensByCompositeKey: updatedByCompositeKey,
-              tokensByChainId: updatedByChainId,
-              tokensByAddress: updatedByAddress,
-            };
-          });
-        }
-      },
-
-      setDestinationToken: (token: Token | null) => {
-        console.log("Setting destination token:", token ? token.name : "null");
-        set({ destinationToken: token });
-        // Update token collections to set destination token to have alwaysLoadPrice to true
-        if (token) {
-          set((state) => {
-            const updatedToken = {
-              ...token,
-              alwaysLoadPrice: true,
-            };
-            const newTokensList = state.allTokensList.map((t) =>
-              t.address === token.address && t.chainId === token.chainId
-                ? updatedToken
-                : t,
-            );
-            const {
-              tokensByCompositeKey: updatedByCompositeKey,
-              tokensByChainId: updatedByChainId,
-              tokensByAddress: updatedByAddress,
-            } = updateTokenCollections(newTokensList);
-            return {
-              allTokensList: newTokensList,
-              tokensByCompositeKey: updatedByCompositeKey,
-              tokensByChainId: updatedByChainId,
-              tokensByAddress: updatedByAddress,
-            };
-          });
-        }
       },
 
       addCustomToken: (token: Token) => {
@@ -355,49 +460,41 @@ const useWeb3Store = create<Web3StoreState>()(
           set({ tokensLoading: true, tokensError: null });
           const structuredTokens: StructuredTokenData = await loadAllTokens();
 
-          // Get current serialized tokens
-          const currentSourceToken = get().sourceToken;
-          const currentDestinationToken = get().destinationToken;
+          // Get all current tokens from all swap integrations
+          const currentSwapStateForSections = get().swapIntegrations;
+          const selectedTokens: Token[] = [];
+
+          // Collect all source and destination tokens from all integrations
+          Object.values(currentSwapStateForSections).forEach((integration) => {
+            if (integration.sourceToken) {
+              selectedTokens.push(integration.sourceToken);
+            }
+            if (integration.destinationToken) {
+              selectedTokens.push(integration.destinationToken);
+            }
+          });
 
           // Create a copy of allTokensList that we can modify
           const updatedTokensList = [...structuredTokens.allTokensList];
           let needsCollectionUpdate = false;
 
-          // Find and update source token if it exists
-          if (currentSourceToken) {
-            const sourceTokenIndex = updatedTokensList.findIndex(
+          // Find and update tokens that are selected in any integration
+          selectedTokens.forEach((selectedToken) => {
+            const tokenIndex = updatedTokensList.findIndex(
               (token) =>
                 token.address.toLowerCase() ===
-                  currentSourceToken.address.toLowerCase() &&
-                token.chainId === currentSourceToken.chainId,
+                  selectedToken.address.toLowerCase() &&
+                token.chainId === selectedToken.chainId,
             );
 
-            if (sourceTokenIndex !== -1) {
-              updatedTokensList[sourceTokenIndex] = {
-                ...updatedTokensList[sourceTokenIndex],
+            if (tokenIndex !== -1) {
+              updatedTokensList[tokenIndex] = {
+                ...updatedTokensList[tokenIndex],
                 alwaysLoadPrice: true,
               };
               needsCollectionUpdate = true;
             }
-          }
-
-          // Find and update destination token if it exists
-          if (currentDestinationToken) {
-            const destTokenIndex = updatedTokensList.findIndex(
-              (token) =>
-                token.address.toLowerCase() ===
-                  currentDestinationToken.address.toLowerCase() &&
-                token.chainId === currentDestinationToken.chainId,
-            );
-
-            if (destTokenIndex !== -1) {
-              updatedTokensList[destTokenIndex] = {
-                ...updatedTokensList[destTokenIndex],
-                alwaysLoadPrice: true,
-              };
-              needsCollectionUpdate = true;
-            }
-          }
+          });
 
           // If we updated any tokens, update the derived collections
           let tokensByCompositeKey = structuredTokens.byCompositeKey;
@@ -412,37 +509,50 @@ const useWeb3Store = create<Web3StoreState>()(
             tokensByAddress = updatedCollections.tokensByAddress;
           }
 
-          // Now get the full token objects with alwaysLoadPrice set
-          let fullSourceToken = null;
-          let fullDestinationToken = null;
+          // Update each integration with the full token objects
+          const updatedIntegrations: Record<string, SwapStateForSection> = {};
 
-          if (currentSourceToken) {
-            fullSourceToken =
-              updatedTokensList.find(
-                (token) =>
-                  token.address.toLowerCase() ===
-                    currentSourceToken.address.toLowerCase() &&
-                  token.chainId === currentSourceToken.chainId,
-              ) || null;
-          }
+          Object.entries(currentSwapStateForSections).forEach(
+            ([key, integration]) => {
+              let fullSourceToken = null;
+              let fullDestinationToken = null;
 
-          if (currentDestinationToken) {
-            fullDestinationToken =
-              updatedTokensList.find(
-                (token) =>
-                  token.address.toLowerCase() ===
-                    currentDestinationToken.address.toLowerCase() &&
-                  token.chainId === currentDestinationToken.chainId,
-              ) || null;
-          }
+              // Find full source token object if it exists
+              if (integration.sourceToken) {
+                fullSourceToken =
+                  updatedTokensList.find(
+                    (token) =>
+                      token.address.toLowerCase() ===
+                        integration.sourceToken!.address.toLowerCase() &&
+                      token.chainId === integration.sourceToken!.chainId,
+                  ) || null;
+              }
+
+              // Find full destination token object if it exists
+              if (integration.destinationToken) {
+                fullDestinationToken =
+                  updatedTokensList.find(
+                    (token) =>
+                      token.address.toLowerCase() ===
+                        integration.destinationToken!.address.toLowerCase() &&
+                      token.chainId === integration.destinationToken!.chainId,
+                  ) || null;
+              }
+
+              updatedIntegrations[key] = {
+                ...integration,
+                sourceToken: fullSourceToken,
+                destinationToken: fullDestinationToken,
+              };
+            },
+          );
 
           set({
             tokensByCompositeKey: tokensByCompositeKey,
             tokensByChainId: tokensByChainId,
             tokensByAddress: tokensByAddress,
             allTokensList: updatedTokensList,
-            sourceToken: fullSourceToken,
-            destinationToken: fullDestinationToken,
+            swapIntegrations: updatedIntegrations,
             tokensLoading: false,
             tokensError: null,
           });
@@ -668,7 +778,7 @@ const useWeb3Store = create<Web3StoreState>()(
         return persistedState;
       },
       partialize: (state) => {
-        const serializeToken = (token: Token | null) => {
+        const serializeToken = (token: Token | null): SerializedToken => {
           if (!token) return null;
           return {
             id: token.id,
@@ -684,21 +794,29 @@ const useWeb3Store = create<Web3StoreState>()(
             alwaysLoadPrice: token.alwaysLoadPrice,
           };
         };
+        // Serialize each swap integration
+        const serializedIntegrations: Record<
+          string,
+          SerializedSwapStateForSection
+        > = {};
+        Object.entries(state.swapIntegrations).forEach(([key, integration]) => {
+          serializedIntegrations[key] = {
+            sourceChain: integration.sourceChain,
+            destinationChain: integration.destinationChain,
+            sourceToken: serializeToken(integration.sourceToken),
+            destinationToken: serializeToken(integration.destinationToken),
+            transactionDetails: integration.transactionDetails,
+          };
+        });
         return {
-          // Include version in persisted data
           version: state.version,
-          // Only persist what we need and ensure we don't store providers
           connectedWallets: state.connectedWallets.map((wallet) => ({
             type: wallet.type,
             name: wallet.name,
             address: wallet.address,
             chainId: wallet.chainId,
           })),
-          sourceChain: state.sourceChain,
-          destinationChain: state.destinationChain,
-          transactionDetails: state.transactionDetails,
-          sourceToken: serializeToken(state.sourceToken),
-          destinationToken: serializeToken(state.destinationToken),
+          swapIntegrations: serializedIntegrations,
         };
       },
     },
@@ -749,11 +867,13 @@ const updateTokenCollections = (
 };
 
 export const useSourceChain = (): Chain => {
-  return useWeb3Store((state) => state.sourceChain);
+  return useWeb3Store((state) => state.getSwapStateForSection().sourceChain);
 };
 
 export const useDestinationChain = (): Chain => {
-  return useWeb3Store((state) => state.destinationChain);
+  return useWeb3Store(
+    (state) => state.getSwapStateForSection().destinationChain,
+  );
 };
 
 // Get wallet by type hook
@@ -773,11 +893,13 @@ export const useWalletsOfType = (walletType: WalletType): WalletInfo[] => {
 
 // New hooks for the selected tokens
 export const useSourceToken = (): Token | null => {
-  return useWeb3Store((state) => state.sourceToken);
+  return useWeb3Store((state) => state.getSwapStateForSection().sourceToken);
 };
 
 export const useDestinationToken = (): Token | null => {
-  return useWeb3Store((state) => state.destinationToken);
+  return useWeb3Store(
+    (state) => state.getSwapStateForSection().destinationToken,
+  );
 };
 
 export const useTokensLoading = (): boolean => {
@@ -797,13 +919,15 @@ export const useTokensForChain = (chainId: number): Token[] => {
 };
 
 export const useSourceChainTokens = (): Token[] => {
-  const sourceChainId = useWeb3Store((state) => state.sourceChain.chainId);
+  const sourceChainId = useWeb3Store(
+    (state) => state.getSwapStateForSection().sourceChain.chainId,
+  );
   return useWeb3Store((state) => state.tokensByChainId[sourceChainId] || []);
 };
 
 export const useDestinationChainTokens = (): Token[] => {
   const destinationChainId = useWeb3Store(
-    (state) => state.destinationChain.chainId,
+    (state) => state.getSwapStateForSection().destinationChain.chainId,
   );
   return useWeb3Store(
     (state) => state.tokensByChainId[destinationChainId] || [],
@@ -822,12 +946,18 @@ export const useTokenByAddress = (
   });
 };
 
+export const useGetWalletBySourceChain = (): WalletInfo | null => {
+  return useWeb3Store((state) => state.getWalletBySourceChain());
+};
+
 export const useLoadTokens = () => {
   return useWeb3Store((state) => state.loadTokens);
 };
 
 export const useTransactionDetails = () => {
-  return useWeb3Store((state) => state.transactionDetails);
+  return useWeb3Store(
+    (state) => state.getSwapStateForSection().transactionDetails,
+  );
 };
 
 export const useSetSlippageValue = () => {
@@ -840,6 +970,10 @@ export const useSetReceiveAddress = () => {
 
 export const useSetGasDrop = () => {
   return useWeb3Store((state) => state.setGasDrop);
+};
+
+export const useSetActiveSwapSection = () => {
+  return useWeb3Store((state) => state.setActiveSwapSection);
 };
 
 export default useWeb3Store;
