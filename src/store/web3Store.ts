@@ -85,6 +85,11 @@ const useWeb3Store = create<Web3StoreState>()(
         }));
       },
 
+      setActiveSwapSection: (sectionKey: SectionKey) => {
+        console.log(`Setting active swap section to: ${sectionKey}`);
+        set({ activeSwapSection: sectionKey });
+      },
+
       setSourceChain: (chain: Chain) => {
         const key = get().activeSwapSection;
         set((state) => {
@@ -965,6 +970,10 @@ export const useSetReceiveAddress = () => {
 
 export const useSetGasDrop = () => {
   return useWeb3Store((state) => state.setGasDrop);
+};
+
+export const useSetActiveSwapSection = () => {
+  return useWeb3Store((state) => state.setActiveSwapSection);
 };
 
 export default useWeb3Store;

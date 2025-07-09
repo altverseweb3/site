@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import ProtocolFilter from "@/components/ui/earning/ProtocolFilter";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +11,10 @@ import BrandedButton from "@/components/ui/BrandedButton";
 import { Wallet } from "lucide-react";
 import { chainList } from "@/config/chains";
 import { WalletType } from "@/types/web3";
-import { useIsWalletTypeConnected } from "@/store/web3Store";
+import {
+  useIsWalletTypeConnected,
+  useSetActiveSwapSection,
+} from "@/store/web3Store";
 import { useEtherFiEarnData, filterEarnData, ProtocolModal } from "./etherFi";
 import {
   EarnTableRow,
@@ -66,7 +69,13 @@ export default function EarnPage() {
   >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const setActiveSwapSection = useSetActiveSwapSection();
+
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  useEffect(() => {
+    setActiveSwapSection("earn");
+  }, [setActiveSwapSection]);
 
   // Use the etherFi hook for data fetching - always fetch earn data, only require wallet for dashboard
   const {

@@ -121,6 +121,7 @@ export interface Web3StoreState {
   // New integration-specific actions
   getSwapStateForSection: () => SwapStateForSection;
   initializeSwapStateForSection: () => void;
+  setActiveSwapSection: (sectionKey: SectionKey) => void;
   setSourceChain: (chain: Chain) => void;
   setDestinationChain: (chain: Chain) => void;
   swapChains: () => void;
