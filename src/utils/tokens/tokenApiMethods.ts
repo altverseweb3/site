@@ -12,6 +12,7 @@ import {
   TokenBalance,
 } from "@/types/web3";
 import { SuiBalanceResult } from "@/api/altverse";
+import { Chain } from "@/types/web3";
 
 /**
  * Formats a balance from hex or large number string to a human-readable token amount
@@ -55,7 +56,10 @@ function formatTokenBalance(balanceStr: string, decimals: number): string {
   }
 }
 
-export async function getPricesAndBalances(): Promise<boolean> {
+export async function getPricesAndBalances(
+  sourceChain: Chain,
+  destinationChain: Chain,
+): Promise<boolean> {
   const store = useWeb3Store.getState();
   const sourceWallet = store.getWalletBySourceChain();
   const destinationWallet = store.getWalletByDestinationChain();
@@ -65,12 +69,12 @@ export async function getPricesAndBalances(): Promise<boolean> {
   try {
     const [sourceResult, destinationResult] = await Promise.allSettled([
       getPricesAndBalancesForChain(
-        store.sourceChain.chainId,
+        sourceChain.chainId,
         sourceWallet?.address,
         "source",
       ),
       getPricesAndBalancesForChain(
-        store.destinationChain.chainId,
+        destinationChain.chainId,
         destinationWallet?.address,
         "destination",
       ),

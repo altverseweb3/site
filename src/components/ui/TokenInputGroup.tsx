@@ -2,7 +2,7 @@ import React from "react";
 import { SelectTokenButton } from "@/components/ui/SelectTokenButton";
 import { TokenAmountInput } from "@/components/ui/TokenAmountInput";
 import useUIStore from "@/store/uiStore";
-import useWeb3Store from "@/store/web3Store";
+import { useSourceToken, useDestinationToken } from "@/store/web3Store";
 
 interface TokenInputGroupProps {
   variant: "source" | "destination";
@@ -31,8 +31,8 @@ export function TokenInputGroup({
   const setDestinationTokenSelectOpen = useUIStore(
     (state) => state.setDestinationTokenSelectOpen,
   );
-  const sourceToken = useWeb3Store((state) => state.sourceToken);
-  const destinationToken = useWeb3Store((state) => state.destinationToken);
+  const sourceToken = useSourceToken();
+  const destinationToken = useDestinationToken();
 
   const setIsOpen =
     variant === "source"
