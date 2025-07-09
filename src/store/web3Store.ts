@@ -20,8 +20,7 @@ import {
 } from "@/utils/tokens/tokenMethods";
 import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
-
-const STORE_VERSION = 2;
+import { STORE_VERSION } from "@/store/storeVersion";
 
 const useWeb3Store = create<Web3StoreState>()(
   persist(

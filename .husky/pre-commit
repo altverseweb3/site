@@ -1,2 +1,12 @@
+#!/bin/bash
+set -eou pipefail
+
 npx prettier --write "**/*.{ts,tsx,js,jsx,json}" && git add -A
 npm run lint
+
+if git diff --staged --name-only | grep -q "src/store/web3Store.ts"; then
+  current_version=$(grep -o 'STORE_VERSION = [0-9]\+' src/store/storeVersion.ts | grep -o '[0-9]\+')
+  new_version=$((current_version + 1))
+  sed -i "s/STORE_VERSION = [0-9]\+/STORE_VERSION = $new_version/" src/store/storeVersion.ts
+  git add src/store/storeVersion.ts
+fi
