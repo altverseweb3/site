@@ -1339,7 +1339,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         }}
                         className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
                       >
-                        Max
+                        max
                       </button>
                     )}
                   </div>
