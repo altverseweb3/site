@@ -105,10 +105,10 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-[#18181B] border border-[#27272A] rounded-lg p-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
                   apy
                 </span>
-                <span className="text-lg font-semibold text-green-400">
+                <span className="text-green-500 font-semibold font-mono">
                   {data.apy === 0 ? "TBD" : `${data.apy.toFixed(1)}%`}
                 </span>
               </div>
@@ -117,10 +117,10 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
             {!isDashboardRow(data) && (
               <div className="bg-[#18181B] border border-[#27272A] rounded-lg p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
                     tvl
                   </span>
-                  <span className="text-lg font-semibold text-[#FAFAFA]">
+                  <span className="text-[#FAFAFA] font-semibold font-mono">
                     {formatCurrency(data.tvl)}
                   </span>
                 </div>
@@ -131,19 +131,23 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
           {/* User Position (Dashboard only) */}
           {isDashboardRow(data) && (
             <div className="border border-[#27272A] rounded-lg p-4">
-              <h3 className="text-sm font-medium text-[#A1A1AA] mb-3">
+              <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
                 your position
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-[#A1A1AA]">balance</span>
-                  <div className="text-[#FAFAFA] font-medium">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                    balance
+                  </span>
+                  <div className="text-[#FAFAFA] font-semibold font-mono">
                     {data.balance.toFixed(4)} {data.position}
                   </div>
                 </div>
                 <div>
-                  <span className="text-sm text-[#A1A1AA]">usd value</span>
-                  <div className="text-[#FAFAFA] font-medium">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                    usd value
+                  </span>
+                  <div className="text-[#FAFAFA] font-semibold font-mono">
                     {formatCurrency(data.balanceUsd)}
                   </div>
                 </div>
@@ -153,7 +157,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
           {/* Supported Assets */}
           <div>
-            <h3 className="text-[#A1A1AA] text-sm font-medium mb-3 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
               supported assets
             </h3>
             <div className="flex gap-3">
@@ -179,7 +183,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
           {/* You Will Receive */}
           <div>
-            <h3 className="text-[#A1A1AA] text-sm font-medium mb-3 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
               you will receive
             </h3>
             <div className="flex items-center gap-3 bg-[#27272A] rounded-lg px-4 py-3">
