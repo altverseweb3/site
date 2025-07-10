@@ -9,6 +9,8 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
+  ExternalLink,
+  Wallet,
 } from "lucide-react";
 import {
   Dialog,
@@ -1025,7 +1027,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 )}
                 <StepIndicator
                   step={2}
-                  title="Vault Deposit"
+                  title="vault deposit"
                   description={`${activeProcess.targetAsset} → ${vault.name}`}
                 />
               </div>
@@ -1054,7 +1056,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               {/* Asset/Chain Selection */}
               <div>
                 <label className="text-sm font-medium text-[#A1A1AA] mb-3 block">
-                  Select Asset
+                  select asset
                 </label>
                 <Select
                   value={
@@ -1168,7 +1170,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   <SelectContent className="bg-[#27272A] border-[#3F3F46]">
                     <SelectGroup>
                       <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
-                        Direct Deposit (Ethereum)
+                        direct deposit (ethereum)
                       </SelectLabel>
                       {vault.supportedAssets.deposit.map((asset) => (
                         <SelectItem
@@ -1194,7 +1196,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
                     <SelectGroup>
                       <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
-                        Cross-chain Swap from
+                        cross-chain swap from
                       </SelectLabel>
                       {chainList
                         .filter((chain) => {
@@ -1263,7 +1265,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-[#A1A1AA]">
-                    Amount
+                    amount
                   </label>
                   <div className="flex items-center gap-2">
                     {/* Balance display - always show when asset is selected */}
@@ -1271,12 +1273,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       <div className="text-xs text-amber-500">
                         {selectedSwapToken && (
                           <span>
-                            Balance:{" "}
-                            {selectedSwapToken.userBalance
-                              ? parseFloat(
-                                  selectedSwapToken.userBalance,
-                                ).toFixed(6)
-                              : "0.00"}{" "}
+                            balance:{" "}
+                            <span className="font-mono">
+                              {selectedSwapToken.userBalance
+                                ? parseFloat(
+                                    selectedSwapToken.userBalance,
+                                  ).toFixed(6)
+                                : "0.00"}
+                            </span>{" "}
                             {selectedSwapToken.ticker}
                           </span>
                         )}
@@ -1354,7 +1358,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     onChange={(e) => {
                       handleSwapAmountChange(e);
                     }}
-                    className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A]"
+                    className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A] font-mono"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     {selectedSwapToken && (
@@ -1386,7 +1390,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       Will swap {selectedSwapToken.ticker} →{" "}
                       {vault.supportedAssets.deposit[0]}
                       {receiveAmount && (
-                        <span className="text-green-500 ml-2">
+                        <span className="text-green-500 font-mono ml-2">
                           ≈ {receiveAmount} {vault.supportedAssets.deposit[0]}
                         </span>
                       )}
@@ -1411,8 +1415,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
           <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
             <Info className="h-4 w-4 text-green-500" />
             <span className="text-sm text-[#FAFAFA]">
-              Current APY:{" "}
-              <span className="text-green-500 font-semibold">
+              current apy:{" "}
+              <span className="text-green-500 font-semibold font-mono">
                 {apy && apy > 0 ? `${apy.toFixed(1)}%` : "TBD"}
               </span>
             </span>
@@ -1451,7 +1455,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                       parseFloat(receiveAmount) <= 0
                     : !isFormValid
                 }
-                className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
+                className="w-full bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border rounded-lg py-3 font-semibold disabled:opacity-50"
               >
                 {isLoadingQuote ? (
                   <div className="flex items-center gap-2">
@@ -1462,13 +1466,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   <>
                     {!isDirectDeposit ? (
                       <>
-                        Start Cross-chain Deposit
+                        start cross-chain deposit
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     ) : (
                       <>
-                        Direct Deposit {selectedSwapToken?.ticker || ""}
-                        <ArrowRight className="h-4 w-4 ml-2" />
+                        <Wallet className="h-4 w-4 mr-1" />
+                        confirm deposit
                       </>
                     )}
                   </>
@@ -1481,8 +1485,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
               variant="outline"
               className="w-full border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
             >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Withdraw on EtherFi
+              <ExternalLink className="h-4 w-4 mr-2" />
+              withdraw on ether.fi
             </Button>
 
             <p className="text-xs text-[#71717A] text-center">

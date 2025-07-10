@@ -72,67 +72,58 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-[#18181B] border-[#27272A]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
+      <DialogContent className="sm:max-w-[460px] bg-[#18181B] border-[#27272A]">
+        <DialogHeader className="pb-4">
+          <div className="flex items-center gap-3">
             <Image
               src={data.marketVaultIcon}
               alt={data.marketVault}
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               className="rounded-full"
             />
-            {data.marketVault}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Description */}
-          <div>
-            <h3 className="text-sm font-medium text-[#A1A1AA] mb-2">
-              Description
-            </h3>
-            <p className="text-[#FAFAFA] text-sm leading-relaxed">
-              {vault.description}
-            </p>
-          </div>
-
-          {/* Vault Info */}
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-medium text-[#A1A1AA] mb-2">
-                Protocol
-              </h3>
-              <div className="flex items-center gap-2">
+              <DialogTitle className="text-[#FAFAFA] text-lg font-semibold">
+                {data.marketVault}
+              </DialogTitle>
+              <div className="flex items-center gap-1">
                 <Image
                   src={data.protocolIcon}
                   alt={data.protocol}
-                  width={20}
-                  height={20}
+                  width={12}
+                  height={12}
+                  className="object-contain"
                 />
-                <span className="text-[#FAFAFA]">{data.protocol}</span>
+                <span className="text-sm text-[#A1A1AA]">{data.protocol}</span>
               </div>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-[#A1A1AA] mb-2">Type</h3>
-              <span className="text-[#FAFAFA]">{vault.type}</span>
-            </div>
           </div>
+        </DialogHeader>
 
-          {/* Performance */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-[#A1A1AA] mb-2">APY</h3>
-              <span className="text-green-500 font-semibold text-lg">
-                {data.apy.toFixed(1)}%
-              </span>
-            </div>
-            {!isDashboardRow(data) && (
-              <div>
-                <h3 className="text-sm font-medium text-[#A1A1AA] mb-2">TVL</h3>
-                <span className="text-[#FAFAFA] font-semibold text-lg">
-                  {formatCurrency(data.tvl)}
+        <div className="space-y-4">
+          {/* APY and TVL Cards */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-[#18181B] border border-[#27272A] rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                  apy
                 </span>
+                <span className="text-green-500 font-semibold font-mono">
+                  {data.apy === 0 ? "TBD" : `${data.apy.toFixed(1)}%`}
+                </span>
+              </div>
+            </div>
+
+            {!isDashboardRow(data) && (
+              <div className="bg-[#18181B] border border-[#27272A] rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                    tvl
+                  </span>
+                  <span className="text-[#FAFAFA] font-semibold font-mono">
+                    {formatCurrency(data.tvl)}
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -140,19 +131,23 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
           {/* User Position (Dashboard only) */}
           {isDashboardRow(data) && (
             <div className="border border-[#27272A] rounded-lg p-4">
-              <h3 className="text-sm font-medium text-[#A1A1AA] mb-3">
-                Your Position
+              <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
+                your position
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-[#A1A1AA]">Balance</span>
-                  <div className="text-[#FAFAFA] font-medium">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                    balance
+                  </span>
+                  <div className="text-[#FAFAFA] font-semibold font-mono">
                     {data.balance.toFixed(4)} {data.position}
                   </div>
                 </div>
                 <div>
-                  <span className="text-sm text-[#A1A1AA]">USD Value</span>
-                  <div className="text-[#FAFAFA] font-medium">
+                  <span className="text-sm font-semibold text-zinc-300 lowercase tracking-wider">
+                    usd value
+                  </span>
+                  <div className="text-[#FAFAFA] font-semibold font-mono">
                     {formatCurrency(data.balanceUsd)}
                   </div>
                 </div>
@@ -162,78 +157,75 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
           {/* Supported Assets */}
           <div>
-            <h3 className="text-sm font-medium text-[#A1A1AA] mb-3">
-              Supported Assets
+            <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
+              supported assets
             </h3>
-            <div className="flex flex-wrap gap-2">
-              {data.assets.map((asset, index) => (
+            <div className="flex gap-3">
+              {data.assets.slice(0, 3).map((asset, index) => (
                 <div
                   key={asset}
-                  className="flex items-center gap-2 bg-[#27272A] rounded-full px-3 py-1"
+                  className="flex items-center gap-2 bg-[#27272A] rounded-full px-3 py-2"
                 >
                   <Image
                     src={data.assetIcons[index]}
                     alt={asset}
-                    width={16}
-                    height={16}
+                    width={20}
+                    height={20}
                     className="rounded-full"
                   />
-                  <span className="text-[#FAFAFA] text-sm">{asset}</span>
+                  <span className="text-[#FAFAFA] text-sm font-medium">
+                    {asset}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Receive Token */}
+          {/* You Will Receive */}
           <div>
-            <h3 className="text-sm font-medium text-[#A1A1AA] mb-3">
-              You Will Receive
+            <h3 className="text-sm font-semibold text-zinc-300 lowercase tracking-wider mb-3">
+              you will receive
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-[#27272A] rounded-lg px-4 py-3">
               <Image
                 src={
                   vault.supportedAssets.receive.imagePath ||
                   "/images/etherFi/liquid.svg"
                 }
                 alt={vault.supportedAssets.receive.symbol}
-                width={20}
-                height={20}
+                width={24}
+                height={24}
                 className="rounded-full"
               />
-              <span className="text-[#FAFAFA]">
+              <span className="text-[#FAFAFA] font-semibold text-base">
                 {vault.supportedAssets.receive.symbol}
               </span>
             </div>
           </div>
 
-          {/* Etherscan Link */}
-          <div className="border-t border-[#27272A] pt-4">
-            <Button
-              variant="outline"
-              onClick={() => window.open(vault.links.explorer, "_blank")}
-              className="w-full border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              View on Etherscan
-            </Button>
+          {/* Description */}
+          <div className="pt-2">
+            <p className="text-[#A1A1AA] text-sm leading-relaxed">
+              {vault.description}
+            </p>
           </div>
 
-          {/* Main Actions */}
-          <div className="flex gap-3">
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
             {isWalletConnected ? (
               <Button
                 onClick={handleDepositClick}
-                className="flex-1 bg-green-600 text-white hover:bg-green-700"
+                className="bg-green-500/25 hover:bg-green-500/50 hover:text-green-400 text-green-500 border-green-500/30 border rounded-lg py-3 font-semibold"
               >
-                <Wallet className="h-4 w-4 mr-2" />
-                Deposit
+                <Wallet className="h-4 w-4 mr-1" />
+                deposit
               </Button>
             ) : (
               <ConnectWalletModal
                 trigger={
-                  <Button className="flex-1 bg-green-600 text-white hover:bg-green-700">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Connect
+                  <Button className="bg-green-500/25 hover:bg-green-500/50 hover:text-green-400 text-green-500 border-green-500/30 border rounded-lg py-3 font-semibold">
+                    <Wallet className="h-4 w-4 mr-1" />
+                    connect
                   </Button>
                 }
                 onSuccess={handleWalletConnectSuccess}
@@ -241,12 +233,22 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
             )}
             <Button
               onClick={() => window.open(vault.links.analytics, "_blank")}
-              className="flex-1 bg-amber-500 text-black hover:bg-amber-600"
+              className="bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border rounded-lg py-3 font-semibold"
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open in Ether.fi
+              <ExternalLink className="h-4 w-4 mr-1" />
+              open vault
             </Button>
           </div>
+
+          {/* Etherscan Link */}
+          <Button
+            variant="outline"
+            onClick={() => window.open(vault.links.explorer, "_blank")}
+            className="w-full border-[#27272A] text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#27272A] py-2 text-sm mt-2"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            view contract on etherscan
+          </Button>
         </div>
 
         {/* Deposit Modal */}

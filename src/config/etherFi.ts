@@ -70,7 +70,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Liquid ETH Yield",
     description:
       "Liquid ETH vault provides staking rewards plus additional yield from ETH delegation strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -103,7 +103,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Liquid BTC Yield",
     description:
       "Liquid BTC vault uses wrapped BTC to generate yield through lending and options strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -136,7 +136,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Market-Neutral USD",
     description:
       "Market-Neutral USD vault focuses on stable returns using conservative stablecoin strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Strategy Vault",
     chain: "ethereum",
     addresses: {
@@ -169,7 +169,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "ETHFI Restaking",
     description:
       "ETHFI Restaking vault allows users to earn rewards by staking ETHFI tokens.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Governance Restaking",
     chain: "ethereum",
     addresses: {
@@ -201,7 +201,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "EIGEN Restaking",
     description:
       "EIGEN Restaking vault allows users to earn rewards by staking EIGEN tokens.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Governance Restaking",
     chain: "ethereum",
     addresses: {
@@ -233,7 +233,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "UltraYield Stablecoin Vault",
     description:
       "Ultra Yield Stablecoin Vault uses aggressive yet secure strategies to maximize stablecoin returns.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Partner Vault",
     chain: "ethereum",
     addresses: {
@@ -266,7 +266,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Liquid Move ETH",
     description:
       "Liquid Move ETH vault combines ETH staking with automated trading strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Partner Vault",
     chain: "ethereum",
     addresses: {
@@ -298,7 +298,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "The Bera ETH Vault",
     description:
       "The Bera ETH Vault focuses on low-risk strategies with consistent returns for ETH holders.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Partner Vault",
     chain: "ethereum",
     addresses: {
@@ -330,7 +330,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "The Bera BTC Vault",
     description:
       "The Bera BTC Vault focuses on low-risk strategies with consistent returns for BTC holders.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Partner Vault",
     chain: "ethereum",
     addresses: {
@@ -362,7 +362,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     id: 10,
     name: " Symbiotic Restaking",
     description: "TBA",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -395,7 +395,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Bitcoin LRT",
     description:
       "Bitcoin LRT vault providing restaked BTC yield through various Bitcoin strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -427,7 +427,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "Ethena USD LRT",
     description:
       "Ethena USD LRT vault combining staking and shorting ETH strategies for stablecoin yield.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
@@ -460,7 +460,7 @@ export const ETHERFI_VAULTS: Record<number, EtherFiVault> = {
     name: "King Karak LRT",
     description:
       "King Karak LRT vault providing restaked ETH yield through Karak network strategies.",
-    ecosystem: "Ether.fi",
+    ecosystem: "ether.fi",
     type: "Featured",
     chain: "ethereum",
     addresses: {
