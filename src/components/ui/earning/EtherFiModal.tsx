@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useState } from "react";
 import Image from "next/image";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Wallet } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -217,12 +217,14 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 onClick={handleDepositClick}
                 className="bg-green-500/25 hover:bg-green-500/50 hover:text-green-400 text-green-500 border-green-500/30 border rounded-lg py-3 font-semibold"
               >
+                <Wallet className="h-4 w-4 mr-1" />
                 deposit
               </Button>
             ) : (
               <ConnectWalletModal
                 trigger={
                   <Button className="bg-green-500/25 hover:bg-green-500/50 hover:text-green-400 text-green-500 border-green-500/30 border rounded-lg py-3 font-semibold">
+                    <Wallet className="h-4 w-4 mr-1" />
                     connect
                   </Button>
                 }

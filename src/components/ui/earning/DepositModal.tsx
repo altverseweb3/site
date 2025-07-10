@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
+  ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -1406,7 +1407,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
             <Info className="h-4 w-4 text-green-500" />
             <span className="text-sm text-[#FAFAFA]">
               Current APY:{" "}
-              <span className="text-green-500 font-semibold">
+              <span className="text-green-500 font-semibold font-mono">
                 {apy && apy > 0 ? `${apy.toFixed(1)}%` : "TBD"}
               </span>
             </span>
@@ -1475,8 +1476,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
               variant="outline"
               className="w-full border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]"
             >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Withdraw on EtherFi
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Withdraw on etherfi
             </Button>
 
             <p className="text-xs text-[#71717A] text-center">
