@@ -1020,7 +1020,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 )}
                 <StepIndicator
                   step={2}
-                  title="Vault Deposit"
+                  title="vault deposit"
                   description={`${activeProcess.targetAsset} → ${vault.name}`}
                 />
               </div>
@@ -1163,7 +1163,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   <SelectContent className="bg-[#27272A] border-[#3F3F46]">
                     <SelectGroup>
                       <SelectLabel className="text-[#A1A1AA] px-2 py-1.5 text-xs font-medium">
-                        Direct Deposit (Ethereum)
+                        direct deposit (ethereum)
                       </SelectLabel>
                       {vault.supportedAssets.deposit.map((asset) => (
                         <SelectItem
@@ -1406,7 +1406,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
             <Info className="h-4 w-4 text-green-500" />
             <span className="text-sm text-[#FAFAFA]">
-              Current APY:{" "}
+              current apy:{" "}
               <span className="text-green-500 font-semibold font-mono">
                 {apy && apy > 0 ? `${apy.toFixed(1)}%` : "TBD"}
               </span>
@@ -1457,12 +1457,12 @@ const DepositModal: React.FC<DepositModalProps> = ({
                   <>
                     {!isDirectDeposit ? (
                       <>
-                        Start Cross-chain Deposit
+                        start cross-chain deposit
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     ) : (
                       <>
-                        Direct Deposit {selectedSwapToken?.ticker || ""}
+                        direct deposit {selectedSwapToken?.ticker || ""}
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     )}
