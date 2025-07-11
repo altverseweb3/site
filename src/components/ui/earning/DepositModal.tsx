@@ -424,7 +424,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     receiveAmount,
     isLoadingQuote,
   } = useTokenTransfer({
-    type: "swap",
+    type: "earn/etherFi", // remember to change me when we integrate with other vaults
     sourceChain,
     destinationChain,
     sourceToken,

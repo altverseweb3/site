@@ -26,6 +26,8 @@ import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 import { SwapStatus } from "@/types/web3";
 import { SwapTrackingOptions } from "@/types/web3";
 import { useSwapTracking } from "@/hooks/useSwapTracking";
+import { recordSwap } from "@/utils/swap/swapRecorder";
+import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
 
 /**
  * Creates a properly formatted CAIP network ID with correct TypeScript typing
@@ -604,7 +606,8 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
 }
 
 interface TokenTransferOptions {
-  type: "swap" | "bridge" | "V";
+  // "vanilla", "earn/etherFi", "earn/aave", "earn/pendle", "lend/aave"
+  type: "vanilla" | "earn/etherFi" | "earn/aave" | "earn/pendle" | "lend/aave";
   pauseQuoting?: boolean;
   enableTracking?: boolean; // New option to enable automatic tracking
   trackingOptions?: SwapTrackingOptions; // Pass through tracking configuration
@@ -736,16 +739,9 @@ export function useTokenTransfer(
         }
 
         // Show final success toast ONLY ONCE
-        toast.success(
-          `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
-          {
-            description: `${amount} ${options.sourceToken!.ticker} → ${receiveAmount} ${
-              options.type === "swap"
-                ? options.destinationToken?.ticker
-                : options.sourceToken!.ticker
-            }`,
-          },
-        );
+        toast.success("Swap completed successfully", {
+          description: `${amount} ${options.sourceToken!.ticker} → ${receiveAmount} ${options.destinationToken?.ticker}`,
+        });
 
         // Call user's completion callback
         options.onTrackingComplete?.(status);
@@ -781,13 +777,10 @@ export function useTokenTransfer(
           const statusText = getStatusDescription(status.clientStatus);
           const stepsText = getStepsDescription(status.steps);
 
-          toast.loading(
-            `${options.type === "swap" ? "Swap" : "Bridge"} in progress...`,
-            {
-              id: progressToastId,
-              description: `${statusText}${stepsText ? ` • ${stepsText}` : ""}`,
-            },
-          );
+          toast.loading("Swap in progress...", {
+            id: progressToastId,
+            description: `${statusText}${stepsText ? ` • ${stepsText}` : ""}`,
+          });
         }
       },
     },
@@ -838,13 +831,10 @@ export function useTokenTransfer(
     if (isTracking && swapId && isTrackingEnabled && !progressToastId) {
       console.log("Starting progress toast for swap:", swapId); // DEBUG
 
-      const toastId = toast.loading(
-        `${options.type === "swap" ? "Swap" : "Bridge"} in progress...`,
-        {
-          description: "Tracking transaction progress...",
-          duration: Infinity, // Keep it open until we dismiss it
-        },
-      );
+      const toastId = toast.loading("Swap in progress...", {
+        description: "Tracking transaction progress...",
+        duration: Infinity, // Keep it open until we dismiss it
+      });
 
       setProgressToastId(toastId);
     }
@@ -922,12 +912,6 @@ export function useTokenTransfer(
       amount &&
       parseFloat(amount) > 0,
   );
-  const isValidForBridge = Boolean(
-    options.sourceToken && amount && parseFloat(amount) > 0,
-  );
-
-  const isValid: boolean =
-    options.type === "swap" ? isValidForSwap : isValidForBridge;
 
   // Update this useEffect to include fee calculation
   useEffect(() => {
@@ -939,7 +923,7 @@ export function useTokenTransfer(
     let timeoutId: NodeJS.Timeout;
 
     const fetchQuote = async () => {
-      if (!isValid) {
+      if (!isValidForSwap) {
         failQuote();
         return;
       }
@@ -950,16 +934,7 @@ export function useTokenTransfer(
       }
 
       // For swap: Check if we have both source and destination tokens
-      if (
-        options.type === "swap" &&
-        (!options.sourceToken || !options.destinationToken)
-      ) {
-        failQuote();
-        return;
-      }
-
-      // For bridge: Check if we have source token
-      if (options.type === "bridge" && !options.sourceToken) {
+      if (!options.sourceToken || !options.destinationToken) {
         failQuote();
         return;
       }
@@ -987,24 +962,12 @@ export function useTokenTransfer(
         const sourceToken = options.sourceToken;
         const destinationToken = options.destinationToken;
 
-        if (options.type === "swap" && sourceToken && destinationToken) {
+        if (sourceToken && destinationToken) {
           quotes = await getMayanQuote({
             amount,
             sourceToken,
             destinationToken,
             sourceChain, // using the reference defined above
-            destinationChain,
-            slippageBps,
-            gasDrop,
-            referrer,
-            referrerBps,
-          });
-        } else if (options.type === "bridge" && sourceToken) {
-          quotes = await getMayanQuote({
-            amount,
-            sourceToken,
-            destinationToken: sourceToken, // Same token on destination chain
-            sourceChain,
             destinationChain,
             slippageBps,
             gasDrop,
@@ -1086,9 +1049,7 @@ export function useTokenTransfer(
           }
 
           // For bridging, we use the source token's decimals
-          const token =
-            options.type === "swap" ? destinationToken! : sourceToken!;
-          const decimals = token.decimals || 6;
+          const decimals = destinationToken.decimals || 6;
 
           const formattedAmount = parseFloat(
             expectedAmountOut.toString(),
@@ -1172,13 +1133,13 @@ export function useTokenTransfer(
     getSlippageBps,
     getGasDrop,
     refreshTrigger,
-    isValid,
+    isValidForSwap,
     options.pauseQuoting,
   ]);
 
   useEffect(() => {
     // Only set up interval if everything is valid
-    if (!isValid) return;
+    if (!isValidForSwap) return;
 
     console.log("Setting up quote refresh interval");
 
@@ -1194,19 +1155,16 @@ export function useTokenTransfer(
       console.log("Cleaning up quote refresh interval");
       clearInterval(intervalId);
     };
-  }, [isValid, isLoadingQuote, isProcessing]);
+  }, [isValidForSwap, isLoadingQuote, isProcessing]);
 
   const swapAmounts = async (): Promise<void> => {
     setAmount(receiveAmount);
   };
 
   const handleTransfer = async (): Promise<string | void> => {
-    if (!isValid) {
+    if (!isValidForSwap) {
       toast.warning(`Invalid ${options.type} parameters`, {
-        description:
-          options.type === "swap"
-            ? "Please select tokens and enter a valid amount"
-            : "Please select a token and enter a valid amount",
+        description: "Please select tokens and enter a valid amount",
       });
       return;
     }
@@ -1284,22 +1242,12 @@ export function useTokenTransfer(
 
     // Generate a toast ID that we'll use for both success and error cases
     const toastId = isTrackingEnabled
-      ? toast.loading(
-          `Initiating ${options.type === "swap" ? "swap" : "bridge"}...`,
-          {
-            description: "Please confirm the transaction in your wallet",
-          },
-        )
-      : toast.loading(
-          `${options.type === "swap" ? "Swapping" : "Bridging"} ${amount} ${options.sourceToken!.ticker}...`,
-          {
-            description: `From ${options.sourceChain.name} to ${
-              options.type === "swap"
-                ? options.destinationToken?.ticker
-                : options.destinationChain.name
-            }`,
-          },
-        );
+      ? toast.loading("Initiating swap...", {
+          description: "Please confirm the transaction in your wallet",
+        })
+      : toast.loading(`Swapping ${amount} ${options.sourceToken!.ticker}...`, {
+          description: `From ${options.sourceChain.name} to ${options.destinationToken?.ticker}`,
+        });
 
     try {
       setIsProcessing(true);
@@ -1324,23 +1272,11 @@ export function useTokenTransfer(
       // Refresh quote if needed
       if (!quoteData || quoteData.length === 0) {
         // Fetch fresh quote
-        if (options.type === "swap" && sourceToken && destinationToken) {
+        if (sourceToken && destinationToken) {
           quotes = await getMayanQuote({
             amount,
             sourceToken,
             destinationToken,
-            sourceChain,
-            destinationChain,
-            slippageBps,
-            gasDrop,
-            referrer,
-            referrerBps,
-          });
-        } else if (options.type === "bridge" && sourceToken) {
-          quotes = await getMayanQuote({
-            amount,
-            sourceToken,
-            destinationToken: sourceToken, // Same token on destination
             sourceChain,
             destinationChain,
             slippageBps,
@@ -1430,6 +1366,23 @@ export function useTokenTransfer(
       );
 
       setSwapId(result);
+      const swapMetricsRequest: SwapMetricsRequest = {
+        swapperAddress: requiredWallet!.address,
+        txHash: result,
+        swapType: options.type,
+        amount: amount,
+        tokenIn: options.sourceToken?.address,
+        tokenOut: options.destinationToken?.address,
+        network: options.sourceChain.name,
+      };
+      // Send swap metrics to the backend
+      try {
+        await recordSwap(swapMetricsRequest);
+        console.log("Swap metrics recorded successfully");
+      } catch (error) {
+        console.error("Failed to record swap metrics:", error);
+      }
+
       // Call the swap initiated callback
       options.onSwapInitiated?.(result);
 
@@ -1444,13 +1397,10 @@ export function useTokenTransfer(
         }
       } else {
         // Original behavior - immediate success
-        toast.success(
-          `${options.type === "swap" ? "Swap" : "Bridge"} completed successfully`,
-          {
-            id: toastId,
-            description: `Transferred ${amount} ${sourceToken!.ticker}`,
-          },
-        );
+        toast.success("Swap completed successfully", {
+          id: toastId,
+          description: `Transferred ${amount} ${sourceToken!.ticker}`,
+        });
       }
 
       return result; // Return swap ID for parent components
@@ -1461,7 +1411,7 @@ export function useTokenTransfer(
       // Use our new error parser to get a user-friendly message
       const friendlyError = parseSwapError(error);
 
-      toast.error(`${options.type === "swap" ? "Swap" : "Bridge"} failed`, {
+      toast.error("Swap failed", {
         description: friendlyError,
       });
       setSwapId(null);
@@ -1482,7 +1432,7 @@ export function useTokenTransfer(
     amount,
     setAmount,
     handleAmountChange,
-    isValid,
+    isValid: isValidForSwap,
     quoteData,
     receiveAmount,
     isLoadingQuote,
@@ -1508,7 +1458,10 @@ export function useTokenTransfer(
     isProcessing:
       isProcessing || isChainSwitching || (isTrackingEnabled && isTracking),
     isButtonDisabled:
-      !isValid || isProcessing || !isWalletCompatible || isChainSwitching,
+      !isValidForSwap ||
+      isProcessing ||
+      !isWalletCompatible ||
+      isChainSwitching,
     // Actions
     handleTransfer,
     swapAmounts,

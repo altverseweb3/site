@@ -31,7 +31,7 @@ const SwapComponent: React.FC = () => {
     relayerFeeUsd,
     swapAmounts,
   } = useTokenTransfer({
-    type: "swap",
+    type: "vanilla",
     sourceChain: useSourceChain(),
     destinationChain: useDestinationChain(),
     sourceToken: sourceToken,
