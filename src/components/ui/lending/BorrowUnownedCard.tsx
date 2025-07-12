@@ -93,7 +93,33 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
     stringChainId: (currentAsset.chainId || 1).toString(),
   };
 
+<<<<<<< HEAD
   const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
+=======
+  const chain: Chain = {
+    id: chainName,
+    name: chainName,
+    chainName: chainName,
+    mayanName: chainName as MayanChainName,
+    alchemyNetworkName: Network.ETH_MAINNET,
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
+    icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
+    currency: "USD",
+    backgroundColor: "",
+    fontColor: "",
+    chainId: currentAsset.chainId || 1,
+    decimals: 18,
+    l2: false,
+    gasDrop: 0,
+    walletType: WalletType.REOWN_EVM,
+  };
+>>>>>>> 765bfe8 (chore: clean up implementation)
 
   // Get borrowing status display
   const getBorrowingStatusDisplay = () => {
