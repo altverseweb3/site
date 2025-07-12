@@ -1,6 +1,6 @@
-import { useState, FC } from "react";
-import Image from "next/image";
+import { FC } from "react";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
+import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
   CardHeader,
@@ -12,6 +12,8 @@ import {
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { BorrowModal } from "./BorrowModal";
 import { chainNames } from "@/config/aave";
+import type { Token, Chain, MayanChainName } from "@/types/web3";
+import { Network, WalletType } from "@/types/web3";
 
 interface BorrowUnOwnedCardProps {
   asset?: AaveReserveData;
@@ -34,8 +36,6 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
 }) => {
-  const [hasImageError, setHasImageError] = useState(false);
-
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
     asset: "0x0000000000000000000000000000000000000000",
@@ -83,21 +83,39 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   const isFrozen = currentAsset.isFrozen ?? false;
 
   const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
-  const tokenIcon = currentAsset.symbol.charAt(0).toUpperCase();
 
-  // Simple image path logic
-  const getImagePath = () => {
-    if (
-      !currentAsset.tokenIcon ||
-      currentAsset.tokenIcon === "unknown.png" ||
-      hasImageError
-    ) {
-      return null;
-    }
-    return `/tokens/${chainName}/pngs/${currentAsset.tokenIcon}`;
+  // Create Token and Chain objects for TokenImage component
+  const token: Token = {
+    id: currentAsset.asset,
+    name: currentAsset.name,
+    ticker: currentAsset.symbol,
+    icon: currentAsset.tokenIcon || "unknown.png",
+    address: currentAsset.asset,
+    decimals: currentAsset.decimals,
+    chainId: currentAsset.chainId || 1,
+    stringChainId: (currentAsset.chainId || 1).toString(),
+    native: false,
   };
 
-  const imagePath = getImagePath();
+  const chain: Chain = {
+    id: chainName,
+    name: chainName,
+    chainName: chainName,
+    mayanName: chainName as MayanChainName,
+    alchemyNetworkName: Network.ETH_MAINNET,
+    symbol: "ETH",
+    chainToken: "ETH",
+    icon: "",
+    currency: "USD",
+    backgroundColor: "",
+    fontColor: "",
+    chainId: currentAsset.chainId || 1,
+    decimals: 18,
+    l2: false,
+    gasDrop: 0,
+    nativeAddress: "",
+    walletType: WalletType.REOWN_EVM,
+  };
 
   // Get borrowing status display
   const getBorrowingStatusDisplay = () => {
@@ -121,23 +139,9 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
-        {/* Token image or fallback */}
-        {imagePath ? (
-          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded-full overflow-hidden">
-            <Image
-              src={imagePath}
-              alt={currentAsset.name}
-              fill
-              sizes="32px"
-              className="object-cover"
-              onError={() => setHasImageError(true)}
-            />
-          </div>
-        ) : (
-          <div className="bg-red-500 rounded-full p-2 mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">{tokenIcon}</span>
-          </div>
-        )}
+        <div className="mr-3">
+          <TokenImage token={token} chain={chain} size="md" />
+        </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
             {currentAsset.name}

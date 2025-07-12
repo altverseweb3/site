@@ -4,6 +4,11 @@ import { AaveSDK } from "./aaveSDK";
 import { ERC20_ABI, POOL_ABI } from "../../types/aaveV3Abis";
 import { SupportedChainId } from "@/config/aave";
 
+export enum RateMode {
+  Stable = 1,
+  Variable = 2,
+}
+
 export interface UserAccountData {
   totalCollateralBase: string;
   totalDebtBase: string;
@@ -129,7 +134,7 @@ export interface BorrowResult {
 export interface BorrowParams {
   tokenAddress: string;
   amount: string;
-  rateMode: number; // 1 = stable, 2 = variable
+  rateMode: RateMode;
   tokenDecimals: number;
   tokenSymbol: string;
   userAddress: string;
@@ -510,7 +515,7 @@ export class AaveTransactions {
 
     try {
       console.log(
-        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === 1 ? "stable" : "variable"} rate`,
+        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === RateMode.Stable ? "stable" : "variable"} rate`,
       );
 
       if (!AaveSDK.isChainSupported(chainId)) {
@@ -532,7 +537,7 @@ export class AaveTransactions {
       const borrowTx = await poolContract.borrow(
         tokenAddress, // asset to borrow
         amountWei, // amount to borrow
-        rateMode, // interest rate mode (1 = stable, 2 = variable)
+        rateMode, // interest rate mode (RateMode.Stable = 1, RateMode.Variable = 2)
         0, // referral code
         userAddress, // on behalf of (borrower address)
       );

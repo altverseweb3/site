@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { AlertCircle, ArrowRight, TrendingUp } from "lucide-react";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/walletMethods";
@@ -21,6 +21,8 @@ import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
+import type { Token, Chain, MayanChainName } from "@/types/web3";
+import { Network, WalletType } from "@/types/web3";
 
 // Health Factor Calculator for Borrowing
 const calculateNewHealthFactorForBorrow = (
@@ -83,6 +85,7 @@ interface BorrowModalProps {
 
 const BorrowModal: FC<BorrowModalProps> = ({
   tokenSymbol = "USDC",
+  tokenName,
   tokenIcon = "usdc.png",
   chainId = 1,
   availableToBorrow = "0",
@@ -106,23 +109,44 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [hasImageError, setHasImageError] = useState(false);
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
 
   const chainName = chainNames[chainId] || "ethereum";
-  const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
 
-  // Image path logic
-  const getImagePath = () => {
-    if (!tokenIcon || tokenIcon === "unknown.png" || hasImageError) {
-      return null;
-    }
-    return `/tokens/${chainName}/pngs/${tokenIcon}`;
+  // Create Token and Chain objects for TokenImage component
+  const token: Token = {
+    id: tokenAddress || `${tokenSymbol}-${chainId}`,
+    name: tokenName || tokenSymbol,
+    ticker: tokenSymbol,
+    icon: tokenIcon || "unknown.png",
+    address: tokenAddress || "",
+    decimals: tokenDecimals,
+    chainId: chainId,
+    stringChainId: chainId.toString(),
+    native: false,
   };
 
-  const imagePath = getImagePath();
+  const chain: Chain = {
+    id: chainName,
+    name: chainName,
+    chainName: chainName,
+    mayanName: chainName as MayanChainName,
+    alchemyNetworkName: Network.ETH_MAINNET,
+    symbol: "ETH", // Default, could be mapped based on chainId
+    chainToken: "ETH",
+    icon: "",
+    currency: "USD",
+    backgroundColor: "",
+    fontColor: "",
+    chainId: chainId,
+    decimals: 18,
+    l2: false,
+    gasDrop: 0,
+    nativeAddress: "",
+    walletType: WalletType.REOWN_EVM,
+  };
 
   // Handle client-side mounting
   useEffect(() => {
@@ -286,22 +310,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
-            {imagePath ? (
-              <Image
-                src={imagePath}
-                alt={tokenSymbol}
-                width={24}
-                height={24}
-                className="rounded-full"
-                onError={() => setHasImageError(true)}
-              />
-            ) : (
-              <div className="bg-red-500 rounded-full p-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {fallbackIcon}
-                </span>
-              </div>
-            )}
+            <TokenImage token={token} chain={chain} size="sm" />
             Borrow {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
