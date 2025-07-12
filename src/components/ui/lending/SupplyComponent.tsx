@@ -11,16 +11,44 @@ import SupplyUnOwnedCard from "./SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
 import { useSourceChain } from "@/store/web3Store";
-import { AaveReserveData, useAaveFetch } from "@/utils/aave/fetch";
+import {
+  AaveReserveData,
+  useAaveFetch,
+  UserPosition,
+} from "@/utils/aave/fetch";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
+  const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [positionsLoading, setPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesData } = useAaveFetch();
+  const { fetchAllReservesWithUserData, fetchUserPositions } = useAaveFetch();
+
+  // Move loadUserPositions to useCallback to fix dependency warning
+  const loadUserPositions = useCallback(
+    async (reserves: AaveReserveData[]) => {
+      try {
+        setPositionsLoading(true);
+        console.log("Fetching user positions...");
+
+        const positions = await fetchUserPositions(reserves);
+        console.log(`Found ${positions.length} user positions`);
+
+        setUserPositions(positions);
+      } catch (err) {
+        console.error("Error loading user positions:", err);
+        // Don't set error state for positions - just log and continue
+        setUserPositions([]);
+      } finally {
+        setPositionsLoading(false);
+      }
+    },
+    [fetchUserPositions],
+  );
 
   const loadAaveReserves = useCallback(
     async (force = false) => {
@@ -47,11 +75,15 @@ const SupplyComponent: React.FC = () => {
           `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
         );
 
-        const reservesData = await fetchAllReservesData();
+        // Fetch reserves with user wallet balances
+        const reservesData = await fetchAllReservesWithUserData();
 
         console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
         setAaveReserves(reservesData);
         setLastChainId(sourceChain.chainId);
+
+        // Now fetch user positions (supplied assets)
+        await loadUserPositions(reservesData);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);
         setError(
@@ -59,6 +91,7 @@ const SupplyComponent: React.FC = () => {
         );
         // Clear data on error
         setAaveReserves([]);
+        setUserPositions([]);
       } finally {
         setLoading(false);
       }
@@ -68,7 +101,8 @@ const SupplyComponent: React.FC = () => {
       lastChainId,
       sourceChain.chainId,
       aaveReserves.length,
-      fetchAllReservesData,
+      fetchAllReservesWithUserData,
+      loadUserPositions, // Added this dependency
     ],
   );
 
@@ -81,6 +115,7 @@ const SupplyComponent: React.FC = () => {
   useEffect(() => {
     if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
       setAaveReserves([]);
+      setUserPositions([]);
       setError(null);
     }
   }, [sourceChain.chainId, lastChainId]);
@@ -91,6 +126,7 @@ const SupplyComponent: React.FC = () => {
       console.log("MetaMask chain changed, clearing data and refreshing...");
       // Immediately clear cards and show loading state
       setAaveReserves([]);
+      setUserPositions([]);
       setError(null);
       setLoading(true);
 
@@ -124,13 +160,25 @@ const SupplyComponent: React.FC = () => {
     // TODO: Implement details modal
   };
 
+  const handleSwitch = (asset: AaveReserveData) => {
+    console.log("Switch collateral for asset:", asset);
+    // TODO: Implement collateral switch functionality
+  };
+
+  const handleWithdraw = (asset: AaveReserveData) => {
+    console.log("Withdraw asset:", asset);
+    // TODO: Implement withdraw functionality
+  };
+
   const handleRefresh = () => {
     console.log("Manual refresh triggered");
     loadAaveReserves(true); // Force refresh
   };
 
   const hasData = aaveReserves.length > 0;
+  const hasUserPositions = userPositions.length > 0;
   const showEmptyState = !loading && !error && !hasData;
+  const isLoadingPositions = loading || positionsLoading;
 
   return (
     <div className="w-full space-y-4">
@@ -144,10 +192,37 @@ const SupplyComponent: React.FC = () => {
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {/* TODO: Replace with actual user positions */}
-              <SupplyOwnedCard />
-              <SupplyOwnedCard />
-              <SupplyOwnedCard />
+              {isLoadingPositions && (
+                <div className="text-white text-center py-8">
+                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div>Loading your positions...</div>
+                </div>
+              )}
+
+              {!isLoadingPositions && !hasUserPositions && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    No supply positions found
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Supply assets to see your positions here
+                  </div>
+                </div>
+              )}
+
+              {!isLoadingPositions &&
+                hasUserPositions &&
+                userPositions.map((position, index) => (
+                  <SupplyOwnedCard
+                    key={`${position.asset.asset}-${sourceChain.chainId}-${index}`}
+                    asset={position.asset}
+                    suppliedBalance={position.suppliedBalance}
+                    suppliedBalanceUSD={position.suppliedBalanceUSD}
+                    isCollateral={position.isCollateral}
+                    onSwitch={handleSwitch}
+                    onWithdraw={handleWithdraw}
+                  />
+                ))}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>

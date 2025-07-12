@@ -95,6 +95,31 @@ export interface WithdrawParams {
   signer: ethers.Signer;
 }
 
+export interface CollateralParams {
+  tokenAddress: string;
+  useAsCollateral: boolean;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
+export interface WithdrawResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
+export interface WithdrawParams {
+  tokenAddress: string;
+  amount: string;
+  tokenDecimals: number;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
 export class AaveTransactions {
   static async withdrawAsset(params: WithdrawParams): Promise<WithdrawResult> {
     const {
@@ -161,69 +186,6 @@ export class AaveTransactions {
             "Insufficient supplied balance to withdraw this amount";
         } else if (error.message.includes("withdraw amount exceeds")) {
           errorMessage = "Withdrawal amount exceeds available balance";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      return {
-        success: false,
-        error: errorMessage,
-      };
-    }
-  }
-
-  static async setUserUseReserveAsCollateral(
-    params: CollateralParams,
-  ): Promise<CollateralResult> {
-    const { tokenAddress, useAsCollateral, tokenSymbol, chainId, signer } =
-      params;
-
-    try {
-      console.log(
-        `🛡️ ${useAsCollateral ? "Enabling" : "Disabling"} ${tokenSymbol} as collateral`,
-      );
-
-      if (!AaveSDK.isChainSupported(chainId)) {
-        throw new Error(`Chain ${chainId} not supported`);
-      }
-
-      const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Create pool contract
-      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
-
-      // Execute collateral toggle transaction
-      console.log(`📤 Executing collateral toggle transaction...`);
-      const collateralTx = await poolContract.setUserUseReserveAsCollateral(
-        tokenAddress,
-        useAsCollateral,
-      );
-
-      console.log(`⏳ Collateral transaction sent: ${collateralTx.hash}`);
-      await collateralTx.wait();
-      console.log(`✅ Collateral transaction confirmed`);
-
-      return {
-        success: true,
-        txHash: collateralTx.hash,
-      };
-    } catch (error) {
-      console.error("❌ Collateral transaction failed:", error);
-
-      // Handle specific error cases
-      let errorMessage = "Unknown error occurred";
-      if (error instanceof Error) {
-        if (error.message.includes("insufficient funds")) {
-          errorMessage = "Insufficient funds for gas fees";
-        } else if (error.message.includes("user rejected")) {
-          errorMessage = "Transaction rejected by user";
-        } else if (error.message.includes("health factor")) {
-          errorMessage =
-            "Transaction would put your account at risk of liquidation";
-        } else if (error.message.includes("not enough collateral")) {
-          errorMessage =
-            "Cannot disable collateral - would cause insufficient collateral";
         } else {
           errorMessage = error.message;
         }
@@ -315,6 +277,69 @@ export class AaveTransactions {
         success: false,
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  }
+
+  static async setUserUseReserveAsCollateral(
+    params: CollateralParams,
+  ): Promise<CollateralResult> {
+    const { tokenAddress, useAsCollateral, tokenSymbol, chainId, signer } =
+      params;
+
+    try {
+      console.log(
+        `🛡️ ${useAsCollateral ? "Enabling" : "Disabling"} ${tokenSymbol} as collateral`,
+      );
+
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+
+      // Create pool contract
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
+
+      // Execute collateral toggle transaction
+      console.log(`📤 Executing collateral toggle transaction...`);
+      const collateralTx = await poolContract.setUserUseReserveAsCollateral(
+        tokenAddress,
+        useAsCollateral,
+      );
+
+      console.log(`⏳ Collateral transaction sent: ${collateralTx.hash}`);
+      await collateralTx.wait();
+      console.log(`✅ Collateral transaction confirmed`);
+
+      return {
+        success: true,
+        txHash: collateralTx.hash,
+      };
+    } catch (error) {
+      console.error("❌ Collateral transaction failed:", error);
+
+      // Handle specific error cases
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (error.message.includes("health factor")) {
+          errorMessage =
+            "Transaction would put your account at risk of liquidation";
+        } else if (error.message.includes("not enough collateral")) {
+          errorMessage =
+            "Cannot disable collateral - would cause insufficient collateral";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
       };
     }
   }

@@ -51,9 +51,6 @@ function rayToPercentage(rayValue: string): string {
 // Rate limiting utility
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Alternative: Fetch with exponential backoff for better error handling
- */
 export async function fetchAllReservesData(
   signer: ethers.Signer,
 ): Promise<AaveReserveData[]> {
@@ -205,6 +202,7 @@ export async function fetchAllReservesData(
         // Success - break out of retry loop
         break;
       } catch (error) {
+        console.log(error);
         retries++;
         if (retries >= MAX_RETRIES) {
           console.error(
@@ -218,7 +216,7 @@ export async function fetchAllReservesData(
           `Batch failed, retrying in ${currentDelay}ms... (attempt ${retries}/${MAX_RETRIES})`,
         );
         await delay(currentDelay);
-        currentDelay *= 2; // Exponential backoff
+        currentDelay *= 2;
       }
     }
 
@@ -230,95 +228,6 @@ export async function fetchAllReservesData(
 
   console.log(`Found ${reservesData.length} active reserves`);
   return reservesData;
-}
-
-export async function fetchUserPositions(
-  signer: ethers.Signer,
-  userAddress: string,
-  reservesData: AaveReserveData[],
-): Promise<UserPosition[]> {
-  const provider = signer.provider;
-  if (!provider) {
-    throw new Error("Signer must have a provider");
-  }
-
-  const network = await provider.getNetwork();
-  const chainId = Number(network.chainId);
-  const market = getAaveMarket(chainId);
-
-  console.log(
-    `Fetching user positions for ${userAddress} on chain ${chainId}...`,
-  );
-
-  const poolDataProvider = new ethers.Contract(
-    market.AAVE_PROTOCOL_DATA_PROVIDER,
-    POOL_DATA_PROVIDER_ABI,
-    provider,
-  );
-
-  const userPositions: UserPosition[] = [];
-  const BATCH_SIZE = 5; // Larger batch for user data as it's typically faster
-  const DELAY = 100;
-
-  // Process reserves in batches to check user positions
-  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
-    const batch = reservesData.slice(i, i + BATCH_SIZE);
-
-    try {
-      const batchPromises = batch.map(async (reserve) => {
-        try {
-          // Get user reserve data using the ABI function
-          const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset,
-            userAddress,
-          );
-
-          const aTokenBalance = userReserveData.currentATokenBalance.toString();
-          const isCollateral = userReserveData.usageAsCollateralEnabled;
-
-          // Check if user has any supplied balance
-          if (aTokenBalance !== "0") {
-            // Format the balance using the asset's decimals
-            const formattedBalance = ethers.formatUnits(
-              aTokenBalance,
-              reserve.decimals,
-            );
-
-            return {
-              asset: reserve,
-              suppliedBalance: formattedBalance,
-              suppliedBalanceUSD: reserve.userBalanceUsd || "0",
-              isCollateral: isCollateral,
-              aTokenBalance: aTokenBalance,
-            };
-          }
-
-          return null;
-        } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
-          return null;
-        }
-      });
-
-      const batchResults = await Promise.all(batchPromises);
-
-      for (const result of batchResults) {
-        if (result !== null) {
-          userPositions.push(result);
-        }
-      }
-
-      // Delay between batches to avoid rate limiting
-      if (i + BATCH_SIZE < reservesData.length) {
-        await delay(DELAY);
-      }
-    } catch (error) {
-      console.error(`Error processing user positions batch:`, error);
-    }
-  }
-
-  console.log(`Found ${userPositions.length} user positions`);
-  return userPositions;
 }
 
 /**
@@ -406,6 +315,105 @@ export async function fetchUserWalletBalances(
     `Updated ${updatedReserves.length} reserves with wallet balances`,
   );
   return updatedReserves;
+}
+
+/**
+ * Fetch user's supplied positions from Aave
+ */
+export async function fetchUserPositions(
+  signer: ethers.Signer,
+  userAddress: string,
+  reservesData: AaveReserveData[],
+): Promise<UserPosition[]> {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer must have a provider");
+  }
+
+  const network = await provider.getNetwork();
+  const chainId = Number(network.chainId);
+  const market = getAaveMarket(chainId);
+
+  console.log(
+    `Fetching user positions for ${userAddress} on chain ${chainId}...`,
+  );
+
+  const poolDataProvider = new ethers.Contract(
+    market.AAVE_PROTOCOL_DATA_PROVIDER,
+    POOL_DATA_PROVIDER_ABI,
+    provider,
+  );
+
+  const userPositions: UserPosition[] = [];
+  const BATCH_SIZE = 5; // Larger batch for user data as it's typically faster
+  const DELAY = 100;
+
+  // Process reserves in batches to check user positions
+  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
+    const batch = reservesData.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchPromises = batch.map(async (reserve) => {
+        try {
+          // Get user reserve data using the ABI function
+          const userReserveData = await poolDataProvider.getUserReserveData(
+            reserve.asset,
+            userAddress,
+          );
+
+          const aTokenBalance = userReserveData.currentATokenBalance.toString();
+          const isCollateral = userReserveData.usageAsCollateralEnabled;
+
+          // Check if user has any supplied balance
+          if (aTokenBalance !== "0") {
+            // Format the balance using the asset's decimals
+            const formattedBalance = ethers.formatUnits(
+              aTokenBalance,
+              reserve.decimals,
+            );
+
+            // TODO: Replace this with actual price fetching
+            // For now, we'll use a mock price - you should integrate with a price oracle
+            const mockPrice = Math.random() * 2 + 0.5; // Mock price between 0.5-2.5
+            const balanceUSD = (
+              parseFloat(formattedBalance) * mockPrice
+            ).toFixed(2);
+
+            return {
+              asset: reserve,
+              suppliedBalance: formattedBalance,
+              suppliedBalanceUSD: balanceUSD,
+              isCollateral: isCollateral,
+              aTokenBalance: aTokenBalance,
+            };
+          }
+
+          return null;
+        } catch (error) {
+          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          return null;
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+
+      for (const result of batchResults) {
+        if (result !== null) {
+          userPositions.push(result);
+        }
+      }
+
+      // Delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < reservesData.length) {
+        await delay(DELAY);
+      }
+    } catch (error) {
+      console.error(`Error processing user positions batch:`, error);
+    }
+  }
+
+  console.log(`Found ${userPositions.length} user positions`);
+  return userPositions;
 }
 
 /**
