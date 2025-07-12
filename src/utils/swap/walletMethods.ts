@@ -504,7 +504,7 @@ export function useChainSwitch(sourceChain: Chain) {
           },
           rpcUrls: {
             default: {
-              http: [chain.rpcUrl || ""],
+              http: chain.rpcUrls || [],
             },
           },
           blockExplorers: chain.explorerUrl

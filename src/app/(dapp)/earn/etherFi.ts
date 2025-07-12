@@ -8,7 +8,7 @@ import {
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
 import { queryAllVaultsAPY, VaultApyData } from "@/utils/etherFi/apy";
 import { chains } from "@/config/chains";
-import { ethers } from "ethers";
+import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
 import { useWalletByType } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import EtherFiModal from "@/components/ui/earning/EtherFiModal";
@@ -52,6 +52,9 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
 
         // Fetch all vault data in parallel for speed
         const vaultEntries = Object.entries(ETHERFI_VAULTS);
+        const sharedProvider = createEthersJsonRpcProviderFromUrls(
+          chains.ethereum.rpcUrls || [],
+        );
 
         // Create parallel promises for all vault data
         const vaultPromises = vaultEntries.map(async ([vaultIdStr, vault]) => {
@@ -68,7 +71,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
 
             // Fetch TVL and price in parallel
             const [tvlData, firstAssetPrice] = await Promise.all([
-              fetchVaultTVLPublic(vaultId).catch(() => null),
+              fetchVaultTVLPublic(vaultId, sharedProvider).catch(() => null),
               vault.supportedAssets.deposit[0]
                 ? fetchAssetPrice(
                     vault.supportedAssets.deposit[0].toLowerCase(),
@@ -156,7 +159,9 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
       try {
         const dashboardRows: DashboardTableRow[] = [];
         if (isWalletConnected && evmWallet?.address) {
-          const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
+          const provider = createEthersJsonRpcProviderFromUrls(
+            chains.ethereum.rpcUrls || [],
+          );
           const vaultEntries = Object.entries(ETHERFI_VAULTS);
 
           // Create parallel promises for all user vault positions
