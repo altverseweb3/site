@@ -91,7 +91,7 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
       // Cancel process (transitions to CANCELLED state)
       cancelProcess: (processId) => {
         get().updateProcessState(processId, "CANCELLED", {
-          errorMessage: "Process cancelled by user",
+          errorMessage: "process cancelled by user",
         });
       },
 
@@ -263,7 +263,7 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
       getProcessProgress: (processId) => {
         const process = get().processes[processId];
         if (!process)
-          return { current: 0, total: 2, description: "Process not found" };
+          return { current: 0, total: 2, description: "process not found" };
 
         const totalSteps = process.type === "DIRECT" ? 1 : 2;
 
@@ -272,55 +272,55 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
             return {
               current: 0,
               total: totalSteps,
-              description: "Ready to start",
+              description: "ready to start",
             };
           case "SWAP_PENDING":
             return {
               current: 0,
               total: totalSteps,
-              description: "Swapping tokens...",
+              description: "swapping tokens...",
             };
           case "SWAP_COMPLETE":
             return {
               current: 1,
               total: totalSteps,
-              description: "Swap complete, checking allowance...",
+              description: "swap complete, checking allowance...",
             };
           case "APPROVAL_PENDING": // Add this case
             return {
               current: 1,
               total: totalSteps,
-              description: "Waiting for token approval...",
+              description: "waiting for token approval...",
             };
           case "DEPOSIT_PENDING":
             return {
               current: 1,
               total: totalSteps,
-              description: "Depositing to vault...",
+              description: "depositing to vault...",
             };
           case "COMPLETED":
             return {
               current: totalSteps,
               total: totalSteps,
-              description: "Deposit completed successfully",
+              description: "deposit completed successfully",
             };
           case "CANCELLED":
             return {
               current: 1,
               total: totalSteps,
-              description: "Process cancelled",
+              description: "process cancelled",
             };
           case "FAILED":
             return {
               current: 0,
               total: totalSteps,
-              description: process.errorMessage || "Process failed",
+              description: process.errorMessage || "process failed",
             };
           default:
             return {
               current: 0,
               total: totalSteps,
-              description: "Unknown state",
+              description: "unknown state",
             };
         }
       },
