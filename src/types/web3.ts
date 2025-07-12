@@ -400,6 +400,9 @@ export type SerializedToken = {
   userBalanceUsd?: string;
   isWalletToken?: boolean;
   alwaysLoadPrice?: boolean;
+  isNativeGas?: boolean;
+  isNativeWrapped?: boolean;
+  isL2Token?: boolean;
 } | null;
 
 export type SerializedSwapStateForSection = {
