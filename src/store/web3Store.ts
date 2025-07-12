@@ -792,6 +792,9 @@ const useWeb3Store = create<Web3StoreState>()(
             userBalanceUsd: token.userBalanceUsd,
             isWalletToken: token.isWalletToken,
             alwaysLoadPrice: token.alwaysLoadPrice,
+            isNativeGas: token.isNativeGas,
+            isNativeWrapped: token.isNativeWrapped,
+            isL2Token: token.isL2Token,
           };
         };
         // Serialize each swap integration
