@@ -8,7 +8,6 @@ import EarnTable from "@/components/ui/earning/EarnTable";
 import EarnCards from "@/components/ui/earning/EarnCards";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
-import { Wallet } from "lucide-react";
 import { chainList } from "@/config/chains";
 import { WalletType } from "@/types/web3";
 import {
@@ -185,7 +184,7 @@ export default function EarnPage() {
     !isEvmWalletConnected && activeTab === "dashboard";
 
   return (
-    <div className="container mx-auto px-2 py-8">
+    <div className="container mx-auto px-2 md:py-8">
       <div className="max-w-6xl mx-auto">
         {/* Main Controls */}
         <div className="mb-6">
@@ -271,24 +270,22 @@ export default function EarnPage() {
         </div>
 
         {/* Table Content */}
-        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden">
+        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden md:mb-0 mb-12">
           {showWalletConnectionRequired ? (
-            <div className="text-center py-16">
-              <Wallet className="h-16 w-16 mx-auto text-[#A1A1AA] mb-4" />
-              <h2 className="text-2xl font-semibold text-[#FAFAFA] mb-2">
-                Connect Your EVM Wallet
-              </h2>
-              <p className="text-[#A1A1AA] mb-6 px-5 md:px-20">
-                Please connect an EVM wallet (Metamask, etc.) to view and manage
-                your positions. We support other environments; however,
-                presently your positions will only be held on EVM wallets.
+            <div className="text-center py-16 md:py-24 px-4 md:px-8">
+              <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
+                please connect an EVM wallet (metamask, etc.) to view and manage
+                your positions. other environments (sui, solana, etc.) are
+                supported; however, presently your positions will only be held
+                and managed on EVM wallets as they will opened and managed on
+                ethereum or other EVM chains.
               </p>
               <ConnectWalletModal
                 trigger={
                   <BrandedButton
                     iconName="Wallet"
-                    buttonText="Connect Wallet"
-                    className="max-w-xs"
+                    buttonText="connect EVM wallet"
+                    className="max-w-xs h-8 text-sm md:text-md"
                   />
                 }
               />

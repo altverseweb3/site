@@ -43,7 +43,7 @@ const EarnCards: React.FC<EarnCardsProps> = ({
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t border-[#27272A] gap-4">
           <div className="text-sm text-[#A1A1AA] order-2 sm:order-1">
-            Showing {startItem}-{endItem} of {totalItems} results
+            showing {startItem}-{endItem} of {totalItems} results
           </div>
           <div className="flex items-center gap-2 order-1 sm:order-2">
             <Button
