@@ -123,7 +123,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
     decimals: tokenDecimals,
     chainId: chainId,
     stringChainId: chainId.toString(),
-    native: false,
   };
 
   const chain: Chain = {
@@ -132,9 +131,14 @@ const SupplyModal: FC<SupplyModalProps> = ({
     chainName: chainName,
     mayanName: chainName as MayanChainName,
     alchemyNetworkName: Network.ETH_MAINNET,
-    symbol: "ETH",
-    chainToken: "ETH",
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
     icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
     currency: "USD",
     backgroundColor: "",
     fontColor: "",
@@ -142,7 +146,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
     decimals: 18,
     l2: false,
     gasDrop: 0,
-    nativeAddress: "",
     walletType: WalletType.REOWN_EVM,
   };
 

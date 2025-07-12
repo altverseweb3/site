@@ -16,13 +16,13 @@ import { Input } from "@/components/ui/Input";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
-import { useWalletConnection } from "@/utils/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
 import type { Token, Chain, MayanChainName } from "@/types/web3";
 import { Network, WalletType } from "@/types/web3";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 
 // Health Factor Calculator for Borrowing
 const calculateNewHealthFactorForBorrow = (
@@ -125,7 +125,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     decimals: tokenDecimals,
     chainId: chainId,
     stringChainId: chainId.toString(),
-    native: false,
   };
 
   const chain: Chain = {
@@ -134,9 +133,14 @@ const BorrowModal: FC<BorrowModalProps> = ({
     chainName: chainName,
     mayanName: chainName as MayanChainName,
     alchemyNetworkName: Network.ETH_MAINNET,
-    symbol: "ETH", // Default, could be mapped based on chainId
-    chainToken: "ETH",
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
     icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
     currency: "USD",
     backgroundColor: "",
     fontColor: "",
@@ -144,7 +148,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     decimals: 18,
     l2: false,
     gasDrop: 0,
-    nativeAddress: "",
     walletType: WalletType.REOWN_EVM,
   };
 

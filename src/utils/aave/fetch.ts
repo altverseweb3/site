@@ -542,9 +542,11 @@ export function useAaveFetch() {
 
       return {
         allReserves: reservesWithBalances,
-        supplyAssets: reservesWithBalances.filter((reserve) => !reserve.isFrozen),
+        supplyAssets: reservesWithBalances.filter(
+          (reserve) => !reserve.isFrozen,
+        ),
         borrowAssets: reservesWithBalances.filter(
-          (reserve) => !reserve.isFrozen && reserve.borrowingEnabled
+          (reserve) => !reserve.isFrozen && reserve.borrowingEnabled,
         ),
       };
     },

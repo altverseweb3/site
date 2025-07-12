@@ -21,7 +21,7 @@ const BorrowLend: React.FC = () => {
               <SupplyYourPositionsHeader />
             </AccordionTrigger>
             <AccordionContent>
-              <SupplyOwnedCard />
+              <SupplyOwnedCard asset={undefined} />
               <SupplyUnOwnedCard />
             </AccordionContent>
           </AccordionItem>

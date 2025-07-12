@@ -89,7 +89,6 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     decimals: currentAsset.decimals,
     chainId: currentAsset.chainId || 1,
     stringChainId: (currentAsset.chainId || 1).toString(),
-    native: false,
   };
 
   const chain: Chain = {
@@ -97,10 +96,15 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     name: chainName,
     chainName: chainName,
     mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET, // Default to ETH mainnet
-    symbol: "ETH",
-    chainToken: "ETH",
+    alchemyNetworkName: Network.ETH_MAINNET,
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
     icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
     currency: "USD",
     backgroundColor: "",
     fontColor: "",
@@ -108,7 +112,6 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     decimals: 18,
     l2: false,
     gasDrop: 0,
-    nativeAddress: "",
     walletType: WalletType.REOWN_EVM,
   };
 

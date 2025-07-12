@@ -50,7 +50,7 @@ const SupplyOwnedCard = ({
   onSwitch = () => {},
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
-}) => {
+}: SupplyOwnedCardProps) => {
   const [collateral, setCollateral] = useState(isCollateral);
 
   // Default asset for demo purposes (fallback)
@@ -63,9 +63,22 @@ const SupplyOwnedCard = ({
     currentLiquidityRate: "0",
     totalSupply: "0",
     formattedSupply: "0",
-    isActive: true,
     supplyAPY: "2.74",
     canBeCollateral: true,
+    variableBorrowRate: "0",
+    stableBorrowRate: "0",
+    variableBorrowAPY: "0",
+    stableBorrowAPY: "0",
+    stableBorrowEnabled: false,
+    borrowingEnabled: false,
+    totalBorrowed: "0",
+    formattedTotalBorrowed: "0",
+    availableLiquidity: "0",
+    formattedAvailableLiquidity: "0",
+    borrowCap: "0",
+    formattedBorrowCap: "0",
+    isActive: true,
+    isFrozen: false,
     isIsolationModeAsset: false,
     debtCeiling: 0,
     userBalance: "0",
@@ -98,7 +111,6 @@ const SupplyOwnedCard = ({
     decimals: currentAsset.decimals,
     chainId: currentAsset.chainId || 1,
     stringChainId: (currentAsset.chainId || 1).toString(),
-    native: false,
   };
 
   const chain: Chain = {
@@ -107,9 +119,14 @@ const SupplyOwnedCard = ({
     chainName: chainName,
     mayanName: chainName as MayanChainName,
     alchemyNetworkName: Network.ETH_MAINNET,
-    symbol: "ETH",
-    chainToken: "ETH",
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
     icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
     currency: "USD",
     backgroundColor: "",
     fontColor: "",
@@ -117,7 +134,6 @@ const SupplyOwnedCard = ({
     decimals: 18,
     l2: false,
     gasDrop: 0,
-    nativeAddress: "",
     walletType: WalletType.REOWN_EVM,
   };
 
@@ -154,33 +170,6 @@ const SupplyOwnedCard = ({
   const handleToggle = () => {
     // The switch component is now just for display and triggers the modal
   };
-
-  // Determine collateral switch state
-  const getCollateralSwitchProps = () => {
-    if (isIsolationMode && canBeCollateral) {
-      return {
-        isCollateral: collateral,
-        onToggle: handleToggle,
-        disabled: false,
-        tooltip: "This asset is in isolation mode",
-      };
-    } else if (canBeCollateral) {
-      return {
-        isCollateral: collateral,
-        onToggle: handleToggle,
-        disabled: false,
-      };
-    } else {
-      return {
-        isCollateral: false,
-        onToggle: () => {},
-        disabled: true,
-        tooltip: "This asset cannot be used as collateral",
-      };
-    }
-  };
-
-  const collateralSwitchProps = getCollateralSwitchProps();
 
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
@@ -240,16 +229,13 @@ const SupplyOwnedCard = ({
             >
               <button className="focus:outline-none">
                 <SupplyCollateralSwitch
-                  isCollateral={collateralSwitchProps.isCollateral}
-                  onToggle={collateralSwitchProps.onToggle}
+                  isCollateral={collateral}
+                  onToggle={handleToggle}
                 />
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch
-              isCollateral={collateralSwitchProps.isCollateral}
-              onToggle={collateralSwitchProps.onToggle}
-            />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
           )}
         </div>
       </CardContent>

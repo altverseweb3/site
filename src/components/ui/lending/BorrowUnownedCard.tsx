@@ -94,7 +94,6 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
     decimals: currentAsset.decimals,
     chainId: currentAsset.chainId || 1,
     stringChainId: (currentAsset.chainId || 1).toString(),
-    native: false,
   };
 
   const chain: Chain = {
@@ -103,9 +102,14 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
     chainName: chainName,
     mayanName: chainName as MayanChainName,
     alchemyNetworkName: Network.ETH_MAINNET,
-    symbol: "ETH",
-    chainToken: "ETH",
+    nativeGasToken: {
+      symbol: "ETH",
+      address: "",
+      decimals: 18,
+    },
     icon: "",
+    brandedIcon: "",
+    chainTokenSymbol: "ETH",
     currency: "USD",
     backgroundColor: "",
     fontColor: "",
@@ -113,7 +117,6 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
     decimals: 18,
     l2: false,
     gasDrop: 0,
-    nativeAddress: "",
     walletType: WalletType.REOWN_EVM,
   };
 
