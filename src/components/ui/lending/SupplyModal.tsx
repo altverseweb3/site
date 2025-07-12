@@ -155,11 +155,11 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const newHealthFactor =
     canBeCollateral && totalDebtUSD > 0
       ? calculateNewHealthFactor(
-          totalCollateralUSD,
-          totalDebtUSD,
-          supplyAmountUSD,
-          liquidationThreshold,
-        )
+        totalCollateralUSD,
+        totalDebtUSD,
+        supplyAmountUSD,
+        liquidationThreshold,
+      )
       : currentHealthFactor;
 
   // Helper function to get collateral status display

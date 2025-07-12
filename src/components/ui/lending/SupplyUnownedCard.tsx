@@ -27,8 +27,8 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   asset,
   userBalance = "0",
   dollarAmount = "0.00",
-  onSupply = () => {},
-  onDetails = () => {},
+  onSupply = () => { },
+  onDetails = () => { },
 }) => {
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
