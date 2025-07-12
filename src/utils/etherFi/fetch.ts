@@ -3,6 +3,8 @@ import { useCallback } from "react"; // Add this import
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { ERC20_ABI, TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
+import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
+import { chains } from "@/config/chains";
 
 export async function fetchVaultTVL(
   vaultId: number,
@@ -149,7 +151,10 @@ export async function getTokenBalance(
 /**
  * Fetch TVL using public RPC (no wallet required)
  */
-export async function fetchVaultTVLPublic(vaultId: number): Promise<{
+export async function fetchVaultTVLPublic(
+  vaultId: number,
+  provider?: ethers.Provider,
+): Promise<{
   vaultId: number;
   address: string;
   name: string;
@@ -157,8 +162,10 @@ export async function fetchVaultTVLPublic(vaultId: number): Promise<{
   decimals: number;
   tvl: string;
 }> {
-  const provider = new ethers.JsonRpcProvider("https://1rpc.io/eth");
-  return fetchVaultTVL(vaultId, provider);
+  const rpcProvider =
+    provider ||
+    createEthersJsonRpcProviderFromUrls(chains.ethereum.rpcUrls || []);
+  return fetchVaultTVL(vaultId, rpcProvider);
 }
 
 /**

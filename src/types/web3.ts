@@ -77,7 +77,7 @@ export type Chain = {
   backgroundColor: string;
   backgroundGradient?: string;
   fontColor: string;
-  rpcUrl?: string;
+  rpcUrls?: string[];
   explorerUrl?: string;
   chainId: number;
   decimals: number;
