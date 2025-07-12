@@ -515,7 +515,7 @@ export class AaveTransactions {
 
     try {
       console.log(
-        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === 1 ? "stable" : "variable"} rate`,
+        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === RateMode.Stable ? "stable" : "variable"} rate`,
       );
 
       if (!AaveSDK.isChainSupported(chainId)) {
@@ -537,7 +537,7 @@ export class AaveTransactions {
       const borrowTx = await poolContract.borrow(
         tokenAddress, // asset to borrow
         amountWei, // amount to borrow
-        rateMode, // interest rate mode (1 = stable, 2 = variable)
+        rateMode, // interest rate mode (RateMode.Stable = 1, RateMode.Variable = 2)
         0, // referral code
         userAddress, // on behalf of (borrower address)
       );

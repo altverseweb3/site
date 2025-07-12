@@ -1,6 +1,6 @@
-import { useState, FC } from "react";
-import Image from "next/image";
+import { FC } from "react";
 import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
+import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
   CardHeader,
@@ -36,8 +36,6 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
 }) => {
-  const [hasImageError, setHasImageError] = useState(false);
-
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
     asset: "0x0000000000000000000000000000000000000000",

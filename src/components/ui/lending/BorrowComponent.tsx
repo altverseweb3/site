@@ -12,6 +12,7 @@ import {
   AaveReservesResult,
   useAaveFetch,
 } from "@/utils/aave/fetch";
+import { RateMode } from "@/utils/aave/interact";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 
 // Interface for user borrowed position data
@@ -20,7 +21,7 @@ interface UserBorrowPosition {
   borrowedBalance: string;
   borrowedBalanceUSD: string;
   currentBorrowAPY: string;
-  borrowRateMode: "variable" | "stable";
+  borrowRateMode: RateMode;
 }
 
 const BorrowComponent: React.FC = () => {
@@ -61,7 +62,7 @@ const BorrowComponent: React.FC = () => {
         borrowedBalance: mockBalance,
         borrowedBalanceUSD: mockBalanceUSD,
         currentBorrowAPY: mockAPY,
-        borrowRateMode: index % 2 === 0 ? "variable" : "stable",
+        borrowRateMode: index % 2 === 0 ? RateMode.Variable : RateMode.Stable,
       });
     });
 
