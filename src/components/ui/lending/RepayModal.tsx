@@ -127,11 +127,9 @@ const RepayModal: FC<RepayModalProps> = ({
 
   // Handle max button click
   const handleMaxClick = () => {
-    const maxRepayableAmount = Math.min(
-      parseFloat(walletBalance) || 0,
-      parseFloat(currentDebt) || 0,
-    );
-    setRepayAmount(maxRepayableAmount.toString());
+    // Max should be the full debt amount, not limited by wallet balance
+    const maxDebtAmount = parseFloat(currentDebt) || 0;
+    setRepayAmount(maxDebtAmount.toString());
   };
 
   // Handle client-side mounting to prevent hydration mismatch
@@ -174,13 +172,11 @@ const RepayModal: FC<RepayModalProps> = ({
   const healthFactorChange = newHealthFactor - currentHealthFactor;
 
   // Validation
-  const maxRepayableAmount = Math.min(
-    parseFloat(walletBalance) || 0,
-    parseFloat(currentDebt) || 0,
-  );
+  const maxDebtAmount = parseFloat(currentDebt) || 0;
+  const walletBalanceNum = parseFloat(walletBalance) || 0;
 
-  const isAmountValid =
-    repayAmountNum > 0 && repayAmountNum <= maxRepayableAmount;
+  const isAmountValid = repayAmountNum > 0 && repayAmountNum <= maxDebtAmount;
+  const hasInsufficientBalance = repayAmountNum > walletBalanceNum;
   const isFormValid = isAmountValid && !isLoading && !isSubmitting;
 
   // Get debt type display
@@ -431,9 +427,18 @@ const RepayModal: FC<RepayModalProps> = ({
               {repayAmount && !isAmountValid && (
                 <div className="flex items-center gap-2 text-red-400 text-xs">
                   <AlertCircle className="h-3 w-3" />
-                  {repayAmountNum > maxRepayableAmount
-                    ? `Amount exceeds available (${maxRepayableAmount.toFixed(6)} ${tokenSymbol})`
+                  {repayAmountNum > maxDebtAmount
+                    ? `Amount exceeds debt (${maxDebtAmount.toFixed(6)} ${tokenSymbol})`
                     : "Please enter a valid amount"}
+                </div>
+              )}
+
+              {/* Insufficient balance warning (but don't prevent submission) */}
+              {repayAmount && isAmountValid && hasInsufficientBalance && (
+                <div className="flex items-center gap-2 text-yellow-400 text-xs">
+                  <AlertCircle className="h-3 w-3" />
+                  Insufficient wallet balance (have:{" "}
+                  {walletBalanceNum.toFixed(6)} {tokenSymbol})
                 </div>
               )}
             </div>
