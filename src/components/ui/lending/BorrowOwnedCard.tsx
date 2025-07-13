@@ -13,22 +13,34 @@ import type { Token, Chain } from "@/types/web3";
 import { UserBorrowPosition } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/aave/format";
 import { getChainByChainId } from "@/config/chains";
+import RepayModal from "./RepayModal";
+import { RateMode } from "@/utils/aave/interact";
 
 interface BorrowOwnedCardProps {
   borrowPosition: UserBorrowPosition;
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
-  onRepay?: (position: UserBorrowPosition, amount: string) => Promise<boolean>;
+  walletBalance?: string; // User's wallet balance of this token
+  onRepay?: (
+    position: UserBorrowPosition,
+    amount: string,
+    rateMode: RateMode,
+  ) => Promise<boolean>;
   onDetailsClick?: (position: UserBorrowPosition) => void;
 }
 
 const BorrowOwnedCard = ({
   borrowPosition,
+  healthFactor = "1.24",
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+  walletBalance = "0.00",
+  onRepay = async () => true,
   onDetailsClick = () => {},
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
-  const [isRepaying, setIsRepaying] = useState(false);
+  const [isRepaying] = useState(false);
 
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
@@ -45,14 +57,17 @@ const BorrowOwnedCard = ({
 
   const chain: Chain = getChainByChainId(asset.chainId || 1);
 
-  const handleRepayClick = async () => {
-    setIsRepaying(true);
+  // Handle repay completion from modal
+  const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
     try {
-      console.log("Repay clicked for:", asset.symbol);
+      const success = await onRepay(borrowPosition, amount, rateMode);
+      if (success) {
+        console.log(`Successfully repaid ${amount} ${asset.symbol}`);
+      }
+      return success;
     } catch (error) {
-      console.error("Error initiating repay:", error);
-    } finally {
-      setIsRepaying(false);
+      console.error("Error completing repay:", error);
+      return false;
     }
   };
 
@@ -113,9 +128,30 @@ const BorrowOwnedCard = ({
       </CardContent>
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-        <BlueButton onClick={handleRepayClick} disabled={isRepaying}>
-          {isRepaying ? "repaying..." : "repay"}
-        </BlueButton>
+        <RepayModal
+          tokenSymbol={asset.symbol}
+          tokenName={asset.name}
+          tokenIcon={asset.tokenIcon}
+          chainId={asset.chainId}
+          walletBalance={walletBalance}
+          currentDebt={borrowPosition.formattedTotalDebt}
+          debtUSD={borrowPosition.totalDebtUSD}
+          borrowAPY={borrowPosition.currentBorrowAPY}
+          stableDebt={borrowPosition.stableDebt}
+          variableDebt={borrowPosition.variableDebt}
+          healthFactor={healthFactor}
+          tokenPrice={1} // You might want to pass real price data
+          liquidationThreshold={0.85} // You might want to get this from asset data
+          totalCollateralUSD={totalCollateralUSD}
+          totalDebtUSD={totalDebtUSD}
+          onRepay={handleRepayComplete}
+          tokenAddress={asset.asset}
+          tokenDecimals={asset.decimals}
+        >
+          <BlueButton disabled={isRepaying}>
+            {isRepaying ? "repaying..." : "repay"}
+          </BlueButton>
+        </RepayModal>
 
         <GrayButton onClick={handleDetailsClick}>details</GrayButton>
       </CardFooter>
