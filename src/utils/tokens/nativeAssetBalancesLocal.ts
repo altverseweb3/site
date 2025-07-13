@@ -7,6 +7,7 @@ import { chains, chainList } from "@/config/chains";
 import { WalletType, Chain } from "@/types/web3";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { useWallet } from "@suiet/wallet-kit";
+import { createEthersJsonRpcProvider } from "@/utils/wallet/ethersJsonRpcProvider";
 
 export interface NativeBalance {
   chainId: string;
@@ -35,11 +36,11 @@ async function getEvmNativeBalance(
   walletAddress: string,
 ): Promise<NativeBalance> {
   try {
-    if (!chain.rpcUrl) {
-      throw new Error(`No RPC URL configured for chain ${chain.chainName}`);
+    if (!chain.rpcUrls || chain.rpcUrls.length === 0) {
+      throw new Error(`No RPC URLs configured for chain ${chain.chainName}`);
     }
 
-    const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
+    const provider = createEthersJsonRpcProvider(chain);
     const balance = await provider.getBalance(walletAddress);
     const balanceFormatted = ethers.formatUnits(balance, chain.decimals);
 
@@ -74,11 +75,11 @@ async function getSolanaNativeBalance(
   walletAddress: string,
 ): Promise<NativeBalance> {
   try {
-    if (!chain.rpcUrl) {
-      throw new Error(`No RPC URL configured for Solana`);
+    if (!chain.rpcUrls || chain.rpcUrls.length === 0) {
+      throw new Error(`No RPC URLs configured for Solana`);
     }
 
-    const connection = new Connection(chain.rpcUrl, "confirmed");
+    const connection = new Connection(chain.rpcUrls[0], "confirmed");
     const publicKey = new PublicKey(walletAddress);
     const balance = await connection.getBalance(publicKey);
     const balanceFormatted = (balance / LAMPORTS_PER_SOL).toString();
@@ -114,11 +115,11 @@ async function getSuiNativeBalance(
   walletAddress: string,
 ): Promise<NativeBalance> {
   try {
-    if (!chain.rpcUrl) {
-      throw new Error(`No RPC URL configured for Sui`);
+    if (!chain.rpcUrls || chain.rpcUrls.length === 0) {
+      throw new Error(`No RPC URLs configured for Sui`);
     }
 
-    const client = new SuiClient({ url: chain.rpcUrl });
+    const client = new SuiClient({ url: chain.rpcUrls[0] });
     const balance = await client.getBalance({
       owner: walletAddress,
     });
