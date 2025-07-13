@@ -1530,6 +1530,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               ) : vaultSharesPreview ? (
                 <div className="mt-1">
                   <div className="text-lg font-semibold text-green-500 font-mono">
+                    ~
                     {parseFloat(vaultSharesPreview.vaultTokensReceived).toFixed(
                       6,
                     )}{" "}
