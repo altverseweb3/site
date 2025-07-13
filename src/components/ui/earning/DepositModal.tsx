@@ -52,6 +52,10 @@ import useVaultDepositStore, {
 import { GasDrop } from "@/components/ui/GasDrop";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import TokenImage from "@/components/ui/TokenImage";
+import {
+  queryVaultConversionRate,
+  VaultConversionRate,
+} from "@/utils/etherFi/vaultShares";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -79,6 +83,12 @@ const DepositModal: React.FC<DepositModalProps> = ({
   );
   const [isDirectDeposit, setIsDirectDeposit] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Vault shares conversion state
+  const [vaultSharesPreview, setVaultSharesPreview] =
+    useState<VaultConversionRate | null>(null);
+  const [isLoadingConversion, setIsLoadingConversion] = useState(false);
+  const [conversionError, setConversionError] = useState<string | null>(null);
 
   // Integration hooks
   const { approveToken, depositTokens } = useEtherFiInteract();
@@ -856,6 +866,106 @@ const DepositModal: React.FC<DepositModalProps> = ({
     }
   }, [isOpen, vault, isMounted, activeProcess, cancelProcess]);
 
+  // Vault shares conversion rate effect
+  useEffect(() => {
+    console.log("🔄 Vault shares useEffect triggered:", {
+      vault: vault?.name,
+      isMounted,
+      isDirectDeposit,
+      swapAmount,
+      selectedSwapToken: selectedSwapToken?.ticker,
+      receiveAmount,
+    });
+
+    if (!vault || !isMounted) return;
+
+    // Determine the amount and asset to use for conversion
+    let amountToConvert = "";
+    let assetToConvert = "";
+
+    if (!isDirectDeposit) {
+      // For cross-chain swaps, use the receive amount and target asset
+      if (receiveAmount && vault.supportedAssets.deposit[0]) {
+        amountToConvert = receiveAmount;
+        assetToConvert = vault.supportedAssets.deposit[0];
+      }
+    } else {
+      // For direct deposits, use the input amount and selected asset
+      if (swapAmount && selectedSwapToken?.ticker) {
+        amountToConvert = swapAmount;
+        assetToConvert = selectedSwapToken.ticker;
+      }
+    }
+
+    console.log("🎯 Conversion values:", {
+      amountToConvert,
+      assetToConvert,
+      isValidAmount: !!(amountToConvert && parseFloat(amountToConvert) > 0),
+    });
+
+    // Only proceed if we have valid inputs
+    if (
+      !amountToConvert ||
+      !assetToConvert ||
+      parseFloat(amountToConvert) <= 0
+    ) {
+      setVaultSharesPreview(null);
+      setConversionError(null);
+      return;
+    }
+
+    // Check if the asset is supported by the vault (case insensitive)
+    const supportedAssets = vault.supportedAssets.deposit.map((asset) =>
+      asset.toLowerCase(),
+    );
+    if (!supportedAssets.includes(assetToConvert.toLowerCase())) {
+      setVaultSharesPreview(null);
+      setConversionError(`${assetToConvert} not supported by ${vault.name}`);
+      return;
+    }
+
+    const fetchConversionRate = async () => {
+      setIsLoadingConversion(true);
+      setConversionError(null);
+
+      try {
+        const signer = await getEvmSigner();
+        const provider = signer.provider;
+        if (!provider) {
+          throw new Error("Provider not available");
+        }
+
+        const conversionResult = await queryVaultConversionRate(
+          vault.id,
+          assetToConvert,
+          amountToConvert,
+          provider,
+        );
+        setVaultSharesPreview(conversionResult);
+      } catch (error) {
+        console.error("Failed to fetch vault conversion rate:", error);
+        setConversionError(
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch conversion rate",
+        );
+        setVaultSharesPreview(null);
+      } finally {
+        setIsLoadingConversion(false);
+      }
+    };
+
+    fetchConversionRate();
+  }, [
+    vault,
+    swapAmount,
+    selectedSwapToken,
+    receiveAmount,
+    isDirectDeposit,
+    isMounted,
+    getEvmSigner,
+  ]);
+
   // Don't render on server
   if (!isMounted || !vault) return null;
 
@@ -1004,7 +1114,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               height={24}
               className="rounded-full"
             />
-            Deposit to {vault.name}
+            deposit to {vault.name}
           </DialogTitle>
         </DialogHeader>
 
@@ -1040,7 +1150,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     size="sm"
                     className="w-full text-amber-500 border-amber-500 hover:bg-amber-500/10"
                   >
-                    Cancel & Keep Swapped Tokens
+                    cancel & keep swapped tokens
                   </Button>
                 </div>
               )}
@@ -1293,7 +1403,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                         onClick={connectEvmWallet}
                         className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
                       >
-                        Connect EVM
+                        connect evm
                       </button>
                     )}
                     {selectedSwapToken &&
@@ -1307,7 +1417,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               onClick={connectSuiWallet}
                               className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors"
                             >
-                              Connect SUI
+                              connect sui
                             </button>
                           );
                         } else if (chain?.walletType === WalletType.REOWN_SOL) {
@@ -1316,7 +1426,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               onClick={connectSolanaWallet}
                               className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30 transition-colors"
                             >
-                              Connect Solana
+                              connect solana
                             </button>
                           );
                         } else if (chain?.walletType === WalletType.REOWN_EVM) {
@@ -1325,7 +1435,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                               onClick={connectEvmWallet}
                               className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
                             >
-                              Connect EVM
+                              connect evm
                             </button>
                           );
                         }
@@ -1411,6 +1521,45 @@ const DepositModal: React.FC<DepositModalProps> = ({
             </>
           )}
 
+          {/* Vault shares preview */}
+          {((!isDirectDeposit && receiveAmount) ||
+            (isDirectDeposit && swapAmount)) && (
+            <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-zinc-400">you will receive</div>
+                {isLoadingConversion && (
+                  <div className="text-xs text-zinc-500">loading...</div>
+                )}
+              </div>
+
+              {conversionError ? (
+                <div className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {conversionError}
+                </div>
+              ) : vaultSharesPreview ? (
+                <div className="mt-1">
+                  <div className="text-lg font-semibold text-green-500 font-mono">
+                    ~
+                    {parseFloat(vaultSharesPreview.vaultTokensReceived).toFixed(
+                      6,
+                    )}{" "}
+                    {vaultSharesPreview.vaultTokenSymbol}
+                  </div>
+                  <div className="text-xs text-zinc-500 mt-1">
+                    exchange rate: 1 {vaultSharesPreview.depositAsset} ={" "}
+                    {vaultSharesPreview.exchangeRate.toFixed(6)}{" "}
+                    {vaultSharesPreview.vaultTokenSymbol}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-1 text-sm text-zinc-500">
+                  enter amount to see vault shares preview
+                </div>
+              )}
+            </div>
+          )}
+
           {/* APY Information */}
           <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
             <Info className="h-4 w-4 text-green-500" />
@@ -1460,7 +1609,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 {isLoadingQuote ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                    Getting Quote...
+                    getting quote...
                   </div>
                 ) : (
                   <>

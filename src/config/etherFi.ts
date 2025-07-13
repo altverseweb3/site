@@ -42,14 +42,14 @@ export interface EtherFiVault {
 }
 
 // Shared lens address for all vaults
-const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
+export const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
 
 // Fallback APY values based on EtherFi website observations (as of current date)
 // These should be updated periodically by checking the actual website
 export const FALLBACK_APY_VALUES: Record<string, number> = {
-  "0x83599937c2c9bea0e0e8ac096c6f32e86486b410": 3.2, // Bera ETH Vault (lowercase)
-  "0xe77076518a813616315eaaba6ca8e595e845eee9": 3.0, // EIGEN Restaking (lowercase)
-  "0x86b5780b606940eb59a062aa85a07959518c0161": 25.0, // ETHFI Restaking (lowercase)
+  "0x83599937c2c9bea0e0e8ac096c6f32e86486b410": 1.2, // Bera ETH Vault (lowercase)
+  "0xe77076518a813616315eaaba6ca8e595e845eee9": 2.7, // EIGEN Restaking (lowercase)
+  "0x86b5780b606940eb59a062aa85a07959518c0161": 20.0, // ETHFI Restaking (lowercase)
   "0xca8711daf13d852ed2121e4be3894dae366039e4": 11.0, // Liquid Move ETH (lowercase)
 };
 
