@@ -416,3 +416,5 @@ export type SerializedSwapStateForSection = {
     gasDrop: number;
   };
 };
+
+export const MAYAN_API_BASE = "https://explorer-api.mayan.finance/v3";
