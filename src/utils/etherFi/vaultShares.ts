@@ -1,27 +1,12 @@
 import { ethers } from "ethers";
 import { useCallback } from "react";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { ETHERFI_VAULTS } from "@/config/etherFi";
-import { DEPOSIT_ASSETS } from "@/config/etherFi";
-
-// Shared lens contract address for all vaults
-const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
-
-// Lens contract ABI - minimal interface for conversion rate queries
-const LENS_ABI = [
-  {
-    inputs: [
-      { name: "depositAsset", type: "address" },
-      { name: "depositAmount", type: "uint256" },
-      { name: "boringVault", type: "address" },
-      { name: "accountant", type: "address" },
-    ],
-    name: "previewDeposit",
-    outputs: [{ name: "shares", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+import {
+  ETHERFI_VAULTS,
+  DEPOSIT_ASSETS,
+  SHARED_LENS_ADDRESS,
+} from "@/config/etherFi";
+import { VAULT_SHARES_PREVIEW_ABI } from "@/types/etherFiABIs";
 
 export interface VaultConversionRate {
   vaultId: number;
@@ -41,9 +26,8 @@ export interface ConversionRateError {
   error: string;
 }
 
-/**
- * Query conversion rate for a specific vault and deposit asset pair
- */
+// Query conversion rate for a specific vault and deposit asset pair
+
 export async function queryVaultConversionRate(
   vaultId: number,
   depositAsset: string,
@@ -61,20 +45,20 @@ export async function queryVaultConversionRate(
   );
   if (!supportedAssets.includes(depositAsset.toLowerCase())) {
     throw new Error(
-      `Asset ${depositAsset} not supported by vault ${vault.name}`,
+      `asset ${depositAsset} not supported by vault ${vault.name}`,
     );
   }
 
   const asset = DEPOSIT_ASSETS[depositAsset.toLowerCase()];
   if (!asset) {
-    throw new Error(`Deposit asset ${depositAsset} not configured`);
+    throw new Error(`deposit asset ${depositAsset} not configured`);
   }
 
   try {
     // Create lens contract instance
     const lensContract = new ethers.Contract(
       SHARED_LENS_ADDRESS,
-      LENS_ABI,
+      VAULT_SHARES_PREVIEW_ABI,
       provider,
     );
 
@@ -146,9 +130,8 @@ export async function queryVaultConversionRate(
   }
 }
 
-/**
- * Query conversion rates for multiple vault-asset pairs
- */
+//Query conversion rates for multiple vault-asset pairs
+
 export async function queryMultipleConversionRates(
   queries: Array<{
     vaultId: number;
@@ -189,9 +172,7 @@ export async function queryMultipleConversionRates(
   return { successful, failed };
 }
 
-/**
- * Get all possible conversion rates for a specific deposit asset across all vaults
- */
+// Get all possible conversion rates for a specific deposit asset across all vaults
 export async function queryAllVaultsForAsset(
   depositAsset: string,
   depositAmount: string,
@@ -211,9 +192,9 @@ export async function queryAllVaultsForAsset(
       failed: [
         {
           vaultId: 0,
-          vaultName: "No vaults found",
+          vaultName: "no vaults found",
           depositAsset,
-          error: `No vaults support deposit asset ${depositAsset}`,
+          error: `no vaults support deposit asset ${depositAsset}`,
         },
       ],
     };
@@ -229,9 +210,8 @@ export async function queryAllVaultsForAsset(
   return queryMultipleConversionRates(queries, provider);
 }
 
-/**
- * React hook for vault share conversion queries with wallet integration
- */
+// React hook for vault share conversion queries with wallet integration
+
 export function useVaultShares() {
   const { getEvmSigner } = useWalletProviderAndSigner();
 
@@ -240,7 +220,7 @@ export function useVaultShares() {
       const signer = await getEvmSigner();
       const provider = signer.provider;
       if (!provider) {
-        throw new Error("Signer must have a provider");
+        throw new Error("signer must have a provider");
       }
       return queryVaultConversionRate(
         vaultId,
@@ -263,7 +243,7 @@ export function useVaultShares() {
       const signer = await getEvmSigner();
       const provider = signer.provider;
       if (!provider) {
-        throw new Error("Signer must have a provider");
+        throw new Error("signer must have a provider");
       }
       return queryMultipleConversionRates(queries, provider);
     },
@@ -275,7 +255,7 @@ export function useVaultShares() {
       const signer = await getEvmSigner();
       const provider = signer.provider;
       if (!provider) {
-        throw new Error("Signer must have a provider");
+        throw new Error("signer must have a provider");
       }
       return queryAllVaultsForAsset(depositAsset, depositAmount, provider);
     },

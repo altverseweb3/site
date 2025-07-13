@@ -42,7 +42,7 @@ export interface EtherFiVault {
 }
 
 // Shared lens address for all vaults
-const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
+export const SHARED_LENS_ADDRESS = "0x5232bc0F5999f8dA604c42E1748A13a170F94A1B";
 
 // Fallback APY values based on EtherFi website observations (as of current date)
 // These should be updated periodically by checking the actual website
