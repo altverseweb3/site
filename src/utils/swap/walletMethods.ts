@@ -28,6 +28,12 @@ import { SwapTrackingOptions } from "@/types/web3";
 import { useSwapTracking } from "@/hooks/useSwapTracking";
 import { recordSwap } from "@/utils/swap/swapRecorder";
 import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
+import {
+  REFERRER_EVM,
+  REFERRER_SOL,
+  REFERRER_SUI,
+  REFERRER_BPS,
+} from "@/config/mayan";
 
 /**
  * Creates a properly formatted CAIP network ID with correct TypeScript typing
@@ -954,8 +960,8 @@ export function useTokenTransfer(
         const gasDrop = getGasDrop();
 
         // Set referrer
-        const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
-        const referrerBps = 0;
+        const referrer = REFERRER_SOL;
+        const referrerBps = REFERRER_BPS;
         // Use the source and destination chains and tokens from options
         const sourceChain = options.sourceChain;
         const destinationChain = options.destinationChain;
@@ -1261,8 +1267,8 @@ export function useTokenTransfer(
       const gasDrop = getGasDrop();
 
       // Set referrer
-      const referrer = "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh";
-      const referrerBps = 0;
+      const referrer = REFERRER_SOL;
+      const referrerBps = REFERRER_BPS;
 
       // Use the source and destination chains and tokens from options
       const sourceChain = options.sourceChain;
@@ -1314,9 +1320,9 @@ export function useTokenTransfer(
           sourceToken: sourceToken!.address,
           amount,
           referrerAddresses: {
-            solana: "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh",
-            evm: "0x95C0029426afa8E47a71b8E6b251f5B70511e599",
-            sui: "0xc232b25bd8796b2b1c8797f66f732fd22aa01db65102fe9f22f76b51af78476e",
+            solana: REFERRER_SOL,
+            evm: REFERRER_EVM,
+            sui: REFERRER_SUI,
           },
           solanaSigner: solanaSigner as SolanaSigner,
           connection: connection,
@@ -1333,9 +1339,9 @@ export function useTokenTransfer(
           swapperAddress: requiredWallet!.address,
           destinationAddress: receiveAddress || requiredWallet!.address,
           referrerAddresses: {
-            solana: "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh",
-            evm: "0x95C0029426afa8E47a71b8E6b251f5B70511e599",
-            sui: "0xc232b25bd8796b2b1c8797f66f732fd22aa01db65102fe9f22f76b51af78476e",
+            solana: REFERRER_SOL,
+            evm: REFERRER_EVM,
+            sui: REFERRER_SUI,
           },
           signTransaction: wallet.signTransaction,
         });
@@ -1351,9 +1357,9 @@ export function useTokenTransfer(
           sourceToken: sourceToken!.address,
           amount,
           referrerAddresses: {
-            solana: "9tks3cKdFxDwBPiyoYy9Wi4gQ29T9Qizniq7kDW86kNh",
-            evm: "0x95C0029426afa8E47a71b8E6b251f5B70511e599",
-            sui: "0xc232b25bd8796b2b1c8797f66f732fd22aa01db65102fe9f22f76b51af78476e",
+            solana: REFERRER_SOL,
+            evm: REFERRER_EVM,
+            sui: REFERRER_SUI,
           },
           signer: evmSigner,
           tokenDecimals: sourceToken!.decimals || 18,
