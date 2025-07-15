@@ -1,4 +1,5 @@
-import { SwapTrackingOptions, SwapStatus, MAYAN_API_BASE } from "@/types/web3";
+import { SwapTrackingOptions, SwapStatus } from "@/types/web3";
+import { MAYAN_API_BASE } from "@/config/mayan";
 
 export class SwapTracker {
   private pollInterval: number;
