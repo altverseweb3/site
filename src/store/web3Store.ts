@@ -1014,7 +1014,6 @@ export const useConnectedWalletSummary = (
   walletsByType: Record<string, string>;
 } => {
   const userWallets = useExtractUserWallets(connectedWallets);
-
   return {
     hasEVM: !!userWallets.evm,
     hasSolana: !!userWallets.solana,
