@@ -206,7 +206,7 @@ const CustomSuiConnectButton = ({
       >
         <div className="flex items-center gap-2">
           <Wallet className="h-3 w-3" />
-          <span>connect SUI</span>
+          <span className="text-[11px]">connect SUI</span>
         </div>
         <Image
           src="/wallets/sui.svg"
@@ -395,7 +395,7 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({
             >
               <div className="flex items-center gap-2">
                 <Wallet className="h-3 w-3" />
-                <span>
+                <span className="text-[11px]">
                   {isCurrentlyConnecting
                     ? "connecting..."
                     : `connect ${option.label}`}
