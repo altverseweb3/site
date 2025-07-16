@@ -12,7 +12,7 @@ import {
   SerializedToken,
   SerializedSwapStateForSection,
   SectionKey,
-  UserWallets
+  UserWallets,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -981,11 +981,11 @@ export const useSetActiveSwapSection = () => {
 };
 
 export const useExtractUserWallets = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>
+  connectedWallets: Array<Omit<WalletInfo, "provider">>,
 ): UserWallets => {
   const userWallets: UserWallets = {};
 
-  connectedWallets.forEach(wallet => {
+  connectedWallets.forEach((wallet) => {
     switch (wallet.type) {
       case WalletType.REOWN_EVM:
         userWallets.evm = wallet.address;
@@ -1005,7 +1005,7 @@ export const useExtractUserWallets = (
 };
 
 export const useConnectedWalletSummary = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>
+  connectedWallets: Array<Omit<WalletInfo, "provider">>,
 ): {
   hasEVM: boolean;
   hasSolana: boolean;
@@ -1014,16 +1014,16 @@ export const useConnectedWalletSummary = (
   walletsByType: Record<string, string>;
 } => {
   const userWallets = useExtractUserWallets(connectedWallets);
-  
+
   return {
     hasEVM: !!userWallets.evm,
     hasSolana: !!userWallets.solana,
     hasSUI: !!userWallets.sui,
     totalConnected: connectedWallets.length,
     walletsByType: {
-      EVM: userWallets.evm || 'Not connected',
-      Solana: userWallets.solana || 'Not connected',
-      SUI: userWallets.sui || 'Not connected',
+      EVM: userWallets.evm || "Not connected",
+      Solana: userWallets.solana || "Not connected",
+      SUI: userWallets.sui || "Not connected",
     },
   };
 };

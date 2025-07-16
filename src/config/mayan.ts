@@ -5,4 +5,3 @@ export const REFERRER_SUI =
 export const REFERRER_BPS = 0;
 
 export const MAYAN_API_BASE = "https://explorer-api.mayan.finance/v3";
-

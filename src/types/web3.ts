@@ -80,6 +80,7 @@ export type Chain = {
   rpcUrls?: string[];
   explorerUrl?: string;
   chainId: number;
+  mayanChainId: number;
   decimals: number;
   testnet?: boolean;
   l2: boolean;
@@ -461,38 +462,15 @@ export interface SwapResponse {
   };
 }
 
-
 export interface SwapQueryResult {
   referrerAddress: string;
   traderAddress: string;
   response: SwapResponse;
   rawResponse?: Response;
   error?: string;
-  debug429Info?: {
-    retryAfter?: string | null;
-    retryAfterMs?: string | null;
-    xRateLimitRemaining?: string | null;
-    xRateLimitReset?: string | null;
-    xRateLimitLimit?: string | null;
-    cfRay?: string | null;
-    server?: string | null;
-    responseBody?: any;
-    responseText?: string;
-    allHeaders?: Record<string, string>;
-    timestamp: string;
-    url: string;
-    requestDuration?: number;
-    detectionMethod: 'direct_429_status' | 'catch_block_429' | 'failed_to_fetch_heuristic';
-    caughtInCatch?: boolean;
-    // Fields for suspected 429s
-    suspectedReason?: string;
-    originalError?: string;
-    assumedRetryAfter?: string;
-    note?: string;
-  };
 }
 
-export type ChainType = 'EVM' | 'SOL' | 'SUI';
+export type ChainType = "EVM" | "SOL" | "SUI";
 
 export interface UserWallets {
   evm?: string;
