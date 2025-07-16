@@ -1,6 +1,5 @@
 import { SwapTrackingOptions, SwapStatus } from "@/types/web3";
-
-const MAYAN_API_BASE = "https://explorer-api.mayan.finance/v3";
+import { MAYAN_API_BASE } from "@/config/mayan";
 
 export class SwapTracker {
   private pollInterval: number;
