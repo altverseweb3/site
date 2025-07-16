@@ -78,15 +78,13 @@ export const TokenImage: React.FC<TokenImageProps> = ({
   }
 
   return (
-    <div
-      className={`relative ${sizeClasses[size]} flex-shrink-0 rounded-full overflow-hidden`}
-    >
+    <div className={`relative ${sizeClasses[size]} flex-shrink-0`}>
       <Image
         src={imageSrc}
         alt={token.name}
         fill
         sizes={sizesProp[size]}
-        className="object-cover"
+        className="object-contain"
         onError={handleImageError}
       />
     </div>
