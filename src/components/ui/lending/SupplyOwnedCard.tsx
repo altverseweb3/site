@@ -10,13 +10,12 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import type { Token, Chain } from "@/types/web3";
 
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
-import { chainNames } from "@/config/aave";
+import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 
 interface SupplyOwnedCardProps {
@@ -99,8 +98,6 @@ const SupplyOwnedCard = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
-
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
     id: currentAsset.asset,
@@ -113,29 +110,7 @@ const SupplyOwnedCard = ({
     stringChainId: (currentAsset.chainId || 1).toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: currentAsset.chainId || 1,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-  };
+  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
 
   // Handle collateral change from modal
   const handleCollateralChange = async (enabled: boolean) => {
@@ -174,7 +149,7 @@ const SupplyOwnedCard = ({
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
-        <div className="mr-3">
+        <div className="mr-3 rounded-full overflow-hidden">
           <TokenImage token={token} chain={chain} size="md" />
         </div>
         <div>

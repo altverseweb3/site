@@ -313,7 +313,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
-            <TokenImage token={token} chain={chain} size="sm" />
+            <div className="rounded-full overflow-hidden">
+              <TokenImage token={token} chain={chain} size="sm" />
+            </div>
             Borrow {tokenSymbol}
           </DialogTitle>
         </DialogHeader>

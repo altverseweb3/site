@@ -12,9 +12,8 @@ import {
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { SupplyModal } from "./SupplyModal";
-import { chainNames } from "@/config/aave";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import { getChainByChainId } from "@/config/chains";
+import type { Token, Chain } from "@/types/web3";
 
 interface SupplyUnOwnedCardProps {
   asset?: AaveReserveData;
@@ -77,8 +76,6 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
-
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
     id: currentAsset.asset,
@@ -91,29 +88,7 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     stringChainId: (currentAsset.chainId || 1).toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: currentAsset.chainId || 1,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-  };
+  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
 
   // Determine what to display for collateral status
   const getCollateralIndicator = () => {
@@ -131,7 +106,7 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
-        <div className="mr-3">
+        <div className="mr-3 rounded-full overflow-hidden">
           <TokenImage token={token} chain={chain} size="md" />
         </div>
         <div>

@@ -20,9 +20,9 @@ import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
-import { chainNames, SupportedChainId } from "@/config/aave";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import { SupportedChainId } from "@/config/aave";
+import { getChainByChainId } from "@/config/chains";
+import type { Token, Chain } from "@/types/web3";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (
@@ -111,8 +111,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
 
-  const chainName = chainNames[chainId] || "ethereum";
-
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
     id: tokenAddress || `${tokenSymbol}-${chainId}`,
@@ -125,29 +123,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
     stringChainId: chainId.toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: chainId,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-  };
+  const chain: Chain = getChainByChainId(chainId);
 
   // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
@@ -330,7 +306,9 @@ const SupplyModal: FC<SupplyModalProps> = ({
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
-            <TokenImage token={token} chain={chain} size="sm" />
+            <div className="rounded-full overflow-hidden">
+              <TokenImage token={token} chain={chain} size="sm" />
+            </div>
             Supply {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
@@ -422,7 +400,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
             <div className="flex justify-between">
               <span className="text-[#A1A1AA]">Asset</span>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4">
+                <div className="w-4 h-4 rounded-full overflow-hidden">
                   <TokenImage token={token} chain={chain} size="sm" />
                 </div>
                 <span className="text-[#FAFAFA]">{tokenName}</span>
