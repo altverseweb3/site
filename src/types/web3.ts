@@ -80,6 +80,7 @@ export type Chain = {
   rpcUrls?: string[];
   explorerUrl?: string;
   chainId: number;
+  mayanChainId: number;
   decimals: number;
   testnet?: boolean;
   l2: boolean;

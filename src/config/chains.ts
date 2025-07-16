@@ -29,6 +29,7 @@ export const chains: Record<string, Chain> = {
     rpcUrls: ["https://1rpc.io/eth", "https://eth.llamarpc.com"],
     explorerUrl: "https://etherscan.io",
     chainId: 1,
+    mayanChainId: 2,
     decimals: 18,
     l2: false,
     gasDrop: 0.05,
@@ -64,6 +65,7 @@ export const chains: Record<string, Chain> = {
     rpcUrls: ["https://arb1.arbitrum.io/rpc", "https://arbitrum.llamarpc.com"],
     explorerUrl: "https://arbiscan.io",
     chainId: 42161,
+    mayanChainId: 23,
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
@@ -102,6 +104,7 @@ export const chains: Record<string, Chain> = {
     ],
     explorerUrl: "https://optimistic.etherscan.io",
     chainId: 10,
+    mayanChainId: 24,
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
@@ -132,6 +135,7 @@ export const chains: Record<string, Chain> = {
     rpcUrls: ["https://mainnet.base.org/", "https://base.llamarpc.com"],
     explorerUrl: "https://basescan.org",
     chainId: 8453,
+    mayanChainId: 30,
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
@@ -171,6 +175,7 @@ export const chains: Record<string, Chain> = {
     ],
     explorerUrl: "https://mainnet.unichain.org",
     chainId: 130,
+    mayanChainId: 44,
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
@@ -196,6 +201,7 @@ export const chains: Record<string, Chain> = {
     rpcUrls: ["https://polygon-rpc.com", "https://polygon.llamarpc.com"],
     explorerUrl: "https://polygonscan.com",
     chainId: 137,
+    mayanChainId: 5,
     decimals: 18,
     l2: false,
     gasDrop: 0.2,
@@ -226,6 +232,7 @@ export const chains: Record<string, Chain> = {
     rpcUrls: ["https://bsc-dataseed1.bnbchain.org", "https://bnb.llamarpc.com"],
     explorerUrl: "https://bscscan.com",
     chainId: 56,
+    mayanChainId: 4,
     decimals: 18,
     l2: false,
     gasDrop: 0.02,
@@ -259,6 +266,7 @@ export const chains: Record<string, Chain> = {
     ],
     explorerUrl: "https://snowtrace.io",
     chainId: 43114,
+    mayanChainId: 6,
     decimals: 18,
     l2: false,
     gasDrop: 0.1,
@@ -285,8 +293,9 @@ export const chains: Record<string, Chain> = {
       "https://sui-mainnet-endpoint.blockvision.org",
       "https://sui-mainnet.nodeinfra.com",
     ],
-    explorerUrl: "https://suiscan.xyz/mainnet/home",
+    explorerUrl: "https://suiscan.xyz/mainnet",
     chainId: 0,
+    mayanChainId: 21,
     decimals: 9,
     l2: false,
     gasDrop: 0.01,
@@ -317,6 +326,7 @@ export const chains: Record<string, Chain> = {
     ],
     explorerUrl: "https://explorer.solana.com/",
     chainId: 101,
+    mayanChainId: 1,
     decimals: 9,
     gasDrop: 0.01,
     l2: false,
@@ -336,6 +346,20 @@ export const getChainById = (id: string): Chain => {
 export const getChainByChainId = (chainId: number): Chain => {
   return (
     chainList.find((chain) => chain.chainId === chainId) || defaultSourceChain
+  );
+};
+
+export const getChainByMayanChainId = (mayanChainId: number): Chain => {
+  return (
+    chainList.find((chain) => chain.mayanChainId === mayanChainId) ||
+    defaultSourceChain
+  );
+};
+
+export const getChainByMayanName = (mayanName: string): Chain => {
+  return (
+    chainList.find((chain) => chain.mayanName === mayanName) ||
+    defaultSourceChain
   );
 };
 
