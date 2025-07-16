@@ -417,3 +417,9 @@ export type SerializedSwapStateForSection = {
     gasDrop: number;
   };
 };
+
+export interface UserWallets {
+  evm?: string;
+  solana?: string;
+  sui?: string;
+}

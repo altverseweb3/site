@@ -12,6 +12,7 @@ import {
   SerializedToken,
   SerializedSwapStateForSection,
   SectionKey,
+  UserWallets,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -977,6 +978,54 @@ export const useSetGasDrop = () => {
 
 export const useSetActiveSwapSection = () => {
   return useWeb3Store((state) => state.setActiveSwapSection);
+};
+
+export const useExtractUserWallets = (
+  connectedWallets: Array<Omit<WalletInfo, "provider">>,
+): UserWallets => {
+  const userWallets: UserWallets = {};
+
+  connectedWallets.forEach((wallet) => {
+    switch (wallet.type) {
+      case WalletType.REOWN_EVM:
+        userWallets.evm = wallet.address;
+        break;
+      case WalletType.REOWN_SOL:
+        userWallets.solana = wallet.address;
+        break;
+      case WalletType.SUIET_SUI:
+        userWallets.sui = wallet.address;
+        break;
+      default:
+        console.warn(`Unknown wallet type: ${wallet.type}`);
+    }
+  });
+
+  return userWallets;
+};
+
+export const useConnectedWalletSummary = (
+  connectedWallets: Array<Omit<WalletInfo, "provider">>,
+): {
+  hasEVM: boolean;
+  hasSolana: boolean;
+  hasSUI: boolean;
+  totalConnected: number;
+  walletsByType: Record<string, string>;
+} => {
+  const userWallets = useExtractUserWallets(connectedWallets);
+
+  return {
+    hasEVM: !!userWallets.evm,
+    hasSolana: !!userWallets.solana,
+    hasSUI: !!userWallets.sui,
+    totalConnected: connectedWallets.length,
+    walletsByType: {
+      EVM: userWallets.evm || "Not connected",
+      Solana: userWallets.solana || "Not connected",
+      SUI: userWallets.sui || "Not connected",
+    },
+  };
 };
 
 export default useWeb3Store;
