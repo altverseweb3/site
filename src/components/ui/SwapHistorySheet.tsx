@@ -83,7 +83,6 @@ const getChainName = (chainId: string): string => {
 
 const getWalletTypeFromChain = (chainId: string): WalletTypeMapping => {
   const chain = getChainByMayanChainId(Number(chainId));
-  console.log(`CHAIN IS: ${chainId} - ${chain?.name}`);
   const walletType = chain?.walletType;
   let wallet: WalletFilterType = "all";
   if (walletType === WalletType.REOWN_EVM) {
