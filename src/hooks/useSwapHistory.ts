@@ -128,7 +128,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
       loadingProgress: {
         current: 0,
         total: 0,
-        stage: "Initializing...",
+        stage: "initializing...",
       },
     }));
 
@@ -160,7 +160,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
         loadingProgress: {
           current: 0,
           total: totalQueries,
-          stage: "Querying swap data across all chains...",
+          stage: "querying swap data across all chains...",
         },
       }));
 
@@ -173,7 +173,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
         loadingProgress: {
           current: totalQueries,
           total: totalQueries,
-          stage: "Processing and deduplicating results...",
+          stage: "processing and deduplicating results...",
         },
       }));
 
