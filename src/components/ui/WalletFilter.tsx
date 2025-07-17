@@ -22,7 +22,7 @@ interface WalletOption {
   walletType?: WalletType; // Map to actual wallet type
 }
 
-interface WalletSelectorProps {
+interface WalletFilterProps {
   selectedWallet: WalletFilterType;
   onWalletChange: (wallet: WalletFilterType) => void;
   className?: string;
@@ -206,7 +206,7 @@ const CustomSuiConnectButton = ({
       >
         <div className="flex items-center gap-2">
           <Wallet className="h-3 w-3" />
-          <span className="text-[11px]">connect SUI</span>
+          <span className="text-[11px]">connect sui</span>
         </div>
         <Image
           src="/wallets/sui.svg"
@@ -220,7 +220,7 @@ const CustomSuiConnectButton = ({
   );
 };
 
-const WalletSelector: React.FC<WalletSelectorProps> = ({
+const WalletFilter: React.FC<WalletFilterProps> = ({
   selectedWallet,
   onWalletChange,
   className,
@@ -418,5 +418,5 @@ const WalletSelector: React.FC<WalletSelectorProps> = ({
   );
 };
 
-export { WalletSelector, WalletIcons };
-export type { WalletSelectorProps };
+export { WalletFilter, WalletIcons };
+export type { WalletFilterProps };
