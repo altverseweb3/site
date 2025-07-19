@@ -345,6 +345,7 @@ const RepayModal: FC<RepayModalProps> = ({
     l2: false,
     gasDrop: 0,
     walletType: WalletType.REOWN_EVM,
+    mayanChainId: 0,
   };
 
   return (
