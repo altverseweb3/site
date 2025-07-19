@@ -71,6 +71,7 @@ const BorrowOwnedCard = ({
     l2: false,
     gasDrop: 0,
     walletType: WalletType.REOWN_EVM,
+    mayanChainId: 0,
   };
 
   // Handle repay action
