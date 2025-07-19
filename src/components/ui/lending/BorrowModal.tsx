@@ -150,7 +150,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
     l2: false,
     gasDrop: 0,
     walletType: WalletType.REOWN_EVM,
-    mayanChainId: 0
+    mayanChainId: 0,
   };
 
   // Handle client-side mounting
@@ -182,11 +182,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const newHealthFactor =
     totalCollateralUSD > 0
       ? calculateNewHealthFactorForBorrow(
-        totalCollateralUSD,
-        totalDebtUSD,
-        borrowAmountUSD,
-        0.85, // Average liquidation threshold
-      )
+          totalCollateralUSD,
+          totalDebtUSD,
+          borrowAmountUSD,
+          0.85, // Average liquidation threshold
+        )
       : currentHealthFactor;
 
   const healthFactorChange = newHealthFactor - currentHealthFactor;
