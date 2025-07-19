@@ -62,6 +62,18 @@ export interface UserPosition {
   aTokenBalance: string;
 }
 
+export interface UserBorrowPosition {
+  asset: AaveReserveData;
+  stableDebt: string;
+  variableDebt: string;
+  totalDebt: string;
+  formattedTotalDebt: string;
+  totalDebtUSD: string;
+  stableBorrowRate: string;
+  variableBorrowRate: string;
+  currentBorrowAPY: string;
+}
+
 function rayToPercentage(rayValue: string): string {
   const RAY = Math.pow(10, 27);
   const SECONDS_PER_YEAR = 31536000;
@@ -410,6 +422,121 @@ export async function fetchUserPositions(
 }
 
 /**
+ * Fetch user's borrow positions from Aave
+ */
+export async function fetchUserBorrowPositions(
+  signer: ethers.Signer,
+  userAddress: string,
+  reservesData: AaveReserveData[],
+): Promise<UserBorrowPosition[]> {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer must have a provider");
+  }
+
+  const network = await provider.getNetwork();
+  const chainId = Number(network.chainId);
+  const market = getAaveMarket(chainId);
+
+  console.log(
+    `Fetching user borrow positions for ${userAddress} on chain ${chainId}...`,
+  );
+
+  const poolDataProvider = new ethers.Contract(
+    market.AAVE_PROTOCOL_DATA_PROVIDER,
+    POOL_DATA_PROVIDER_ABI,
+    provider,
+  );
+
+  const userBorrowPositions: UserBorrowPosition[] = [];
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
+
+  // Process reserves in batches to check user borrow positions
+  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
+    const batch = reservesData.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchPromises = batch.map(async (reserve) => {
+        try {
+          // Get user reserve data using the ABI function
+          const userReserveData = await poolDataProvider.getUserReserveData(
+            reserve.asset,
+            userAddress,
+          );
+
+          const stableDebt = userReserveData.currentStableDebt.toString();
+          const variableDebt = userReserveData.currentVariableDebt.toString();
+          const stableBorrowRate = userReserveData.stableBorrowRate.toString();
+
+          // Calculate total debt
+          const totalDebtBigInt = BigInt(stableDebt) + BigInt(variableDebt);
+          const totalDebt = totalDebtBigInt.toString();
+
+          // Check if user has any borrowed balance
+          if (totalDebtBigInt > 0) {
+            // Format the debt using the asset's decimals
+            const formattedTotalDebt = ethers.formatUnits(
+              totalDebt,
+              reserve.decimals,
+            );
+
+            //For Now Im mocking price I will update this when we integrate the token info
+            const mockPrice = 1; // Mock price between 0.5-2.5
+            const debtUSD = (
+              parseFloat(formattedTotalDebt) * mockPrice
+            ).toFixed(2);
+
+            const currentBorrowAPY =
+              BigInt(variableDebt) > 0
+                ? reserve.variableBorrowAPY
+                : reserve.stableBorrowAPY;
+
+            return {
+              asset: reserve,
+              stableDebt: stableDebt,
+              variableDebt: variableDebt,
+              totalDebt: totalDebt,
+              formattedTotalDebt: formattedTotalDebt,
+              totalDebtUSD: debtUSD,
+              stableBorrowRate: stableBorrowRate,
+              variableBorrowRate: reserve.variableBorrowRate,
+              currentBorrowAPY: currentBorrowAPY,
+            };
+          }
+
+          return null;
+        } catch (error) {
+          console.log(
+            `Error fetching user borrow data for ${reserve.symbol}:`,
+            error,
+          );
+          return null;
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+
+      for (const result of batchResults) {
+        if (result !== null) {
+          userBorrowPositions.push(result);
+        }
+      }
+
+      // Delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < reservesData.length) {
+        await delay(DELAY);
+      }
+    } catch (error) {
+      console.error(`Error processing user borrow positions batch:`, error);
+    }
+  }
+
+  console.log(`Found ${userBorrowPositions.length} user borrow positions`);
+  return userBorrowPositions;
+}
+
+/**
  * Fetch user's wallet balances for available reserves
  */
 export async function fetchUserWalletBalances(
@@ -517,6 +644,12 @@ export function useAaveFetch() {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
       return fetchUserPositions(signer, userAddress, reservesData);
+    },
+
+    fetchUserBorrowPositions: async (reservesData: AaveReserveData[]) => {
+      const signer = await getEvmSigner();
+      const userAddress = await signer.getAddress();
+      return fetchUserBorrowPositions(signer, userAddress, reservesData);
     },
 
     fetchUserWalletBalances: async (reservesData: AaveReserveData[]) => {
