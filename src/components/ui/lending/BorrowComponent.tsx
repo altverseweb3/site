@@ -344,44 +344,45 @@ const BorrowComponent: React.FC = () => {
                 })}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
-          <AccordionItem
-            value="borrowPositions"
-            className="border-[1px] border-[#232326] rounded-md overflow-hidden"
-          >
-            <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-              <div className="flex items-center justify-between w-full px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="text-[#FAFAFA] font-medium">Your Borrows</div>
-                  {hasBorrowPositions && (
-                    <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
-                      {userBorrowPositions.length}
-                    </div>
-                  )}
-                </div>
+        </AccordionItem>
+        <AccordionItem
+          value="borrowPositions"
+          className="border-[1px] border-[#232326] rounded-md overflow-hidden"
+        >
+          <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
+            <div className="flex items-center justify-between w-full px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="text-[#FAFAFA] font-medium">Your Borrows</div>
+                {hasBorrowPositions && (
+                  <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
+                    {userBorrowPositions.length}
+                  </div>
+                )}
               </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <ScrollBoxSupplyBorrowAssets>
-                {isLoadingBorrowPositions && (
-                  <div className="text-white text-center py-8">
-                    <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                    <div>Loading your borrow positions...</div>
-                  </div>
-                )}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <ScrollBoxSupplyBorrowAssets>
+              {isLoadingBorrowPositions && (
+                <div className="text-white text-center py-8">
+                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div>Loading your borrow positions...</div>
+                </div>
+              )}
 
-                {!isLoadingBorrowPositions && !hasBorrowPositions && (
-                  <div className="text-center py-8">
-                    <div className="text-gray-400 mb-4">
-                      No borrow positions found
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Borrow assets to see your positions here
-                    </div>
+              {!isLoadingBorrowPositions && !hasBorrowPositions && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    No borrow positions found
                   </div>
-                )}
-              </ScrollBoxSupplyBorrowAssets>
-            </AccordionContent>
-          </AccordionItem>
+                  <div className="text-sm text-gray-500">
+                    Borrow assets to see your positions here
+                  </div>
+                </div>
+              )}
+            </ScrollBoxSupplyBorrowAssets>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
 
       <Accordion type="single" collapsible className="w-full">
