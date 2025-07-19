@@ -1,6 +1,6 @@
-import React, { useState, FC } from "react";
-import Image from "next/image";
+import React, { useState } from "react";
 import { BlueButton, PrimaryButton } from "./SupplyButtonComponents";
+import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
   CardHeader,
@@ -10,11 +10,12 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
+import type { Token, Chain } from "@/types/web3";
 
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
-import { chainNames } from "@/config/aave";
+import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 
 interface SupplyOwnedCardProps {
@@ -37,7 +38,7 @@ interface SupplyOwnedCardProps {
   ) => Promise<boolean>;
 }
 
-const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
+const SupplyOwnedCard = ({
   asset,
   suppliedBalance = "0",
   suppliedBalanceUSD = "0.00",
@@ -48,8 +49,7 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
   onSwitch = () => {},
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
-}) => {
-  const [hasImageError, setHasImageError] = useState(false);
+}: SupplyOwnedCardProps) => {
   const [collateral, setCollateral] = useState(isCollateral);
 
   // Default asset for demo purposes (fallback)
@@ -62,9 +62,22 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
     currentLiquidityRate: "0",
     totalSupply: "0",
     formattedSupply: "0",
-    isActive: true,
     supplyAPY: "2.74",
     canBeCollateral: true,
+    variableBorrowRate: "0",
+    stableBorrowRate: "0",
+    variableBorrowAPY: "0",
+    stableBorrowAPY: "0",
+    stableBorrowEnabled: false,
+    borrowingEnabled: false,
+    totalBorrowed: "0",
+    formattedTotalBorrowed: "0",
+    availableLiquidity: "0",
+    formattedAvailableLiquidity: "0",
+    borrowCap: "0",
+    formattedBorrowCap: "0",
+    isActive: true,
+    isFrozen: false,
     isIsolationModeAsset: false,
     debtCeiling: 0,
     userBalance: "0",
@@ -85,22 +98,19 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chainName = chainNames[currentAsset.chainId || 1] || "ethereum";
-  const tokenIcon = currentAsset.symbol.charAt(0).toUpperCase();
-
-  // Simple image path logic
-  const getImagePath = () => {
-    if (
-      !currentAsset.tokenIcon ||
-      currentAsset.tokenIcon === "unknown.png" ||
-      hasImageError
-    ) {
-      return null;
-    }
-    return `/tokens/${chainName}/pngs/${currentAsset.tokenIcon}`;
+  // Create Token and Chain objects for TokenImage component
+  const token: Token = {
+    id: currentAsset.asset,
+    name: currentAsset.name,
+    ticker: currentAsset.symbol,
+    icon: currentAsset.tokenIcon || "unknown.png",
+    address: currentAsset.asset,
+    decimals: currentAsset.decimals,
+    chainId: currentAsset.chainId || 1,
+    stringChainId: (currentAsset.chainId || 1).toString(),
   };
 
-  const imagePath = getImagePath();
+  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
 
   // Handle collateral change from modal
   const handleCollateralChange = async (enabled: boolean) => {
@@ -136,53 +146,12 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
     // The switch component is now just for display and triggers the modal
   };
 
-  // Determine collateral switch state
-  const getCollateralSwitchProps = () => {
-    if (isIsolationMode && canBeCollateral) {
-      return {
-        isCollateral: collateral,
-        onToggle: handleToggle,
-        disabled: false,
-        tooltip: "This asset is in isolation mode",
-      };
-    } else if (canBeCollateral) {
-      return {
-        isCollateral: collateral,
-        onToggle: handleToggle,
-        disabled: false,
-      };
-    } else {
-      return {
-        isCollateral: false,
-        onToggle: () => {},
-        disabled: true,
-        tooltip: "This asset cannot be used as collateral",
-      };
-    }
-  };
-
-  const collateralSwitchProps = getCollateralSwitchProps();
-
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
-        {/* Token image or fallback */}
-        {imagePath ? (
-          <div className="relative w-8 h-8 flex-shrink-0 mr-3 rounded-full overflow-hidden">
-            <Image
-              src={imagePath}
-              alt={currentAsset.name}
-              fill
-              sizes="32px"
-              className="object-cover"
-              onError={() => setHasImageError(true)}
-            />
-          </div>
-        ) : (
-          <div className="bg-blue-500 rounded-full p-2 mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">{tokenIcon}</span>
-          </div>
-        )}
+        <div className="mr-3 rounded-full overflow-hidden">
+          <TokenImage token={token} chain={chain} size="md" />
+        </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
             {currentAsset.name}
@@ -235,16 +204,13 @@ const SupplyOwnedCard: FC<SupplyOwnedCardProps> = ({
             >
               <button className="focus:outline-none">
                 <SupplyCollateralSwitch
-                  isCollateral={collateralSwitchProps.isCollateral}
-                  onToggle={collateralSwitchProps.onToggle}
+                  isCollateral={collateral}
+                  onToggle={handleToggle}
                 />
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch
-              isCollateral={collateralSwitchProps.isCollateral}
-              onToggle={collateralSwitchProps.onToggle}
-            />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
           )}
         </div>
       </CardContent>

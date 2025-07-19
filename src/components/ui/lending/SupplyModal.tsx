@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,9 @@ import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
-import { chainNames, SupportedChainId } from "@/config/aave";
+import { SupportedChainId } from "@/config/aave";
+import { getChainByChainId } from "@/config/chains";
+import type { Token, Chain } from "@/types/web3";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (
@@ -105,23 +107,23 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [hasImageError, setHasImageError] = useState(false);
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
 
-  const chainName = chainNames[chainId] || "ethereum";
-  const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
-
-  // Image path logic (same as SupplyUnownedCard)
-  const getImagePath = () => {
-    if (!tokenIcon || tokenIcon === "unknown.png" || hasImageError) {
-      return null;
-    }
-    return `/tokens/${chainName}/pngs/${tokenIcon}`;
+  // Create Token and Chain objects for TokenImage component
+  const token: Token = {
+    id: tokenAddress || `${tokenSymbol}-${chainId}`,
+    name: tokenName,
+    ticker: tokenSymbol,
+    icon: tokenIcon || "unknown.png",
+    address: tokenAddress,
+    decimals: tokenDecimals,
+    chainId: chainId,
+    stringChainId: chainId.toString(),
   };
 
-  const imagePath = getImagePath();
+  const chain: Chain = getChainByChainId(chainId);
 
   // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
@@ -304,22 +306,9 @@ const SupplyModal: FC<SupplyModalProps> = ({
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
-            {imagePath ? (
-              <Image
-                src={imagePath}
-                alt={tokenSymbol}
-                width={24}
-                height={24}
-                className="rounded-full"
-                onError={() => setHasImageError(true)}
-              />
-            ) : (
-              <div className="bg-blue-500 rounded-full p-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {fallbackIcon}
-                </span>
-              </div>
-            )}
+            <div className="rounded-full overflow-hidden">
+              <TokenImage token={token} chain={chain} size="sm" />
+            </div>
             Supply {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
@@ -411,22 +400,9 @@ const SupplyModal: FC<SupplyModalProps> = ({
             <div className="flex justify-between">
               <span className="text-[#A1A1AA]">Asset</span>
               <div className="flex items-center gap-2">
-                {imagePath ? (
-                  <Image
-                    src={imagePath}
-                    alt={tokenSymbol}
-                    width={16}
-                    height={16}
-                    className="rounded-full"
-                    onError={() => setHasImageError(true)}
-                  />
-                ) : (
-                  <div className="bg-blue-500 rounded-full flex-shrink-0 w-4 h-4 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {fallbackIcon}
-                    </span>
-                  </div>
-                )}
+                <div className="w-4 h-4 rounded-full overflow-hidden">
+                  <TokenImage token={token} chain={chain} size="sm" />
+                </div>
                 <span className="text-[#FAFAFA]">{tokenName}</span>
               </div>
             </div>

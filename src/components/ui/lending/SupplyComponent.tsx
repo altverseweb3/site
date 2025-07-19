@@ -26,7 +26,7 @@ const SupplyComponent: React.FC = () => {
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesWithUserData, fetchUserPositions } = useAaveFetch();
+  const { fetchAllReservesData, fetchUserPositions } = useAaveFetch();
 
   // Move loadUserPositions to useCallback to fix dependency warning
   const loadUserPositions = useCallback(
@@ -75,15 +75,16 @@ const SupplyComponent: React.FC = () => {
           `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
         );
 
-        // Fetch reserves with user wallet balances
-        const reservesData = await fetchAllReservesWithUserData();
+        const reservesData = await fetchAllReservesData();
 
-        console.log(`Successfully loaded ${reservesData.length} Aave reserves`);
-        setAaveReserves(reservesData);
+        console.log(
+          `Successfully loaded ${reservesData.supplyAssets.length} Aave reserves`,
+        );
+        setAaveReserves(reservesData.supplyAssets);
         setLastChainId(sourceChain.chainId);
 
         // Now fetch user positions (supplied assets)
-        await loadUserPositions(reservesData);
+        await loadUserPositions(reservesData.supplyAssets);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);
         setError(
@@ -101,7 +102,7 @@ const SupplyComponent: React.FC = () => {
       lastChainId,
       sourceChain.chainId,
       aaveReserves.length,
-      fetchAllReservesWithUserData,
+      fetchAllReservesData,
       loadUserPositions, // Added this dependency
     ],
   );

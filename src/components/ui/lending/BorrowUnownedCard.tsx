@@ -10,25 +10,30 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import { formatBalance, formatAPY } from "@/utils/aave/format";
-import { SupplyModal } from "./SupplyModal";
+import { BorrowModal } from "./BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 
-interface SupplyUnOwnedCardProps {
+interface BorrowUnOwnedCardProps {
   asset?: AaveReserveData;
-  userBalance?: string; // Optional user balance for this asset
-  dollarAmount?: string; // Optional USD value of user balance
-  onSupply?: (asset: AaveReserveData) => void;
+  availableToBorrow?: string; // Amount user can borrow based on collateral
+  availableToBorrowUSD?: string; // USD value of borrowable amount
+  onBorrow?: (asset: AaveReserveData) => void;
   onDetails?: (asset: AaveReserveData) => void;
+  healthFactor?: string;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
 }
 
-const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
+const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   asset,
-  userBalance = "0",
-  dollarAmount = "0.00",
-  onSupply = () => {},
+  availableToBorrow = "0.00",
+  availableToBorrowUSD = "0.00",
+  onBorrow = () => {},
   onDetails = () => {},
+  healthFactor = "1.24",
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
 }) => {
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
@@ -67,14 +72,14 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
 
   const currentAsset = asset || defaultAsset;
 
-  // Determine collateral status and isolation mode
-  const canBeCollateral = currentAsset.canBeCollateral ?? true;
-  const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
+  // Get borrow APY (variable rate) from your enhanced data
+  const borrowAPY = currentAsset.variableBorrowAPY || "0.00";
+  const stableBorrowAPY = currentAsset.stableBorrowAPY || "0.00";
 
-  const formattedBalance = formatBalance(userBalance);
-  const supplyAPY = currentAsset.supplyAPY
-    ? currentAsset.supplyAPY
-    : formatAPY(currentAsset.currentLiquidityRate);
+  // Check if borrowing is enabled using your enhanced data
+  const borrowingEnabled = currentAsset.borrowingEnabled ?? true;
+  const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
+  const isFrozen = currentAsset.isFrozen ?? false;
 
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
@@ -90,18 +95,24 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
 
   const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
 
-  // Determine what to display for collateral status
-  const getCollateralIndicator = () => {
-    if (isIsolationMode && canBeCollateral) {
-      return (
-        <div className="text-amber-500 font-bold text-sm">isolation mode</div>
-      );
-    } else if (canBeCollateral) {
-      return <div className="text-amber-500">✓</div>;
-    } else {
-      return <div className="text-amber-500">✗</div>;
+  // Get borrowing status display
+  const getBorrowingStatusDisplay = () => {
+    if (!borrowingEnabled || isFrozen) {
+      return { text: "Disabled", color: "text-red-500" };
     }
+    if (isIsolationMode) {
+      return { text: "Isolation Mode", color: "text-yellow-500" };
+    }
+    if (parseFloat(currentAsset.formattedAvailableLiquidity || "0") === 0) {
+      return { text: "No Liquidity", color: "text-orange-500" };
+    }
+    return { text: "Available", color: "text-green-500" };
   };
+
+  const borrowingStatus = getBorrowingStatusDisplay();
+
+  // Check if user can actually borrow
+  const canBorrow = borrowingEnabled && parseFloat(availableToBorrow) > 0;
 
   return (
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
@@ -120,55 +131,61 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
       </CardHeader>
 
       <CardContent className="p-3 pt-2 space-y-2">
-        {/* Balance row */}
+        {/* Available to borrow row */}
         <div className="flex justify-between items-start">
-          <div className="text-gray-400 text-sm mt-0">wallet balance</div>
+          <div className="text-gray-400 text-sm mt-0">available to borrow</div>
           <div className="text-right flex flex-col items-end">
-            <div className="text-sm">{formattedBalance}</div>
-            <div className="text-gray-400 text-xs">${dollarAmount}</div>
+            <div className="text-sm">{availableToBorrow}</div>
+            <div className="text-gray-400 text-xs">${availableToBorrowUSD}</div>
           </div>
         </div>
 
-        {/* APY row */}
+        {/* Borrow APY row */}
         <div className="flex justify-between items-start">
-          <div className="text-gray-400 text-sm mt-0">supply APY</div>
-          <div className="text-sm text-green-400">{supplyAPY}%</div>
+          <div className="text-gray-400 text-sm mt-0">variable APY</div>
+          <div className="text-sm text-red-400">{borrowAPY}%</div>
         </div>
 
-        {/* Collateral indicator row */}
+        {/* Borrowing status row */}
         <div className="flex justify-between items-start">
-          <div className="text-gray-400 text-sm mt-0">can be collateral</div>
-          {getCollateralIndicator()}
+          <div className="text-gray-400 text-sm mt-0">borrowing</div>
+          <div className={`text-sm ${borrowingStatus.color}`}>
+            {borrowingStatus.text}
+          </div>
         </div>
       </CardContent>
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-        <SupplyModal
+        <BorrowModal
           tokenSymbol={currentAsset.symbol}
           tokenName={currentAsset.name}
           tokenIcon={currentAsset.tokenIcon}
           chainId={currentAsset.chainId}
-          balance={userBalance}
-          supplyAPY={supplyAPY}
-          collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
-          healthFactor="0"
+          availableToBorrow={availableToBorrow}
+          availableToBorrowUSD={availableToBorrowUSD}
+          variableBorrowAPY={borrowAPY}
+          stableBorrowAPY={stableBorrowAPY}
+          borrowingEnabled={borrowingEnabled}
+          isIsolationMode={isIsolationMode}
+          healthFactor={healthFactor}
           tokenPrice={1}
-          liquidationThreshold={0.85}
-          totalCollateralUSD={0}
-          totalDebtUSD={0}
+          totalCollateralUSD={totalCollateralUSD}
+          totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset}
           tokenDecimals={currentAsset.decimals}
-          onSupply={async () => {
-            onSupply(currentAsset);
+          onBorrow={async () => {
+            onBorrow(currentAsset);
             return true;
           }}
         >
-          <PrimaryButton>supply</PrimaryButton>
-        </SupplyModal>
+          <PrimaryButton disabled={!canBorrow}>
+            {canBorrow ? "borrow" : "unavailable"}
+          </PrimaryButton>
+        </BorrowModal>
         <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
       </CardFooter>
     </Card>
   );
 };
 
-export default SupplyUnOwnedCard;
+export default BorrowUnOwnedCard;

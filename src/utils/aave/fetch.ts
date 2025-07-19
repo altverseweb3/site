@@ -7,26 +7,51 @@ import { Token } from "@/types/web3";
 import { getAaveMarket } from "@/config/chains";
 import { chainNames } from "@/config/aave";
 
-// Types
+// Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
   symbol: string;
   name: string;
   asset: string;
   decimals: number;
   aTokenAddress: string;
+
+  // Supply data
   currentLiquidityRate: string;
   totalSupply: string;
   formattedSupply: string;
-  isActive: boolean;
   supplyAPY: string;
   canBeCollateral: boolean;
+
+  // Borrow data
+  variableBorrowRate: string;
+  stableBorrowRate: string;
+  variableBorrowAPY: string;
+  stableBorrowAPY: string;
+  stableBorrowEnabled: boolean;
+  borrowingEnabled: boolean;
+  totalBorrowed: string;
+  formattedTotalBorrowed: string;
+  availableLiquidity: string;
+  formattedAvailableLiquidity: string;
+  borrowCap: string;
+  formattedBorrowCap: string;
+
+  // General data
+  isActive: boolean;
+  isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
   userBalance?: string;
   userBalanceFormatted?: string;
   userBalanceUsd?: string;
-  tokenIcon?: string; // Just the icon filename
-  chainId?: number; // For image path
+  tokenIcon?: string;
+  chainId?: number;
+}
+
+export interface AaveReservesResult {
+  allReserves: AaveReserveData[];
+  supplyAssets: AaveReserveData[];
+  borrowAssets: AaveReserveData[];
 }
 
 export interface UserPosition {
@@ -51,9 +76,12 @@ function rayToPercentage(rayValue: string): string {
 // Rate limiting utility
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Enhanced function that fetches all reserves and returns categorized lists
+ */
 export async function fetchAllReservesData(
   signer: ethers.Signer,
-): Promise<AaveReserveData[]> {
+): Promise<AaveReservesResult> {
   const provider = signer.provider;
   if (!provider) {
     throw new Error("Signer must have a provider");
@@ -83,8 +111,8 @@ export async function fetchAllReservesData(
   const reserveTokens = await poolDataProvider.getAllReservesTokens();
   console.log(`Found ${reserveTokens.length} reserve tokens`);
 
-  const reservesData: AaveReserveData[] = [];
-  const BATCH_SIZE = 2; // Even smaller batches
+  const allReserves: AaveReserveData[] = [];
+  const BATCH_SIZE = 2;
   const INITIAL_DELAY = 0;
   const MAX_RETRIES = 3;
 
@@ -98,17 +126,27 @@ export async function fetchAllReservesData(
         const batchPromises = batch.map(
           async (token: { tokenAddress: string; symbol: string }) => {
             try {
-              const [configData, reserveData, debtCeiling] = await Promise.all([
-                poolDataProvider.getReserveConfigurationData(
-                  token.tokenAddress,
-                ),
-                poolDataProvider.getReserveData(token.tokenAddress),
-                poolDataProvider.getDebtCeiling(token.tokenAddress),
-              ]);
+              const [configData, reserveData, debtCeiling, reserveCaps] =
+                await Promise.all([
+                  poolDataProvider.getReserveConfigurationData(
+                    token.tokenAddress,
+                  ),
+                  poolDataProvider.getReserveData(token.tokenAddress),
+                  poolDataProvider.getDebtCeiling(token.tokenAddress),
+                  poolDataProvider.getReserveCaps(token.tokenAddress),
+                ]);
 
-              if (!configData.isActive || configData.isFrozen) {
+              // Only skip completely inactive or frozen assets
+              if (!configData.isActive) {
                 return null;
               }
+
+              // Calculate borrow and liquidity data
+              const totalBorrowed =
+                BigInt(reserveData.totalVariableDebt) +
+                BigInt(reserveData.totalStableDebt);
+              const availableLiquidity =
+                BigInt(reserveData.totalAToken) - totalBorrowed;
 
               // Check if asset is in isolation mode and collateral settings
               const isIsolationModeAsset = Number(debtCeiling) > 0;
@@ -117,24 +155,28 @@ export async function fetchAllReservesData(
               const supplyAPY = rayToPercentage(
                 reserveData.liquidityRate.toString(),
               );
+              const variableBorrowAPY = rayToPercentage(
+                reserveData.variableBorrowRate.toString(),
+              );
+              const stableBorrowAPY = rayToPercentage(
+                reserveData.stableBorrowRate.toString(),
+              );
+
               const formattedSupply = ethers.formatUnits(
                 reserveData.totalAToken,
                 Number(configData.decimals),
               );
 
-              // Try to get token contract data for actual name and symbol
+              // Get token metadata
               let tokenName = token.symbol;
               let tokenSymbol = token.symbol;
 
-              // Look up token data first (this has the proper names)
               const tokenData = tokenLookup[token.tokenAddress.toLowerCase()];
 
               if (tokenData) {
-                // Use token database name and symbol (properly formatted)
-                tokenName = tokenData.name; // e.g. "USD Coin" instead of "USDC"
-                tokenSymbol = tokenData.ticker; // e.g. "USDC"
+                tokenName = tokenData.name;
+                tokenSymbol = tokenData.ticker;
               } else {
-                // Fallback to contract data if not in token database
                 try {
                   const tokenContract = new ethers.Contract(
                     token.tokenAddress,
@@ -142,7 +184,6 @@ export async function fetchAllReservesData(
                     provider,
                   );
 
-                  // Try to get name and symbol from contract
                   const [contractName, contractSymbol] = await Promise.all([
                     tokenContract.name().catch(() => token.symbol),
                     tokenContract.symbol().catch(() => token.symbol),
@@ -150,29 +191,56 @@ export async function fetchAllReservesData(
 
                   tokenName = contractName;
                   tokenSymbol = contractSymbol;
-                } catch (error) {
-                  // Final fallback to reserve token data
+                } catch {
                   console.log(
                     `Could not fetch contract data for ${token.symbol}, using fallback.`,
-                    error,
                   );
                 }
               }
 
               const tokenIcon = tokenData?.icon || "unknown.png";
+              const decimals = Number(configData.decimals);
 
               return {
-                symbol: tokenSymbol, // From token database or contract
-                name: tokenName, // From token database or contract
+                symbol: tokenSymbol,
+                name: tokenName,
                 asset: token.tokenAddress,
-                decimals: Number(configData.decimals),
+                decimals: decimals,
                 aTokenAddress: reserveData.aTokenAddress || "",
+
+                // Supply data
                 currentLiquidityRate: reserveData.liquidityRate.toString(),
                 totalSupply: reserveData.totalAToken.toString(),
                 formattedSupply: formattedSupply,
-                isActive: configData.isActive,
                 supplyAPY: supplyAPY,
                 canBeCollateral: canBeCollateral,
+
+                // Borrow data
+                variableBorrowRate: reserveData.variableBorrowRate.toString(),
+                stableBorrowRate: reserveData.stableBorrowRate.toString(),
+                variableBorrowAPY: variableBorrowAPY,
+                stableBorrowAPY: stableBorrowAPY,
+                stableBorrowEnabled: configData.stableBorrowRateEnabled,
+                borrowingEnabled: configData.borrowingEnabled,
+                totalBorrowed: totalBorrowed.toString(),
+                formattedTotalBorrowed: ethers.formatUnits(
+                  totalBorrowed,
+                  decimals,
+                ),
+                availableLiquidity: availableLiquidity.toString(),
+                formattedAvailableLiquidity: ethers.formatUnits(
+                  availableLiquidity,
+                  decimals,
+                ),
+                borrowCap: reserveCaps.borrowCap.toString(),
+                formattedBorrowCap: ethers.formatUnits(
+                  reserveCaps.borrowCap,
+                  decimals,
+                ),
+
+                // General data
+                isActive: configData.isActive,
+                isFrozen: configData.isFrozen,
                 isIsolationModeAsset: isIsolationModeAsset,
                 debtCeiling: Number(debtCeiling),
                 userBalance: "0",
@@ -195,12 +263,11 @@ export async function fetchAllReservesData(
 
         for (const result of batchResults) {
           if (result !== null) {
-            reservesData.push(result);
+            allReserves.push(result);
           }
         }
 
-        // Success - break out of retry loop
-        break;
+        break; // Success
       } catch (error) {
         console.log(error);
         retries++;
@@ -220,101 +287,27 @@ export async function fetchAllReservesData(
       }
     }
 
-    // Always delay between batches
     if (i + BATCH_SIZE < reserveTokens.length) {
       await delay(currentDelay);
     }
   }
 
-  console.log(`Found ${reservesData.length} active reserves`);
-  return reservesData;
-}
+  // Process the data into categorized lists
+  const supplyAssets = allReserves.filter((reserve) => !reserve.isFrozen);
 
-/**
- * Fetch user's wallet balances for available reserves
- */
-export async function fetchUserWalletBalances(
-  signer: ethers.Signer,
-  userAddress: string,
-  reservesData: AaveReserveData[],
-): Promise<AaveReserveData[]> {
-  const provider = signer.provider;
-  if (!provider) {
-    throw new Error("Signer must have a provider");
-  }
-
-  console.log(`Fetching wallet balances for ${userAddress}...`);
-
-  const updatedReserves: AaveReserveData[] = [];
-  const BATCH_SIZE = 5;
-  const DELAY = 100;
-
-  // Process reserves in batches to get wallet balances
-  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
-    const batch = reservesData.slice(i, i + BATCH_SIZE);
-
-    try {
-      const batchPromises = batch.map(async (reserve) => {
-        try {
-          // Get user's wallet balance for this token
-          const tokenContract = new ethers.Contract(
-            reserve.asset,
-            ERC20_ABI,
-            provider,
-          );
-
-          const walletBalance = await tokenContract.balanceOf(userAddress);
-          const formattedBalance = ethers.formatUnits(
-            walletBalance,
-            reserve.decimals,
-          );
-
-          return {
-            ...reserve,
-            userBalance: walletBalance.toString(),
-            userBalanceFormatted: formattedBalance,
-            userBalanceUsd: walletBalance.toString(),
-          };
-        } catch (error) {
-          console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
-            error,
-          );
-          // Return reserve with zero balance on error
-          return {
-            ...reserve,
-            userBalance: "0",
-            userBalanceFormatted: "0.00",
-            userBalanceUsd: "0.00",
-          };
-        }
-      });
-
-      const batchResults = await Promise.all(batchPromises);
-      updatedReserves.push(...batchResults);
-
-      // Delay between batches
-      if (i + BATCH_SIZE < reservesData.length) {
-        await delay(DELAY);
-      }
-    } catch (error) {
-      console.error(`Error processing wallet balances batch:`, error);
-      // Add reserves with zero balances on batch error
-      updatedReserves.push(
-        ...batch.map((reserve) => ({
-          ...reserve,
-          userBalance: "0",
-          userBalanceFormatted: "0.00",
-          userBalanceUsd: "0.00",
-        })),
-      );
-    }
-  }
-
-  console.log(
-    `Updated ${updatedReserves.length} reserves with wallet balances`,
+  const borrowAssets = allReserves.filter(
+    (reserve) => !reserve.isFrozen && reserve.borrowingEnabled,
   );
-  return updatedReserves;
+
+  console.log(`Found ${allReserves.length} total reserves`);
+  console.log(`Found ${supplyAssets.length} supply assets`);
+  console.log(`Found ${borrowAssets.length} borrow assets`);
+
+  return {
+    allReserves,
+    supplyAssets,
+    borrowAssets,
+  };
 }
 
 /**
@@ -417,11 +410,103 @@ export async function fetchUserPositions(
 }
 
 /**
- * React hook for Aave fetch functions with wallet integration
+ * Fetch user's wallet balances for available reserves
+ */
+export async function fetchUserWalletBalances(
+  signer: ethers.Signer,
+  userAddress: string,
+  reservesData: AaveReserveData[],
+): Promise<AaveReserveData[]> {
+  const provider = signer.provider;
+  if (!provider) {
+    throw new Error("Signer must have a provider");
+  }
+
+  console.log(`Fetching wallet balances for ${userAddress}...`);
+
+  const updatedReserves: AaveReserveData[] = [];
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
+
+  // Process reserves in batches to get wallet balances
+  for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
+    const batch = reservesData.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchPromises = batch.map(async (reserve) => {
+        try {
+          // Get user's wallet balance for this token
+          const tokenContract = new ethers.Contract(
+            reserve.asset,
+            ERC20_ABI,
+            provider,
+          );
+
+          const walletBalance = await tokenContract.balanceOf(userAddress);
+          const formattedBalance = ethers.formatUnits(
+            walletBalance,
+            reserve.decimals,
+          );
+
+          // TODO: Replace with actual price fetching
+          const mockPrice = Math.random() * 2 + 0.5;
+          const balanceUSD = (parseFloat(formattedBalance) * mockPrice).toFixed(
+            2,
+          );
+
+          return {
+            ...reserve,
+            userBalance: walletBalance.toString(),
+            userBalanceFormatted: formattedBalance,
+            userBalanceUsd: balanceUSD,
+          };
+        } catch (error) {
+          console.log(
+            `Error fetching wallet balance for ${reserve.symbol}:`,
+            error,
+          );
+          // Return reserve with zero balance on error
+          return {
+            ...reserve,
+            userBalance: "0",
+            userBalanceFormatted: "0.00",
+            userBalanceUsd: "0.00",
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      updatedReserves.push(...batchResults);
+
+      // Delay between batches
+      if (i + BATCH_SIZE < reservesData.length) {
+        await delay(DELAY);
+      }
+    } catch (error) {
+      console.error(`Error processing wallet balances batch:`, error);
+      // Add reserves with zero balances on batch error
+      updatedReserves.push(
+        ...batch.map((reserve) => ({
+          ...reserve,
+          userBalance: "0",
+          userBalanceFormatted: "0.00",
+          userBalanceUsd: "0.00",
+        })),
+      );
+    }
+  }
+
+  console.log(
+    `Updated ${updatedReserves.length} reserves with wallet balances`,
+  );
+  return updatedReserves;
+}
+
+/**
+ * Updated React hook
  */
 export function useAaveFetch() {
   const { getEvmSigner } = useWalletProviderAndSigner();
-
   return {
     fetchAllReservesData: async () => {
       const signer = await getEvmSigner();
@@ -452,10 +537,18 @@ export function useAaveFetch() {
       const reservesWithBalances = await fetchUserWalletBalances(
         signer,
         userAddress,
-        reserves,
+        reserves.allReserves,
       );
 
-      return reservesWithBalances;
+      return {
+        allReserves: reservesWithBalances,
+        supplyAssets: reservesWithBalances.filter(
+          (reserve) => !reserve.isFrozen,
+        ),
+        borrowAssets: reservesWithBalances.filter(
+          (reserve) => !reserve.isFrozen && reserve.borrowingEnabled,
+        ),
+      };
     },
   };
 }
