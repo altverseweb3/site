@@ -929,17 +929,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
       setConversionError(null);
 
       try {
-        const signer = await getEvmSigner();
-        const provider = signer.provider;
-        if (!provider) {
-          throw new Error("Provider not available");
-        }
-
+        // Use automatic Ethereum provider for vault queries (vaults only exist on Ethereum)
         const conversionResult = await queryVaultConversionRate(
           vault.id,
           assetToConvert,
           amountToConvert,
-          provider,
         );
         setVaultSharesPreview(conversionResult);
       } catch (error) {
