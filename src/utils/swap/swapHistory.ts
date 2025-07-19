@@ -15,7 +15,7 @@ interface RetryConfig {
   maxRetries: number;
   baseDelayMs: number;
   maxDelayMs: number;
-  jitterFactor: number;
+  indexSpacingMs: number;
 }
 
 export class MayanSwapService {
@@ -27,9 +27,9 @@ export class MayanSwapService {
 
   private readonly retryConfig: RetryConfig = {
     maxRetries: 8,
-    baseDelayMs: 10000, // Start with 10 seconds
-    maxDelayMs: 60000, // 60 seconds max delay
-    jitterFactor: 0.2, // 20% jitter
+    baseDelayMs: 10000,
+    maxDelayMs: 60000,
+    indexSpacingMs: 500,
   };
 
   /**
@@ -40,20 +40,17 @@ export class MayanSwapService {
   }
 
   /**
-   * Calculate delay with exponential backoff and jitter
-   * Since we can't detect 429s specifically, we assume network errors might be rate limits
+   * Calculate delay with exponential backoff and index-based spacing
+   * Uses deterministic spacing to prevent clustering of retry attempts
    */
-  private calculateDelay(attempt: number): number {
-    // Exponential backoff: baseDelay * 2^(attempt-1)
+  private calculateDelay(attempt: number, callIndex: number = 0): number {
     const exponentialDelay =
       this.retryConfig.baseDelayMs * Math.pow(2, attempt - 1);
 
-    // Add jitter to prevent thundering herd (±jitterFactor of the delay)
-    const jitterRange = exponentialDelay * this.retryConfig.jitterFactor;
-    const jitter = (Math.random() - 0.5) * 2 * jitterRange; // Random between -jitterRange and +jitterRange
+    const indexDelay = callIndex * this.retryConfig.indexSpacingMs;
+    const finalDelay = exponentialDelay + indexDelay;
 
-    const finalDelay = exponentialDelay + jitter;
-    return Math.min(Math.max(finalDelay, 1000), this.retryConfig.maxDelayMs); // At least 1 second, at most maxDelayMs
+    return Math.min(Math.max(finalDelay, 1000), this.retryConfig.maxDelayMs);
   }
 
   /**
@@ -77,12 +74,13 @@ export class MayanSwapService {
     referrerAddress: string,
     traderAddress: string,
     attempt: number = 1,
+    callIndex: number = 0,
   ): Promise<SwapQueryResult> {
     const url = `${MAYAN_API_BASE}/swaps?referrerAddress=${referrerAddress}&trader=${traderAddress}`;
 
     try {
       console.log(
-        `[Attempt ${attempt}] Fetching swaps for referrer: ${referrerAddress}, trader: ${traderAddress}`,
+        `[Attempt ${attempt}, Call ${callIndex}] Fetching swaps for referrer: ${referrerAddress}, trader: ${traderAddress}`,
       );
 
       const response = await fetch(url);
@@ -94,7 +92,9 @@ export class MayanSwapService {
       const data: SwapResponse = await response.json();
 
       if (attempt > 1) {
-        console.log(`✓ Successfully fetched after ${attempt} attempts`);
+        console.log(
+          `✓ Successfully fetched after ${attempt} attempts (Call ${callIndex})`,
+        );
       }
 
       return {
@@ -108,11 +108,11 @@ export class MayanSwapService {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
 
-      // If this might be a rate limit and we haven't exceeded max retries, try again
       if (isPotentialRateLimit && attempt < this.retryConfig.maxRetries) {
-        const delayMs = this.calculateDelay(attempt);
+        const delayMs = this.calculateDelay(attempt, callIndex);
+
         console.log(
-          `Potential rate limit detected (${errorMessage}). Retrying in ${Math.round(delayMs / 1000)}s (attempt ${attempt}/${this.retryConfig.maxRetries})`,
+          `Potential rate limit detected (${errorMessage}). Retrying in ${Math.round(delayMs / 1000)}s with indexed spacing (Call ${callIndex}, attempt ${attempt}/${this.retryConfig.maxRetries})`,
         );
 
         await this.sleep(delayMs);
@@ -120,17 +120,17 @@ export class MayanSwapService {
           referrerAddress,
           traderAddress,
           attempt + 1,
+          callIndex,
         );
       }
 
-      // For non-rate-limit errors or if we've exhausted retries
       if (isPotentialRateLimit && attempt >= this.retryConfig.maxRetries) {
         console.error(
-          `Potential rate limit - max retries (${this.retryConfig.maxRetries}) reached for ${referrerAddress} -> ${traderAddress}`,
+          `Potential rate limit - max retries (${this.retryConfig.maxRetries}) reached for ${referrerAddress} -> ${traderAddress} (Call ${callIndex})`,
         );
       } else {
         console.error(
-          `Non-retryable error for ${referrerAddress} -> ${traderAddress}:`,
+          `Non-retryable error for ${referrerAddress} -> ${traderAddress} (Call ${callIndex}):`,
           errorMessage,
         );
       }
@@ -152,8 +152,14 @@ export class MayanSwapService {
   private async querySwaps(
     referrerAddress: string,
     traderAddress: string,
+    callIndex: number = 0,
   ): Promise<SwapQueryResult> {
-    return this.querySwapsWithRetry(referrerAddress, traderAddress);
+    return this.querySwapsWithRetry(
+      referrerAddress,
+      traderAddress,
+      1,
+      callIndex,
+    );
   }
 
   /**
@@ -161,12 +167,13 @@ export class MayanSwapService {
    */
   private async processBatched<T, R>(
     items: T[],
-    processor: (item: T) => Promise<R>,
+    processor: (item: T, globalIndex: number) => Promise<R>,
     batchSize: number = 3,
     delayBetweenBatches: number = 2000,
     delayBetweenRequests: number = 500,
   ): Promise<R[]> {
     const results: R[] = [];
+    let globalIndex = 0;
 
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
@@ -174,13 +181,12 @@ export class MayanSwapService {
         `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)} (${batch.length} items)`,
       );
 
-      // Process items in batch with delays between each request
       const batchResults: R[] = [];
       for (let j = 0; j < batch.length; j++) {
-        const result = await processor(batch[j]);
+        const result = await processor(batch[j], globalIndex);
         batchResults.push(result);
+        globalIndex++;
 
-        // Add delay between requests within the batch (except for the last item)
         if (j < batch.length - 1) {
           await this.sleep(delayBetweenRequests);
         }
@@ -188,7 +194,6 @@ export class MayanSwapService {
 
       results.push(...batchResults);
 
-      // Add delay between batches (except for the last batch)
       if (i + batchSize < items.length) {
         console.log(`Waiting ${delayBetweenBatches}ms before next batch...`);
         await this.sleep(delayBetweenBatches);
@@ -204,16 +209,15 @@ export class MayanSwapService {
   async getSwapsForTrader(traderAddress: string): Promise<SwapQueryResult[]> {
     const referrerAddresses = Object.values(this.referrerAddresses);
 
-    // Process referrers sequentially with delays to minimize rate limiting
     const results = await this.processBatched(
       referrerAddresses,
-      (referrerAddress) => this.querySwaps(referrerAddress, traderAddress),
-      1, // Process one referrer at a time
-      1000, // 1 second delay between referrers
-      0, // No delay within batch since batch size is 1
+      (referrerAddress, callIndex) =>
+        this.querySwaps(referrerAddress, traderAddress, callIndex),
+      1,
+      1000,
+      0,
     );
 
-    // Log summary
     const totalSwaps = results.reduce(
       (sum, result) => sum + result.response.data.length,
       0,
@@ -250,7 +254,6 @@ export class MayanSwapService {
   }> {
     const walletAddresses: string[] = [];
 
-    // Collect all wallet addresses
     if (userWallets.evm) {
       walletAddresses.push(userWallets.evm);
     }
@@ -261,7 +264,6 @@ export class MayanSwapService {
       walletAddresses.push(userWallets.sui);
     }
 
-    // Create query items for each combination of referrer and wallet
     const queryItems: { referrerAddress: string; walletAddress: string }[] = [];
     for (const referrerAddress of Object.values(this.referrerAddresses)) {
       for (const walletAddress of walletAddresses) {
@@ -270,24 +272,22 @@ export class MayanSwapService {
     }
 
     console.log(
-      `Starting ${queryItems.length} queries in conservative batches to avoid rate limiting...`,
+      `Starting ${queryItems.length} queries with indexed retry strategy...`,
     );
     const startTime = Date.now();
 
-    // Process very conservatively to avoid rate limits
     const results = await this.processBatched(
       queryItems,
-      ({ referrerAddress, walletAddress }) =>
-        this.querySwaps(referrerAddress, walletAddress),
-      2, // Process only 2 requests at a time
-      3000, // 3 second delay between batches
-      1500, // 1.5 second delay between requests in batch
+      ({ referrerAddress, walletAddress }, callIndex) =>
+        this.querySwaps(referrerAddress, walletAddress, callIndex),
+      2,
+      3000,
+      1500,
     );
 
     const endTime = Date.now();
     console.log(`Completed all queries in ${endTime - startTime}ms`);
 
-    // Calculate summary statistics
     const totalSwaps = results.reduce(
       (sum, result) => sum + result.response.data.length,
       0,
@@ -295,7 +295,6 @@ export class MayanSwapService {
     const successfulQueries = results.filter((result) => !result.error).length;
     const errors = results.filter((result) => result.error);
 
-    // Count swaps by chain (approximate based on referrer)
     const swapsByChain: Record<ChainType, number> = {
       EVM: 0,
       SOL: 0,
@@ -366,5 +365,12 @@ export class MayanSwapService {
   updateRetryConfig(config: Partial<RetryConfig>): void {
     Object.assign(this.retryConfig, config);
     console.log("Updated retry config:", this.retryConfig);
+  }
+
+  /**
+   * Update the spacing between indexed retry attempts
+   */
+  updateIndexSpacing(spacingMs: number): void {
+    this.updateRetryConfig({ indexSpacingMs: spacingMs });
   }
 }
