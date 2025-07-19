@@ -142,6 +142,23 @@ export interface BorrowParams {
   signer: ethers.Signer;
 }
 
+export interface RepayResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
+export interface RepayParams {
+  tokenAddress: string;
+  amount: string;
+  rateMode: RateMode;
+  tokenDecimals: number;
+  tokenSymbol: string;
+  userAddress: string;
+  chainId: SupportedChainId;
+  signer: ethers.Signer;
+}
+
 export class AaveTransactions {
   static async withdrawAsset(params: WithdrawParams): Promise<WithdrawResult> {
     const {
@@ -571,6 +588,114 @@ export class AaveTransactions {
           errorMessage = "Asset is not available for borrowing";
         } else if (error.message.includes("stable borrowing not enabled")) {
           errorMessage = "Stable rate borrowing is not enabled for this asset";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  static async repayAsset(params: RepayParams): Promise<RepayResult> {
+    const {
+      tokenAddress,
+      amount,
+      rateMode,
+      tokenDecimals,
+      tokenSymbol,
+      userAddress,
+      chainId,
+      signer,
+    } = params;
+
+    try {
+      console.log(
+        `💳 Starting repay transaction for ${amount} ${tokenSymbol} (${rateMode === RateMode.Stable ? "stable" : "variable"} debt)`,
+      );
+
+      if (!AaveSDK.isChainSupported(chainId)) {
+        throw new Error(`Chain ${chainId} not supported`);
+      }
+
+      const poolAddress = AaveSDK.getPoolAddress(chainId);
+
+      // Convert amount to wei
+      const amountWei = ethers.parseUnits(amount, tokenDecimals);
+      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
+
+      // Check user's token balance
+      const tokenContract = new ethers.Contract(
+        tokenAddress,
+        ERC20_ABI,
+        signer,
+      );
+      const userBalance = await tokenContract.balanceOf(userAddress);
+
+      if (userBalance < amountWei) {
+        throw new Error(`Insufficient ${tokenSymbol} balance for repayment`);
+      }
+
+      // Check and approve if necessary
+      console.log(`🔍 Checking allowance for ${tokenSymbol}...`);
+      const currentAllowance = await tokenContract.allowance(
+        userAddress,
+        poolAddress,
+      );
+
+      if (currentAllowance < amountWei) {
+        console.log(`📝 Approving ${tokenSymbol} for repayment...`);
+        const approveTx = await tokenContract.approve(poolAddress, amountWei);
+        console.log(`⏳ Approval transaction sent: ${approveTx.hash}`);
+        await approveTx.wait();
+        console.log(`✅ Approval confirmed`);
+      }
+
+      // Create pool contract
+      const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
+
+      // Execute repay transaction
+      // Aave repay function: repay(asset, amount, rateMode, onBehalfOf)
+      console.log(`📤 Executing repay transaction...`);
+      const repayTx = await poolContract.repay(
+        tokenAddress, // asset to repay
+        amountWei, // amount to repay
+        rateMode, // interest rate mode (RateMode.Stable = 1, RateMode.Variable = 2)
+        userAddress, // on behalf of (borrower address)
+      );
+
+      console.log(`⏳ Repay transaction sent: ${repayTx.hash}`);
+      await repayTx.wait();
+      console.log(`✅ Repay transaction confirmed`);
+
+      return {
+        success: true,
+        txHash: repayTx.hash,
+      };
+    } catch (error) {
+      console.error("❌ Repay transaction failed:", error);
+
+      // Handle specific error cases
+      let errorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (
+          error.message.includes("Insufficient") &&
+          error.message.includes("balance")
+        ) {
+          errorMessage = `Insufficient ${tokenSymbol} balance for repayment`;
+        } else if (error.message.includes("no debt")) {
+          errorMessage = "No debt to repay for this asset";
+        } else if (error.message.includes("amount exceeds debt")) {
+          errorMessage = "Repay amount exceeds current debt";
+        } else if (error.message.includes("reserve inactive")) {
+          errorMessage = "Asset repayment is currently unavailable";
         } else {
           errorMessage = error.message;
         }
