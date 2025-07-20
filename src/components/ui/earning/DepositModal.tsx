@@ -33,7 +33,11 @@ import {
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
-import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
+import {
+  useChainSwitch,
+  useTokenTransfer,
+  parseDepositError,
+} from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
 import { useAppKit } from "@reown/appkit/react";
@@ -316,9 +320,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
         }
       } catch (error) {
         console.error("❌ Approval error:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        failDepositStep(processId, `Approval error: ${errorMessage}`);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(processId, friendlyError);
         return false;
       }
     },
@@ -409,10 +412,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
           return false;
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        console.error("❌ Vault deposit error:", errorMessage);
-        failDepositStep(processId, errorMessage);
+        console.error("❌ Vault deposit error:", error);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(processId, friendlyError);
         return false;
       }
     },
@@ -705,10 +707,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
         }
       } catch (error) {
         if (isCancelled) return;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        console.error("❌ Cross-chain vault deposit error:", errorMessage);
-        failDepositStep(process.id, errorMessage);
+        console.error("❌ Cross-chain vault deposit error:", error);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(process.id, friendlyError);
       } finally {
         operationInProgress.current = false;
       }

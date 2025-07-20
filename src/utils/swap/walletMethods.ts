@@ -1553,6 +1553,84 @@ export function parseSwapError(error: unknown): string {
   }
 }
 
+//Extract a user-friendly error message from deposit-related blockchain errors
+
+export function parseDepositError(error: unknown): string {
+  // Default fallback message
+  const friendlyMessage = "Something went wrong with your deposit";
+
+  try {
+    if (!error) return friendlyMessage;
+
+    // Convert to string for easier parsing
+    const errorString = JSON.stringify(error);
+
+    // Try to extract common error patterns
+    const patterns = [
+      // Balance errors
+      {
+        regex: /transfer amount exceeds balance/i,
+        message: "Insufficient token balance for this deposit",
+      },
+      // Gas errors
+      {
+        regex: /gas|fee|ETH balance|execution reverted/i,
+        message: "Not enough ETH to cover gas fees",
+      },
+      // Approval errors
+      {
+        regex: /allowance|approve|permission|ERC20: insufficient allowance/i,
+        message: "Token approval required. Please try again.",
+      },
+      // Timeout errors
+      {
+        regex: /timeout|timed? out|expired/i,
+        message: "Request timed out. Please try again.",
+      },
+      // User rejection errors
+      {
+        regex:
+          /user rejected action|ethers-user-denied|User rejected the request|user denied/i,
+        message: "Transaction was cancelled by user",
+      },
+    ];
+
+    // Check for specific error patterns
+    for (const pattern of patterns) {
+      if (pattern.regex.test(errorString)) {
+        return pattern.message;
+      }
+    }
+
+    // Extract reason if present (common in revert errors)
+    const reasonMatch = /reason="([^"]+)"/.exec(errorString);
+    if (reasonMatch && reasonMatch[1]) {
+      return reasonMatch[1];
+    }
+
+    // Extract message if present
+    const messageMatch = /"message":"([^"]+)"/.exec(errorString);
+    if (messageMatch && messageMatch[1]) {
+      return messageMatch[1];
+    }
+
+    // If error is actually an Error object
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    // If error is a string
+    if (typeof error === "string") {
+      return error;
+    }
+
+    return friendlyMessage;
+  } catch (e) {
+    console.error("Error parsing deposit error:", e);
+    return friendlyMessage;
+  }
+}
+
 export const truncateAddress = (address: string) => {
   if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
