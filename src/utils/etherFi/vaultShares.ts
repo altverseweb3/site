@@ -7,6 +7,8 @@ import {
   SHARED_LENS_ADDRESS,
 } from "@/config/etherFi";
 import { VAULT_SHARES_PREVIEW_ABI } from "@/types/etherFiABIs";
+import { createEthersJsonRpcProvider } from "@/utils/wallet/ethersJsonRpcProvider";
+import { getChainById } from "@/config/chains";
 
 export interface VaultConversionRate {
   vaultId: number;
@@ -26,14 +28,26 @@ export interface ConversionRateError {
   error: string;
 }
 
+// Get Ethereum provider for vault operations (EtherFi vaults only exist on Ethereum)
+async function getEthereumProvider(): Promise<ethers.Provider> {
+  const ethereumChain = getChainById("ethereum");
+  if (!ethereumChain) {
+    throw new Error("Ethereum chain configuration not found");
+  }
+
+  return createEthersJsonRpcProvider(ethereumChain);
+}
+
 // Query conversion rate for a specific vault and deposit asset pair
 
 export async function queryVaultConversionRate(
   vaultId: number,
   depositAsset: string,
   depositAmount: string,
-  provider: ethers.Provider,
+  provider?: ethers.Provider,
 ): Promise<VaultConversionRate> {
+  // If no provider is passed, use Ethereum provider (vaults only exist on Ethereum)
+  const vaultProvider = provider || (await getEthereumProvider());
   const vault = ETHERFI_VAULTS[vaultId];
   if (!vault) {
     throw new Error(`Vault ${vaultId} not found`);
@@ -59,7 +73,7 @@ export async function queryVaultConversionRate(
     const lensContract = new ethers.Contract(
       SHARED_LENS_ADDRESS,
       VAULT_SHARES_PREVIEW_ABI,
-      provider,
+      vaultProvider,
     );
 
     // Parse deposit amount with correct decimals
@@ -95,7 +109,7 @@ export async function queryVaultConversionRate(
           type: "function",
         },
       ],
-      provider,
+      vaultProvider,
     );
 
     const vaultTokenDecimals = await vaultContract.decimals();
@@ -138,7 +152,7 @@ export async function queryMultipleConversionRates(
     depositAsset: string;
     depositAmount: string;
   }>,
-  provider: ethers.Provider,
+  provider?: ethers.Provider,
 ): Promise<{
   successful: VaultConversionRate[];
   failed: ConversionRateError[];
@@ -176,7 +190,7 @@ export async function queryMultipleConversionRates(
 export async function queryAllVaultsForAsset(
   depositAsset: string,
   depositAmount: string,
-  provider: ethers.Provider,
+  provider?: ethers.Provider,
 ): Promise<{
   successful: VaultConversionRate[];
   failed: ConversionRateError[];
@@ -217,17 +231,28 @@ export function useVaultShares() {
 
   const queryVaultConversionRateMemoized = useCallback(
     async (vaultId: number, depositAsset: string, depositAmount: string) => {
-      const signer = await getEvmSigner();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("signer must have a provider");
+      try {
+        // Try to use wallet provider if available and connected to Ethereum
+        const signer = await getEvmSigner();
+        const provider = signer.provider;
+        if (provider) {
+          const network = await provider.getNetwork();
+          // If connected to Ethereum mainnet, use wallet provider
+          if (network.chainId === BigInt(1)) {
+            return queryVaultConversionRate(
+              vaultId,
+              depositAsset,
+              depositAmount,
+              provider,
+            );
+          }
+        }
+      } catch {
+        // If wallet provider fails, fall through to read-only provider
       }
-      return queryVaultConversionRate(
-        vaultId,
-        depositAsset,
-        depositAmount,
-        provider,
-      );
+
+      // Use read-only Ethereum provider for cross-chain scenarios
+      return queryVaultConversionRate(vaultId, depositAsset, depositAmount);
     },
     [getEvmSigner],
   );
@@ -240,24 +265,50 @@ export function useVaultShares() {
         depositAmount: string;
       }>,
     ) => {
-      const signer = await getEvmSigner();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("signer must have a provider");
+      try {
+        // Try to use wallet provider if available and connected to Ethereum
+        const signer = await getEvmSigner();
+        const provider = signer.provider;
+        if (provider) {
+          const network = await provider.getNetwork();
+          // If connected to Ethereum mainnet, use wallet provider
+          if (network.chainId === BigInt(1)) {
+            return queryMultipleConversionRates(queries, provider);
+          }
+        }
+      } catch {
+        // If wallet provider fails, fall through to read-only provider
       }
-      return queryMultipleConversionRates(queries, provider);
+
+      // Use read-only Ethereum provider for cross-chain scenarios
+      return queryMultipleConversionRates(queries);
     },
     [getEvmSigner],
   );
 
   const queryAllVaultsForAssetMemoized = useCallback(
     async (depositAsset: string, depositAmount: string) => {
-      const signer = await getEvmSigner();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("signer must have a provider");
+      try {
+        // Try to use wallet provider if available and connected to Ethereum
+        const signer = await getEvmSigner();
+        const provider = signer.provider;
+        if (provider) {
+          const network = await provider.getNetwork();
+          // If connected to Ethereum mainnet, use wallet provider
+          if (network.chainId === BigInt(1)) {
+            return queryAllVaultsForAsset(
+              depositAsset,
+              depositAmount,
+              provider,
+            );
+          }
+        }
+      } catch {
+        // If wallet provider fails, fall through to read-only provider
       }
-      return queryAllVaultsForAsset(depositAsset, depositAmount, provider);
+
+      // Use read-only Ethereum provider for cross-chain scenarios
+      return queryAllVaultsForAsset(depositAsset, depositAmount);
     },
     [getEvmSigner],
   );
