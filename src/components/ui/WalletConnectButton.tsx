@@ -130,7 +130,7 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
     >
       <div className="flex items-center gap-2">
         <Wallet className={iconSizes[size].iconClass} />
-        <span>
+        <span className="pr-2">
           {children ||
             (connecting
               ? "connecting..."
