@@ -1567,6 +1567,12 @@ export function parseDepositError(error: unknown): string {
 
     // Try to extract common error patterns
     const patterns = [
+      // User rejection errors - CHECK FIRST to avoid false matches with gas/fee keywords
+      {
+        regex:
+          /user rejected action|ethers-user-denied|User rejected the request|user denied/i,
+        message: "Transaction was cancelled by user",
+      },
       // Balance errors
       {
         regex: /transfer amount exceeds balance/i,
@@ -1586,12 +1592,6 @@ export function parseDepositError(error: unknown): string {
       {
         regex: /timeout|timed? out|expired/i,
         message: "Request timed out. Please try again.",
-      },
-      // User rejection errors
-      {
-        regex:
-          /user rejected action|ethers-user-denied|User rejected the request|user denied/i,
-        message: "Transaction was cancelled by user",
       },
     ];
 

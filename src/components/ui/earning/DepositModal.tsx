@@ -304,18 +304,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
               "❌ Deposit failed after approval:",
               depositResult.message,
             );
-            failDepositStep(
-              processId,
+            const friendlyError = parseDepositError(
               depositResult.message || "Deposit failed after approval",
             );
+            failDepositStep(processId, friendlyError);
             return false;
           }
         } else {
           console.error("❌ Approval failed:", approvalResult.message);
-          failDepositStep(
-            processId,
-            `Approval failed: ${approvalResult.message}`,
-          );
+          const friendlyError = parseDepositError(approvalResult.message);
+          failDepositStep(processId, friendlyError);
           return false;
         }
       } catch (error) {
@@ -408,7 +406,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
           return true;
         } else {
           console.error("❌ Deposit failed:", result.message);
-          failDepositStep(processId, result.message || "Deposit failed");
+          const friendlyError = parseDepositError(
+            result.message || "Deposit failed",
+          );
+          failDepositStep(processId, friendlyError);
           return false;
         }
       } catch (error) {
@@ -1117,7 +1118,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           {/* Process Progress */}
           {activeProcess && activeProcess.state !== "CANCELLED" && (
             <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
-              <div className="text-sm text-wrap font-medium text-[#FAFAFA] mb-3 break-all">
+              <div className="text-sm font-medium text-[#FAFAFA] mb-3 break-words">
                 {formatErrorMessage(processProgress?.description) ||
                   "Processing..."}
               </div>
