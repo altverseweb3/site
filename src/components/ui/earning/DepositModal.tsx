@@ -1458,10 +1458,25 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 <div className="relative">
                   <Input
                     type="number"
+                    step="any"
+                    min="0"
                     placeholder="0.00"
                     value={swapAmount}
                     onChange={(e) => {
-                      handleSwapAmountChange(e);
+                      // Only allow positive numbers
+                      const value = parseFloat(e.target.value);
+                      if (
+                        e.target.value === "" ||
+                        (!isNaN(value) && value >= 0)
+                      ) {
+                        handleSwapAmountChange(e);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevent negative sign and scientific notation
+                      if (e.key === "-" || e.key === "e" || e.key === "E") {
+                        e.preventDefault();
+                      }
                     }}
                     className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A] font-mono"
                   />
