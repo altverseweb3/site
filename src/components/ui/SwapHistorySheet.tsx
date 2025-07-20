@@ -115,9 +115,9 @@ const mapSwapToTransaction = (swap: SwapData): TransactionDisplay => {
     walletType: walletInfo.walletType,
     orderHash: swap.orderHash,
     service: swap.service,
-    fees: swap.clientRelayerFeeRefund.toString(),
-    fromTokenPrice: swap.fromTokenPrice.toString(),
-    toTokenPrice: swap.toTokenPrice.toString(),
+    fees: swap.clientRelayerFeeRefund?.toString() ?? "0",
+    fromTokenPrice: swap.fromTokenPrice?.toString() ?? "N/A",
+    toTokenPrice: swap.toTokenPrice?.toString() ?? "N/A",
   };
 };
 
@@ -376,7 +376,7 @@ export function SwapHistorySheet({
             className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all duration-300 ${
               tx.status === "completed"
                 ? "text-green-400 bg-green-500/10 border-green-500/30 group-hover:shadow-green-500/20 group-hover:shadow-md"
-                : tx.status === "pending"
+                : tx.status === "inprogress"
                   ? "text-amber-400 bg-amber-500/10 border-amber-500/30 animate-pulse group-hover:shadow-amber-500/20 group-hover:shadow-md"
                   : tx.status === "failed"
                     ? "text-red-400 bg-red-500/10 border-red-500/30 group-hover:shadow-red-500/20 group-hover:shadow-md"
