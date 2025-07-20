@@ -12,30 +12,37 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/Sheet";
-import { Menu } from "lucide-react";
+import { Menu, History } from "lucide-react";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import Link from "next/link";
+import { SwapHistorySheet } from "@/components/ui/SwapHistorySheet";
 
-export function SiteHeader() {
+export function SiteHeader(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
 
-  const handleSheetClose = () => {
+  const handleSheetClose = (): void => {
     setIsOpen(false);
   };
 
   // Get wallet button text based on connection status
-  const getWalletButtonText = () => {
+  const getWalletButtonText = (): string => {
     if (!requiredWallet) return "connect wallet";
     return "wallet connected";
   };
 
-  useEffect(() => {
-    const handleResize = () => {
+  const handleMobileHistoryClick = (): void => {
+    setIsOpen(false);
+    setIsHistoryOpen(true);
+  };
+
+  useEffect((): (() => void) => {
+    const handleResize = (): void => {
       // Check if window width is at or above the md breakpoint
       if (window.innerWidth >= 768 && isOpen) {
         setIsOpen(false);
@@ -46,7 +53,7 @@ export function SiteHeader() {
     window.addEventListener("resize", handleResize);
 
     // Cleanup function
-    return () => {
+    return (): void => {
       window.removeEventListener("resize", handleResize);
     };
   }, [isOpen]); // Only re-run if isOpen changes
@@ -70,7 +77,7 @@ export function SiteHeader() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <MainNav onNavigate={() => void 0} />
+            <MainNav onNavigate={(): void => void 0} />
           </div>
         </div>
 
@@ -92,7 +99,7 @@ export function SiteHeader() {
                 <SheetTitle>
                   <div
                     className="flex items-center gap-3"
-                    onClick={() => setIsOpen(false)}
+                    onClick={(): void => setIsOpen(false)}
                   >
                     <Image
                       src="/tokens/branded/ALT.svg"
@@ -108,8 +115,10 @@ export function SiteHeader() {
               </SheetHeader>
               <div className="flex flex-col gap-6 mt-6">
                 <nav className="flex flex-col gap-2">
-                  <MainNav onNavigate={() => setIsOpen(false)} />
+                  <MainNav onNavigate={(): void => setIsOpen(false)} />
                 </nav>
+                {/* transaction history Button for Mobile with enhanced styling */}
+
                 {/* Always use ConnectWalletModal for mobile */}
                 <ConnectWalletModal
                   onSuccess={handleSheetClose}
@@ -122,9 +131,35 @@ export function SiteHeader() {
                     />
                   }
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMobileHistoryClick}
+                  className="w-full flex items-center bg-gradient-to-r from-amber-500/10 to-sky-500/10 border-amber-500/30 text-amber-200 hover:from-amber-500/20 hover:to-sky-500/20 hover:border-amber-500/50 hover:text-amber-100 transition-all duration-300 h-[30px]"
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  transaction history
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
+
+          {/* Desktop transaction history Sheet */}
+          <SwapHistorySheet
+            isOpen={isHistoryOpen}
+            onOpenChange={setIsHistoryOpen}
+          >
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-sky-500/10 border-amber-500/30 text-amber-200 hover:from-amber-500/20 hover:to-sky-500/20 hover:border-amber-500/50 hover:text-amber-100 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 h-[30px]"
+              >
+                <History className="h-4 w-4" />
+                <span className="sr-only">transaction history</span>
+              </Button>
+            </SheetTrigger>
+          </SwapHistorySheet>
 
           {/* Desktop Wallet Button - Always use ConnectWalletModal */}
           <ConnectWalletModal

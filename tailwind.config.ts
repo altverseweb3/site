@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
 
 export default {
   darkMode: ["class"],
@@ -70,6 +71,9 @@ export default {
         fadeOut: "fadeOut 0.3s ease-out",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in-up": "fade-in-up 0.6s ease-out",
+        shimmer: "shimmer 2s infinite",
+        "progress-pulse": "progress-pulse 2s infinite",
       },
       keyframes: {
         ripple: {
@@ -133,8 +137,77 @@ export default {
             height: "0",
           },
         },
+        "fade-in-up": {
+          from: {
+            opacity: "0",
+            transform: "translateY(20px)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        shimmer: {
+          "0%": {
+            "background-position": "-200% 0",
+          },
+          "100%": {
+            "background-position": "200% 0",
+          },
+        },
+        "progress-pulse": {
+          "0%, 100%": {
+            opacity: "1",
+          },
+          "50%": {
+            opacity: "0.7",
+          },
+        },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function ({ addUtilities }) {
+      const scrollbarUtilities = {
+        // Firefox scrollbar styles
+        ".scrollbar-thin": {
+          "scrollbar-width": "thin",
+        },
+        ".scrollbar-track-transparent": {
+          "scrollbar-color": "transparent transparent",
+        },
+        ".scrollbar-thumb-amber": {
+          "scrollbar-color": "rgba(245, 158, 11, 0.2) transparent",
+        },
+        ".scrollbar-thumb-amber:hover": {
+          "scrollbar-color": "rgba(245, 158, 11, 0.4) transparent",
+        },
+
+        // Webkit scrollbar styles
+        ".scrollbar-thin::-webkit-scrollbar": {
+          width: "8px",
+        },
+        ".scrollbar-thin::-webkit-scrollbar-track": {
+          background: "transparent",
+        },
+        ".scrollbar-thin::-webkit-scrollbar-thumb": {
+          background: "rgba(245, 158, 11, 0.2)",
+          "border-radius": "9999px",
+        },
+        ".scrollbar-thin:hover::-webkit-scrollbar-thumb": {
+          background: "rgba(245, 158, 11, 0.4)",
+        },
+
+        // Additional shimmer utility class
+        ".shimmer": {
+          background:
+            "linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.1), transparent)",
+          "background-size": "200% 100%",
+        },
+      };
+
+      addUtilities(scrollbarUtilities);
+    }),
+  ],
 } satisfies Config;
