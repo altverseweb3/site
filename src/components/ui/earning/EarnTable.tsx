@@ -6,7 +6,6 @@ import { EarnTableRow, DashboardTableRow, EarnTableType } from "@/types/earn";
 import { Button } from "@/components/ui/Button";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
-import { ScrollArea, ScrollBar } from "@/components/ui/ScrollArea";
 import { chains } from "@/config/chains";
 
 interface EarnTableProps {
@@ -117,121 +116,112 @@ const EarnTable: React.FC<EarnTableProps> = ({
 
   return (
     <div className="w-full">
-      <ScrollArea className="w-full h-auto">
-        <div className="min-w-[900px] w-full">
-          <table className="w-full min-w-[900px]">
-            <thead className="bg-zinc-800/90 border-b border-[#27272A]">
-              <tr>
-                <th className={cn(tableHeaderClass, "pl-6")}>protocol</th>
-                <th className={tableHeaderClass}>market/vault</th>
-                <th className={tableHeaderClass}>assets</th>
-                <th className={tableHeaderClass}>chains</th>
-                {type === "dashboard" && (
+      <div className="w-full overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-zinc-800/90 border-b border-[#27272A]">
+            <tr>
+              <th className={cn(tableHeaderClass, "pl-6")}>protocol</th>
+              <th className={tableHeaderClass}>market/vault</th>
+              <th className={tableHeaderClass}>assets</th>
+              <th className={tableHeaderClass}>chains</th>
+              {type === "dashboard" && (
+                <>
+                  <th className={tableHeaderClass}>position</th>
+                  <th className={tableHeaderClass}>balance</th>
+                </>
+              )}
+              {type === "earn" && <th className={tableHeaderClass}>tvl</th>}
+              <th className={tableHeaderClass}>apy</th>
+              <th className={tableHeaderClass}>details</th>
+            </tr>
+          </thead>
+          <tbody className="bg-[#18181B] divide-y divide-[#27272A]">
+            {data.map((row) => (
+              <tr key={row.id} className="hover:bg-[#1C1C1F] transition-colors">
+                <td className="px-4 py-3 pl-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                      <Image
+                        src={row.protocolIcon}
+                        alt={row.protocol}
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="text-[#FAFAFA] font-semibold">
+                      {row.protocol}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <Image
+                        src={row.marketVaultIcon}
+                        alt={row.marketVault}
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="text-[#FAFAFA] text-sm font-semibold">
+                      {row.marketVault}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <AssetIcons assets={row.assets} assetIcons={row.assetIcons} />
+                </td>
+                <td className="px-4 py-3">
+                  <ChainIcons
+                    chains={row.supportedChains}
+                    chainIcons={row.supportedChainIcons}
+                  />
+                </td>
+                {type === "dashboard" && "position" in row && (
                   <>
-                    <th className={tableHeaderClass}>position</th>
-                    <th className={tableHeaderClass}>balance</th>
-                  </>
-                )}
-                {type === "earn" && <th className={tableHeaderClass}>tvl</th>}
-                <th className={tableHeaderClass}>apy</th>
-                <th className={tableHeaderClass}>details</th>
-              </tr>
-            </thead>
-            <tbody className="bg-[#18181B] divide-y divide-[#27272A]">
-              {data.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-[#1C1C1F] transition-colors"
-                >
-                  <td className="px-4 py-3 pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                        <Image
-                          src={row.protocolIcon}
-                          alt={row.protocol}
-                          width={32}
-                          height={32}
-                          className="object-contain"
-                        />
-                      </div>
-                      <span className="text-[#FAFAFA] font-semibold">
-                        {row.protocol}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center">
-                        <Image
-                          src={row.marketVaultIcon}
-                          alt={row.marketVault}
-                          width={28}
-                          height={28}
-                          className="object-contain"
-                        />
-                      </div>
-                      <span className="text-[#FAFAFA] text-sm font-semibold">
-                        {row.marketVault}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <AssetIcons
-                      assets={row.assets}
-                      assetIcons={row.assetIcons}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <ChainIcons
-                      chains={row.supportedChains}
-                      chainIcons={row.supportedChainIcons}
-                    />
-                  </td>
-                  {type === "dashboard" && "position" in row && (
-                    <>
-                      <td className="px-4 py-3">
-                        <span className="text-[#FAFAFA] text-sm font-semibold">
-                          {row.position}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="text-[#FAFAFA] font-semibold font-mono">
-                            {row.balance.toFixed(4)}
-                          </span>
-                          <span className="text-[#A1A1AA] text-xs font-mono">
-                            {formatCurrency(row.balanceUsd)}
-                          </span>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                  {type === "earn" && (
                     <td className="px-4 py-3">
-                      <span className="text-[#FAFAFA] font-semibold font-mono">
-                        {formatCurrency((row as EarnTableRow).tvl)}
+                      <span className="text-[#FAFAFA] text-sm font-semibold">
+                        {row.position}
                       </span>
                     </td>
-                  )}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="text-[#FAFAFA] font-semibold font-mono">
+                          {row.balance.toFixed(4)}
+                        </span>
+                        <span className="text-[#A1A1AA] text-xs font-mono">
+                          {formatCurrency(row.balanceUsd)}
+                        </span>
+                      </div>
+                    </td>
+                  </>
+                )}
+                {type === "earn" && (
                   <td className="px-4 py-3">
-                    <span className="text-green-500 font-semibold font-mono">
-                      {formatAPY(row.apy)}
+                    <span className="text-[#FAFAFA] font-semibold font-mono">
+                      {formatCurrency((row as EarnTableRow).tvl)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 pr-6">
-                    <BrandedButton
-                      buttonText={type === "dashboard" ? " view " : "details"}
-                      onClick={() => onDetails?.(row)}
-                      className="text-sm h-8 px-2"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+                )}
+                <td className="px-4 py-3">
+                  <span className="text-green-500 font-semibold font-mono">
+                    {formatAPY(row.apy)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 pr-6">
+                  <BrandedButton
+                    buttonText={type === "dashboard" ? " view " : "details"}
+                    onClick={() => onDetails?.(row)}
+                    className="text-sm h-8 px-2"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
