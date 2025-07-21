@@ -15,7 +15,7 @@ import useWeb3Store, {
 } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { GasDrop } from "@/components/ui/GasDrop";
-
+import WalletConnectButton from "@/components/ui/WalletConnectButton";
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
   relayerFeeUsd?: number;
@@ -642,14 +642,13 @@ export function TransactionDetails({
                 </div>
               )}
             </div>
-            {/* Wallet Type Info */}
-            <div className="text-right text-zinc-500 text-[10px] mt-1">
-              {destinationChain?.walletType === WalletType.REOWN_EVM &&
-                "Ethereum wallet required"}
-              {destinationChain?.walletType === WalletType.REOWN_SOL &&
-                "Solana wallet required"}
-              {destinationChain?.walletType === WalletType.SUIET_SUI &&
-                "Sui wallet required"}
+            {/* Align the button to the right */}
+            <div className="flex justify-end mt-2">
+              <WalletConnectButton
+                className="w-auto"
+                walletType={destinationChain?.walletType}
+                size="sm"
+              />
             </div>
           </div>
 
