@@ -373,7 +373,7 @@ export default function EarnPage() {
           ) : (
             <>
               {/* Mobile Cards View */}
-              <div className="block md:hidden">
+              <div className="block 2xl:hidden">
                 <EarnCards
                   type={activeTab}
                   data={paginatedData}
@@ -386,8 +386,8 @@ export default function EarnPage() {
                 />
               </div>
 
-              {/* Desktop Table View */}
-              <div className="hidden md:block">
+              {/* Desktop Table View - Only show when header and all columns fit properly */}
+              <div className="hidden 2xl:block">
                 <EarnTable
                   type={activeTab}
                   data={paginatedData}
