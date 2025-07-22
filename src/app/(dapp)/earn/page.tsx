@@ -336,7 +336,7 @@ export default function EarnPage() {
         </div>
 
         {/* Table Content */}
-        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden md:mb-0 mb-12">
+        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden 2xl:mb-0 mb-12">
           {showWalletConnectionRequired ? (
             <div className="text-center py-16 md:py-24 px-4 md:px-8">
               <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
