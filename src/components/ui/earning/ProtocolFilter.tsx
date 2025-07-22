@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "../Button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
   protocols,
   selectedProtocols,
   onSelectionChange,
+  className,
 }) => {
   const handleCheckedChange = (protocolId: string, checked: boolean) => {
     if (checked) {
@@ -47,7 +49,10 @@ const ProtocolFilter: React.FC<ProtocolFilterProps> = ({
       <DropdownMenuTrigger asChild className="h-8">
         <Button
           variant="outline"
-          className="justify-between min-w-[140px] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] bg-[#18181B]"
+          className={cn(
+            "justify-between w-full sm:min-w-[140px] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A] bg-[#18181B]",
+            className,
+          )}
         >
           <span className="truncate">{displayText}</span>
           <ChevronDownIcon className="h-4 w-4 opacity-50" />

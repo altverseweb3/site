@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
-import { ChevronUpIcon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EarnTableRow, DashboardTableRow, EarnTableType } from "@/types/earn";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +12,6 @@ import { chains } from "@/config/chains";
 interface EarnTableProps {
   type: EarnTableType;
   data: EarnTableRow[] | DashboardTableRow[];
-  onSort?: (column: string, direction: "asc" | "desc") => void;
   onDetails?: (row: EarnTableRow | DashboardTableRow) => void;
   currentPage: number;
   totalPages: number;
@@ -22,58 +19,6 @@ interface EarnTableProps {
   itemsPerPage: number;
   totalItems: number;
 }
-
-interface SortableHeaderProps {
-  children: React.ReactNode;
-  column: string;
-  onSort?: (column: string, direction: "asc" | "desc") => void;
-  sortDirection?: "asc" | "desc" | null;
-  className?: string;
-}
-
-const SortableHeader: React.FC<SortableHeaderProps> = ({
-  children,
-  column,
-  onSort,
-  sortDirection,
-  className,
-}) => {
-  const handleSort = () => {
-    if (!onSort) return;
-    const newDirection = sortDirection === "asc" ? "desc" : "asc";
-    onSort(column, newDirection);
-  };
-
-  return (
-    <th
-      className={cn(
-        "px-4 py-2 text-left text-sm font-semibold text-zinc-300 lowercase tracking-wider cursor-pointer hover:text-zinc-50 transition-colors",
-        className,
-      )}
-      onClick={handleSort}
-    >
-      <div className="flex items-center gap-1">
-        {children}
-        {onSort && (
-          <div className="flex flex-col">
-            <ChevronUpIcon
-              className={cn(
-                "h-3 w-3",
-                sortDirection === "asc" ? "text-amber-500" : "text-zinc-400",
-              )}
-            />
-            <ChevronDownIcon
-              className={cn(
-                "h-3 w-3 -mt-1",
-                sortDirection === "desc" ? "text-amber-500" : "text-zinc-400",
-              )}
-            />
-          </div>
-        )}
-      </div>
-    </th>
-  );
-};
 
 const AssetIcons: React.FC<{ assets: string[]; assetIcons: string[] }> = ({
   assets,
@@ -143,7 +88,6 @@ const ChainIcons: React.FC<{ chains: string[]; chainIcons: string[] }> = ({
 const EarnTable: React.FC<EarnTableProps> = ({
   type,
   data,
-  onSort,
   onDetails,
   currentPage,
   totalPages,
@@ -151,15 +95,6 @@ const EarnTable: React.FC<EarnTableProps> = ({
   itemsPerPage,
   totalItems,
 }) => {
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
-  const handleSort = (column: string, direction: "asc" | "desc") => {
-    setSortColumn(column);
-    setSortDirection(direction);
-    onSort?.(column, direction);
-  };
-
   const formatCurrency = (value: number) => {
     if (value === 0) return "$0";
     if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
@@ -194,33 +129,11 @@ const EarnTable: React.FC<EarnTableProps> = ({
                 {type === "dashboard" && (
                   <>
                     <th className={tableHeaderClass}>position</th>
-                    <SortableHeader
-                      column="balance"
-                      onSort={handleSort}
-                      sortDirection={
-                        sortColumn === "balance" ? sortDirection : null
-                      }
-                    >
-                      balance
-                    </SortableHeader>
+                    <th className={tableHeaderClass}>balance</th>
                   </>
                 )}
-                {type === "earn" && (
-                  <SortableHeader
-                    column="tvl"
-                    onSort={handleSort}
-                    sortDirection={sortColumn === "tvl" ? sortDirection : null}
-                  >
-                    tvl
-                  </SortableHeader>
-                )}
-                <SortableHeader
-                  column="apy"
-                  onSort={handleSort}
-                  sortDirection={sortColumn === "apy" ? sortDirection : null}
-                >
-                  apy
-                </SortableHeader>
+                {type === "earn" && <th className={tableHeaderClass}>tvl</th>}
+                <th className={tableHeaderClass}>apy</th>
                 <th className={tableHeaderClass}>details</th>
               </tr>
             </thead>
