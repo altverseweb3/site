@@ -12,8 +12,6 @@ export const TAB_CONFIG: Record<Tab, TabConfig> = {
   },
   earn: {
     label: "earn",
-    disabled: true,
-    disabledMessage: "Coming soon",
   },
   lending: {
     label: "lending",
