@@ -9,11 +9,10 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import type { Token, Chain } from "@/types/web3";
 import { UserBorrowPosition } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/aave/format";
-import { chainNames } from "@/config/aave";
+import { getChainByChainId } from "@/config/chains";
 
 interface BorrowOwnedCardProps {
   borrowPosition: UserBorrowPosition;
@@ -31,13 +30,8 @@ const BorrowOwnedCard = ({
   const { asset } = borrowPosition;
   const [isRepaying, setIsRepaying] = useState(false);
 
-  // Format the borrow balance and APY
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
-
-  const chainName = chainNames[asset.chainId || 1] || "ethereum";
-
-  // Create Token and Chain objects for TokenImage component
   const token: Token = {
     id: asset.asset,
     name: asset.name,
@@ -49,39 +43,12 @@ const BorrowOwnedCard = ({
     stringChainId: (asset.chainId || 1).toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: asset.chainId || 1,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-    mayanChainId: 0,
-  };
+  const chain: Chain = getChainByChainId(asset.chainId || 1);
 
-  // Handle repay action
   const handleRepayClick = async () => {
     setIsRepaying(true);
     try {
-      // For now, just show the modal - you would typically open a RepayModal here
-      // Similar to how WithdrawModal is used in SupplyOwnedCard
       console.log("Repay clicked for:", asset.symbol);
-      // You could open a repay modal here or handle the repay directly
     } catch (error) {
       console.error("Error initiating repay:", error);
     } finally {
@@ -89,12 +56,10 @@ const BorrowOwnedCard = ({
     }
   };
 
-  // Handle details click
   const handleDetailsClick = () => {
     onDetailsClick(borrowPosition);
   };
 
-  // Determine debt type for display
   const debtTypeDisplay = () => {
     const hasVariable = BigInt(borrowPosition.variableDebt) > BigInt(0);
     const hasStable = BigInt(borrowPosition.stableDebt) > BigInt(0);
@@ -106,7 +71,7 @@ const BorrowOwnedCard = ({
     } else if (hasStable) {
       return "Stable";
     }
-    return "Variable"; // Default
+    return "Variable";
   };
 
   return (
@@ -126,7 +91,6 @@ const BorrowOwnedCard = ({
       </CardHeader>
 
       <CardContent className="p-3 pt-2 space-y-2">
-        {/* Debt balance row */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">debt balance</div>
           <div className="text-right flex flex-col items-end">
@@ -137,13 +101,11 @@ const BorrowOwnedCard = ({
           </div>
         </div>
 
-        {/* Borrow APY row */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">borrow APY</div>
           <div className="text-sm text-red-400">{borrowAPY}%</div>
         </div>
 
-        {/* Debt type row */}
         <div className="flex justify-between items-start">
           <div className="text-gray-400 text-sm mt-0">debt type</div>
           <div className="text-sm text-gray-300">{debtTypeDisplay()}</div>
