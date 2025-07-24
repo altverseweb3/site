@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -83,6 +83,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
         formattedAvailableLiquidity: "0",
         borrowCap: "0",
         formattedBorrowCap: "0",
+        ltv: 0,
+        liquidationThreshold: 0,
+        liquidationBonus: 0,
         isActive: true,
         isFrozen: false,
         isIsolationModeAsset: false,
@@ -187,6 +190,15 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   <p className="text-sm text-zinc-400">{currentAsset.name}</p>
                 </div>
               </div>
+              <DialogClose asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-[#1A1A1A]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </DialogClose>
             </div>
           </DialogHeader>
 
@@ -208,7 +220,10 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
             {(() => {
               const metrics = getReserveMetrics(currentAsset, extendedDetails);
-              const tokenPrice = extendedDetails?.oraclePrice || 1;
+              const tokenPrice =
+                extendedDetails?.oraclePrice ||
+                extendedDetails?.currentPrice ||
+                1;
 
               return (
                 <div className="space-y-6">
@@ -484,7 +499,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <span className="text-sm text-zinc-400">Max LTV</span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.ltv || "Loading..."}
+                    {currentAsset.ltv
+                      ? `${(currentAsset.ltv * 100).toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
                 <div>
@@ -492,7 +509,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     Liquidation Threshold
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationThreshold || "Loading..."}
+                    {currentAsset.liquidationThreshold
+                      ? `${(currentAsset.liquidationThreshold * 100).toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
                 <div>
@@ -500,7 +519,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     Liquidation Penalty
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationPenalty || "Loading..."}
+                    {currentAsset.liquidationBonus
+                      ? `${(currentAsset.liquidationBonus * 100).toFixed(1)}%`
+                      : "0.0%"}
                   </div>
                 </div>
               </div>
@@ -674,17 +695,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <DialogClose asChild>
-                <Button
-                  variant="outline"
-                  className="border-[#232326] text-zinc-300 hover:bg-[#1A1A1A]"
-                >
-                  Close
-                </Button>
-              </DialogClose>
             </div>
           </div>
         </DialogContent>

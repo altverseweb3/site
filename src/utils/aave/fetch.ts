@@ -4,8 +4,43 @@ import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
 import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
-import { getAaveMarket } from "@/config/chains";
+import { getAaveMarket, getChainByChainId } from "@/config/chains";
 import { chainNames } from "@/config/aave";
+import { altverseAPI } from "@/api/altverse";
+
+// Helper function to get real token price from oracle
+async function getTokenPrice(
+  asset: AaveReserveData,
+  chainId: number,
+): Promise<number> {
+  try {
+    const chainInfo = getChainByChainId(chainId);
+    if (!chainInfo?.alchemyNetworkName) {
+      return 1;
+    }
+
+    const priceResponse = await altverseAPI.getTokenPrices({
+      addresses: [
+        {
+          network: chainInfo.alchemyNetworkName,
+          address: asset.asset,
+        },
+      ],
+    });
+
+    if (
+      !priceResponse.error &&
+      priceResponse.data?.data?.[0]?.prices?.[0]?.value
+    ) {
+      return parseFloat(priceResponse.data.data[0].prices[0].value);
+    } else {
+      return 1;
+    }
+  } catch (error) {
+    console.error(`Error fetching price for ${asset.symbol}:`, error);
+    return 1;
+  }
+}
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
@@ -35,6 +70,11 @@ export interface AaveReserveData {
   formattedAvailableLiquidity: string;
   borrowCap: string;
   formattedBorrowCap: string;
+
+  // Risk parameters
+  ltv: number; // Loan-to-Value ratio (decimal, e.g., 0.80 for 80%)
+  liquidationThreshold: number; // Liquidation threshold (decimal, e.g., 0.85 for 85%)
+  liquidationBonus: number; // Liquidation bonus (decimal, e.g., 0.05 for 5%)
 
   // General data
   isActive: boolean;
@@ -102,12 +142,8 @@ export async function fetchAllReservesData(
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
   const market = getAaveMarket(chainId);
-
-  console.log(`Fetching Aave reserves for chain ${chainId} with backoff...`);
-
   const chainName = chainNames[chainId] || "ethereum";
 
-  // Load tokens for this chain once
   const chainTokens = await loadTokensForChain(chainName);
   const tokenLookup: Record<string, Token> = {};
   chainTokens.forEach((token) => {
@@ -121,7 +157,6 @@ export async function fetchAllReservesData(
   );
 
   const reserveTokens = await poolDataProvider.getAllReservesTokens();
-  console.log(`Found ${reserveTokens.length} reserve tokens`);
 
   const allReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 2;
@@ -204,14 +239,19 @@ export async function fetchAllReservesData(
                   tokenName = contractName;
                   tokenSymbol = contractSymbol;
                 } catch {
-                  console.log(
-                    `Could not fetch contract data for ${token.symbol}, using fallback.`,
-                  );
+                  // Use fallback values
                 }
               }
 
               const tokenIcon = tokenData?.icon || "unknown.png";
               const decimals = Number(configData.decimals);
+
+              // Extract real risk parameters from AAVE configuration (stored in basis points)
+              const ltvBps = Number(configData.ltv);
+              const liquidationThresholdBps = Number(
+                configData.liquidationThreshold,
+              );
+              const liquidationBonusBps = Number(configData.liquidationBonus);
 
               return {
                 symbol: tokenSymbol,
@@ -250,6 +290,11 @@ export async function fetchAllReservesData(
                   decimals,
                 ),
 
+                // Risk parameters (convert from basis points to decimals)
+                ltv: ltvBps / 10000, // e.g., 8000 -> 0.80
+                liquidationThreshold: liquidationThresholdBps / 10000, // e.g., 8500 -> 0.85
+                liquidationBonus: (liquidationBonusBps - 10000) / 10000, // e.g., 10500 -> 0.05
+
                 // General data
                 isActive: configData.isActive,
                 isFrozen: configData.isFrozen,
@@ -261,11 +306,7 @@ export async function fetchAllReservesData(
                 tokenIcon: tokenIcon,
                 chainId: chainId,
               };
-            } catch (error) {
-              console.log(
-                `Skipping ${token.symbol}:`,
-                error instanceof Error ? error.message : String(error),
-              );
+            } catch {
               return null;
             }
           },
@@ -279,9 +320,9 @@ export async function fetchAllReservesData(
           }
         }
 
-        break; // Success
+        break;
       } catch (error) {
-        console.log(error);
+        console.error(`Error processing user positions batch:`, error);
         retries++;
         if (retries >= MAX_RETRIES) {
           console.error(
@@ -290,10 +331,6 @@ export async function fetchAllReservesData(
           );
           break;
         }
-
-        console.log(
-          `Batch failed, retrying in ${currentDelay}ms... (attempt ${retries}/${MAX_RETRIES})`,
-        );
         await delay(currentDelay);
         currentDelay *= 2;
       }
@@ -304,16 +341,10 @@ export async function fetchAllReservesData(
     }
   }
 
-  // Process the data into categorized lists
   const supplyAssets = allReserves.filter((reserve) => !reserve.isFrozen);
-
   const borrowAssets = allReserves.filter(
     (reserve) => !reserve.isFrozen && reserve.borrowingEnabled,
   );
-
-  console.log(`Found ${allReserves.length} total reserves`);
-  console.log(`Found ${supplyAssets.length} supply assets`);
-  console.log(`Found ${borrowAssets.length} borrow assets`);
 
   return {
     allReserves,
@@ -338,10 +369,6 @@ export async function fetchUserPositions(
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
   const market = getAaveMarket(chainId);
-
-  console.log(
-    `Fetching user positions for ${userAddress} on chain ${chainId}...`,
-  );
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
@@ -377,11 +404,10 @@ export async function fetchUserPositions(
               reserve.decimals,
             );
 
-            // TODO: Replace this with actual price fetching
-            // For now, we'll use a mock price - you should integrate with a price oracle
-            const mockPrice = Math.random() * 2 + 0.5; // Mock price between 0.5-2.5
+            // Get real price from oracle
+            const realPrice = await getTokenPrice(reserve, chainId);
             const balanceUSD = (
-              parseFloat(formattedBalance) * mockPrice
+              parseFloat(formattedBalance) * realPrice
             ).toFixed(2);
 
             return {
@@ -395,7 +421,7 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          console.error(`Error processing user positions batch:`, error);
           return null;
         }
       });
@@ -408,7 +434,6 @@ export async function fetchUserPositions(
         }
       }
 
-      // Delay between batches to avoid rate limiting
       if (i + BATCH_SIZE < reservesData.length) {
         await delay(DELAY);
       }
@@ -417,7 +442,6 @@ export async function fetchUserPositions(
     }
   }
 
-  console.log(`Found ${userPositions.length} user positions`);
   return userPositions;
 }
 
@@ -437,10 +461,6 @@ export async function fetchUserBorrowPositions(
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
   const market = getAaveMarket(chainId);
-
-  console.log(
-    `Fetching user borrow positions for ${userAddress} on chain ${chainId}...`,
-  );
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
@@ -481,10 +501,10 @@ export async function fetchUserBorrowPositions(
               reserve.decimals,
             );
 
-            //For Now Im mocking price I will update this when we integrate the token info
-            const mockPrice = 1; // Mock price between 0.5-2.5
+            // Get real price from oracle
+            const realPrice = await getTokenPrice(reserve, chainId);
             const debtUSD = (
-              parseFloat(formattedTotalDebt) * mockPrice
+              parseFloat(formattedTotalDebt) * realPrice
             ).toFixed(2);
 
             const currentBorrowAPY =
@@ -507,10 +527,7 @@ export async function fetchUserBorrowPositions(
 
           return null;
         } catch (error) {
-          console.log(
-            `Error fetching user borrow data for ${reserve.symbol}:`,
-            error,
-          );
+          console.error(`Error processing user positions batch:`, error);
           return null;
         }
       });
@@ -523,7 +540,6 @@ export async function fetchUserBorrowPositions(
         }
       }
 
-      // Delay between batches to avoid rate limiting
       if (i + BATCH_SIZE < reservesData.length) {
         await delay(DELAY);
       }
@@ -532,7 +548,6 @@ export async function fetchUserBorrowPositions(
     }
   }
 
-  console.log(`Found ${userBorrowPositions.length} user borrow positions`);
   return userBorrowPositions;
 }
 
@@ -549,7 +564,8 @@ export async function fetchUserWalletBalances(
     throw new Error("Signer must have a provider");
   }
 
-  console.log(`Fetching wallet balances for ${userAddress}...`);
+  const network = await provider.getNetwork();
+  const chainId = Number(network.chainId);
 
   const updatedReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 5;
@@ -575,9 +591,9 @@ export async function fetchUserWalletBalances(
             reserve.decimals,
           );
 
-          // TODO: Replace with actual price fetching
-          const mockPrice = Math.random() * 2 + 0.5;
-          const balanceUSD = (parseFloat(formattedBalance) * mockPrice).toFixed(
+          // Get real price from oracle
+          const realPrice = await getTokenPrice(reserve, chainId);
+          const balanceUSD = (parseFloat(formattedBalance) * realPrice).toFixed(
             2,
           );
 
@@ -588,11 +604,7 @@ export async function fetchUserWalletBalances(
             userBalanceUsd: balanceUSD,
           };
         } catch (error) {
-          console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
-            error,
-          );
-          // Return reserve with zero balance on error
+          console.error(`Error processing user positions batch:`, error);
           return {
             ...reserve,
             userBalance: "0",
@@ -605,13 +617,11 @@ export async function fetchUserWalletBalances(
       const batchResults = await Promise.all(batchPromises);
       updatedReserves.push(...batchResults);
 
-      // Delay between batches
       if (i + BATCH_SIZE < reservesData.length) {
         await delay(DELAY);
       }
     } catch (error) {
       console.error(`Error processing wallet balances batch:`, error);
-      // Add reserves with zero balances on batch error
       updatedReserves.push(
         ...batch.map((reserve) => ({
           ...reserve,
@@ -623,9 +633,6 @@ export async function fetchUserWalletBalances(
     }
   }
 
-  console.log(
-    `Updated ${updatedReserves.length} reserves with wallet balances`,
-  );
   return updatedReserves;
 }
 

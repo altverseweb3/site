@@ -165,50 +165,35 @@ export class AaveTransactions {
       tokenAddress,
       amount,
       tokenDecimals,
-      tokenSymbol,
+
       userAddress,
       chainId,
       signer,
     } = params;
 
     try {
-      console.log(
-        `🏦 Starting withdrawal transaction for ${amount} ${tokenSymbol}`,
-      );
-
       if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Convert amount to wei
       const amountWei = ethers.parseUnits(amount, tokenDecimals);
-      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
-
-      // Create pool contract
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
-      // Execute withdrawal transaction
-      // Note: Aave withdraw function takes (asset, amount, to)
-      // If amount is uint256.max, it withdraws the full balance
-      console.log(`📤 Executing withdrawal transaction...`);
       const withdrawTx = await poolContract.withdraw(
         tokenAddress,
         amountWei,
-        userAddress, // to address (where to send the withdrawn tokens)
+        userAddress,
       );
 
-      console.log(`⏳ Withdrawal transaction sent: ${withdrawTx.hash}`);
       await withdrawTx.wait();
-      console.log(`✅ Withdrawal transaction confirmed`);
 
       return {
         success: true,
         txHash: withdrawTx.hash,
       };
     } catch (error) {
-      console.error("❌ Withdrawal transaction failed:", error);
+      console.error("Withdrawal transaction failed:", error);
 
       // Handle specific error cases
       let errorMessage = "Unknown error occurred";
@@ -245,28 +230,20 @@ export class AaveTransactions {
       tokenAddress,
       amount,
       tokenDecimals,
-      tokenSymbol,
+
       userAddress,
       chainId,
       signer,
     } = params;
 
     try {
-      console.log(
-        `🏦 Starting supply transaction for ${amount} ${tokenSymbol}`,
-      );
-
       if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Convert amount to wei
       const amountWei = ethers.parseUnits(amount, tokenDecimals);
-      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
-      // Create contracts
       const tokenContract = new ethers.Contract(
         tokenAddress,
         ERC20_ABI,
@@ -274,44 +251,31 @@ export class AaveTransactions {
       );
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
-      // Check current allowance
       const currentAllowance = await tokenContract.allowance(
         userAddress,
         poolAddress,
       );
-      console.log(
-        `📋 Current allowance: ${ethers.formatUnits(currentAllowance, tokenDecimals)}`,
-      );
 
-      // Approve if needed
       if (currentAllowance < amountWei) {
-        console.log(`🔓 Approving ${tokenSymbol} for supply...`);
         const approveTx = await tokenContract.approve(poolAddress, amountWei);
-        console.log(`⏳ Approval transaction sent: ${approveTx.hash}`);
-
         await approveTx.wait();
-        console.log(`✅ Approval confirmed`);
       }
 
-      // Execute supply transaction
-      console.log(`📤 Executing supply transaction...`);
       const supplyTx = await poolContract.supply(
         tokenAddress,
         amountWei,
         userAddress,
-        0, // referral code
+        0,
       );
 
-      console.log(`⏳ Supply transaction sent: ${supplyTx.hash}`);
       await supplyTx.wait();
-      console.log(`✅ Supply transaction confirmed`);
 
       return {
         success: true,
         txHash: supplyTx.hash,
       };
     } catch (error) {
-      console.error("❌ Supply transaction failed:", error);
+      console.error("Supply transaction failed:", error);
       return {
         success: false,
         error:
@@ -323,40 +287,29 @@ export class AaveTransactions {
   static async setUserUseReserveAsCollateral(
     params: CollateralParams,
   ): Promise<CollateralResult> {
-    const { tokenAddress, useAsCollateral, tokenSymbol, chainId, signer } =
-      params;
+    const { tokenAddress, useAsCollateral, chainId, signer } = params;
 
     try {
-      console.log(
-        `🛡️ ${useAsCollateral ? "Enabling" : "Disabling"} ${tokenSymbol} as collateral`,
-      );
-
       if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Create pool contract
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
-      // Execute collateral toggle transaction
-      console.log(`📤 Executing collateral toggle transaction...`);
       const collateralTx = await poolContract.setUserUseReserveAsCollateral(
         tokenAddress,
         useAsCollateral,
       );
 
-      console.log(`⏳ Collateral transaction sent: ${collateralTx.hash}`);
       await collateralTx.wait();
-      console.log(`✅ Collateral transaction confirmed`);
 
       return {
         success: true,
         txHash: collateralTx.hash,
       };
     } catch (error) {
-      console.error("❌ Collateral transaction failed:", error);
+      console.error("Collateral transaction failed:", error);
 
       // Handle specific error cases
       let errorMessage = "Unknown error occurred";
@@ -458,20 +411,24 @@ export class AaveTransactions {
         window.ethereum as unknown as ethers.Eip1193Provider,
       );
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, provider);
-
       const accountData = await poolContract.getUserAccountData(userAddress);
+
+      const formattedHealthFactor = ethers.formatUnits(
+        accountData.healthFactor,
+        18,
+      );
 
       return {
         totalCollateralBase: accountData.totalCollateralBase.toString(),
         totalDebtBase: accountData.totalDebtBase.toString(),
         availableBorrowsBase: accountData.availableBorrowsBase.toString(),
         currentLiquidationThreshold:
-          Number(accountData.currentLiquidationThreshold) / 10000, // Convert from basis points
-        ltv: Number(accountData.ltv) / 10000, // Convert from basis points
-        healthFactor: ethers.formatUnits(accountData.healthFactor, 18),
+          Number(accountData.currentLiquidationThreshold) / 10000,
+        ltv: Number(accountData.ltv) / 10000,
+        healthFactor: formattedHealthFactor,
       };
     } catch (error) {
-      console.error("Error getting user account data:", error);
+      console.error("Failed to get user account data:", error);
       return null;
     }
   }
@@ -524,51 +481,37 @@ export class AaveTransactions {
       amount,
       rateMode,
       tokenDecimals,
-      tokenSymbol,
+
       userAddress,
       chainId,
       signer,
     } = params;
 
     try {
-      console.log(
-        `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === RateMode.Stable ? "stable" : "variable"} rate`,
-      );
-
       if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Convert amount to wei
       const amountWei = ethers.parseUnits(amount, tokenDecimals);
-      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
-
-      // Create pool contract
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
-      // Execute borrow transaction
-      // Aave borrow function: borrow(asset, amount, interestRateMode, referralCode, onBehalfOf)
-      console.log(`📤 Executing borrow transaction...`);
       const borrowTx = await poolContract.borrow(
-        tokenAddress, // asset to borrow
-        amountWei, // amount to borrow
-        rateMode, // interest rate mode (RateMode.Stable = 1, RateMode.Variable = 2)
-        0, // referral code
-        userAddress, // on behalf of (borrower address)
+        tokenAddress,
+        amountWei,
+        rateMode,
+        0,
+        userAddress,
       );
 
-      console.log(`⏳ Borrow transaction sent: ${borrowTx.hash}`);
       await borrowTx.wait();
-      console.log(`✅ Borrow transaction confirmed`);
 
       return {
         success: true,
         txHash: borrowTx.hash,
       };
     } catch (error) {
-      console.error("❌ Borrow transaction failed:", error);
+      console.error("Borrow transaction failed:", error);
 
       // Handle specific error cases
       let errorMessage = "Unknown error occurred";
@@ -613,21 +556,13 @@ export class AaveTransactions {
     } = params;
 
     try {
-      console.log(
-        `💳 Starting repay transaction for ${amount} ${tokenSymbol} (${rateMode === RateMode.Stable ? "stable" : "variable"} debt)`,
-      );
-
       if (!AaveSDK.isChainSupported(chainId)) {
         throw new Error(`Chain ${chainId} not supported`);
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-
-      // Convert amount to wei
       const amountWei = ethers.parseUnits(amount, tokenDecimals);
-      console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
-      // Check user's token balance
       const tokenContract = new ethers.Contract(
         tokenAddress,
         ERC20_ABI,
@@ -639,44 +574,33 @@ export class AaveTransactions {
         throw new Error(`Insufficient ${tokenSymbol} balance for repayment`);
       }
 
-      // Check and approve if necessary
-      console.log(`🔍 Checking allowance for ${tokenSymbol}...`);
       const currentAllowance = await tokenContract.allowance(
         userAddress,
         poolAddress,
       );
 
       if (currentAllowance < amountWei) {
-        console.log(`📝 Approving ${tokenSymbol} for repayment...`);
         const approveTx = await tokenContract.approve(poolAddress, amountWei);
-        console.log(`⏳ Approval transaction sent: ${approveTx.hash}`);
         await approveTx.wait();
-        console.log(`✅ Approval confirmed`);
       }
 
-      // Create pool contract
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
-      // Execute repay transaction
-      // Aave repay function: repay(asset, amount, rateMode, onBehalfOf)
-      console.log(`📤 Executing repay transaction...`);
       const repayTx = await poolContract.repay(
-        tokenAddress, // asset to repay
-        amountWei, // amount to repay
-        rateMode, // interest rate mode (RateMode.Stable = 1, RateMode.Variable = 2)
-        userAddress, // on behalf of (borrower address)
+        tokenAddress,
+        amountWei,
+        rateMode,
+        userAddress,
       );
 
-      console.log(`⏳ Repay transaction sent: ${repayTx.hash}`);
       await repayTx.wait();
-      console.log(`✅ Repay transaction confirmed`);
 
       return {
         success: true,
         txHash: repayTx.hash,
       };
     } catch (error) {
-      console.error("❌ Repay transaction failed:", error);
+      console.error("Repay transaction failed:", error);
 
       // Handle specific error cases
       let errorMessage = "Unknown error occurred";

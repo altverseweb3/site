@@ -17,12 +17,13 @@ import type { Token, Chain } from "@/types/web3";
 
 interface BorrowUnOwnedCardProps {
   asset?: AaveReserveData;
-  availableToBorrow?: string; // Amount user can borrow based on collateral
-  availableToBorrowUSD?: string; // USD value of borrowable amount
+  availableToBorrow?: string;
+  availableToBorrowUSD?: string;
   onBorrow?: (asset: AaveReserveData) => void;
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
+  tokenPrice?: number;
 }
 
 const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
@@ -33,8 +34,8 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  tokenPrice = 1,
 }) => {
-  // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
     asset: "0x0000000000000000000000000000000000000000",
     name: "Sample Token",
@@ -54,18 +55,21 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
     userBalanceUsd: "0.00",
     tokenIcon: "unknown.png",
     chainId: 1,
-    variableBorrowRate: "",
-    stableBorrowRate: "",
-    variableBorrowAPY: "",
-    stableBorrowAPY: "",
+    variableBorrowRate: "0",
+    stableBorrowRate: "0",
+    variableBorrowAPY: "0.00",
+    stableBorrowAPY: "0.00",
     stableBorrowEnabled: false,
     borrowingEnabled: false,
-    totalBorrowed: "",
-    formattedTotalBorrowed: "",
-    availableLiquidity: "",
-    formattedAvailableLiquidity: "",
-    borrowCap: "",
-    formattedBorrowCap: "",
+    totalBorrowed: "0",
+    formattedTotalBorrowed: "0",
+    availableLiquidity: "0",
+    formattedAvailableLiquidity: "0",
+    borrowCap: "0",
+    formattedBorrowCap: "0",
+    ltv: 0,
+    liquidationThreshold: 0,
+    liquidationBonus: 0,
     isFrozen: false,
   };
 
@@ -167,7 +171,7 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
           borrowingEnabled={borrowingEnabled}
           isIsolationMode={isIsolationMode}
           healthFactor={healthFactor}
-          tokenPrice={1}
+          tokenPrice={tokenPrice}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset}
