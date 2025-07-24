@@ -30,44 +30,13 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   onSupply = () => {},
 }) => {
   // Default asset for demo purposes
-  const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
-    name: "Sample Token",
-    symbol: "SAMP",
-    decimals: 18,
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    isActive: true,
-    supplyAPY: "0.00",
-    canBeCollateral: true,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
-    variableBorrowRate: "",
-    stableBorrowRate: "",
-    variableBorrowAPY: "",
-    stableBorrowAPY: "",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "",
-    formattedTotalBorrowed: "",
-    availableLiquidity: "",
-    formattedAvailableLiquidity: "",
-    borrowCap: "",
-    formattedBorrowCap: "",
-    ltv: 0.8,
-    liquidationThreshold: 0.85,
-    liquidationBonus: 0.05,
-    isFrozen: false,
-  };
+  // Only use real AAVE data - no fallback
+  if (!asset) {
+    console.error("SupplyUnownedCard: No asset data provided");
+    return null;
+  }
 
-  const currentAsset = asset || defaultAsset;
+  const currentAsset = asset;
 
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
@@ -155,7 +124,7 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
           healthFactor="0"
           tokenPrice={1}
-          liquidationThreshold={0.85}
+          liquidationThreshold={currentAsset.liquidationThreshold || 0}
           totalCollateralUSD={0}
           totalDebtUSD={0}
           tokenAddress={currentAsset.asset}

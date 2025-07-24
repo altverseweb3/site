@@ -57,45 +57,13 @@ const SupplyOwnedCard = ({
 }: SupplyOwnedCardProps) => {
   const [collateral, setCollateral] = useState(isCollateral);
 
-  // Default asset for demo purposes (fallback)
-  const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
-    name: "USD Coin",
-    symbol: "USDC",
-    decimals: 18,
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    supplyAPY: "2.74",
-    canBeCollateral: true,
-    variableBorrowRate: "0",
-    stableBorrowRate: "0",
-    variableBorrowAPY: "0",
-    stableBorrowAPY: "0",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "0",
-    formattedTotalBorrowed: "0",
-    availableLiquidity: "0",
-    formattedAvailableLiquidity: "0",
-    borrowCap: "0",
-    formattedBorrowCap: "0",
-    ltv: 0.8,
-    liquidationThreshold: 0.85,
-    liquidationBonus: 0.05,
-    isActive: true,
-    isFrozen: false,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
-  };
+  // Only use real AAVE data - no fallback
+  if (!asset) {
+    console.error("SupplyOwnedCard: No asset data provided");
+    return null;
+  }
 
-  const currentAsset = asset || defaultAsset;
+  const currentAsset = asset;
 
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
@@ -203,7 +171,7 @@ const SupplyOwnedCard = ({
               canBeCollateral={canBeCollateral}
               healthFactor={healthFactor}
               tokenPrice={1} // You might want to pass real price data
-              liquidationThreshold={0.85} // You might want to get this from asset data
+              liquidationThreshold={currentAsset.liquidationThreshold || 0}
               totalCollateralUSD={totalCollateralUSD}
               totalDebtUSD={totalDebtUSD}
               onCollateralChange={handleCollateralChange}
@@ -240,7 +208,7 @@ const SupplyOwnedCard = ({
           isCollateral={collateral}
           healthFactor={healthFactor}
           tokenPrice={1} // You might want to pass real price data
-          liquidationThreshold={0.85} // You might want to get this from asset data
+          liquidationThreshold={currentAsset.liquidationThreshold || 0}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           onWithdraw={handleWithdrawComplete}

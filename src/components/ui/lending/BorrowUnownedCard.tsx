@@ -36,44 +36,13 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   totalDebtUSD = 0,
   tokenPrice = 1,
 }) => {
-  const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
-    name: "Sample Token",
-    symbol: "SAMP",
-    decimals: 18,
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    isActive: true,
-    supplyAPY: "0.00",
-    canBeCollateral: true,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
-    variableBorrowRate: "0",
-    stableBorrowRate: "0",
-    variableBorrowAPY: "0.00",
-    stableBorrowAPY: "0.00",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "0",
-    formattedTotalBorrowed: "0",
-    availableLiquidity: "0",
-    formattedAvailableLiquidity: "0",
-    borrowCap: "0",
-    formattedBorrowCap: "0",
-    ltv: 0,
-    liquidationThreshold: 0,
-    liquidationBonus: 0,
-    isFrozen: false,
-  };
+  // Only use real AAVE data - no fallback
+  if (!asset) {
+    console.error("BorrowUnownedCard: No asset data provided");
+    return null;
+  }
 
-  const currentAsset = asset || defaultAsset;
+  const currentAsset = asset;
 
   // Get borrow APY (variable rate) from your enhanced data
   const borrowAPY = currentAsset.variableBorrowAPY || "0.00";

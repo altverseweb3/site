@@ -67,7 +67,7 @@ interface CollateralModalProps {
   canBeCollateral?: boolean; // Whether the asset can be used as collateral
   healthFactor?: string;
   tokenPrice?: number; // Current token price in USD
-  liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
+  liquidationThreshold: number; // LTV for this asset - must be provided from AAVE data
   totalCollateralUSD?: number; // Current total collateral in USD
   totalDebtUSD?: number; // Current total debt in USD
   onCollateralChange?: (enabled: boolean) => Promise<boolean>;
@@ -89,7 +89,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
   isolationModeEnabled = false,
   canBeCollateral = true,
   healthFactor = "1.24",
-  liquidationThreshold = 0.85, // Default 85% LTV
+  liquidationThreshold, // Must be provided from real AAVE data
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   onCollateralChange = async () => true,

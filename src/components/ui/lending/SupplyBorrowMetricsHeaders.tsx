@@ -9,8 +9,6 @@ import {
   UserBorrowPosition,
   AaveReserveData,
 } from "@/utils/aave/fetch";
-import { AaveTransactions, UserAccountData } from "@/utils/aave/interact";
-import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import { altverseAPI } from "@/api/altverse";
 
@@ -34,8 +32,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const [userBorrowPositions, setUserBorrowPositions] = useState<
     UserBorrowPosition[]
   >([]);
-  const [userAccountData, setUserAccountData] =
-    useState<UserAccountData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
   const [marketMetrics, setMarketMetrics] = useState({
@@ -116,16 +112,12 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
           reservesResult.borrowAssets,
         );
 
-        const accountData = await AaveTransactions.getUserAccountData(
-          wallet.address,
-          sourceChain.chainId as SupportedChainId,
-        );
-        setUserAccountData(accountData);
+        // Account data is now calculated from user positions
+        // No need to fetch separately from AAVE
       } catch (err) {
         console.error("Error loading AAVE data:", err);
         setUserSupplyPositions([]);
         setUserBorrowPositions([]);
-        setUserAccountData(null);
         setAllReserves([]);
       } finally {
         setLoading(false);
@@ -153,7 +145,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
       setUserSupplyPositions([]);
       setUserBorrowPositions([]);
-      setUserAccountData(null);
       setAllReserves([]);
     }
   }, [sourceChain.chainId, lastChainId]);
@@ -185,21 +176,30 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
           reserve.asset.toLowerCase() === position.asset.asset.toLowerCase(),
       );
 
-      let liquidationThreshold = 0.85;
+      // Use liquidation threshold from reserve data or asset data, no hardcoded fallbacks
+      let liquidationThreshold = 0;
       if (reserveData && reserveData.liquidationThreshold) {
         liquidationThreshold = reserveData.liquidationThreshold;
+      } else if (position.asset.liquidationThreshold) {
+        liquidationThreshold = position.asset.liquidationThreshold;
       } else {
-        if (
-          position.asset.symbol === "WETH" ||
-          position.asset.symbol === "ETH"
-        ) {
-          liquidationThreshold = 0.825;
-        } else if (position.asset.symbol === "WBTC") {
-          liquidationThreshold = 0.75;
-        }
+        // Skip assets without liquidation threshold data by not adding to calculation
+        console.warn(
+          `No liquidation threshold data for ${position.asset.symbol}, excluding from health factor calculation`,
+        );
+        return; // This only skips this iteration
       }
 
-      totalCollateralWeighted += suppliedUSD * liquidationThreshold;
+      // Only count collateral positions in health factor
+      // Ensure liquidation threshold is in decimal form (0.0-1.0) for health factor calculation
+      if (position.isCollateral) {
+        // If liquidation threshold is in percentage form (>1), convert to decimal
+        const liquidationThresholdDecimal =
+          liquidationThreshold > 1
+            ? liquidationThreshold / 100
+            : liquidationThreshold;
+        totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
+      }
     });
 
     userBorrowPositions.forEach((position) => {
@@ -242,14 +242,105 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     return ((totalSupplyEarnings - totalBorrowCosts) / netWorth) * 100;
   };
 
+  const calculateLTVData = () => {
+    if (!hasConnectedWallet || loading)
+      return { currentLTV: 0, maxLTV: 0, liquidationThreshold: 0 };
+
+    const totalBorrowedUSD = userBorrowPositions.reduce((sum, position) => {
+      return sum + parseFloat(position.totalDebtUSD || "0");
+    }, 0);
+
+    // Calculate weighted average max LTV and liquidation threshold based on collateral
+    let weightedMaxLTV = 0;
+    let weightedLiquidationThreshold = 0;
+    let totalCollateralValue = 0;
+
+    userSupplyPositions.forEach((position) => {
+      if (position.isCollateral) {
+        const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+
+        // Find reserve data for more accurate liquidation threshold
+        const reserveData = allReserves.find(
+          (reserve) =>
+            reserve.asset.toLowerCase() === position.asset.asset.toLowerCase(),
+        );
+
+        // Use consistent data source prioritizing reserve data over position data
+        let assetLTV = position.asset.ltv;
+        let assetLiqThreshold = 0;
+
+        if (reserveData && reserveData.liquidationThreshold) {
+          assetLiqThreshold = reserveData.liquidationThreshold;
+          // Also prefer LTV from reserve data if available
+          if (reserveData.ltv) {
+            assetLTV = reserveData.ltv;
+          }
+        } else if (position.asset.liquidationThreshold) {
+          assetLiqThreshold = position.asset.liquidationThreshold;
+        }
+
+        // Skip assets without proper LTV/liquidation threshold data
+        if (!assetLTV || !assetLiqThreshold) {
+          console.warn(
+            `Missing LTV/liquidation threshold data for ${position.asset.symbol}, excluding from LTV calculation`,
+          );
+          return; // This only skips this iteration
+        }
+
+        // Ensure both LTV and liquidation threshold are in decimal form (0.0-1.0) for calculation
+        const assetLTVDecimal = assetLTV > 1 ? assetLTV / 100 : assetLTV;
+        const assetLiqThresholdDecimal =
+          assetLiqThreshold > 1 ? assetLiqThreshold / 100 : assetLiqThreshold;
+
+        weightedMaxLTV += suppliedUSD * assetLTVDecimal;
+        weightedLiquidationThreshold += suppliedUSD * assetLiqThresholdDecimal;
+        totalCollateralValue += suppliedUSD;
+      }
+    });
+
+    const maxLTV =
+      totalCollateralValue > 0
+        ? (weightedMaxLTV / totalCollateralValue) * 100
+        : 0;
+    const liquidationThreshold =
+      totalCollateralValue > 0
+        ? (weightedLiquidationThreshold / totalCollateralValue) * 100
+        : 0;
+    // Current LTV should be calculated against collateral value that can be used as borrowing power
+    const currentLTV =
+      totalCollateralValue > 0
+        ? (totalBorrowedUSD / totalCollateralValue) * 100
+        : 0;
+
+    return { currentLTV, maxLTV, liquidationThreshold };
+  };
+
   const rawNetWorth = calculateNetWorth();
   const rawNetAPY = calculateWeightedNetAPY();
   const rawHealthFactor = getHealthFactor();
+  const ltvData = calculateLTVData();
+
+  // Calculate total collateral USD (only positions used as collateral)
+  const totalCollateralUSD = userSupplyPositions.reduce((sum, position) => {
+    if (position.isCollateral) {
+      return sum + parseFloat(position.suppliedBalanceUSD || "0");
+    }
+    return sum;
+  }, 0);
+
+  const totalBorrowedUSD = userBorrowPositions.reduce((sum, position) => {
+    return sum + parseFloat(position.totalDebtUSD || "0");
+  }, 0);
 
   const userMetrics = {
     netWorth: rawNetWorth,
     netAPY: rawNetAPY,
     healthFactor: rawHealthFactor,
+    totalCollateralUSD: totalCollateralUSD, // Use actual collateral USD, not all supplied USD
+    totalDebtUSD: totalBorrowedUSD,
+    currentLTV: ltvData.currentLTV,
+    maxLTV: ltvData.maxLTV,
+    liquidationThreshold: ltvData.liquidationThreshold,
   };
 
   const calculateMarketMetrics = useCallback(async () => {
@@ -334,16 +425,14 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
               realPrice = debtUSD / debtAmount;
             }
           } else {
-            if (reserve.symbol === "WETH" || reserve.symbol === "ETH")
-              realPrice = 3500;
-            else if (reserve.symbol === "WBTC" || reserve.symbol === "BTC")
-              realPrice = 70000;
-            else if (
-              reserve.symbol === "USDC" ||
-              reserve.symbol === "USDT" ||
-              reserve.symbol === "DAI"
-            )
-              realPrice = 1;
+            // Skip this reserve if we can't get real price data
+            console.warn(
+              `Unable to fetch real price for ${reserve.symbol}, skipping market calculation`,
+            );
+            return {
+              supplyValueUSD: 0,
+              borrowValueUSD: 0,
+            };
           }
         }
 
@@ -460,7 +549,14 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       showButton: hasConnectedWallet,
       buttonText: "risk details",
       customButton: hasConnectedWallet ? (
-        <RiskDetailsModal userAccountData={userAccountData}>
+        <RiskDetailsModal
+          healthFactor={userMetrics.healthFactor}
+          totalCollateralUSD={userMetrics.totalCollateralUSD}
+          totalDebtUSD={userMetrics.totalDebtUSD}
+          currentLTV={userMetrics.currentLTV}
+          maxLTV={userMetrics.maxLTV}
+          liquidationThreshold={userMetrics.liquidationThreshold}
+        >
           <button className="ml-2 rounded bg-[#232326] px-2 py-[2px] text-xs text-[#FFFFFF80] font-['Urbanist'] leading-none whitespace-nowrap hover:bg-[#2a2a2e]">
             risk details
           </button>

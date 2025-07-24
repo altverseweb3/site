@@ -62,7 +62,7 @@ interface RepayModalProps {
   variableDebt?: string;
   healthFactor?: string;
   tokenPrice?: number;
-  liquidationThreshold?: number;
+  liquidationThreshold: number;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
   onRepay?: (amount: string, rateMode: RateMode) => Promise<boolean>;
@@ -85,7 +85,7 @@ const RepayModal: FC<RepayModalProps> = ({
   variableDebt = "0.00",
   healthFactor = "1.24",
   tokenPrice = 1,
-  liquidationThreshold = 0.85,
+  liquidationThreshold,
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   onRepay = async () => true,

@@ -126,10 +126,17 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             : "Failed to fetch extended details",
         );
 
+        // Use real asset data instead of hardcoded fallbacks
         setExtendedDetails({
-          ltv: "80.00%",
-          liquidationThreshold: "85.00%",
-          liquidationPenalty: "5.00%",
+          ltv: currentAsset.ltv
+            ? `${(currentAsset.ltv * 100).toFixed(2)}%`
+            : "0.00%",
+          liquidationThreshold: currentAsset.liquidationThreshold
+            ? `${(currentAsset.liquidationThreshold * 100).toFixed(2)}%`
+            : "0.00%",
+          liquidationPenalty: currentAsset.liquidationBonus
+            ? `${(currentAsset.liquidationBonus * 100).toFixed(2)}%`
+            : "0.00%",
         });
       } finally {
         setIsLoading(false);
