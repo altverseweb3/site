@@ -16,10 +16,9 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { chainNames } from "@/config/aave";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import type { Token, Chain } from "@/types/web3";
+import { getChainByChainId } from "@/config/chains";
 import {
   ExtendedAssetDetails,
   getReserveMetrics,
@@ -142,8 +141,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     return null;
   }
 
-  const chainName = chainNames[currentAsset.chainId || chainId] || "ethereum";
-
   const token: Token = {
     id: currentAsset.asset,
     name: currentAsset.name,
@@ -155,30 +152,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     stringChainId: (currentAsset.chainId || chainId).toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: currentAsset.chainId || chainId,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-    mayanChainId: 0,
-  };
+  const chain: Chain = getChainByChainId(currentAsset.chainId || chainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
