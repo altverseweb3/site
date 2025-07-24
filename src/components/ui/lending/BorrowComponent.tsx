@@ -13,12 +13,11 @@ import {
   UserBorrowPosition,
   UserPosition,
   useAaveFetch,
+  getTokenPrice as fetchTokenPrice,
 } from "@/utils/aave/fetch";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
-import { altverseAPI } from "@/api/altverse";
-import { getChainByChainId } from "@/config/chains";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
@@ -78,41 +77,27 @@ const BorrowComponent: React.FC = () => {
     return { totalCollateralUSD, totalDebtUSD };
   };
 
-  // Get token price for a reserve
+  // Get token price for a reserve with caching
   const getTokenPrice = useCallback(
     async (reserve: AaveReserveData): Promise<number> => {
       const cached = tokenPrices[reserve.asset.toLowerCase()];
       if (cached) return cached;
 
       try {
-        const chainInfo = getChainByChainId(sourceChain.chainId);
-        if (!chainInfo?.alchemyNetworkName) return 1;
+        // Use the existing fetch utility function
+        const price = await fetchTokenPrice(reserve, sourceChain.chainId);
 
-        const priceResponse = await altverseAPI.getTokenPrices({
-          addresses: [
-            {
-              network: chainInfo.alchemyNetworkName,
-              address: reserve.asset,
-            },
-          ],
-        });
+        // Cache the price for future use
+        setTokenPrices((prev) => ({
+          ...prev,
+          [reserve.asset.toLowerCase()]: price,
+        }));
 
-        if (
-          !priceResponse.error &&
-          priceResponse.data?.data?.[0]?.prices?.[0]?.value
-        ) {
-          const price = parseFloat(priceResponse.data.data[0].prices[0].value);
-          setTokenPrices((prev) => ({
-            ...prev,
-            [reserve.asset.toLowerCase()]: price,
-          }));
-          return price;
-        }
+        return price;
       } catch (error) {
         console.error(`Error fetching price for ${reserve.symbol}:`, error);
+        return 1;
       }
-
-      return 1;
     },
     [sourceChain.chainId, tokenPrices],
   );
@@ -186,8 +171,8 @@ const BorrowComponent: React.FC = () => {
         ]);
 
         // Preload token prices for calculation accuracy
-        const pricePromises = reservesResult.borrowAssets.map(
-          (reserve) => getTokenPrice(reserve).catch(() => 1), // Fallback to 1 on error
+        const pricePromises = reservesResult.borrowAssets.map((reserve) =>
+          getTokenPrice(reserve).catch(() => 1),
         );
         await Promise.all(pricePromises);
       } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -8,11 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
   DialogPortal,
   DialogOverlay,
+  StyledDialogClose,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -190,15 +189,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   <p className="text-sm text-zinc-400">{currentAsset.name}</p>
                 </div>
               </div>
-              <DialogClose asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-[#1A1A1A]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </DialogClose>
+              <StyledDialogClose />
             </div>
           </DialogHeader>
 

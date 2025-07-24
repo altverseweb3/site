@@ -9,7 +9,7 @@ import { chainNames } from "@/config/aave";
 import { altverseAPI } from "@/api/altverse";
 
 // Helper function to get real token price from oracle
-async function getTokenPrice(
+export async function getTokenPrice(
   asset: AaveReserveData,
   chainId: number,
 ): Promise<number> {
