@@ -230,7 +230,7 @@ const SupplyComponent: React.FC = () => {
           className="border-[1px] border-[#232326] rounded-md  overflow-hidden"
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <SupplyAvailablePositionsHeader />
+            <SupplyAvailablePositionsHeader text="available positions" />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>

@@ -15,6 +15,7 @@ import {
 } from "@/utils/aave/fetch";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
+import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
@@ -200,16 +201,7 @@ const BorrowComponent: React.FC = () => {
           className="border-[1px] border-[#232326] rounded-md overflow-hidden"
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <div className="flex items-center justify-between w-full px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="text-[#FAFAFA] font-medium">Your Borrows</div>
-                {hasBorrowPositions && (
-                  <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
-                    {userBorrowPositions.length}
-                  </div>
-                )}
-              </div>
-            </div>
+            <SupplyAvailablePositionsHeader text="your borrows" />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
@@ -258,18 +250,7 @@ const BorrowComponent: React.FC = () => {
           className="border-[1px] border-[#232326] rounded-md overflow-hidden"
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <div className="flex items-center justify-between w-full px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="text-[#FAFAFA] font-medium">
-                  Assets to Borrow
-                </div>
-                {borrowableReserves.length > 0 && (
-                  <div className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
-                    {borrowableReserves.length}
-                  </div>
-                )}
-              </div>
-            </div>
+            <SupplyAvailablePositionsHeader text="assets to borrow" />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
