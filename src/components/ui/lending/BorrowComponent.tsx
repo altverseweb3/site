@@ -13,8 +13,8 @@ import {
   UserBorrowPosition,
   UserPosition,
   useAaveFetch,
-  getTokenPrice as fetchTokenPrice,
 } from "@/utils/aave/fetch";
+import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
@@ -43,43 +43,55 @@ const BorrowComponent: React.FC = () => {
 
   const hasConnectedWallet = !!wallet?.address;
 
-  // Calculate real health factor from user positions
-  const calculateHealthFactor = () => {
-    if (!hasConnectedWallet || userSupplyPositions.length === 0) return "∞";
+  // Get health factor from Aave contract data
+  const [healthFactorData, setHealthFactorData] = useState<string>("∞");
 
-    let totalCollateralWeighted = 0;
-    let totalDebtUSD = 0;
+  const calculateHealthFactor = useCallback(() => {
+    if (!hasConnectedWallet || userSupplyPositions.length === 0) {
+      setHealthFactorData("∞");
+      return;
+    }
 
-    userSupplyPositions.forEach((position) => {
-      const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
-      const liquidationThreshold = position.asset.liquidationThreshold;
+    try {
+      // Calculate weighted collateral based on liquidation thresholds
+      let totalCollateralWeighted = 0;
+      userSupplyPositions.forEach((position) => {
+        if (position.isCollateral) {
+          const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+          const liquidationThreshold = position.asset.liquidationThreshold || 0;
 
-      // Skip assets without liquidation threshold data
-      if (!liquidationThreshold) {
-        console.warn(
-          `No liquidation threshold for ${position.asset.symbol}, excluding from health factor`,
-        );
-        return; // This only skips this iteration
+          // Ensure liquidation threshold is in decimal form (0.0-1.0)
+          const liquidationThresholdDecimal =
+            liquidationThreshold > 1
+              ? liquidationThreshold / 100
+              : liquidationThreshold;
+
+          totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
+        }
+      });
+
+      // Calculate total debt
+      const totalDebtUSD = userBorrowPositions.reduce((sum, position) => {
+        return sum + parseFloat(position.totalDebtUSD || "0");
+      }, 0);
+
+      // Calculate health factor
+      if (totalDebtUSD === 0) {
+        setHealthFactorData("∞");
+      } else {
+        const healthFactor = totalCollateralWeighted / totalDebtUSD;
+        setHealthFactorData(healthFactor.toFixed(2));
       }
+    } catch (error) {
+      console.error("Error calculating health factor:", error);
+      setHealthFactorData("∞");
+    }
+  }, [hasConnectedWallet, userSupplyPositions, userBorrowPositions]);
 
-      // Only count collateral positions in health factor
-      if (position.isCollateral) {
-        // Ensure liquidation threshold is in decimal form (0.0-1.0) for health factor calculation
-        const liquidationThresholdDecimal =
-          liquidationThreshold > 1
-            ? liquidationThreshold / 100
-            : liquidationThreshold;
-        totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
-      }
-    });
-
-    userBorrowPositions.forEach((position) => {
-      totalDebtUSD += parseFloat(position.totalDebtUSD || "0");
-    });
-
-    if (totalDebtUSD === 0) return "∞";
-    return (totalCollateralWeighted / totalDebtUSD).toFixed(2);
-  };
+  // Update health factor when data changes
+  useEffect(() => {
+    calculateHealthFactor();
+  }, [calculateHealthFactor]);
 
   // Calculate real total collateral and debt
   const getUserTotals = () => {
@@ -98,92 +110,36 @@ const BorrowComponent: React.FC = () => {
     return { totalCollateralUSD, totalDebtUSD };
   };
 
-  // Get token price for a reserve with caching and fallbacks
-  const getTokenPrice = useCallback(
+  // Get oracle price for a reserve using the same logic as AssetDetailsModal
+  const getOraclePrice = useCallback(
     async (reserve: AaveReserveData): Promise<number> => {
       const cached = tokenPrices[reserve.asset.toLowerCase()];
       if (cached) return cached;
 
       try {
-        // Use the existing fetch utility function
-        const price = await fetchTokenPrice(reserve, sourceChain.chainId);
+        const extendedDetails = await fetchExtendedAssetDetails(
+          reserve,
+          sourceChain.chainId,
+        );
+        const oraclePrice =
+          extendedDetails.oraclePrice || extendedDetails.currentPrice || 1;
 
-        // Cache the price for future use
+        // Cache the oracle price
         setTokenPrices((prev) => ({
           ...prev,
-          [reserve.asset.toLowerCase()]: price,
+          [reserve.asset.toLowerCase()]: oraclePrice,
         }));
 
-        return price;
+        return oraclePrice;
       } catch (error) {
-        console.error(`Error fetching price for ${reserve.symbol}:`, error);
-
-        // Try to get price from user positions as fallback
-        const userPosition = userSupplyPositions.find(
-          (pos) =>
-            pos.asset.asset.toLowerCase() === reserve.asset.toLowerCase(),
-        );
-        const userBorrowPosition = userBorrowPositions.find(
-          (pos) =>
-            pos.asset.asset.toLowerCase() === reserve.asset.toLowerCase(),
-        );
-
-        if (
-          userPosition &&
-          userPosition.suppliedBalanceUSD &&
-          userPosition.suppliedBalance
-        ) {
-          const suppliedUSD = parseFloat(userPosition.suppliedBalanceUSD);
-          const suppliedAmount = parseFloat(userPosition.suppliedBalance);
-          if (suppliedAmount > 0) {
-            const fallbackPrice = suppliedUSD / suppliedAmount;
-            console.log(
-              `Using fallback price from supply position for ${reserve.symbol}: $${fallbackPrice}`,
-            );
-
-            // Cache the fallback price
-            setTokenPrices((prev) => ({
-              ...prev,
-              [reserve.asset.toLowerCase()]: fallbackPrice,
-            }));
-
-            return fallbackPrice;
-          }
-        } else if (
-          userBorrowPosition &&
-          userBorrowPosition.totalDebtUSD &&
-          userBorrowPosition.formattedTotalDebt
-        ) {
-          const debtUSD = parseFloat(userBorrowPosition.totalDebtUSD);
-          const debtAmount = parseFloat(userBorrowPosition.formattedTotalDebt);
-          if (debtAmount > 0) {
-            const fallbackPrice = debtUSD / debtAmount;
-            console.log(
-              `Using fallback price from borrow position for ${reserve.symbol}: $${fallbackPrice}`,
-            );
-
-            // Cache the fallback price
-            setTokenPrices((prev) => ({
-              ...prev,
-              [reserve.asset.toLowerCase()]: fallbackPrice,
-            }));
-
-            return fallbackPrice;
-          }
-        }
-
-        console.warn(
-          `No fallback price available for ${reserve.symbol}, using $1`,
+        console.error(
+          `Error fetching oracle price for ${reserve.symbol}:`,
+          error,
         );
         return 1;
       }
     },
-    [
-      sourceChain.chainId,
-      tokenPrices,
-      userSupplyPositions,
-      userBorrowPositions,
-    ],
+    [sourceChain.chainId, tokenPrices],
   );
 
   // Load user borrow positions using real Aave data
@@ -254,9 +210,9 @@ const BorrowComponent: React.FC = () => {
           loadUserSupplyPositions(reservesResult.supplyAssets),
         ]);
 
-        // Preload token prices for calculation accuracy
+        // Preload oracle prices for calculation accuracy
         const pricePromises = reservesResult.borrowAssets.map((reserve) =>
-          getTokenPrice(reserve).catch(() => 1),
+          getOraclePrice(reserve).catch(() => 1),
         );
         await Promise.all(pricePromises);
       } catch (err) {
@@ -279,79 +235,150 @@ const BorrowComponent: React.FC = () => {
       fetchAllReservesData,
       loadUserBorrowPositions,
       loadUserSupplyPositions,
-      getTokenPrice,
+      getOraclePrice,
     ],
   );
 
-  // Calculate available to borrow for each reserve based on user's real collateral
-  const calculateAvailableToBorrow = async (
-    reserve: AaveReserveData,
-  ): Promise<{ amount: string; amountUSD: string }> => {
-    if (!hasConnectedWallet || userSupplyPositions.length === 0) {
-      return { amount: "0.00", amountUSD: "0.00" };
-    }
-
-    // 1. Calculate user's borrowing power based on supplied collateral
-    let totalBorrowingPowerUSD = 0;
-    userSupplyPositions.forEach((position) => {
-      const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
-      const ltv = position.asset.ltv || 0; // LTV ratio for this collateral
-
-      if (position.isCollateral) {
-        // Ensure LTV is in decimal form (0.0-1.0) for borrowing power calculation
-        const ltvDecimal = ltv > 1 ? ltv / 100 : ltv;
-        const borrowingPower = suppliedUSD * ltvDecimal;
-        totalBorrowingPowerUSD += borrowingPower;
+  // Calculate available to borrow using existing user position data
+  const calculateAvailableToBorrow = useCallback(
+    (reserve: AaveReserveData): { amount: string; amountUSD: string } => {
+      if (!hasConnectedWallet || userSupplyPositions.length === 0) {
+        return { amount: "0.00", amountUSD: "0.00" };
       }
-    });
 
-    // 2. Calculate current debt USD to get remaining borrowing power
-    const { totalDebtUSD } = getUserTotals();
-    const remainingBorrowingPowerUSD = Math.max(
-      0,
-      totalBorrowingPowerUSD - totalDebtUSD,
-    );
+      try {
+        // 1. Calculate total borrowing power from user's collateral positions
+        let totalBorrowingPowerUSD = 0;
 
-    // 3. Check reserve constraints
-    const reserveLiquidity = parseFloat(
-      reserve.formattedAvailableLiquidity || "0",
-    );
-    const borrowCap = parseFloat(reserve.formattedBorrowCap || "0");
-    const currentBorrowed = parseFloat(reserve.formattedTotalBorrowed || "0");
+        userSupplyPositions.forEach((position) => {
+          if (position.isCollateral) {
+            const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+            const ltv = position.asset.ltv || 0;
 
-    // Available liquidity in the reserve
-    let maxBorrowFromReserve = reserveLiquidity;
+            // Ensure LTV is in decimal form (0.0-1.0)
+            const ltvDecimal = ltv > 1 ? ltv / 100 : ltv;
+            const borrowingPower = suppliedUSD * ltvDecimal;
+            totalBorrowingPowerUSD += borrowingPower;
 
-    // Apply borrow cap if it exists
-    if (borrowCap > 0) {
-      const remainingCapacity = borrowCap - currentBorrowed;
-      maxBorrowFromReserve = Math.min(maxBorrowFromReserve, remainingCapacity);
-    }
+            console.log(
+              `Position: ${position.asset.symbol}, Supplied: $${suppliedUSD}, LTV: ${ltvDecimal}, Borrowing Power: $${borrowingPower}`,
+            );
+          }
+        });
 
-    // 4. Get token price to convert USD to token amount
-    let cachedPrice = tokenPrices[reserve.asset.toLowerCase()];
+        // 2. Calculate current total debt from borrow positions
+        const totalDebtUSD = userBorrowPositions.reduce((sum, position) => {
+          return sum + parseFloat(position.totalDebtUSD || "0");
+        }, 0);
 
-    // If no cached price, try to get it now
-    if (!cachedPrice) {
-      cachedPrice = await getTokenPrice(reserve);
-    }
+        // 3. Calculate remaining borrowing capacity
+        const remainingBorrowingPowerUSD = Math.max(
+          0,
+          totalBorrowingPowerUSD - totalDebtUSD,
+        );
 
-    // 5. Calculate final available amount
-    const maxBorrowUSD = Math.min(
-      remainingBorrowingPowerUSD,
-      maxBorrowFromReserve * cachedPrice,
-    );
-    const maxBorrowTokens = maxBorrowUSD / cachedPrice;
+        console.log(`Total borrowing power: $${totalBorrowingPowerUSD}`);
+        console.log(`Total debt: $${totalDebtUSD}`);
+        console.log(
+          `Remaining borrowing power: $${remainingBorrowingPowerUSD}`,
+        );
 
-    // Ensure non-negative and format to reasonable precision
-    const availableAmount = Math.max(0, maxBorrowTokens);
-    const availableUSD = Math.max(0, maxBorrowUSD);
+        if (remainingBorrowingPowerUSD <= 0) {
+          return { amount: "0.00", amountUSD: "0.00" };
+        }
 
-    return {
-      amount: availableAmount.toFixed(6),
-      amountUSD: availableUSD.toFixed(2),
-    };
-  };
+        // 4. Get available liquidity from the reserve (what Aave uses)
+        // Use the availableLiquidity field from your example data
+        const availableLiquidity = parseFloat(
+          reserve.availableLiquidity ||
+          reserve.formattedAvailableLiquidity ||
+          "0",
+        );
+
+        console.log(`Reserve ${reserve.symbol}:`, {
+          availableLiquidity: availableLiquidity,
+          userBorrowingPowerUSD: remainingBorrowingPowerUSD,
+          rawAvailableLiquidity: reserve.availableLiquidity,
+          formattedAvailableLiquidity: reserve.formattedAvailableLiquidity,
+        });
+
+        if (availableLiquidity <= 0) {
+          console.log(`No liquidity available in ${reserve.symbol} reserve`);
+          return { amount: "0.00", amountUSD: "0.00" };
+        }
+
+        // 5. Get asset price with validation
+        let tokenPrice = tokenPrices[reserve.asset.toLowerCase()];
+
+        // Validate the price is reasonable
+        if (!tokenPrice || tokenPrice <= 0 || isNaN(tokenPrice)) {
+          console.log(
+            `Invalid price for ${reserve.symbol} (${tokenPrice}), using fallback price of 1`,
+          );
+          tokenPrice = 1;
+        }
+
+        // Additional validation for extremely high/low prices that might be errors
+        if (tokenPrice > 1000000 || tokenPrice < 0.000001) {
+          console.log(
+            `Suspicious price for ${reserve.symbol} ($${tokenPrice}), using fallback price of 1`,
+          );
+          tokenPrice = 1;
+        }
+
+        console.log(
+          `Using validated price for ${reserve.symbol}: $${tokenPrice}`,
+        );
+
+        // 6. Calculate available to borrow following Aave's logic:
+        // MIN(User's Borrowing Capacity, Reserve Available Liquidity)
+
+        // Convert user's borrowing power from USD to token amount
+        const userMaxBorrowTokens = remainingBorrowingPowerUSD / tokenPrice;
+
+        // The final amount is limited by both user capacity and reserve liquidity
+        const maxBorrowTokens = Math.min(
+          userMaxBorrowTokens,
+          availableLiquidity,
+        );
+
+        // Always round DOWN to prevent borrowing more than available
+        // Use Math.floor for token amounts to ensure we never exceed capacity
+        const availableTokensFloor =
+          Math.floor(maxBorrowTokens * 1000000) / 1000000; // Round to 6 decimals, floor
+        const availableUSDFloor =
+          Math.floor(availableTokensFloor * tokenPrice * 100) / 100; // Round to 2 decimals, floor
+
+        // Ensure non-negative
+        const availableAmount = Math.max(0, availableTokensFloor);
+        const availableUSD = Math.max(0, availableUSDFloor);
+
+        console.log(`${reserve.symbol} Calculation:`, {
+          userMaxBorrowTokens: userMaxBorrowTokens.toFixed(8),
+          reserveAvailableLiquidity: availableLiquidity.toFixed(6),
+          limitingFactor:
+            userMaxBorrowTokens < availableLiquidity
+              ? "User Capacity"
+              : "Reserve Liquidity",
+          tokenPrice: tokenPrice,
+          beforeRounding: `${maxBorrowTokens.toFixed(8)} ${reserve.symbol} ($${(maxBorrowTokens * tokenPrice).toFixed(4)})`,
+          afterFloorRounding: `${availableAmount.toFixed(6)} ${reserve.symbol} ($${availableUSD.toFixed(2)})`,
+        });
+
+        return {
+          amount: availableAmount.toFixed(6),
+          amountUSD: availableUSD.toFixed(2),
+        };
+      } catch (error) {
+        console.error(
+          `Error calculating available to borrow for ${reserve.symbol}:`,
+          error,
+        );
+        return { amount: "0.00", amountUSD: "0.00" };
+      }
+    },
+    [hasConnectedWallet, userSupplyPositions, userBorrowPositions, tokenPrices],
+  );
 
   // Load data when component mounts or chain changes
   useEffect(() => {
@@ -436,9 +463,12 @@ const BorrowComponent: React.FC = () => {
                   <BorrowOwnedCard
                     key={`${borrowPosition.asset.asset}-${sourceChain.chainId}`}
                     borrowPosition={borrowPosition}
-                    healthFactor={calculateHealthFactor()}
+                    healthFactor={healthFactorData}
                     totalCollateralUSD={getUserTotals().totalCollateralUSD}
                     totalDebtUSD={getUserTotals().totalDebtUSD}
+                    tokenPrice={
+                      tokenPrices[borrowPosition.asset.asset.toLowerCase()] || 1
+                    }
                     onRepay={async (position, amount) => {
                       console.log("Repay", amount, "of", position.asset.symbol);
                       // TODO: Implement repay functionality
@@ -526,22 +556,20 @@ const BorrowComponent: React.FC = () => {
                 )}
 
               {hasData &&
-                (!hasConnectedWallet ||
-                  userSupplyPositions.length > 0 ||
-                  !loading) &&
+                !loading &&
                 borrowableReserves.map((reserve) => {
+                  const borrowData = calculateAvailableToBorrow(reserve);
                   return (
-                    <BorrowCardWrapper
+                    <BorrowUnOwnedCard
                       key={`${reserve.asset}-${sourceChain.chainId}`}
-                      reserve={reserve}
-                      userSupplyPositions={userSupplyPositions}
-                      userBorrowPositions={userBorrowPositions}
-                      calculateAvailableToBorrow={calculateAvailableToBorrow}
+                      asset={reserve}
+                      availableToBorrow={borrowData.amount}
+                      availableToBorrowUSD={borrowData.amountUSD}
                       onBorrow={handleBorrow}
-                      healthFactor={calculateHealthFactor()}
+                      healthFactor={healthFactorData}
                       totalCollateralUSD={getUserTotals().totalCollateralUSD}
                       totalDebtUSD={getUserTotals().totalDebtUSD}
-                      tokenPrices={tokenPrices}
+                      tokenPrice={tokenPrices[reserve.asset.toLowerCase()] || 1}
                     />
                   );
                 })}

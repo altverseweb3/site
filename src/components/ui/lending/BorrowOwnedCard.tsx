@@ -23,6 +23,7 @@ interface BorrowOwnedCardProps {
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
   walletBalance?: string; // User's wallet balance of this token
+  tokenPrice?: number; // Current token price in USD
   onRepay?: (
     position: UserBorrowPosition,
     amount: string,
@@ -36,6 +37,7 @@ const BorrowOwnedCard = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   walletBalance = "0.00",
+  tokenPrice = 1,
   onRepay = async () => true,
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
@@ -134,8 +136,8 @@ const BorrowOwnedCard = ({
           stableDebt={borrowPosition.stableDebt}
           variableDebt={borrowPosition.variableDebt}
           healthFactor={healthFactor}
-          tokenPrice={1}
-          liquidationThreshold={0.85}
+          tokenPrice={tokenPrice}
+          liquidationThreshold={asset.liquidationThreshold || 0}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           onRepay={handleRepayComplete}

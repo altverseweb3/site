@@ -9,8 +9,7 @@ import {
   UserBorrowPosition,
   AaveReserveData,
 } from "@/utils/aave/fetch";
-import { getChainByChainId } from "@/config/chains";
-import { altverseAPI } from "@/api/altverse";
+import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
 
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
@@ -364,82 +363,30 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       const batchPromises = batch.map(async (reserve) => {
         const supplyAmount = parseFloat(reserve.formattedSupply || "0");
         const borrowAmount = parseFloat(reserve.formattedTotalBorrowed || "0");
-        let realPrice = 1;
 
         try {
-          const chainInfo = getChainByChainId(sourceChain.chainId);
-          if (chainInfo?.alchemyNetworkName) {
-            const priceResponse = await altverseAPI.getTokenPrices({
-              addresses: [
-                {
-                  network: chainInfo.alchemyNetworkName,
-                  address: reserve.asset,
-                },
-              ],
-            });
+          // Use the same oracle price logic as AssetDetailsModal
+          const extendedDetails = await fetchExtendedAssetDetails(
+            reserve,
+            sourceChain.chainId,
+          );
+          const oraclePrice =
+            extendedDetails.oraclePrice || extendedDetails.currentPrice || 1;
 
-            if (
-              !priceResponse.error &&
-              priceResponse.data?.data?.[0]?.prices?.[0]?.value
-            ) {
-              realPrice = parseFloat(
-                priceResponse.data.data[0].prices[0].value,
-              );
-            } else {
-              throw new Error("No price data");
-            }
-          } else {
-            throw new Error("No network info");
-          }
+          return {
+            supplyValueUSD: supplyAmount * oraclePrice,
+            borrowValueUSD: borrowAmount * oraclePrice,
+          };
         } catch (error) {
-          const userPosition = userSupplyPositions.find(
-            (pos) =>
-              pos.asset.asset.toLowerCase() === reserve.asset.toLowerCase(),
-            console.log(error),
+          console.warn(
+            `Unable to fetch oracle price for ${reserve.symbol}, using $1 fallback`,
+            error,
           );
-          const userBorrowPosition = userBorrowPositions.find(
-            (pos) =>
-              pos.asset.asset.toLowerCase() === reserve.asset.toLowerCase(),
-          );
-
-          if (
-            userPosition &&
-            userPosition.suppliedBalanceUSD &&
-            userPosition.suppliedBalance
-          ) {
-            const suppliedUSD = parseFloat(userPosition.suppliedBalanceUSD);
-            const suppliedAmount = parseFloat(userPosition.suppliedBalance);
-            if (suppliedAmount > 0) {
-              realPrice = suppliedUSD / suppliedAmount;
-            }
-          } else if (
-            userBorrowPosition &&
-            userBorrowPosition.totalDebtUSD &&
-            userBorrowPosition.formattedTotalDebt
-          ) {
-            const debtUSD = parseFloat(userBorrowPosition.totalDebtUSD);
-            const debtAmount = parseFloat(
-              userBorrowPosition.formattedTotalDebt,
-            );
-            if (debtAmount > 0) {
-              realPrice = debtUSD / debtAmount;
-            }
-          } else {
-            // Skip this reserve if we can't get real price data
-            console.warn(
-              `Unable to fetch real price for ${reserve.symbol}, skipping market calculation`,
-            );
-            return {
-              supplyValueUSD: 0,
-              borrowValueUSD: 0,
-            };
-          }
+          return {
+            supplyValueUSD: supplyAmount * 1,
+            borrowValueUSD: borrowAmount * 1,
+          };
         }
-
-        return {
-          supplyValueUSD: supplyAmount * realPrice,
-          borrowValueUSD: borrowAmount * realPrice,
-        };
       });
 
       const batchResults = await Promise.all(batchPromises);
@@ -467,14 +414,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       available: formatMarketValue(totalAvailableUSD),
       borrows: formatMarketValue(totalBorrowsUSD),
     };
-  }, [
-    hasConnectedWallet,
-    loading,
-    allReserves,
-    userSupplyPositions,
-    userBorrowPositions,
-    sourceChain.chainId,
-  ]);
+  }, [hasConnectedWallet, loading, allReserves, sourceChain.chainId]);
 
   const loadMarketMetrics = useCallback(async () => {
     try {

@@ -157,25 +157,37 @@ const BorrowModal: FC<BorrowModalProps> = ({
     setIsMounted(true);
   }, []);
 
+  // Calculate values (moved before early return to avoid hook order issues)
+  const borrowAmountNum = parseFloat(borrowAmount) || 0;
+  const borrowAmountUSD = borrowAmountNum * tokenPrice;
+  const currentHealthFactor = parseFloat(healthFactor) || 0;
+  const availableToBorrowNum = parseFloat(availableToBorrow) || 0;
+
+  // Check if stable rate is available
+  const stableBorrowAPYNum = parseFloat(stableBorrowAPY.replace("%", "")) || 0;
+  const isStableRateAvailable = stableBorrowAPYNum > 0;
+
   // Reset form when modal opens/closes
   useEffect(() => {
     if (!isMounted) return;
 
     if (isOpen) {
       setBorrowAmount("");
+      // Default to variable, or ensure we don't select stable if it's unavailable
       setRateMode("variable");
     }
   }, [isOpen, isMounted]);
 
+  // Auto-switch from stable to variable if stable becomes unavailable
+  useEffect(() => {
+    if (!isStableRateAvailable && rateMode === "stable") {
+      setRateMode("variable");
+    }
+  }, [isStableRateAvailable, rateMode]);
+
   if (!isMounted) {
     return null;
   }
-
-  // Calculate values
-  const borrowAmountNum = parseFloat(borrowAmount) || 0;
-  const borrowAmountUSD = borrowAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
-  const availableToBorrowNum = parseFloat(availableToBorrow) || 0;
 
   // Calculate new health factor
   const newHealthFactor =
@@ -422,16 +434,23 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 <div className="text-xs">{variableBorrowAPY}</div>
               </button>
               <button
-                onClick={() => setRateMode("stable")}
+                onClick={() => isStableRateAvailable && setRateMode("stable")}
+                disabled={!isStableRateAvailable}
                 className={cn(
                   "p-3 rounded-lg border text-left transition-colors",
-                  rateMode === "stable"
-                    ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
-                    : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-blue-500/30",
+                  !isStableRateAvailable
+                    ? "bg-[#27272A] border-[#3F3F46] text-[#71717A] opacity-50 cursor-not-allowed"
+                    : rateMode === "stable"
+                      ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
+                      : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-blue-500/30",
                 )}
               >
-                <div className="font-medium text-sm">Stable</div>
-                <div className="text-xs">{stableBorrowAPY}</div>
+                <div className="font-medium text-sm">
+                  Stable {!isStableRateAvailable && "(Unavailable)"}
+                </div>
+                <div className="text-xs">
+                  {isStableRateAvailable ? stableBorrowAPY : "0.00%"}
+                </div>
               </button>
             </div>
           </div>
