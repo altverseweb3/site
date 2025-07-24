@@ -328,6 +328,7 @@ const RepayModal: FC<RepayModalProps> = ({
     name: chainName,
     chainName: chainName,
     mayanName: chainName as MayanChainName,
+    mayanChainId: 1, // Default to Ethereum
     alchemyNetworkName: Network.ETH_MAINNET,
     nativeGasToken: {
       symbol: "ETH",
