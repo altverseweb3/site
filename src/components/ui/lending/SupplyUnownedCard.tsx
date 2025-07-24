@@ -61,6 +61,9 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
     formattedAvailableLiquidity: "",
     borrowCap: "",
     formattedBorrowCap: "",
+    ltv: 0.8,
+    liquidationThreshold: 0.85,
+    liquidationBonus: 0.05,
     isFrozen: false,
   };
 
