@@ -12,6 +12,7 @@ import {
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { SupplyModal } from "./SupplyModal";
+import AssetDetailsModal from "./AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 
@@ -20,7 +21,6 @@ interface SupplyUnOwnedCardProps {
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
   onSupply?: (asset: AaveReserveData) => void;
-  onDetails?: (asset: AaveReserveData) => void;
 }
 
 const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
@@ -28,7 +28,6 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   userBalance = "0",
   dollarAmount = "0.00",
   onSupply = () => {},
-  onDetails = () => {},
 }) => {
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
@@ -165,7 +164,9 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
         >
           <PrimaryButton>supply</PrimaryButton>
         </SupplyModal>
-        <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
+        <AssetDetailsModal assetData={currentAsset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

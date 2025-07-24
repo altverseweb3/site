@@ -182,11 +182,6 @@ const BorrowComponent: React.FC = () => {
     // TODO: Implement borrow functionality
   };
 
-  const handleDetails = (asset: AaveReserveData) => {
-    console.log("View asset details:", asset);
-    // TODO: Implement details modal
-  };
-
   const handleRefresh = () => {
     console.log("Manual refresh triggered");
     loadAaveReserves(true);
@@ -238,10 +233,6 @@ const BorrowComponent: React.FC = () => {
                       console.log("Repay", amount, "of", position.asset.symbol);
                       // TODO: Implement repay functionality
                       return true;
-                    }}
-                    onDetailsClick={(position) => {
-                      console.log("Details for", position.asset.symbol);
-                      // TODO: Implement details modal
                     }}
                   />
                 ))}
@@ -331,7 +322,6 @@ const BorrowComponent: React.FC = () => {
                       availableToBorrow={borrowData.amount}
                       availableToBorrowUSD={borrowData.amountUSD}
                       onBorrow={handleBorrow}
-                      onDetails={handleDetails}
                       healthFactor="1.24" // You'll want to get real health factor
                       totalCollateralUSD={0} // You'll want to get real values
                       totalDebtUSD={0} // You'll want to get real values

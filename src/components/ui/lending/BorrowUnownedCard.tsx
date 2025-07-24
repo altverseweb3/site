@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/Card";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { BorrowModal } from "./BorrowModal";
+import AssetDetailsModal from "./AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 
@@ -19,7 +20,6 @@ interface BorrowUnOwnedCardProps {
   availableToBorrow?: string; // Amount user can borrow based on collateral
   availableToBorrowUSD?: string; // USD value of borrowable amount
   onBorrow?: (asset: AaveReserveData) => void;
-  onDetails?: (asset: AaveReserveData) => void;
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
@@ -30,7 +30,6 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
   onBorrow = () => {},
-  onDetails = () => {},
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
@@ -182,7 +181,9 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
             {canBorrow ? "borrow" : "unavailable"}
           </PrimaryButton>
         </BorrowModal>
-        <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
+        <AssetDetailsModal assetData={currentAsset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

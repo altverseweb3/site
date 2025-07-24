@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { BlueButton, PrimaryButton } from "./SupplyButtonComponents";
+import {
+  BlueButton,
+  PrimaryButton,
+  GrayButton,
+} from "./SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
@@ -17,6 +21,7 @@ import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/aave/format";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
+import AssetDetailsModal from "./AssetDetailsModal";
 
 interface SupplyOwnedCardProps {
   asset?: AaveReserveData;
@@ -242,6 +247,10 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
+
+        <AssetDetailsModal assetData={currentAsset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

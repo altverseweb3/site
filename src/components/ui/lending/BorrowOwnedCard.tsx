@@ -27,7 +27,6 @@ interface BorrowOwnedCardProps {
     amount: string,
     rateMode: RateMode,
   ) => Promise<boolean>;
-  onDetailsClick?: (position: UserBorrowPosition) => void;
 }
 
 const BorrowOwnedCard = ({
@@ -37,7 +36,6 @@ const BorrowOwnedCard = ({
   totalDebtUSD = 0,
   walletBalance = "0.00",
   onRepay = async () => true,
-  onDetailsClick = () => {},
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
   const [isRepaying] = useState(false);
@@ -68,10 +66,6 @@ const BorrowOwnedCard = ({
       console.error("Error completing repay:", error);
       return false;
     }
-  };
-
-  const handleDetailsClick = () => {
-    onDetailsClick(borrowPosition);
   };
 
   const debtTypeDisplay = () => {
@@ -152,7 +146,9 @@ const BorrowOwnedCard = ({
           </BlueButton>
         </RepayModal>
 
-        <GrayButton onClick={handleDetailsClick}>details</GrayButton>
+        <AssetDetailsModal assetData={asset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );
