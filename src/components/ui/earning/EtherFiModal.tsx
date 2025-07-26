@@ -60,6 +60,14 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
     [],
   );
 
+  // Clear previous vault balance when modal opens or vault changes
+  useEffect(() => {
+    if (isOpen) {
+      setUserVaultBalance(null);
+      setIsLoadingBalance(false);
+    }
+  }, [isOpen, data?.id]); // Reset when modal opens or vault ID changes
+
   // Fetch user's vault balance when modal opens and wallet is connected
   useEffect(() => {
     const fetchUserBalance = async () => {
