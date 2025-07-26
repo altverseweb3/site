@@ -35,22 +35,18 @@ const BorrowLendComponent: React.FC = () => {
         </>
       ) : (
         <>
-          <div className="flex justify-center mt-8">
-            <div className="w-1/4 text-center">
-              <h2 className="text-lg font-semibold mb-4">
-                connect your wallet
-              </h2>
-              <p className="text-sm text-gray-500 mb-4">
-                to supply or borrow assets, please connect your wallet.
-              </p>
+          <div className="text-center py-16 md:py-24 px-4 md:px-8">
+            <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
+              please connect an EVM wallet (metamask, etc.) to view and manage
+              your positions.
+            </p>
+            <div className="flex justify-center">
+              <WalletConnectButton
+                className="w-1/4 text-center rounded-lg"
+                size="lg"
+                walletType={WalletType.REOWN_EVM}
+              />
             </div>
-          </div>
-          <div className="flex justify-center">
-            <WalletConnectButton
-              className="w-1/4 text-center"
-              size="lg"
-              walletType={WalletType.REOWN_EVM}
-            />
           </div>
         </>
       )}
