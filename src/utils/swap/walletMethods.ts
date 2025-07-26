@@ -1539,35 +1539,146 @@ export function parseSwapError(error: unknown): string {
     // Check for specific error patterns
     for (const pattern of patterns) {
       if (pattern.regex.test(errorString)) {
-        return pattern.message;
+        return truncateMessage(pattern.message);
       }
     }
 
     // Extract reason if present (common in revert errors)
     const reasonMatch = /reason="([^"]+)"/.exec(errorString);
     if (reasonMatch && reasonMatch[1]) {
-      return reasonMatch[1];
+      return truncateMessage(reasonMatch[1]);
     }
 
     // Extract message if present
     const messageMatch = /"message":"([^"]+)"/.exec(errorString);
     if (messageMatch && messageMatch[1]) {
-      return messageMatch[1];
+      return truncateMessage(messageMatch[1]);
     }
 
     // If error is actually an Error object
     if (error instanceof Error) {
-      return error.message;
+      return truncateMessage(error.message);
     }
 
     // If error is a string
     if (typeof error === "string") {
-      return error;
+      return truncateMessage(error);
     }
 
     return friendlyMessage;
   } catch (e) {
     console.error("Error parsing swap error:", e);
+    return friendlyMessage;
+  }
+}
+
+//Extract a user-friendly error message from deposit-related blockchain errors
+
+//Truncates error messages to 200-300 character limit for better UX
+
+function truncateMessage(message: string): string {
+  const MAX_LENGTH = 300;
+  const MIN_LENGTH = 200;
+
+  if (message.length <= MAX_LENGTH) {
+    return message;
+  }
+
+  // Try to find a good break point (sentence, word boundary) within the limit
+  const truncated = message.substring(0, MAX_LENGTH);
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf("."),
+    truncated.lastIndexOf("!"),
+    truncated.lastIndexOf("?"),
+  );
+
+  // If we found a sentence boundary after MIN_LENGTH, use it
+  if (lastSentenceEnd > MIN_LENGTH) {
+    return message.substring(0, lastSentenceEnd + 1);
+  }
+
+  // Otherwise, find the last word boundary
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > MIN_LENGTH) {
+    return message.substring(0, lastSpace) + "...";
+  }
+
+  // Fallback to hard truncation
+  return message.substring(0, MAX_LENGTH) + "...";
+}
+
+export function parseDepositError(error: unknown): string {
+  // Default fallback message
+  const friendlyMessage = "Something went wrong with your deposit";
+
+  try {
+    if (!error) return friendlyMessage;
+
+    // Convert to string for easier parsing
+    const errorString = JSON.stringify(error);
+
+    // Try to extract common error patterns
+    const patterns = [
+      // User rejection errors - CHECK FIRST to avoid false matches with gas/fee keywords
+      {
+        regex:
+          /user rejected action|ethers-user-denied|User rejected the request|user denied/i,
+        message: "Transaction was cancelled by user",
+      },
+      // Balance errors
+      {
+        regex: /transfer amount exceeds balance/i,
+        message: "Insufficient token balance for this deposit",
+      },
+      // Gas errors
+      {
+        regex: /gas|fee|ETH balance|execution reverted/i,
+        message: "Not enough ETH to cover gas fees",
+      },
+      // Approval errors
+      {
+        regex: /allowance|approve|permission|ERC20: insufficient allowance/i,
+        message: "Token approval required. Please try again.",
+      },
+      // Timeout errors
+      {
+        regex: /timeout|timed? out|expired/i,
+        message: "Request timed out. Please try again.",
+      },
+    ];
+
+    // Check for specific error patterns
+    for (const pattern of patterns) {
+      if (pattern.regex.test(errorString)) {
+        return truncateMessage(pattern.message);
+      }
+    }
+
+    // Extract reason if present (common in revert errors)
+    const reasonMatch = /reason="([^"]+)"/.exec(errorString);
+    if (reasonMatch && reasonMatch[1]) {
+      return truncateMessage(reasonMatch[1]);
+    }
+
+    // Extract message if present
+    const messageMatch = /"message":"([^"]+)"/.exec(errorString);
+    if (messageMatch && messageMatch[1]) {
+      return truncateMessage(messageMatch[1]);
+    }
+
+    // If error is actually an Error object
+    if (error instanceof Error) {
+      return truncateMessage(error.message);
+    }
+
+    // If error is a string
+    if (typeof error === "string") {
+      return truncateMessage(error);
+    }
+
+    return friendlyMessage;
+  } catch (e) {
+    console.error("Error parsing deposit error:", e);
     return friendlyMessage;
   }
 }

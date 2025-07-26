@@ -33,7 +33,11 @@ import {
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/utils/etherFi/interact";
-import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
+import {
+  useChainSwitch,
+  useTokenTransfer,
+  parseDepositError,
+} from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
 import useWeb3Store, {
@@ -286,25 +290,22 @@ const DepositModal: React.FC<DepositModalProps> = ({
               "❌ Deposit failed after approval:",
               depositResult.message,
             );
-            failDepositStep(
-              processId,
+            const friendlyError = parseDepositError(
               depositResult.message || "Deposit failed after approval",
             );
+            failDepositStep(processId, friendlyError);
             return false;
           }
         } else {
           console.error("❌ Approval failed:", approvalResult.message);
-          failDepositStep(
-            processId,
-            `Approval failed: ${approvalResult.message}`,
-          );
+          const friendlyError = parseDepositError(approvalResult.message);
+          failDepositStep(processId, friendlyError);
           return false;
         }
       } catch (error) {
         console.error("❌ Approval error:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        failDepositStep(processId, `Approval error: ${errorMessage}`);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(processId, friendlyError);
         return false;
       }
     },
@@ -391,14 +392,16 @@ const DepositModal: React.FC<DepositModalProps> = ({
           return true;
         } else {
           console.error("❌ Deposit failed:", result.message);
-          failDepositStep(processId, result.message || "Deposit failed");
+          const friendlyError = parseDepositError(
+            result.message || "Deposit failed",
+          );
+          failDepositStep(processId, friendlyError);
           return false;
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        console.error("❌ Vault deposit error:", errorMessage);
-        failDepositStep(processId, errorMessage);
+        console.error("❌ Vault deposit error:", error);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(processId, friendlyError);
         return false;
       }
     },
@@ -691,10 +694,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
         }
       } catch (error) {
         if (isCancelled) return;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        console.error("❌ Cross-chain vault deposit error:", errorMessage);
-        failDepositStep(process.id, errorMessage);
+        console.error("❌ Cross-chain vault deposit error:", error);
+        const friendlyError = parseDepositError(error);
+        failDepositStep(process.id, friendlyError);
       } finally {
         operationInProgress.current = false;
       }
@@ -1119,7 +1121,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           {/* Process Progress */}
           {activeProcess && activeProcess.state !== "CANCELLED" && (
             <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
-              <div className="text-sm text-wrap font-medium text-[#FAFAFA] mb-3 break-all">
+              <div className="text-sm font-medium text-[#FAFAFA] mb-3 break-words">
                 {formatErrorMessage(processProgress?.description) ||
                   "Processing..."}
               </div>
@@ -1437,10 +1439,25 @@ const DepositModal: React.FC<DepositModalProps> = ({
                 <div className="relative">
                   <Input
                     type="number"
+                    step="any"
+                    min="0"
                     placeholder="0.00"
                     value={swapAmount}
                     onChange={(e) => {
-                      handleSwapAmountChange(e);
+                      // Only allow positive numbers
+                      const value = parseFloat(e.target.value);
+                      if (
+                        e.target.value === "" ||
+                        (!isNaN(value) && value >= 0)
+                      ) {
+                        handleSwapAmountChange(e);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevent negative sign and scientific notation
+                      if (e.key === "-" || e.key === "e" || e.key === "E") {
+                        e.preventDefault();
+                      }
                     }}
                     className="pr-20 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A] font-mono"
                   />
