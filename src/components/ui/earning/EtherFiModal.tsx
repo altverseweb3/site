@@ -189,7 +189,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
             (isWalletConnected && (userVaultBalance || isLoadingBalance))) && (
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <h3 className="text-sm font-medium text-[#FAFAFA] mb-2">
+                <h3 className="text-lg font-bold text-[#FAFAFA] mb-1 mt-1">
                   balance
                 </h3>
                 <div className="flex items-center gap-2">
@@ -223,8 +223,8 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                   <ExternalLink className="h-3 w-3 text-[#A1A1AA] ml-1" />
                 </div>
               </div>
-              <div>
-                <h3 className="text-sm font-medium text-[#FAFAFA] mb-2">
+              <div className="text-right">
+                <h3 className="text-lg font-bold text-[#FAFAFA] mb-1 mt-1">
                   value
                 </h3>
                 <div className="text-[#FAFAFA] font-mono">
