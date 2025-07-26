@@ -313,7 +313,6 @@ export async function executeSuiSwap({
 }): Promise<string> {
   try {
     if (!quote) throw new Error("Invalid quote");
-
     const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
 
     // Get the transaction block from Mayan SDK
