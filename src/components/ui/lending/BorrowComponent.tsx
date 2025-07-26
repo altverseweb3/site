@@ -43,72 +43,58 @@ const BorrowComponent: React.FC = () => {
 
   const hasConnectedWallet = !!wallet?.address;
 
-  // Get health factor from Aave contract data
-  const [healthFactorData, setHealthFactorData] = useState<string>("∞");
-
-  const calculateHealthFactor = useCallback(() => {
-    if (!hasConnectedWallet || userSupplyPositions.length === 0) {
-      setHealthFactorData("∞");
-      return;
-    }
-
-    try {
-      // Calculate weighted collateral based on liquidation thresholds
-      let totalCollateralWeighted = 0;
-      userSupplyPositions.forEach((position) => {
-        if (position.isCollateral) {
-          const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
-          const liquidationThreshold = position.asset.liquidationThreshold || 0;
-
-          // Ensure liquidation threshold is in decimal form (0.0-1.0)
-          const liquidationThresholdDecimal =
-            liquidationThreshold > 1
-              ? liquidationThreshold / 100
-              : liquidationThreshold;
-
-          totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
-        }
-      });
-
-      // Calculate total debt
-      const totalDebtUSD = userBorrowPositions.reduce((sum, position) => {
-        return sum + parseFloat(position.totalDebtUSD || "0");
-      }, 0);
-
-      // Calculate health factor
-      if (totalDebtUSD === 0) {
-        setHealthFactorData("∞");
-      } else {
-        const healthFactor = totalCollateralWeighted / totalDebtUSD;
-        setHealthFactorData(healthFactor.toFixed(2));
-      }
-    } catch (error) {
-      console.error("Error calculating health factor:", error);
-      setHealthFactorData("∞");
-    }
-  }, [hasConnectedWallet, userSupplyPositions, userBorrowPositions]);
-
-  // Update health factor when data changes
-  useEffect(() => {
-    calculateHealthFactor();
-  }, [calculateHealthFactor]);
-
-  // Calculate real total collateral and debt
+  // Get health factor from user positions data
   const getUserTotals = () => {
-    const totalCollateralUSD = userSupplyPositions.reduce((sum, position) => {
-      // Only count positions that are used as collateral
-      if (position.isCollateral) {
-        return sum + parseFloat(position.suppliedBalanceUSD || "0");
-      }
-      return sum;
-    }, 0);
+    if (!hasConnectedWallet) {
+      return {
+        healthFactor: "∞",
+        totalCollateralUSD: 0,
+        totalDebtUSD: 0,
+      };
+    }
 
+    // Calculate total collateral from supply positions
+    let totalCollateralWeighted = 0;
+    userSupplyPositions.forEach((position) => {
+      if (position.isCollateral) {
+        const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+        const liquidationThreshold = position.asset.liquidationThreshold || 0;
+
+        // Ensure liquidation threshold is in decimal form (0.0-1.0)
+        const liquidationThresholdDecimal =
+          liquidationThreshold > 1
+            ? liquidationThreshold / 100
+            : liquidationThreshold;
+
+        totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
+      }
+    });
+
+    // Calculate total debt from borrow positions
     const totalDebtUSD = userBorrowPositions.reduce((sum, position) => {
       return sum + parseFloat(position.totalDebtUSD || "0");
     }, 0);
 
-    return { totalCollateralUSD, totalDebtUSD };
+    // Calculate health factor
+    let healthFactor = "∞";
+    if (totalDebtUSD > 0) {
+      const hf = totalCollateralWeighted / totalDebtUSD;
+      healthFactor = hf.toFixed(2);
+    }
+
+    return {
+      healthFactor,
+      totalCollateralUSD: userSupplyPositions.reduce((sum, position) => {
+        if (position.isCollateral) {
+          return sum + parseFloat(position.suppliedBalanceUSD || "0");
+        }
+        return sum;
+      }, 0),
+      totalDebtUSD,
+    };
   };
+
+  const userTotals = getUserTotals();
 
   // Get oracle price for a reserve using the same logic as AssetDetailsModal
   const getOraclePrice = useCallback(
@@ -291,8 +277,8 @@ const BorrowComponent: React.FC = () => {
         // Use the availableLiquidity field from your example data
         const availableLiquidity = parseFloat(
           reserve.availableLiquidity ||
-          reserve.formattedAvailableLiquidity ||
-          "0",
+            reserve.formattedAvailableLiquidity ||
+            "0",
         );
 
         console.log(`Reserve ${reserve.symbol}:`, {
@@ -463,15 +449,16 @@ const BorrowComponent: React.FC = () => {
                   <BorrowOwnedCard
                     key={`${borrowPosition.asset.asset}-${sourceChain.chainId}`}
                     borrowPosition={borrowPosition}
-                    healthFactor={healthFactorData}
-                    totalCollateralUSD={getUserTotals().totalCollateralUSD}
-                    totalDebtUSD={getUserTotals().totalDebtUSD}
+                    healthFactor={userTotals.healthFactor}
+                    totalCollateralUSD={userTotals.totalCollateralUSD}
+                    totalDebtUSD={userTotals.totalDebtUSD}
                     tokenPrice={
                       tokenPrices[borrowPosition.asset.asset.toLowerCase()] || 1
                     }
                     onRepay={async (position, amount) => {
                       console.log("Repay", amount, "of", position.asset.symbol);
-                      // TODO: Implement repay functionality
+                      // Refresh data after successful repay
+                      await loadAaveReserves(true);
                       return true;
                     }}
                   />
@@ -566,9 +553,9 @@ const BorrowComponent: React.FC = () => {
                       availableToBorrow={borrowData.amount}
                       availableToBorrowUSD={borrowData.amountUSD}
                       onBorrow={handleBorrow}
-                      healthFactor={healthFactorData}
-                      totalCollateralUSD={getUserTotals().totalCollateralUSD}
-                      totalDebtUSD={getUserTotals().totalDebtUSD}
+                      healthFactor={userTotals.healthFactor}
+                      totalCollateralUSD={userTotals.totalCollateralUSD}
+                      totalDebtUSD={userTotals.totalDebtUSD}
                       tokenPrice={tokenPrices[reserve.asset.toLowerCase()] || 1}
                     />
                   );

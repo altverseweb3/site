@@ -34,13 +34,19 @@ const calculateNewHealthFactorForCollateral = (
     return 999; // No debt means very high health factor
   }
 
+  // Ensure liquidation threshold is in decimal form (0.0-1.0)
+  const liquidationThresholdDecimal =
+    liquidationThreshold > 1
+      ? liquidationThreshold / 100
+      : liquidationThreshold;
+
   // If enabling: add to collateral, if disabling: subtract from collateral
   const newTotalCollateral = isEnabling
     ? currentTotalCollateralUSD + assetCollateralUSD
     : currentTotalCollateralUSD - assetCollateralUSD;
 
   const adjustedCollateral =
-    Math.max(0, newTotalCollateral) * liquidationThreshold;
+    Math.max(0, newTotalCollateral) * liquidationThresholdDecimal;
 
   return adjustedCollateral / currentTotalDebtUSD;
 };
@@ -374,9 +380,9 @@ const CollateralModal: FC<CollateralModalProps> = ({
             )}
           </div>
 
-          {/* Health Factor Impact */}
+          {/* Health Factor Impact Display */}
           {totalDebtUSD > 0 && (
-            <div className="space-y-3 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-[#A1A1AA]">Current Health Factor</span>
                 <span className={getHealthFactorColor(currentHealthFactor)}>
@@ -403,6 +409,85 @@ const CollateralModal: FC<CollateralModalProps> = ({
                   </span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Health Factor Impact Message */}
+          {totalDebtUSD > 0 && Math.abs(healthFactorChange) > 0.01 && (
+            <div
+              className={`flex items-center gap-2 p-3 rounded-lg ${
+                isEnabling
+                  ? "bg-green-500/10 border border-green-500/20"
+                  : healthFactorChange < -0.1
+                    ? "bg-red-500/10 border border-red-500/20"
+                    : "bg-orange-500/10 border border-orange-500/20"
+              }`}
+            >
+              <div
+                className={
+                  isEnabling
+                    ? "text-green-500"
+                    : healthFactorChange < -0.1
+                      ? "text-red-500"
+                      : "text-orange-500"
+                }
+              >
+                {isEnabling ? (
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                ) : healthFactorChange < -0.1 ? (
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+              </div>
+              <div className="text-sm">
+                <div className="text-[#FAFAFA] font-medium">
+                  {isEnabling
+                    ? "Health Factor Improvement"
+                    : "Health Factor Impact"}
+                </div>
+                <div className="text-[#A1A1AA] text-xs">
+                  {isEnabling
+                    ? `Enabling this asset as collateral will improve your health factor by ${healthFactorChange.toFixed(2)}`
+                    : `Disabling this collateral will reduce your health factor by ${Math.abs(healthFactorChange).toFixed(2)}`}
+                </div>
+              </div>
             </div>
           )}
 

@@ -33,6 +33,9 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   >([]);
   const [loading, setLoading] = useState(false);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
+  const [lastMarketMetricsChainId, setLastMarketMetricsChainId] = useState<
+    number | null
+  >(null);
   const [marketMetrics, setMarketMetrics] = useState({
     marketSize: "--",
     available: "--",
@@ -145,6 +148,12 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       setUserSupplyPositions([]);
       setUserBorrowPositions([]);
       setAllReserves([]);
+      setMarketMetrics({
+        marketSize: "--",
+        available: "--",
+        borrows: "--",
+      });
+      setLastMarketMetricsChainId(null);
     }
   }, [sourceChain.chainId, lastChainId]);
 
@@ -343,7 +352,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   };
 
   const calculateMarketMetrics = useCallback(async () => {
-    if (!hasConnectedWallet || loading || allReserves.length === 0) {
+    if (!hasConnectedWallet || allReserves.length === 0) {
       return {
         marketSize: "--",
         available: "--",
@@ -414,12 +423,13 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       available: formatMarketValue(totalAvailableUSD),
       borrows: formatMarketValue(totalBorrowsUSD),
     };
-  }, [hasConnectedWallet, loading, allReserves, sourceChain.chainId]);
+  }, [hasConnectedWallet, allReserves, sourceChain.chainId]);
 
   const loadMarketMetrics = useCallback(async () => {
     try {
       const metrics = await calculateMarketMetrics();
       setMarketMetrics(metrics);
+      setLastMarketMetricsChainId(sourceChain.chainId);
     } catch (error) {
       console.error("Error calculating market metrics:", error);
       setMarketMetrics({
@@ -428,13 +438,25 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         borrows: "--",
       });
     }
-  }, [calculateMarketMetrics]);
+  }, [calculateMarketMetrics, sourceChain.chainId]);
 
   useEffect(() => {
-    if (hasConnectedWallet && allReserves.length > 0 && !loading) {
+    if (
+      hasConnectedWallet &&
+      allReserves.length > 0 &&
+      !loading &&
+      lastMarketMetricsChainId !== sourceChain.chainId
+    ) {
       loadMarketMetrics();
     }
-  }, [loadMarketMetrics, hasConnectedWallet, allReserves.length, loading]);
+  }, [
+    loadMarketMetrics,
+    hasConnectedWallet,
+    allReserves.length,
+    loading,
+    lastMarketMetricsChainId,
+    sourceChain.chainId,
+  ]);
 
   const getHealthFactorColor = (healthFactor: number | null) => {
     if (healthFactor === null) return "text-white";

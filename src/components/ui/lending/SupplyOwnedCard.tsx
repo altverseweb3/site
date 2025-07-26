@@ -31,6 +31,7 @@ interface SupplyOwnedCardProps {
   healthFactor?: string; // User's current health factor
   totalCollateralUSD?: number; // User's total collateral value
   totalDebtUSD?: number; // User's total debt value
+  tokenPrice?: number; // Current token price in USD
   onSwitch?: (asset: AaveReserveData) => void;
   onWithdraw?: (asset: AaveReserveData) => void;
   onCollateralChange?: (
@@ -51,6 +52,7 @@ const SupplyOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  tokenPrice = 1,
   onSwitch = () => {},
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
@@ -170,7 +172,7 @@ const SupplyOwnedCard = ({
               isolationModeEnabled={isIsolationMode}
               canBeCollateral={canBeCollateral}
               healthFactor={healthFactor}
-              tokenPrice={1} // TODO: Pass real price data from parent component
+              tokenPrice={tokenPrice}
               liquidationThreshold={currentAsset.liquidationThreshold || 0}
               totalCollateralUSD={totalCollateralUSD}
               totalDebtUSD={totalDebtUSD}
@@ -207,7 +209,7 @@ const SupplyOwnedCard = ({
           supplyAPY={supplyAPY}
           isCollateral={collateral}
           healthFactor={healthFactor}
-          tokenPrice={1} // TODO: Pass real price data from parent component
+          tokenPrice={tokenPrice}
           liquidationThreshold={currentAsset.liquidationThreshold || 0}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}

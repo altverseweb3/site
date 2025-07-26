@@ -20,6 +20,10 @@ interface SupplyUnOwnedCardProps {
   asset?: AaveReserveData;
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
+  healthFactor?: string; // User's current health factor
+  totalCollateralUSD?: number; // User's total collateral value
+  totalDebtUSD?: number; // User's total debt value
+  tokenPrice?: number; // Current token price in USD
   onSupply?: (asset: AaveReserveData) => void;
 }
 
@@ -27,6 +31,10 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   asset,
   userBalance = "0",
   dollarAmount = "0.00",
+  healthFactor = "1.24",
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+  tokenPrice = 1,
   onSupply = () => {},
 }) => {
   // Default asset for demo purposes
@@ -122,11 +130,11 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
           balance={userBalance}
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
-          healthFactor="0"
-          tokenPrice={1} // TODO: Pass real price data from parent component
+          healthFactor={healthFactor}
+          tokenPrice={tokenPrice}
           liquidationThreshold={currentAsset.liquidationThreshold || 0}
-          totalCollateralUSD={0}
-          totalDebtUSD={0}
+          totalCollateralUSD={totalCollateralUSD}
+          totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset}
           tokenDecimals={currentAsset.decimals}
           onSupply={async () => {

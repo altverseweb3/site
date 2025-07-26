@@ -10,23 +10,119 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnOwnedCard from "./SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
-import { useSourceChain } from "@/store/web3Store";
+import useWeb3Store, { useSourceChain } from "@/store/web3Store";
 import {
   AaveReserveData,
   useAaveFetch,
   UserPosition,
+  UserBorrowPosition,
 } from "@/utils/aave/fetch";
+import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
   const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
+  const [userBorrowPositions, setUserBorrowPositions] = useState<
+    UserBorrowPosition[]
+  >([]);
+  const [tokenPrices, setTokenPrices] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [positionsLoading, setPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const sourceChain = useSourceChain();
-  const { fetchAllReservesData, fetchUserPositions } = useAaveFetch();
+  const { getWalletByType } = useWeb3Store();
+  const wallet = getWalletByType(sourceChain.walletType);
+  const { fetchAllReservesData, fetchUserPositions, fetchUserBorrowPositions } =
+    useAaveFetch();
+
+  const hasConnectedWallet = !!wallet?.address;
+
+  // Get health factor from user positions data
+  const getUserTotals = () => {
+    if (!hasConnectedWallet) {
+      return {
+        healthFactor: "∞",
+        totalCollateralUSD: 0,
+        totalDebtUSD: 0,
+      };
+    }
+
+    // Calculate total collateral from supply positions
+    let totalCollateralWeighted = 0;
+    userPositions.forEach((position) => {
+      if (position.isCollateral) {
+        const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+        const liquidationThreshold = position.asset.liquidationThreshold || 0;
+
+        // Ensure liquidation threshold is in decimal form (0.0-1.0)
+        const liquidationThresholdDecimal =
+          liquidationThreshold > 1
+            ? liquidationThreshold / 100
+            : liquidationThreshold;
+
+        totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
+      }
+    });
+
+    // Calculate total debt from borrow positions
+    const totalDebtUSD = userBorrowPositions.reduce((sum, position) => {
+      return sum + parseFloat(position.totalDebtUSD || "0");
+    }, 0);
+
+    // Calculate health factor
+    let healthFactor = "∞";
+    if (totalDebtUSD > 0) {
+      const hf = totalCollateralWeighted / totalDebtUSD;
+      healthFactor = hf.toFixed(2);
+    }
+
+    return {
+      healthFactor,
+      totalCollateralUSD: userPositions.reduce((sum, position) => {
+        if (position.isCollateral) {
+          return sum + parseFloat(position.suppliedBalanceUSD || "0");
+        }
+        return sum;
+      }, 0),
+      totalDebtUSD,
+    };
+  };
+
+  const userTotals = getUserTotals();
+
+  // Get oracle price for a reserve
+  const getOraclePrice = useCallback(
+    async (reserve: AaveReserveData): Promise<number> => {
+      const cached = tokenPrices[reserve.asset.toLowerCase()];
+      if (cached) return cached;
+
+      try {
+        const extendedDetails = await fetchExtendedAssetDetails(
+          reserve,
+          sourceChain.chainId,
+        );
+        const oraclePrice =
+          extendedDetails.oraclePrice || extendedDetails.currentPrice || 1;
+
+        // Cache the oracle price
+        setTokenPrices((prev) => ({
+          ...prev,
+          [reserve.asset.toLowerCase()]: oraclePrice,
+        }));
+
+        return oraclePrice;
+      } catch (error) {
+        console.error(
+          `Error fetching oracle price for ${reserve.symbol}:`,
+          error,
+        );
+        return 1;
+      }
+    },
+    [sourceChain.chainId, tokenPrices],
+  );
 
   // Move loadUserPositions to useCallback to fix dependency warning
   const loadUserPositions = useCallback(
@@ -48,6 +144,21 @@ const SupplyComponent: React.FC = () => {
       }
     },
     [fetchUserPositions],
+  );
+
+  // Load user borrow positions for health factor calculation
+  const loadUserBorrowPositions = useCallback(
+    async (reserves: AaveReserveData[]) => {
+      try {
+        console.log("Fetching user borrow positions...");
+        const borrowPositions = await fetchUserBorrowPositions(reserves);
+        setUserBorrowPositions(borrowPositions);
+      } catch (err) {
+        console.error("Error loading user borrow positions:", err);
+        setUserBorrowPositions([]);
+      }
+    },
+    [fetchUserBorrowPositions],
   );
 
   const loadAaveReserves = useCallback(
@@ -83,8 +194,17 @@ const SupplyComponent: React.FC = () => {
         setAaveReserves(reservesData.supplyAssets);
         setLastChainId(sourceChain.chainId);
 
-        // Now fetch user positions (supplied assets)
-        await loadUserPositions(reservesData.supplyAssets);
+        // Load both user supply and borrow positions for health factor calculation
+        await Promise.all([
+          loadUserPositions(reservesData.supplyAssets),
+          loadUserBorrowPositions(reservesData.borrowAssets),
+        ]);
+
+        // Preload oracle prices for calculation accuracy
+        const pricePromises = reservesData.supplyAssets.map((reserve) =>
+          getOraclePrice(reserve).catch(() => 1),
+        );
+        await Promise.all(pricePromises);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);
         setError(
@@ -93,6 +213,7 @@ const SupplyComponent: React.FC = () => {
         // Clear data on error
         setAaveReserves([]);
         setUserPositions([]);
+        setUserBorrowPositions([]);
       } finally {
         setLoading(false);
       }
@@ -103,7 +224,9 @@ const SupplyComponent: React.FC = () => {
       sourceChain.chainId,
       aaveReserves.length,
       fetchAllReservesData,
-      loadUserPositions, // Added this dependency
+      loadUserPositions,
+      loadUserBorrowPositions,
+      getOraclePrice,
     ],
   );
 
@@ -117,6 +240,7 @@ const SupplyComponent: React.FC = () => {
     if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
       setAaveReserves([]);
       setUserPositions([]);
+      setUserBorrowPositions([]);
       setError(null);
     }
   }, [sourceChain.chainId, lastChainId]);
@@ -128,6 +252,7 @@ const SupplyComponent: React.FC = () => {
       // Immediately clear cards and show loading state
       setAaveReserves([]);
       setUserPositions([]);
+      setUserBorrowPositions([]);
       setError(null);
       setLoading(true);
 
@@ -215,6 +340,12 @@ const SupplyComponent: React.FC = () => {
                     suppliedBalance={position.suppliedBalance}
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
                     isCollateral={position.isCollateral}
+                    healthFactor={userTotals.healthFactor}
+                    totalCollateralUSD={userTotals.totalCollateralUSD}
+                    totalDebtUSD={userTotals.totalDebtUSD}
+                    tokenPrice={
+                      tokenPrices[position.asset.asset.toLowerCase()] || 1
+                    }
                     onSwitch={handleSwitch}
                     onWithdraw={handleWithdraw}
                   />
@@ -280,6 +411,10 @@ const SupplyComponent: React.FC = () => {
                     asset={reserve}
                     userBalance={reserve.userBalanceFormatted || "0.00"}
                     dollarAmount={reserve.userBalanceUsd || "0.00"}
+                    healthFactor={userTotals.healthFactor}
+                    totalCollateralUSD={userTotals.totalCollateralUSD}
+                    totalDebtUSD={userTotals.totalDebtUSD}
+                    tokenPrice={tokenPrices[reserve.asset.toLowerCase()] || 1}
                     onSupply={handleSupply}
                   />
                 ))}

@@ -245,7 +245,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                       <div className="space-y-2">
                         {metrics.supplyCapFormatted !== "Unlimited" &&
-                          metrics.supplyCapUtilization > 0 ? (
+                        metrics.supplyCapUtilization > 0 ? (
                           <>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-zinc-400">
@@ -291,7 +291,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                       <div className="space-y-2">
                         {metrics.borrowCapFormatted !== "No cap" &&
-                          metrics.borrowCapUtilization > 0 ? (
+                        metrics.borrowCapUtilization > 0 ? (
                           <>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-zinc-400">

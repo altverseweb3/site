@@ -35,8 +35,14 @@ const calculateNewHealthFactor = (
     return 999; // No debt means very high health factor
   }
 
+  // Ensure liquidation threshold is in decimal form (0.0-1.0)
+  const liquidationThresholdDecimal =
+    liquidationThreshold > 1
+      ? liquidationThreshold / 100
+      : liquidationThreshold;
+
   const newTotalCollateral = currentTotalCollateralUSD + newSupplyAmountUSD;
-  const adjustedCollateral = newTotalCollateral * liquidationThreshold;
+  const adjustedCollateral = newTotalCollateral * liquidationThresholdDecimal;
 
   return adjustedCollateral / currentTotalDebtUSD;
 };
@@ -152,12 +158,13 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
   // Calculate new health factor only if asset can be collateral and there's debt
+  // Note: We only add the new supply amount to collateral if the asset will be used as collateral
   const newHealthFactor =
     canBeCollateral && totalDebtUSD > 0
       ? calculateNewHealthFactor(
           totalCollateralUSD,
           totalDebtUSD,
-          supplyAmountUSD,
+          supplyAmountUSD, // This gets added to collateral if canBeCollateral is true
           liquidationThreshold,
         )
       : currentHealthFactor;
@@ -395,6 +402,64 @@ const SupplyModal: FC<SupplyModalProps> = ({
             )}
           </div>
 
+          {/* Health Factor Impact Display */}
+          {supplyAmountNum > 0 &&
+            Math.abs(healthFactorChange) > 0.01 &&
+            canBeCollateral &&
+            totalDebtUSD > 0 && (
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#A1A1AA]">Current Health Factor</span>
+                  <span className={getHealthFactorColor(currentHealthFactor)}>
+                    {currentHealthFactor.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#A1A1AA]">New Health Factor</span>
+                  <span className={getHealthFactorColor(newHealthFactor)}>
+                    {newHealthFactor.toFixed(2)}
+                    <span className="text-green-500">
+                      {" "}
+                      (+{healthFactorChange.toFixed(2)})
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+          {/* Health Factor Improvement Message */}
+          {supplyAmountNum > 0 &&
+            healthFactorChange > 0.01 &&
+            canBeCollateral &&
+            totalDebtUSD > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="text-green-500">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="text-sm">
+                  <div className="text-[#FAFAFA] font-medium">
+                    Health Factor Improvement
+                  </div>
+                  <div className="text-[#A1A1AA] text-xs">
+                    Supplying this amount as collateral will improve your health
+                    factor by {healthFactorChange.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            )}
+
           {/* Asset Details */}
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
@@ -413,27 +478,18 @@ const SupplyModal: FC<SupplyModalProps> = ({
               </span>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Current Health Factor</span>
-              <span className={getHealthFactorColor(currentHealthFactor)}>
-                {currentHealthFactor.toFixed(2)}
-              </span>
-            </div>
-
-            {/* New Health Factor (only show if there's a meaningful change) */}
-            {supplyAmountNum > 0 &&
-              Math.abs(healthFactorChange) > 0.01 &&
-              canBeCollateral && (
-                <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">New Health Factor</span>
-                  <span className={getHealthFactorColor(newHealthFactor)}>
-                    {newHealthFactor.toFixed(2)}
-                    <span className="text-green-500 ml-1">
-                      (+{healthFactorChange.toFixed(2)})
-                    </span>
-                  </span>
-                </div>
-              )}
+            {/* Show current health factor only if no debt or no improvement to show */}
+            {(totalDebtUSD === 0 ||
+              supplyAmountNum === 0 ||
+              Math.abs(healthFactorChange) <= 0.01 ||
+              !canBeCollateral) && (
+              <div className="flex justify-between">
+                <span className="text-[#A1A1AA]">Current Health Factor</span>
+                <span className={getHealthFactorColor(currentHealthFactor)}>
+                  {totalDebtUSD === 0 ? "∞" : currentHealthFactor.toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Supply Button */}

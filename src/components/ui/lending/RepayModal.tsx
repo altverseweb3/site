@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { cn } from "@/lib/utils";
 import { AaveTransactions, RateMode } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ethers } from "ethers";
@@ -413,52 +412,93 @@ const RepayModal: FC<RepayModalProps> = ({
               )}
             </div>
 
-            {/* Health Factor Impact */}
+            {/* Health Factor Impact Display */}
             {totalDebtUSD > 0 && repayAmountNum > 0 && (
-              <div className="space-y-3 p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm font-medium">
-                    Health Factor Impact
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Current</span>
-                  <span
-                    className={cn(
-                      "text-sm font-medium",
-                      getHealthFactorColor(currentHealthFactor),
-                    )}
-                  >
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#A1A1AA]">Current Health Factor</span>
+                  <span className={getHealthFactorColor(currentHealthFactor)}>
                     {currentHealthFactor.toFixed(2)}
                   </span>
                 </div>
-
-                <div className="flex items-center justify-center text-gray-400">
-                  <ArrowRight className="h-4 w-4" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">After Repayment</span>
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        "text-sm font-medium",
-                        getHealthFactorColor(newHealthFactor),
-                      )}
-                    >
-                      {newHealthFactor.toFixed(2)}
-                    </span>
-                    {healthFactorChange !== 0 && (
-                      <div className="text-xs text-green-400">
-                        +{healthFactorChange.toFixed(2)}
-                      </div>
+                <div className="flex justify-between">
+                  <span className="text-[#A1A1AA]">New Health Factor</span>
+                  <span className={getHealthFactorColor(newHealthFactor)}>
+                    {newHealthFactor === 999 ? "∞" : newHealthFactor.toFixed(2)}
+                    {healthFactorChange > 0 && (
+                      <span className="text-green-500">
+                        {" "}
+                        (+{healthFactorChange.toFixed(2)})
+                      </span>
                     )}
-                  </div>
+                  </span>
                 </div>
               </div>
             )}
+
+            {/* Health Factor Improvement Message */}
+            {repayAmountNum > 0 &&
+              healthFactorChange > 0.01 &&
+              totalDebtUSD > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="text-green-500">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-sm">
+                    <div className="text-[#FAFAFA] font-medium">
+                      Health Factor Improvement
+                    </div>
+                    <div className="text-[#A1A1AA] text-xs">
+                      {newHealthFactor === 999
+                        ? "Repaying this amount will eliminate all debt and restore infinite health factor"
+                        : `Repaying this amount will improve your health factor by ${healthFactorChange.toFixed(2)}`}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {/* Full Debt Repayment Message */}
+            {repayAmountNum > 0 &&
+              repayAmountNum >= parseFloat(currentDebt) && (
+                <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <div className="text-blue-500">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-sm">
+                    <div className="text-[#FAFAFA] font-medium">
+                      Full Debt Repayment
+                    </div>
+                    <div className="text-[#A1A1AA] text-xs">
+                      You are repaying your entire {tokenSymbol} debt. This will
+                      stop all interest charges for this asset.
+                    </div>
+                  </div>
+                </div>
+              )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
