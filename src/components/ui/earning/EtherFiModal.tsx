@@ -162,7 +162,10 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 <DialogTitle className="text-[#FAFAFA] text-lg font-semibold">
                   {data.marketVault}
                 </DialogTitle>
-                <div className="flex items-center gap-1">
+                <button
+                  onClick={() => window.open(vault.links.analytics, "_blank")}
+                  className="flex items-center gap-1 py-1 px-2 -mx-2 rounded hover:bg-[#27272A]/50 transition-all group"
+                >
                   <Image
                     src={data.protocolIcon}
                     alt={data.protocol}
@@ -170,11 +173,11 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                     height={12}
                     className="object-contain"
                   />
-                  <span className="text-sm text-[#A1A1AA]">
+                  <span className="text-sm text-[#A1A1AA] group-hover:text-[#FAFAFA] transition-colors">
                     {data.protocol}
                   </span>
-                  <ExternalLink className="h-3 w-3 text-[#A1A1AA] ml-1" />
-                </div>
+                  <ExternalLink className="h-3 w-3 text-[#A1A1AA] group-hover:text-[#FAFAFA] transition-colors ml-1" />
+                </button>
               </div>
             </div>
           </div>
