@@ -64,6 +64,8 @@ const useWeb3Store = create<Web3StoreState>()(
       tokenBalancesByWallet: {},
       tokenPricesUsd: {},
 
+      aaveChain: getChainByChainId(1),
+
       // New integration management methods
       getSwapStateForSection: () => {
         const key = get().activeSwapSection;
@@ -747,6 +749,10 @@ const useWeb3Store = create<Web3StoreState>()(
       setTokensLoading: (loading) => {
         set({ tokensLoading: loading });
       },
+
+      setAaveChain(chain: Chain) {
+        set({ aaveChain: chain });
+      },
     }),
     {
       name: "altverse-storage-web3",
@@ -821,6 +827,7 @@ const useWeb3Store = create<Web3StoreState>()(
             chainId: wallet.chainId,
           })),
           swapIntegrations: serializedIntegrations,
+          aaveChain: state.aaveChain,
         };
       },
     },
