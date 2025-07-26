@@ -1175,6 +1175,25 @@ export function useTokenTransfer(
       return;
     }
 
+    if (!receiveAddress) {
+      switch (options.destinationChain.walletType) {
+        case WalletType.REOWN_SOL:
+          throw new Error(
+            "Please connect a Solana wallet or provide a receive address",
+          );
+        case WalletType.SUIET_SUI:
+          throw new Error(
+            "Please connect a Sui wallet or provide a receive address",
+          );
+        case WalletType.REOWN_EVM:
+          throw new Error(
+            "Please connect an EVM wallet or provide a receive address",
+          );
+        default:
+          throw new Error("Please provide a receive address for the transfer");
+      }
+    }
+
     // Check if wallet is compatible with source chain
     if (!isWalletCompatible) {
       const requiredWalletType = options.sourceChain.walletType;
@@ -1316,7 +1335,7 @@ export function useTokenTransfer(
         result = await executeSolanaSwap({
           quote: quotes[0],
           swapperAddress: requiredWallet!.address,
-          destinationAddress: receiveAddress || requiredWallet!.address,
+          destinationAddress: receiveAddress,
           sourceToken: sourceToken!.address,
           amount,
           referrerAddresses: {
@@ -1337,7 +1356,7 @@ export function useTokenTransfer(
         result = await executeSuiSwap({
           quote: quotes[0],
           swapperAddress: requiredWallet!.address,
-          destinationAddress: receiveAddress || requiredWallet!.address,
+          destinationAddress: receiveAddress,
           referrerAddresses: {
             solana: REFERRER_SOL,
             evm: REFERRER_EVM,
@@ -1353,7 +1372,7 @@ export function useTokenTransfer(
         result = await executeEvmSwap({
           quote: quotes[0],
           swapperAddress: requiredWallet!.address,
-          destinationAddress: receiveAddress || requiredWallet!.address,
+          destinationAddress: receiveAddress,
           sourceToken: sourceToken!.address,
           amount,
           referrerAddresses: {
