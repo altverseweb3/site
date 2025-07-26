@@ -1520,30 +1520,30 @@ export function parseSwapError(error: unknown): string {
     // Check for specific error patterns
     for (const pattern of patterns) {
       if (pattern.regex.test(errorString)) {
-        return pattern.message;
+        return truncateMessage(pattern.message);
       }
     }
 
     // Extract reason if present (common in revert errors)
     const reasonMatch = /reason="([^"]+)"/.exec(errorString);
     if (reasonMatch && reasonMatch[1]) {
-      return reasonMatch[1];
+      return truncateMessage(reasonMatch[1]);
     }
 
     // Extract message if present
     const messageMatch = /"message":"([^"]+)"/.exec(errorString);
     if (messageMatch && messageMatch[1]) {
-      return messageMatch[1];
+      return truncateMessage(messageMatch[1]);
     }
 
     // If error is actually an Error object
     if (error instanceof Error) {
-      return error.message;
+      return truncateMessage(error.message);
     }
 
     // If error is a string
     if (typeof error === "string") {
-      return error;
+      return truncateMessage(error);
     }
 
     return friendlyMessage;
@@ -1554,6 +1554,39 @@ export function parseSwapError(error: unknown): string {
 }
 
 //Extract a user-friendly error message from deposit-related blockchain errors
+
+//Truncates error messages to 200-300 character limit for better UX
+
+function truncateMessage(message: string): string {
+  const MAX_LENGTH = 300;
+  const MIN_LENGTH = 200;
+
+  if (message.length <= MAX_LENGTH) {
+    return message;
+  }
+
+  // Try to find a good break point (sentence, word boundary) within the limit
+  const truncated = message.substring(0, MAX_LENGTH);
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf("."),
+    truncated.lastIndexOf("!"),
+    truncated.lastIndexOf("?"),
+  );
+
+  // If we found a sentence boundary after MIN_LENGTH, use it
+  if (lastSentenceEnd > MIN_LENGTH) {
+    return message.substring(0, lastSentenceEnd + 1);
+  }
+
+  // Otherwise, find the last word boundary
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > MIN_LENGTH) {
+    return message.substring(0, lastSpace) + "...";
+  }
+
+  // Fallback to hard truncation
+  return message.substring(0, MAX_LENGTH) + "...";
+}
 
 export function parseDepositError(error: unknown): string {
   // Default fallback message
@@ -1598,30 +1631,30 @@ export function parseDepositError(error: unknown): string {
     // Check for specific error patterns
     for (const pattern of patterns) {
       if (pattern.regex.test(errorString)) {
-        return pattern.message;
+        return truncateMessage(pattern.message);
       }
     }
 
     // Extract reason if present (common in revert errors)
     const reasonMatch = /reason="([^"]+)"/.exec(errorString);
     if (reasonMatch && reasonMatch[1]) {
-      return reasonMatch[1];
+      return truncateMessage(reasonMatch[1]);
     }
 
     // Extract message if present
     const messageMatch = /"message":"([^"]+)"/.exec(errorString);
     if (messageMatch && messageMatch[1]) {
-      return messageMatch[1];
+      return truncateMessage(messageMatch[1]);
     }
 
     // If error is actually an Error object
     if (error instanceof Error) {
-      return error.message;
+      return truncateMessage(error.message);
     }
 
     // If error is a string
     if (typeof error === "string") {
-      return error;
+      return truncateMessage(error);
     }
 
     return friendlyMessage;
