@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/lending/Accordion";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
-import { useSourceChain } from "@/store/web3Store";
+import { useSourceChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import {
   AaveReserveData,
   AaveReservesResult,
@@ -15,6 +15,7 @@ import {
 } from "@/utils/aave/fetch";
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
+import { WalletType } from "@/types/web3";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
@@ -30,6 +31,8 @@ const BorrowComponent: React.FC = () => {
 
   const sourceChain = useSourceChain();
   const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
+
+  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   // Load user borrow positions using real Aave data
   const loadUserBorrowPositions = useCallback(
@@ -74,7 +77,7 @@ const BorrowComponent: React.FC = () => {
         console.log(
           `Fetching Aave reserves for borrowing on chain ${sourceChain.chainId}...`,
         );
-
+        if (!isWalletConnected) return;
         // Fetch reserves data using your enhanced function
         const reservesResult: AaveReservesResult = await fetchAllReservesData();
 
@@ -100,6 +103,7 @@ const BorrowComponent: React.FC = () => {
     },
     [
       loading,
+      isWalletConnected,
       lastChainId,
       sourceChain.chainId,
       borrowableReserves.length,
@@ -134,49 +138,6 @@ const BorrowComponent: React.FC = () => {
     };
   };
 
-  // Load data when component mounts or chain changes
-  useEffect(() => {
-    loadAaveReserves();
-  }, [loadAaveReserves]);
-
-  // Reset data when chain changes
-  useEffect(() => {
-    if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
-      setBorrowableReserves([]);
-      setUserBorrowPositions([]);
-      setError(null);
-    }
-  }, [sourceChain.chainId, lastChainId]);
-
-  // MetaMask chain change listener
-  useEffect(() => {
-    const handleChainChanged = () => {
-      console.log(
-        "MetaMask chain changed, clearing borrow data and refreshing...",
-      );
-      setBorrowableReserves([]);
-      setUserBorrowPositions([]);
-      setError(null);
-      setLoading(true);
-
-      setTimeout(() => {
-        loadAaveReserves(true);
-      }, 200);
-    };
-
-    if (typeof window !== "undefined" && window.ethereum) {
-      const ethereum = window.ethereum as {
-        on?: (event: string, callback: () => void) => void;
-        removeListener?: (event: string, callback: () => void) => void;
-      };
-      ethereum.on?.("chainChanged", handleChainChanged);
-
-      return () => {
-        ethereum.removeListener?.("chainChanged", handleChainChanged);
-      };
-    }
-  }, [loadAaveReserves]);
-
   const handleBorrow = (asset: AaveReserveData) => {
     console.log("Borrow asset:", asset);
     // TODO: Implement borrow functionality
@@ -187,10 +148,12 @@ const BorrowComponent: React.FC = () => {
     // TODO: Implement details modal
   };
 
-  const handleRefresh = () => {
-    console.log("Manual refresh triggered");
-    loadAaveReserves(true);
-  };
+  useEffect(() => {
+    // Only load if wallet is connected
+    if (isWalletConnected) {
+      loadAaveReserves();
+    }
+  }, [isWalletConnected, loadAaveReserves, sourceChain.chainId]);
 
   const hasData = borrowableReserves.length > 0;
   const hasBorrowPositions = userBorrowPositions.length > 0;
@@ -199,6 +162,7 @@ const BorrowComponent: React.FC = () => {
 
   return (
     <div className="w-full space-y-4">
+      {/* Only show accordion if wallet is connected */}
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem
           value="borrowPositions"
@@ -298,7 +262,6 @@ const BorrowComponent: React.FC = () => {
                     Chain: {sourceChain.name}
                   </div>
                   <button
-                    onClick={handleRefresh}
                     disabled={loading}
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
@@ -312,10 +275,7 @@ const BorrowComponent: React.FC = () => {
                   <div className="text-gray-400 mb-4">
                     No borrowable assets found
                   </div>
-                  <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
+                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
                     Refresh
                   </button>
                 </div>
