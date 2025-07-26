@@ -20,11 +20,10 @@ import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
-import { chainNames, SupportedChainId } from "@/config/aave";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import { SupportedChainId } from "@/config/aave";
+import type { Token, Chain } from "@/types/web3";
+import { getChainByChainId } from "@/config/chains";
 
-// Health Factor Calculator for Repayment
 const calculateNewHealthFactorForRepay = (
   currentTotalCollateralUSD: number,
   currentTotalDebtUSD: number,
@@ -55,12 +54,12 @@ interface RepayModalProps {
   tokenName?: string;
   tokenIcon?: string;
   chainId?: number;
-  walletBalance?: string; // User's wallet balance of the token
-  currentDebt?: string; // User's current debt amount
-  debtUSD?: string; // Current debt in USD
-  borrowAPY?: string; // Current borrow APY
-  stableDebt?: string; // Stable debt amount
-  variableDebt?: string; // Variable debt amount
+  walletBalance?: string;
+  currentDebt?: string;
+  debtUSD?: string;
+  borrowAPY?: string;
+  stableDebt?: string;
+  variableDebt?: string;
   healthFactor?: string;
   tokenPrice?: number;
   liquidationThreshold?: number;
@@ -116,7 +115,6 @@ const RepayModal: FC<RepayModalProps> = ({
     }
   }, [variableDebt, stableDebt]);
 
-  // Handle amount input change
   const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Allow empty string, numbers, and decimal point
@@ -125,19 +123,16 @@ const RepayModal: FC<RepayModalProps> = ({
     }
   };
 
-  // Handle max button click
   const handleMaxClick = () => {
     // Max should be the full debt amount, not limited by wallet balance
     const maxDebtAmount = parseFloat(currentDebt) || 0;
     setRepayAmount(maxDebtAmount.toString());
   };
 
-  // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Reset form when modal opens/closes
   useEffect(() => {
     if (!isMounted) return;
 
@@ -309,9 +304,6 @@ const RepayModal: FC<RepayModalProps> = ({
     }
   };
 
-  // Create Token and Chain objects for TokenImage
-  const chainName = chainNames[chainId] || "ethereum";
-
   const token: Token = {
     id: tokenAddress,
     name: tokenName,
@@ -323,30 +315,7 @@ const RepayModal: FC<RepayModalProps> = ({
     stringChainId: chainId.toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    mayanChainId: 1, // Default to Ethereum
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: chainId,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-  };
+  const chain: Chain = getChainByChainId(chainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

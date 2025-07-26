@@ -13,7 +13,7 @@ import type { Token, Chain } from "@/types/web3";
 import { UserBorrowPosition } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/aave/format";
 import { getChainByChainId } from "@/config/chains";
-import RepayModal from "./RepayModal";
+import RepayModal from "@/components/ui/lending/RepayModal";
 import { RateMode } from "@/utils/aave/interact";
 
 interface BorrowOwnedCardProps {
@@ -57,7 +57,6 @@ const BorrowOwnedCard = ({
 
   const chain: Chain = getChainByChainId(asset.chainId || 1);
 
-  // Handle repay completion from modal
   const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
     try {
       const success = await onRepay(borrowPosition, amount, rateMode);
@@ -140,8 +139,8 @@ const BorrowOwnedCard = ({
           stableDebt={borrowPosition.stableDebt}
           variableDebt={borrowPosition.variableDebt}
           healthFactor={healthFactor}
-          tokenPrice={1} // You might want to pass real price data
-          liquidationThreshold={0.85} // You might want to get this from asset data
+          tokenPrice={1}
+          liquidationThreshold={0.85}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           onRepay={handleRepayComplete}
