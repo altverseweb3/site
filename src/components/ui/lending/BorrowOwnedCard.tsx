@@ -15,6 +15,7 @@ import { formatBalance } from "@/utils/aave/format";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
 import { RateMode } from "@/utils/aave/interact";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface BorrowOwnedCardProps {
   borrowPosition: UserBorrowPosition;
