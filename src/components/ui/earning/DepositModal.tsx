@@ -43,6 +43,8 @@ import useWeb3Store, {
   useDestinationToken,
   useTransactionDetails,
   useIsWalletTypeConnected,
+  useSetReceiveAddress,
+  useWalletByType,
 } from "@/store/web3Store";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
@@ -74,6 +76,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const sourceChain = useSourceChain();
   const destinationChain = useDestinationChain();
   const transactionDetails = useTransactionDetails();
+  const setReceiveAddress = useSetReceiveAddress();
+  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
 
   // Form state
   const [selectedSwapChain, setSelectedSwapChain] = useState<string>("");
@@ -814,6 +818,15 @@ const DepositModal: React.FC<DepositModalProps> = ({
   useEffect(() => {
     if (!isMounted) return;
 
+    if (isOpen && evmWallet?.address) {
+      console.log("Setting receiveAddress to EVM wallet:", evmWallet.address);
+      setReceiveAddress(evmWallet.address);
+    } else if (isOpen && !evmWallet?.address) {
+      // Clear receiveAddress if no EVM wallet is connected
+      console.log("Clearing receiveAddress - no EVM wallet connected");
+      setReceiveAddress(null);
+    }
+
     const wasOpen = prevIsOpenRef.current;
     const isOpening = isOpen && !wasOpen; // Modal is transitioning from closed to open
     const isClosing = !isOpen && wasOpen; // Modal is transitioning from open to closed
@@ -846,7 +859,15 @@ const DepositModal: React.FC<DepositModalProps> = ({
         cancelProcess(activeProcess.id);
       }
     }
-  }, [isOpen, vault, isMounted, activeProcess, cancelProcess]);
+  }, [
+    isOpen,
+    vault,
+    isMounted,
+    activeProcess,
+    cancelProcess,
+    evmWallet,
+    setReceiveAddress,
+  ]);
 
   // Vault shares conversion rate effect
   useEffect(() => {
