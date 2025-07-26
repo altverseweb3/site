@@ -16,9 +16,6 @@ import {
 import BorrowUnOwnedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
 
-// Legacy interface for mock data compatibility (no longer used)
-// UserBorrowPosition is now imported from @/utils/aave/fetch
-
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
     AaveReserveData[]
@@ -41,7 +38,6 @@ const BorrowComponent: React.FC = () => {
         setBorrowPositionsLoading(true);
         console.log("Fetching user borrow positions...");
 
-        // Use real fetch function for borrow positions
         const borrowPositions = await fetchUserBorrowPositions(reserves);
         setUserBorrowPositions(borrowPositions);
       } catch (err) {
