@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import DepositModal from "@/components/ui/earning/DepositModal";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
@@ -20,6 +19,7 @@ import { WalletType } from "@/types/web3";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
 import { formatCurrency } from "@/utils/ui/uiHelpers";
+import WalletConnectButton from "@/components/ui/WalletConnectButton";
 
 interface EtherFiModalProps {
   isOpen: boolean;
@@ -37,14 +37,10 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
   const sourceChain = getChainById("ethereum");
 
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
-  const isSolanaWalletConnected = useIsWalletTypeConnected(
-    WalletType.REOWN_SOL,
-  );
+
   const { switchToChain } = useChainSwitch(sourceChain);
 
-  const isWalletConnected =
-    isEvmWalletConnected || isSuiWalletConnected || isSolanaWalletConnected;
+  const isWalletConnected = isEvmWalletConnected;
 
   if (!data) return null;
 
@@ -221,14 +217,12 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 deposit
               </Button>
             ) : (
-              <ConnectWalletModal
-                trigger={
-                  <Button className="bg-green-500/25 hover:bg-green-500/50 hover:text-green-400 text-green-500 border-green-500/30 border rounded-lg py-3 font-semibold">
-                    <Wallet className="h-4 w-4 mr-1" />
-                    connect
-                  </Button>
-                }
+              <WalletConnectButton
+                walletType={WalletType.REOWN_EVM}
+                size="md"
+                className="border rounded-lg font-semibold bg-amber-500/25 border-[#61410B] D!text-sm !px-4 !h-10 !py-0 !justify-center"
                 onSuccess={handleWalletConnectSuccess}
+                showIcon={false}
               />
             )}
             <Button
