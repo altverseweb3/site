@@ -108,6 +108,8 @@ export interface Web3StoreState {
   tokenBalancesByWallet: Record<string, Record<string, string>>;
   tokenPricesUsd: Record<string, string>;
 
+  aaveChain: Chain;
+
   // Wallet actions (remain the same)
   addWallet: (wallet: WalletInfo) => void;
   removeWallet: (walletType: WalletType) => void;
@@ -147,6 +149,7 @@ export interface Web3StoreState {
   updateTokenPrices: (priceResults: TokenPriceResult[]) => void;
   addCustomToken: (token: Token) => void;
   setTokensLoading: (loading: boolean) => void;
+  setAaveChain: (chain: Chain) => void;
 }
 
 export enum Network {
