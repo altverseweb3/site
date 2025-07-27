@@ -158,11 +158,11 @@ const RepayModal: FC<RepayModalProps> = ({
   const newHealthFactor =
     totalDebtUSD > 0
       ? calculateNewHealthFactorForRepay(
-          totalCollateralUSD,
-          totalDebtUSD,
-          repayAmountUSD,
-          liquidationThreshold,
-        )
+        totalCollateralUSD,
+        totalDebtUSD,
+        repayAmountUSD,
+        liquidationThreshold,
+      )
       : currentHealthFactor;
 
   const healthFactorChange = newHealthFactor - currentHealthFactor;
@@ -273,13 +273,13 @@ const RepayModal: FC<RepayModalProps> = ({
           description: `Successfully repaid ${repayAmount} ${tokenSymbol}`,
           action: result.txHash
             ? {
-                label: "View Transaction",
-                onClick: () =>
-                  window.open(
-                    getExplorerUrl(result.txHash!, currentChainId),
-                    "_blank",
-                  ),
-              }
+              label: "View Transaction",
+              onClick: () =>
+                window.open(
+                  getExplorerUrl(result.txHash!, currentChainId),
+                  "_blank",
+                ),
+            }
             : undefined,
         });
 
