@@ -145,7 +145,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     backgroundColor: "",
     fontColor: "",
     chainId: chainId,
-    mayanChainId: 2,
     decimals: 18,
     l2: false,
     gasDrop: 0,
