@@ -42,9 +42,10 @@ const BorrowLendComponent: React.FC = () => {
             </p>
             <div className="flex justify-center">
               <WalletConnectButton
-                className="w-1/4 text-center rounded-lg"
+                className="w-full md:w-1/4 text-center rounded-lg !flex !justify-center !items-center"
                 size="lg"
                 walletType={WalletType.REOWN_EVM}
+                showIcon={true}
               />
             </div>
           </div>
