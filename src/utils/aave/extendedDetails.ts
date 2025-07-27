@@ -1,14 +1,16 @@
 import { ethers } from "ethers";
+import { useCallback } from "react";
 import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3Abis";
 import { getAaveMarket, getChainByChainId } from "@/config/chains";
 import { altverseAPI } from "@/api/altverse";
-import { getSafeProvider } from "@/utils/wallet/providerUtils";
-import { AaveReserveData } from "./fetch";
-import { ExtendedAssetDetails } from "./calculations";
+import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { AaveReserveData } from "@/utils/aave/fetch";
+import { ExtendedAssetDetails } from "@/utils/aave/calculations";
 
 export const fetchExtendedAssetDetails = async (
   currentAsset: AaveReserveData,
   chainId: number,
+  provider?: ethers.Provider,
 ): Promise<ExtendedAssetDetails> => {
   let oraclePrice = 1;
 
@@ -67,9 +69,7 @@ export const fetchExtendedAssetDetails = async (
     );
   }
 
-  if (typeof window !== "undefined" && window.ethereum) {
-    const safeProvider = getSafeProvider(window.ethereum);
-    const provider = new ethers.BrowserProvider(safeProvider);
+  if (provider) {
     const network = await provider.getNetwork();
     const chainId = Number(network.chainId);
     const market = getAaveMarket(chainId);
@@ -118,3 +118,23 @@ export const fetchExtendedAssetDetails = async (
     currentPrice: oraclePrice,
   };
 };
+
+export function useAaveFetch() {
+  const { getEvmSigner } = useWalletProviderAndSigner();
+
+  const fetchExtendedAssetDetailsMemoized = useCallback(
+    async (currentAsset: AaveReserveData, chainId: number) => {
+      const signer = await getEvmSigner();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return fetchExtendedAssetDetails(currentAsset, chainId, provider);
+    },
+    [getEvmSigner],
+  );
+
+  return {
+    fetchExtendedAssetDetails: fetchExtendedAssetDetailsMemoized,
+  };
+}

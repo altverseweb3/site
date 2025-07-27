@@ -1,4 +1,4 @@
-import { AaveReserveData } from "./fetch";
+import { AaveReserveData } from "@/utils/aave/fetch";
 
 export interface ReserveMetrics {
   reserveSize: string;
