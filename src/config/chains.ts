@@ -34,6 +34,7 @@ export const chains: Record<string, Chain> = {
     l2: false,
     gasDrop: 0.05,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   arbitrum: {
     id: "arbitrum",
@@ -70,6 +71,7 @@ export const chains: Record<string, Chain> = {
     l2: true,
     gasDrop: 0.01,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   optimism: {
     id: "optimism",
@@ -109,6 +111,7 @@ export const chains: Record<string, Chain> = {
     l2: true,
     gasDrop: 0.01,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   base: {
     id: "base",
@@ -140,6 +143,7 @@ export const chains: Record<string, Chain> = {
     l2: true,
     gasDrop: 0.01,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   unichain: {
     id: "unichain",
@@ -180,6 +184,7 @@ export const chains: Record<string, Chain> = {
     l2: true,
     gasDrop: 0.01,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: false,
   },
   polygon: {
     id: "polygon",
@@ -206,6 +211,7 @@ export const chains: Record<string, Chain> = {
     l2: false,
     gasDrop: 0.2,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   "binance-smart-chain": {
     id: "binance-smart-chain",
@@ -237,6 +243,7 @@ export const chains: Record<string, Chain> = {
     l2: false,
     gasDrop: 0.02,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   avalanche: {
     id: "avalanche",
@@ -271,6 +278,7 @@ export const chains: Record<string, Chain> = {
     l2: false,
     gasDrop: 0.1,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   },
   sui: {
     id: "sui",
@@ -300,6 +308,7 @@ export const chains: Record<string, Chain> = {
     l2: false,
     gasDrop: 0.01,
     walletType: WalletType.SUIET_SUI,
+    aaveSupported: false,
   },
   solana: {
     id: "solana",
@@ -331,6 +340,7 @@ export const chains: Record<string, Chain> = {
     gasDrop: 0.01,
     l2: false,
     walletType: WalletType.REOWN_SOL,
+    aaveSupported: false,
   },
 };
 
