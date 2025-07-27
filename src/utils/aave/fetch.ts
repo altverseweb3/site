@@ -2,10 +2,8 @@
 import { ethers } from "ethers";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
-import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
 import { getAaveMarket } from "@/config/chains";
-import { chainNames } from "@/config/aave";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
@@ -105,14 +103,7 @@ export async function fetchAllReservesData(
 
   console.log(`Fetching Aave reserves for chain ${chainId} with backoff...`);
 
-  const chainName = chainNames[chainId] || "ethereum";
-
-  // Load tokens for this chain once
-  const chainTokens = await loadTokensForChain(chainName);
   const tokenLookup: Record<string, Token> = {};
-  chainTokens.forEach((token) => {
-    tokenLookup[token.address.toLowerCase()] = token;
-  });
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
