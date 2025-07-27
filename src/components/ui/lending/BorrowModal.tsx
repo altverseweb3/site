@@ -150,6 +150,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
     l2: false,
     gasDrop: 0,
     walletType: WalletType.REOWN_EVM,
+    aaveSupported: true,
   };
 
   // Handle client-side mounting
