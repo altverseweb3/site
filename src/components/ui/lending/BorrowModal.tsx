@@ -150,6 +150,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
     l2: false,
     gasDrop: 0,
     walletType: WalletType.REOWN_EVM,
+    mayanChainId: 0,
   };
 
   // Handle client-side mounting
