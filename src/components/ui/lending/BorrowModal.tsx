@@ -132,7 +132,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     fontColor: "",
     chainId: chainId,
     mayanChainId: 2,
-    mayanChainId: 2,
     decimals: 18,
     l2: false,
     gasDrop: 0,
