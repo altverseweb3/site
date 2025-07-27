@@ -86,6 +86,7 @@ export type Chain = {
   l2: boolean;
   gasDrop: number;
   walletType: WalletType;
+  aaveSupported: boolean;
 };
 
 export type SectionKey = "swap" | "earn" | "lend";
