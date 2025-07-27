@@ -169,11 +169,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const newHealthFactor =
     totalCollateralUSD > 0
       ? calculateNewHealthFactorForBorrow(
-        totalCollateralUSD,
-        totalDebtUSD,
-        borrowAmountUSD,
-        0.85, // Average liquidation threshold
-      )
+          totalCollateralUSD,
+          totalDebtUSD,
+          borrowAmountUSD,
+          0.85, // Average liquidation threshold
+        )
       : currentHealthFactor;
 
   const healthFactorChange = newHealthFactor - currentHealthFactor;

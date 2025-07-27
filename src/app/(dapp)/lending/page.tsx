@@ -4,7 +4,6 @@ import PoweredByAave from "@/components/ui/lending/PoweredByAave";
 import SupplyBorrowMetricsHeaders from "@/components/ui/lending/SupplyBorrowMetricsHeaders";
 import SupplyComponent from "@/components/ui/lending/SupplyComponent";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import React, { useState, useEffect } from "react";
 import {
   useSetActiveSwapSection,
