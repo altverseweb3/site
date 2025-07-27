@@ -13,7 +13,7 @@ export default async function DAppLayout({
       <div className="flex flex-col h-dvh">
         <TokenInitializer />
         <SiteHeader />
-        <main className="container mx-auto flex-1 md:h-screen pt-6 px-2 sm:px-4">
+        <main className="container mx-auto flex-1 pt-6 px-2 sm:px-4 pb-6">
           {children}
         </main>
         <SiteFooter />

@@ -36,7 +36,6 @@ import { useEtherFiInteract } from "@/utils/etherFi/interact";
 import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { chainList, getChainById, chains } from "@/config/chains";
-import { useAppKit } from "@reown/appkit/react";
 import useWeb3Store, {
   useSourceChain,
   useDestinationChain,
@@ -45,7 +44,6 @@ import useWeb3Store, {
   useTransactionDetails,
   useIsWalletTypeConnected,
 } from "@/store/web3Store";
-import { ConnectButton } from "@suiet/wallet-kit";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
 } from "@/store/vaultDepositStore";
@@ -56,6 +54,7 @@ import {
   queryVaultConversionRate,
   VaultConversionRate,
 } from "@/utils/etherFi/vaultShares";
+import WalletConnectButton from "@/components/ui/WalletConnectButton";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -93,7 +92,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   // Integration hooks
   const { approveToken, depositTokens } = useEtherFiInteract();
   const { switchToChain } = useChainSwitch(sourceChain);
-  const { open: openAppKit } = useAppKit();
 
   // Web3Store functions for token management
   const loadTokens = useWeb3Store((state) => state.loadTokens);
@@ -131,7 +129,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   } = useVaultDepositStore();
 
   const activeProcess = useActiveVaultDepositProcess();
-  const suiButtonRef = useRef<HTMLDivElement>(null);
 
   // Helper functions for token management
   const getSupportedTokensForChain = useCallback(
@@ -232,21 +229,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     },
     [isWalletConnected, isSuiWalletConnected, isSolanaWalletConnected],
   );
-
-  const connectSuiWallet = () => {
-    if (!suiButtonRef.current) return;
-    const suietButton = suiButtonRef.current.querySelector("button");
-    if (!suietButton) return;
-    suietButton.click();
-  };
-
-  const connectSolanaWallet = async () => {
-    openAppKit({ view: "Connect", namespace: "solana" });
-  };
-
-  const connectEvmWallet = async () => {
-    openAppKit({ view: "Connect", namespace: "eip155" });
-  };
 
   // ===== UNIFIED APPROVAL AND RETRY FUNCTION =====
   const handleApprovalAndRetry = useCallback(
@@ -929,17 +911,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
       setConversionError(null);
 
       try {
-        const signer = await getEvmSigner();
-        const provider = signer.provider;
-        if (!provider) {
-          throw new Error("Provider not available");
-        }
-
+        // Use automatic Ethereum provider for vault queries (vaults only exist on Ethereum)
         const conversionResult = await queryVaultConversionRate(
           vault.id,
           assetToConvert,
           amountToConvert,
-          provider,
         );
         setVaultSharesPreview(conversionResult);
       } catch (error) {
@@ -1398,66 +1374,43 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     )}
 
                     {/* Connect wallet buttons */}
-                    {selectedSwapToken && !isWalletConnected && (
-                      <button
-                        onClick={connectEvmWallet}
-                        className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
-                      >
-                        connect evm
-                      </button>
-                    )}
                     {selectedSwapToken &&
                       selectedSwapChain &&
                       !isChainWalletConnected(selectedSwapChain) &&
                       (() => {
                         const chain = getChainById(selectedSwapChain);
-                        if (chain?.walletType === WalletType.SUIET_SUI) {
+                        if (chain) {
                           return (
-                            <button
-                              onClick={connectSuiWallet}
-                              className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors"
-                            >
-                              connect sui
-                            </button>
-                          );
-                        } else if (chain?.walletType === WalletType.REOWN_SOL) {
-                          return (
-                            <button
-                              onClick={connectSolanaWallet}
-                              className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30 transition-colors"
-                            >
-                              connect solana
-                            </button>
-                          );
-                        } else if (chain?.walletType === WalletType.REOWN_EVM) {
-                          return (
-                            <button
-                              onClick={connectEvmWallet}
-                              className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30 transition-colors"
-                            >
-                              connect evm
-                            </button>
+                            <WalletConnectButton
+                              size="sm"
+                              className="w-auto"
+                              walletType={chain.walletType}
+                            />
                           );
                         }
                         return null;
                       })()}
 
                     {/* Max button */}
-                    {selectedSwapToken && selectedSwapToken.userBalance && (
-                      <button
-                        onClick={() => {
-                          const balance = selectedSwapToken.userBalance || "0";
-                          if (parseFloat(balance) > 0) {
-                            handleSwapAmountChange({
-                              target: { value: balance },
-                            } as React.ChangeEvent<HTMLInputElement>);
-                          }
-                        }}
-                        className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
-                      >
-                        Max
-                      </button>
-                    )}
+                    {selectedSwapToken &&
+                      selectedSwapChain &&
+                      selectedSwapToken.userBalance &&
+                      isChainWalletConnected(selectedSwapChain) && (
+                        <button
+                          onClick={() => {
+                            const balance =
+                              selectedSwapToken.userBalance || "0";
+                            if (parseFloat(balance) > 0) {
+                              handleSwapAmountChange({
+                                target: { value: balance },
+                              } as React.ChangeEvent<HTMLInputElement>);
+                            }
+                          }}
+                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors"
+                        >
+                          Max
+                        </button>
+                      )}
                   </div>
                 </div>
                 <div className="relative">
@@ -1643,14 +1596,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
               Your deposit will start earning yield immediately.
             </p>
           </div>
-        </div>
-
-        {/* Hidden SUI wallet connect button */}
-        <div
-          ref={suiButtonRef}
-          className="absolute opacity-0 pointer-events-auto -z-10"
-        >
-          <ConnectButton />
         </div>
       </DialogContent>
     </Dialog>

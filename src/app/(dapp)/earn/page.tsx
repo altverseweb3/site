@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import ProtocolFilter from "@/components/ui/earning/ProtocolFilter";
+import SortDropdown from "@/components/ui/earning/SortDropdown";
 import { Input } from "@/components/ui/Input";
 import EarnTable from "@/components/ui/earning/EarnTable";
 import EarnCards from "@/components/ui/earning/EarnCards";
@@ -63,6 +64,7 @@ export default function EarnPage() {
     column: string;
     direction: "asc" | "desc";
   } | null>(null);
+  const [sortDropdownValue, setSortDropdownValue] = useState<string>("");
   const [selectedRowForModal, setSelectedRowForModal] = useState<
     EarnTableRow | DashboardTableRow | null
   >(null);
@@ -88,48 +90,76 @@ export default function EarnPage() {
     const filtered = filterEarnData(earnData, filters);
 
     if (sortConfig) {
-      const sortedEarnRows = [...filtered.earnRows].sort((a, b) => {
-        const aValue = a[sortConfig.column as keyof EarnTableRow];
-        const bValue = b[sortConfig.column as keyof EarnTableRow];
+      const sortEarnData = (data: EarnTableRow[]) => {
+        return [...data].sort((a, b) => {
+          // Handle multi-column sorting for dropdown options
+          if (sortDropdownValue === "apy-desc-tvl-desc") {
+            // Sort by APY first (desc), then by TVL (desc)
+            const apyDiff = b.apy - a.apy;
+            if (apyDiff !== 0) return apyDiff;
+            return b.tvl - a.tvl;
+          } else if (sortDropdownValue === "tvl-desc-apy-desc") {
+            // Sort by TVL first (desc), then by APY (desc)
+            const tvlDiff = b.tvl - a.tvl;
+            if (tvlDiff !== 0) return tvlDiff;
+            return b.apy - a.apy;
+          } else {
+            // Single column sorting
+            const aValue = a[sortConfig.column as keyof EarnTableRow];
+            const bValue = b[sortConfig.column as keyof EarnTableRow];
 
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortConfig.direction === "asc"
-            ? aValue - bValue
-            : bValue - aValue;
-        }
+            if (typeof aValue === "number" && typeof bValue === "number") {
+              return sortConfig.direction === "asc"
+                ? aValue - bValue
+                : bValue - aValue;
+            }
 
-        const aStr = String(aValue).toLowerCase();
-        const bStr = String(bValue).toLowerCase();
-        return sortConfig.direction === "asc"
-          ? aStr.localeCompare(bStr)
-          : bStr.localeCompare(aStr);
-      });
+            const aStr = String(aValue).toLowerCase();
+            const bStr = String(bValue).toLowerCase();
+            return sortConfig.direction === "asc"
+              ? aStr.localeCompare(bStr)
+              : bStr.localeCompare(aStr);
+          }
+        });
+      };
 
-      const sortedDashboardRows = [...filtered.dashboardRows].sort((a, b) => {
-        const aValue = a[sortConfig.column as keyof DashboardTableRow];
-        const bValue = b[sortConfig.column as keyof DashboardTableRow];
+      const sortDashboardData = (data: DashboardTableRow[]) => {
+        return [...data].sort((a, b) => {
+          // Dashboard rows don't have TVL, so multi-column sorting only applies to APY
+          if (
+            sortDropdownValue === "apy-desc-tvl-desc" ||
+            sortDropdownValue === "tvl-desc-apy-desc"
+          ) {
+            // For dashboard, just sort by APY since TVL doesn't exist
+            return b.apy - a.apy;
+          } else {
+            // Single column sorting
+            const aValue = a[sortConfig.column as keyof DashboardTableRow];
+            const bValue = b[sortConfig.column as keyof DashboardTableRow];
 
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortConfig.direction === "asc"
-            ? aValue - bValue
-            : bValue - aValue;
-        }
+            if (typeof aValue === "number" && typeof bValue === "number") {
+              return sortConfig.direction === "asc"
+                ? aValue - bValue
+                : bValue - aValue;
+            }
 
-        const aStr = String(aValue).toLowerCase();
-        const bStr = String(bValue).toLowerCase();
-        return sortConfig.direction === "asc"
-          ? aStr.localeCompare(bStr)
-          : bStr.localeCompare(aStr);
-      });
+            const aStr = String(aValue).toLowerCase();
+            const bStr = String(bValue).toLowerCase();
+            return sortConfig.direction === "asc"
+              ? aStr.localeCompare(bStr)
+              : bStr.localeCompare(aStr);
+          }
+        });
+      };
 
       return {
-        earnRows: sortedEarnRows,
-        dashboardRows: sortedDashboardRows,
+        earnRows: sortEarnData(filtered.earnRows),
+        dashboardRows: sortDashboardData(filtered.dashboardRows),
       };
     }
 
     return filtered;
-  }, [earnData, filters, sortConfig]);
+  }, [earnData, filters, sortConfig, sortDropdownValue]);
 
   const currentData =
     activeTab === "earn" ? filteredData.earnRows : filteredData.dashboardRows;
@@ -139,8 +169,31 @@ export default function EarnPage() {
     currentPage * ITEMS_PER_PAGE,
   );
 
-  const handleSort = (column: string, direction: "asc" | "desc") => {
+  const handleSortDropdownChange = (
+    column: string,
+    direction: "asc" | "desc",
+  ) => {
     setSortConfig({ column, direction });
+
+    if (column === "apy") {
+      setSortDropdownValue("apy-desc");
+    } else if (column === "tvl") {
+      setSortDropdownValue("tvl-desc");
+    }
+
+    setCurrentPage(1);
+  };
+
+  const handleMultiSort = (sortValue: string) => {
+    setSortDropdownValue(sortValue);
+
+    // Set sortConfig for the primary column
+    if (sortValue === "apy-desc-tvl-desc") {
+      setSortConfig({ column: "apy", direction: "desc" });
+    } else if (sortValue === "tvl-desc-apy-desc") {
+      setSortConfig({ column: "tvl", direction: "desc" });
+    }
+
     setCurrentPage(1);
   };
 
@@ -251,13 +304,26 @@ export default function EarnPage() {
               </ToggleGroup>
             </div>
 
-            {/* Right Side: Protocol Filter and Asset Input */}
+            {/* Right Side: Protocol Filter, Sort Dropdown, and Asset Input */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center xl:shrink-0">
-              <ProtocolFilter
-                protocols={availableProtocols}
-                selectedProtocols={filters.protocols}
-                onSelectionChange={handleProtocolChange}
-              />
+              {/* Protocol Filter and Sort Dropdown - side by side on mobile */}
+              <div className="flex gap-4 w-full sm:w-auto">
+                <div className="flex-1 sm:flex-none">
+                  <ProtocolFilter
+                    protocols={availableProtocols}
+                    selectedProtocols={filters.protocols}
+                    onSelectionChange={handleProtocolChange}
+                  />
+                </div>
+                <div className="flex-1 sm:flex-none">
+                  <SortDropdown
+                    value={sortDropdownValue}
+                    onSortChange={handleSortDropdownChange}
+                    onMultiSort={handleMultiSort}
+                    className="w-full sm:w-32"
+                  />
+                </div>
+              </div>
 
               <Input
                 placeholder="filter by asset (e.g., ETH, BTC)"
@@ -270,7 +336,7 @@ export default function EarnPage() {
         </div>
 
         {/* Table Content */}
-        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden md:mb-0 mb-12">
+        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden 2xl:mb-0 mb-12">
           {showWalletConnectionRequired ? (
             <div className="text-center py-16 md:py-24 px-4 md:px-8">
               <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
@@ -307,7 +373,7 @@ export default function EarnPage() {
           ) : (
             <>
               {/* Mobile Cards View */}
-              <div className="block md:hidden">
+              <div className="block 2xl:hidden">
                 <EarnCards
                   type={activeTab}
                   data={paginatedData}
@@ -320,12 +386,11 @@ export default function EarnPage() {
                 />
               </div>
 
-              {/* Desktop Table View */}
-              <div className="hidden md:block">
+              {/* Desktop Table View - Only show when header and all columns fit properly */}
+              <div className="hidden 2xl:block">
                 <EarnTable
                   type={activeTab}
                   data={paginatedData}
-                  onSort={handleSort}
                   onDetails={handleDetails}
                   currentPage={currentPage}
                   totalPages={totalPages}

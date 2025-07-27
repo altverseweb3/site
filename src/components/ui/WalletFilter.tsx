@@ -1,62 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef } from "react";
-import { ChevronDownIcon, CheckIcon, Wallet } from "lucide-react";
+import { useState } from "react";
+import { ChevronDownIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
-import { useAppKit } from "@reown/appkit/react";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
-import { ConnectButton, useWallet } from "@suiet/wallet-kit";
-import { WalletType } from "@/types/web3";
+import { WalletFilterType } from "@/types/web3";
 import { toast } from "sonner";
-
-export type WalletFilterType = "all" | "metamask" | "phantom" | "suiet";
-
-interface WalletOption {
-  value: WalletFilterType;
-  label: string;
-  icon?: string;
-  icons?: string[]; // For "all" option
-  walletType?: WalletType; // Map to actual wallet type
-}
+import { walletOptions } from "@/config/wallets";
+import { WalletConnectButton } from "@/components/ui/WalletConnectButton";
 
 interface WalletFilterProps {
   selectedWallet: WalletFilterType;
   onWalletChange: (wallet: WalletFilterType) => void;
   className?: string;
 }
-
-const walletOptions: WalletOption[] = [
-  {
-    value: "all",
-    label: "all wallets",
-    icons: [
-      "/wallets/metamask.svg",
-      "/wallets/phantom.svg",
-      "/wallets/sui.svg",
-    ],
-  },
-  {
-    value: "metamask",
-    label: "metamask",
-    icon: "/wallets/metamask.svg",
-    walletType: WalletType.REOWN_EVM,
-  },
-  {
-    value: "phantom",
-    label: "phantom",
-    icon: "/wallets/phantom.svg",
-    walletType: WalletType.REOWN_SOL,
-  },
-  {
-    value: "suiet",
-    label: "suiet",
-    icon: "/wallets/sui.svg",
-    walletType: WalletType.SUIET_SUI,
-  },
-];
 
 const WalletIcons: React.FC<{
   walletType: WalletFilterType;
@@ -81,7 +41,7 @@ const WalletIcons: React.FC<{
     lg: 24,
   };
 
-  // Handle "all" case with multiple icons
+  // handle all case with multiple icons
   if (selectedOption.icons) {
     return (
       <div className="flex items-center gap-1">
@@ -117,7 +77,7 @@ const WalletIcons: React.FC<{
     );
   }
 
-  // Handle single wallet case
+  // handle single wallet case
   if (selectedOption.icon) {
     return (
       <div className="flex items-center gap-1">
@@ -148,87 +108,12 @@ const WalletIcons: React.FC<{
   return null;
 };
 
-const CustomSuiConnectButton = ({
-  onSuccess,
-  className,
-}: {
-  onSuccess?: () => void;
-  className?: string;
-}) => {
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const { connected, disconnect } = useWallet();
-
-  const handleCustomClick = () => {
-    if (connected) {
-      disconnect();
-    } else {
-      if (!buttonRef.current) {
-        console.error("Button ref is null or undefined.");
-        return;
-      }
-
-      const suietButton = buttonRef.current.querySelector("button");
-      if (!suietButton) {
-        console.error(
-          "Could not find the button element inside the hidden div.",
-        );
-        return;
-      }
-
-      suietButton.click();
-      // Success will be handled by the wallet sync component
-      if (onSuccess) {
-        // Delay the callback to allow connection to complete
-        setTimeout(onSuccess, 1000);
-      }
-    }
-  };
-
-  return (
-    <div className="relative">
-      {/* Hidden Suiet button */}
-      <div
-        ref={buttonRef}
-        className="absolute opacity-0 pointer-events-auto inset-0 z-10"
-        style={{ height: "1px", width: "1px", overflow: "hidden" }}
-      >
-        <ConnectButton />
-      </div>
-
-      {/* Visible custom button */}
-      <button
-        className={cn(
-          "text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors",
-          "flex items-center justify-between w-full",
-          className,
-        )}
-        onClick={handleCustomClick}
-      >
-        <div className="flex items-center gap-2">
-          <Wallet className="h-3 w-3" />
-          <span className="text-[11px]">connect sui</span>
-        </div>
-        <Image
-          src="/wallets/sui.svg"
-          alt="Suiet"
-          width={12}
-          height={12}
-          className="object-contain"
-        />
-      </button>
-    </div>
-  );
-};
-
 const WalletFilter: React.FC<WalletFilterProps> = ({
   selectedWallet,
   onWalletChange,
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [connecting, setConnecting] = useState<WalletType | null>(null);
-
-  const { open: openAppKit } = useAppKit();
   const { isWalletTypeConnected } = useWalletConnection();
 
   const selectedOption = walletOptions.find(
@@ -240,37 +125,8 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
     setIsOpen(false);
   };
 
-  const handleWalletConnect = async (
-    walletType: WalletType,
-    walletName: string,
-  ) => {
-    try {
-      setConnecting(walletType);
-
-      switch (walletType) {
-        case WalletType.REOWN_EVM:
-          openAppKit({ view: "Connect", namespace: "eip155" });
-          break;
-        case WalletType.REOWN_SOL:
-          openAppKit({ view: "Connect", namespace: "solana" });
-          break;
-        // Suiet is handled by CustomSuiConnectButton
-      }
-
-      // Reset connecting state after a delay
-      setTimeout(() => {
-        setConnecting(null);
-      }, 3000);
-    } catch (error) {
-      console.error(`Error connecting to ${walletName}:`, error);
-      toast.error(`Failed to connect to ${walletName}`);
-      setConnecting(null);
-    }
-  };
-
-  // Get only connected wallets for dropdown
   const getAvailableOptions = () => {
-    const availableOptions = [walletOptions[0]]; // Always include "all"
+    const availableOptions = [walletOptions[0]];
 
     walletOptions.slice(1).forEach((option) => {
       if (option.walletType && isWalletTypeConnected(option.walletType)) {
@@ -285,7 +141,6 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {/* Dropdown for connected wallets */}
       <div className="relative">
         <Button
           variant="outline"
@@ -316,7 +171,6 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
 
         {isOpen && (
           <>
-            {/* Backdrop */}
             <div
               className="fixed inset-0 z-10"
               onClick={() => setIsOpen(false)}
@@ -355,62 +209,22 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
         )}
       </div>
 
-      {/* Connect buttons for disconnected wallets */}
       <div className="space-y-2">
         {walletOptions.slice(1).map((option) => {
           if (!option.walletType) return null;
 
           const isConnected = isWalletTypeConnected(option.walletType);
-          const isCurrentlyConnecting = connecting === option.walletType;
 
           if (isConnected) return null; // Don't show connect button if already connected
 
-          // Special handling for Suiet
-          if (option.walletType === WalletType.SUIET_SUI) {
-            return (
-              <CustomSuiConnectButton
-                key={option.value}
-                onSuccess={() => {
-                  toast.success(`Connected to ${option.label}`);
-                }}
-              />
-            );
-          }
-
           return (
-            <button
+            <WalletConnectButton
               key={option.value}
-              onClick={() =>
-                handleWalletConnect(option.walletType!, option.label)
-              }
-              disabled={isCurrentlyConnecting}
-              className={cn(
-                "text-xs px-2 py-1 rounded transition-colors flex items-center justify-between w-full",
-                option.walletType === WalletType.REOWN_EVM &&
-                  "bg-green-500/20 text-green-500 hover:text-green-400 hover:bg-green-500/30",
-                option.walletType === WalletType.REOWN_SOL &&
-                  "bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30",
-                isCurrentlyConnecting && "opacity-50 cursor-not-allowed",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Wallet className="h-3 w-3" />
-                <span className="text-[11px]">
-                  {isCurrentlyConnecting
-                    ? "connecting..."
-                    : `connect ${option.label}`}
-                </span>
-              </div>
-              {option.icon && (
-                <Image
-                  src={option.icon}
-                  alt={option.label}
-                  width={12}
-                  height={12}
-                  className="object-contain"
-                />
-              )}
-            </button>
+              walletType={option.walletType}
+              onSuccess={() => {
+                toast.success(`Connected to ${option.label}`);
+              }}
+            />
           );
         })}
       </div>

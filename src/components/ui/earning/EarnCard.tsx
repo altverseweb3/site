@@ -29,31 +29,54 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
     return `${apy.toFixed(1)}%`;
   };
 
+  const formatLimitedList = (items: string[], maxDisplay: number = 3) => {
+    if (items.length <= maxDisplay) {
+      return items.join(", ");
+    }
+    const displayItems = items.slice(0, maxDisplay);
+    const remainingCount = items.length - maxDisplay;
+    return `${displayItems.join(", ")}, +${remainingCount}`;
+  };
+
   const AssetIcons = ({
     assets,
     assetIcons,
   }: {
     assets: string[];
     assetIcons: string[];
-  }) => (
-    <div className="flex -space-x-1">
-      {assets.map((asset, index) => (
-        <div
-          key={asset}
-          className="relative w-5 h-5 rounded-full border border-[#27272A] overflow-hidden"
-          title={asset}
-        >
-          <Image
-            src={assetIcons[index]}
-            alt={asset}
-            width={20}
-            height={20}
-            className="object-cover"
-          />
-        </div>
-      ))}
-    </div>
-  );
+  }) => {
+    const maxDisplay = 3;
+    const displayAssets = assets.slice(0, maxDisplay);
+    const remainingCount = assets.length - maxDisplay;
+
+    return (
+      <div className="flex -space-x-1">
+        {displayAssets.map((asset, index) => (
+          <div
+            key={asset}
+            className="relative w-5 h-5 rounded-full border border-[#27272A] overflow-hidden"
+            title={asset}
+          >
+            <Image
+              src={assetIcons[index]}
+              alt={asset}
+              width={20}
+              height={20}
+              className="object-cover"
+            />
+          </div>
+        ))}
+        {remainingCount > 0 && (
+          <div
+            className="relative w-5 h-5 rounded-full border border-[#27272A] bg-[#27272A] flex items-center justify-center text-[#FAFAFA] text-xs font-medium"
+            title={`+${remainingCount} more assets: ${assets.slice(maxDisplay).join(", ")}`}
+          >
+            +{remainingCount}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const ChainIcons = ({
     chains: chainNames,
@@ -61,30 +84,44 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
   }: {
     chains: string[];
     chainIcons: string[];
-  }) => (
-    <div className="flex -space-x-1">
-      {chainNames.map((chainName, index) => {
-        const chain = chains[chainName];
-        return (
+  }) => {
+    const maxDisplay = 3;
+    const displayChains = chainNames.slice(0, maxDisplay);
+    const remainingCount = chainNames.length - maxDisplay;
+
+    return (
+      <div className="flex -space-x-1">
+        {displayChains.map((chainName, index) => {
+          const chain = chains[chainName];
+          return (
+            <div
+              key={chainName}
+              className="relative w-4 h-4 rounded-full border border-[#27272A] overflow-hidden"
+              title={chainName}
+              style={{ backgroundColor: chain?.backgroundColor || "#18181B" }}
+            >
+              <Image
+                src={chainIcons[index]}
+                alt={chainName}
+                width={16}
+                height={16}
+                className="object-contain p-0.5"
+                style={{ filter: "brightness(0) saturate(100%) invert(1)" }}
+              />
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
           <div
-            key={chainName}
-            className="relative w-4 h-4 rounded-full border border-[#27272A] overflow-hidden"
-            title={chainName}
-            style={{ backgroundColor: chain?.backgroundColor || "#18181B" }}
+            className="relative w-4 h-4 rounded-full border border-[#27272A] bg-[#27272A] flex items-center justify-center text-[#FAFAFA] text-xs font-medium"
+            title={`+${remainingCount} more chains: ${chainNames.slice(maxDisplay).join(", ")}`}
           >
-            <Image
-              src={chainIcons[index]}
-              alt={chainName}
-              width={16}
-              height={16}
-              className="object-contain p-0.5"
-              style={{ filter: "brightness(0) saturate(100%) invert(1)" }}
-            />
+            +{remainingCount}
           </div>
-        );
-      })}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
@@ -122,7 +159,7 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
           <div className="flex items-center gap-2">
             <AssetIcons assets={data.assets} assetIcons={data.assetIcons} />
             <span className="text-[#FAFAFA] text-xs">
-              {data.assets.join(", ")}
+              {formatLimitedList(data.assets)}
             </span>
           </div>
         </div>
@@ -136,7 +173,7 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
               chainIcons={data.supportedChainIcons}
             />
             <span className="text-[#FAFAFA] text-xs">
-              {data.supportedChains.join(", ")}
+              {formatLimitedList(data.supportedChains)}
             </span>
           </div>
         </div>
