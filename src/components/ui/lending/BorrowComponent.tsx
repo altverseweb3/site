@@ -5,7 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/Accordion";
-import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
+import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
 import { useSourceChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import {
   AaveReserveData,
@@ -13,8 +13,8 @@ import {
   UserBorrowPosition,
   useAaveFetch,
 } from "@/utils/aave/fetch";
-import BorrowUnownedCard from "./BorrowUnownedCard";
-import BorrowOwnedCard from "./BorrowOwnedCard";
+import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
+import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
 import { WalletType } from "@/types/web3";
 
 const BorrowComponent: React.FC = () => {

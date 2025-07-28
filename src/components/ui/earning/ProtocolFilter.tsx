@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ChevronDownIcon } from "lucide-react";
-import { Button } from "../Button";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
