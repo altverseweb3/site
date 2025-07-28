@@ -13,7 +13,7 @@ import {
   UserBorrowPosition,
   useAaveFetch,
 } from "@/utils/aave/fetch";
-import BorrowUnOwnedCard from "./BorrowUnownedCard";
+import BorrowUnownedCard from "./BorrowUnownedCard";
 import BorrowOwnedCard from "./BorrowOwnedCard";
 import { WalletType } from "@/types/web3";
 
@@ -285,7 +285,7 @@ const BorrowComponent: React.FC = () => {
                 borrowableReserves.map((reserve) => {
                   const borrowData = calculateAvailableToBorrow(reserve);
                   return (
-                    <BorrowUnOwnedCard
+                    <BorrowUnownedCard
                       key={`${reserve.asset}-${sourceChain.chainId}`}
                       asset={reserve}
                       availableToBorrow={borrowData.amount}
