@@ -5,7 +5,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/lending/Accordion";
+} from "@/components/ui/Accordion";
 import PoweredByAave from "@/components/ui/lending/PoweredByAave";
 import SupplyOwnedCard from "@/components/ui/lending/SupplyOwnedCard";
 import SupplyUnOwnedCard from "@/components/ui/lending/SupplyUnownedCard";

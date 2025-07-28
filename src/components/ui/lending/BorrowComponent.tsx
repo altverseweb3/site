@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/lending/Accordion";
+} from "@/components/ui/Accordion";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
 import { useSourceChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import {
