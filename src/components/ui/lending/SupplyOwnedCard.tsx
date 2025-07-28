@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { BlueButton, PrimaryButton } from "./SupplyButtonComponents";
+import {
+  BlueButton,
+  PrimaryButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,

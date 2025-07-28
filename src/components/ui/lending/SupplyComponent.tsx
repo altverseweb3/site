@@ -5,11 +5,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/Accordion";
-import SupplyOwnedCard from "./SupplyOwnedCard";
+import SupplyOwnedCard from "@/components/ui/lending/SupplyOwnedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositionsHeader";
-import SupplyUnownedCard from "./SupplyUnownedCard";
-import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
-import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
+import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
+import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
+import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
 import { useSourceChain } from "@/store/web3Store";
 import {
   AaveReserveData,

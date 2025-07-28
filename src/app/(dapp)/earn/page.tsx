@@ -15,7 +15,11 @@ import {
   useIsWalletTypeConnected,
   useSetActiveSwapSection,
 } from "@/store/web3Store";
-import { useEtherFiEarnData, filterEarnData, ProtocolModal } from "./etherFi";
+import {
+  useEtherFiEarnData,
+  filterEarnData,
+  ProtocolModal,
+} from "@/app/(dapp)/earn/etherFi";
 import {
   EarnTableRow,
   DashboardTableRow,

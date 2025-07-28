@@ -1,5 +1,8 @@
 import { FC } from "react";
-import { PrimaryButton, GrayButton } from "./SupplyButtonComponents";
+import {
+  PrimaryButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
@@ -10,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import { BorrowModal } from "./BorrowModal";
+import { BorrowModal } from "@/components/ui/lending/BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { EarnTableRow, DashboardTableRow, EarnTableType } from "@/types/earn";
-import EarnCard from "./EarnCard";
+import EarnCard from "@/components/ui/earning/EarnCard";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
