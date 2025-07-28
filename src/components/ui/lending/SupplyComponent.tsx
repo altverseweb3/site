@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/lending/Accordion";
+} from "@/components/ui/Accordion";
 import SupplyOwnedCard from "./SupplyOwnedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositionsHeader";
 import SupplyUnownedCard from "./SupplyUnownedCard";
