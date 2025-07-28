@@ -1,25 +1,39 @@
 "use client";
-
 import BorrowComponent from "@/components/ui/lending/BorrowComponent";
 import PoweredByAave from "@/components/ui/lending/PoweredByAave";
 import SupplyBorrowMetricsHeaders from "@/components/ui/lending/SupplyBorrowMetricsHeaders";
 import SupplyComponent from "@/components/ui/lending/SupplyComponent";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ChainPicker from "@/components/ui/ChainPicker";
 import React, { useState, useEffect } from "react";
 import {
   useSetActiveSwapSection,
   useIsWalletTypeConnected,
 } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
+import { chainList } from "@/config/chains";
+import { AaveSDK } from "@/utils/aave/aaveSDK";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
+  const [selectedChain, setSelectedChain] = useState<string>(""); // Single chain selection
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  const aaveLendingSupportedChains = chainList.filter((chain) =>
+    AaveSDK.isChainSupported(chain.chainId),
+  );
 
   useEffect(() => {
     setActiveSwapSection("lend");
   }, [setActiveSwapSection]);
+
+  const handleChainChange = (value: string | string[]) => {
+    const newValue = typeof value === "string" ? value : "";
+    if (newValue !== "") {
+      setSelectedChain(newValue);
+    }
+  };
 
   return (
     <div className="w-full">
@@ -28,9 +42,17 @@ const BorrowLendComponent: React.FC = () => {
           <SupplyBorrowMetricsHeaders
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            chainPicker={
+              <ChainPicker
+                type="single"
+                value={selectedChain}
+                onSelectionChange={handleChainChange}
+                chains={aaveLendingSupportedChains}
+                size="md"
+              />
+            }
           />
           {activeTab === "supply" ? <SupplyComponent /> : <BorrowComponent />}
-
           <PoweredByAave />
         </>
       ) : (
@@ -54,4 +76,5 @@ const BorrowLendComponent: React.FC = () => {
     </div>
   );
 };
+
 export default BorrowLendComponent;
