@@ -1,5 +1,4 @@
-import { SupportedChainId } from "@/config/aave";
-import { ChainConfig, getAaveMarket } from "@/config/chains";
+import { SupportedChainId, ChainConfig, getAaveMarket } from "@/config/aave";
 
 /**
  * SDK-based Aave configuration using official address book

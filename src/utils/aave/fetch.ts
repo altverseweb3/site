@@ -4,8 +4,7 @@ import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
 import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
-import { getAaveMarket } from "@/config/chains";
-import { chainNames } from "@/config/aave";
+import { getAaveMarket, chainNames } from "@/config/aave";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
