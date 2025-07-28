@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/lending/Accordion";
 import SupplyOwnedCard from "./SupplyOwnedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositionsHeader";
-import SupplyUnOwnedCard from "./SupplyUnownedCard";
+import SupplyUnownedCard from "./SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "./ScrollBoxSupplyBorrowAssets";
 import { useSourceChain } from "@/store/web3Store";
@@ -280,7 +280,7 @@ const SupplyComponent: React.FC = () => {
 
               {hasData &&
                 aaveReserves.map((reserve) => (
-                  <SupplyUnOwnedCard
+                  <SupplyUnownedCard
                     key={`${reserve.asset}-${sourceChain.chainId}`}
                     asset={reserve}
                     userBalance={reserve.userBalanceFormatted || "0.00"}

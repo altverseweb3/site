@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/lending/Accordion";
 import PoweredByAave from "@/components/ui/lending/PoweredByAave";
 import SupplyOwnedCard from "@/components/ui/lending/SupplyOwnedCard";
-import SupplyUnOwnedCard from "@/components/ui/lending/SupplyUnownedCard";
+import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
 const BorrowLend: React.FC = () => {
@@ -22,7 +22,7 @@ const BorrowLend: React.FC = () => {
             </AccordionTrigger>
             <AccordionContent>
               <SupplyOwnedCard asset={undefined} />
-              <SupplyUnOwnedCard />
+              <SupplyUnownedCard />
             </AccordionContent>
           </AccordionItem>
         </Accordion>

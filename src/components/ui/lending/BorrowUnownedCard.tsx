@@ -14,7 +14,7 @@ import { BorrowModal } from "./BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 
-interface BorrowUnOwnedCardProps {
+interface BorrowUnownedCardProps {
   asset?: AaveReserveData;
   availableToBorrow?: string; // Amount user can borrow based on collateral
   availableToBorrowUSD?: string; // USD value of borrowable amount
@@ -25,7 +25,7 @@ interface BorrowUnOwnedCardProps {
   totalDebtUSD?: number;
 }
 
-const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
+const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   asset,
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
@@ -188,4 +188,4 @@ const BorrowUnOwnedCard: FC<BorrowUnOwnedCardProps> = ({
   );
 };
 
-export default BorrowUnOwnedCard;
+export default BorrowUnownedCard;

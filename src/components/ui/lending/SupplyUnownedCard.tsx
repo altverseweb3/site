@@ -15,7 +15,7 @@ import { SupplyModal } from "./SupplyModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 
-interface SupplyUnOwnedCardProps {
+interface SupplyUnownedCardProps {
   asset?: AaveReserveData;
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
@@ -23,7 +23,7 @@ interface SupplyUnOwnedCardProps {
   onDetails?: (asset: AaveReserveData) => void;
 }
 
-const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
+const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   asset,
   userBalance = "0",
   dollarAmount = "0.00",
@@ -171,4 +171,4 @@ const SupplyUnOwnedCard: FC<SupplyUnOwnedCardProps> = ({
   );
 };
 
-export default SupplyUnOwnedCard;
+export default SupplyUnownedCard;
