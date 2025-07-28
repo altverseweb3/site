@@ -4,14 +4,14 @@ import { useState, ReactNode } from "react"; // Import useState
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { BentoCard, BentoGrid } from "@/components/ui/BentoGrid";
-import { LandingBackground } from "@/components/ui/LandingBackground";
+import { LandingBackground } from "@/components/ui/landing/LandingBackground";
 import ShimmerButton from "@/components/ui/ShimmerButton";
 import { Zap, Globe, HandCoins, Layers, LucideIcon } from "lucide-react";
-import { GlobeCard } from "@/components/ui/GlobeCard";
-import Tiles from "@/components/ui/Tiles";
-import Spider from "@/components/ui/Spider";
+import { GlobeCard } from "@/components/ui/landing/GlobeCard";
+import Tiles from "@/components/ui/landing/Tiles";
+import Spider from "@/components/ui/landing/Spider";
 import BlurIn from "@/components/ui/BlurIn";
-import EarnCard from "@/components/ui/EarnCard";
+import EarnCard from "@/components/ui/landing/EarnCard";
 import {
   AlertDialog,
   AlertDialogAction,
