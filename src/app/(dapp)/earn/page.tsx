@@ -9,6 +9,7 @@ import EarnTable from "@/components/ui/earning/EarnTable";
 import EarnCards from "@/components/ui/earning/EarnCards";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
+import ChainPicker from "@/components/ui/ChainPicker";
 import { chainList } from "@/config/chains";
 import { WalletType } from "@/types/web3";
 import {
@@ -23,8 +24,6 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
-import Image from "next/image";
-import { getTokenGradient } from "@/utils/ui/uiHelpers";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -211,7 +210,9 @@ export default function EarnPage() {
     setSelectedRowForModal(null);
   };
 
-  const handleChainChange = (chains: string[]) => {
+  const handleChainChange = (value: string | string[]) => {
+    // For multiple select, value will be an array
+    const chains = Array.isArray(value) ? value : [];
     setFilters((prev) => ({ ...prev, chains }));
     setCurrentPage(1);
   };
@@ -267,41 +268,14 @@ export default function EarnPage() {
                 </ToggleGroupItem>
               </ToggleGroup>
 
-              {/* Chain Toggle */}
-              <ToggleGroup
+              <ChainPicker
                 type="multiple"
                 value={filters.chains}
-                onValueChange={handleChainChange}
-                variant="outline"
-                className="justify-start flex-wrap"
-              >
-                {chainList.map((chain) => {
-                  const isSelected = filters.chains.includes(chain.id);
-                  return (
-                    <ToggleGroupItem
-                      key={chain.id}
-                      value={chain.id}
-                      aria-label={`Toggle ${chain.name}`}
-                      className="relative h-8 w-8 p-1 overflow-hidden"
-                    >
-                      <Image
-                        src={isSelected ? chain.brandedIcon : chain.icon}
-                        alt={chain.name}
-                        width={16}
-                        height={16}
-                        className="object-contain relative z-10"
-                      />
-                      {isSelected && (
-                        <div
-                          className={`pointer-events-none absolute left-1/2 top-1/2 h-1/2 w-1/2 -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-full bg-gradient-to-r ${getTokenGradient(
-                            chain.chainTokenSymbol,
-                          )} opacity-70 blur-[20px] filter`}
-                        />
-                      )}
-                    </ToggleGroupItem>
-                  );
-                })}
-              </ToggleGroup>
+                onSelectionChange={handleChainChange}
+                chains={chainList}
+                size="sm"
+                className="!mb-0 !pb-0"
+              />
             </div>
 
             {/* Right Side: Protocol Filter, Sort Dropdown, and Asset Input */}
