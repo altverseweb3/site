@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Wallet } from "lucide-react";
 import PersistentAmountDisplay from "@/components/ui/PersistentAmountDisplay";
 import useWeb3Store, { useSourceToken } from "@/store/web3Store";
+import { formatBalance } from "@/utils/common";
 
 interface TokenAmountInputProps {
   amount: string;
@@ -61,59 +62,6 @@ export function TokenAmountInput({
       dollarValue > 0 ? `$${dollarValue.toFixed(2)}` : "$-",
     );
   }, [dollarValue]);
-
-  // Helper function to format balance nicely with abbreviations for large numbers
-  const formatBalance = (balance: string): string => {
-    try {
-      // Handle hex strings that start with "0x"
-      let numericBalance = balance;
-      if (typeof balance === "string" && balance.startsWith("0x")) {
-        numericBalance = BigInt(balance).toString();
-      }
-
-      // Convert balance to a number
-      const numBalance = Number(numericBalance);
-
-      // Check if we have a valid number
-      if (isNaN(numBalance)) {
-        return "0.000000";
-      }
-
-      // Handle abbreviations for large numbers
-      if (numBalance >= 1_000_000_000_000) {
-        // Trillion+
-        return (numBalance / 1_000_000_000_000).toFixed(2) + "T";
-      } else if (numBalance >= 1_000_000_000) {
-        // Billion+
-        return (numBalance / 1_000_000_000).toFixed(2) + "B";
-      } else if (numBalance >= 1_000_000) {
-        // Million+
-        return (numBalance / 1_000_000).toFixed(2) + "M";
-      } else if (numBalance >= 1_000) {
-        // Thousand+
-        return (numBalance / 1_000).toFixed(2) + "K";
-      } else if (numBalance >= 1) {
-        // Between 1 and 999
-        return numBalance.toFixed(3);
-      } else if (numBalance === 0) {
-        // Exactly zero
-        return "0.000";
-      } else {
-        // Small fractions - use more decimal places but cap at 6
-        // For very small numbers, show up to 6 decimal places
-        if (numBalance < 0.0001) {
-          return numBalance.toFixed(6);
-        } else if (numBalance < 0.01) {
-          return numBalance.toFixed(5);
-        } else {
-          return numBalance.toFixed(4);
-        }
-      }
-    } catch (e) {
-      console.error("Error formatting balance:", e);
-      return "0.000000";
-    }
-  };
 
   // Determine if input should be readonly:
   // - For source variant: readonly when no token is selected OR when explicitly set to readonly

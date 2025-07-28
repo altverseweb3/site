@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForCollateral = (
@@ -43,14 +44,6 @@ const calculateNewHealthFactorForCollateral = (
     Math.max(0, newTotalCollateral) * liquidationThreshold;
 
   return adjustedCollateral / currentTotalDebtUSD;
-};
-
-// Health Factor Color Helper
-const getHealthFactorColor = (healthFactor: number): string => {
-  if (healthFactor >= 2) return "text-green-500";
-  if (healthFactor >= 1.5) return "text-yellow-500";
-  if (healthFactor >= 1.1) return "text-orange-500";
-  return "text-red-500";
 };
 
 // Main Collateral Modal Component
