@@ -5,11 +5,13 @@ import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  chainPicker?: React.ReactNode;
 }
 
 const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   activeTab,
   onTabChange,
+  chainPicker,
 }) => {
   // First card metrics (networth, net APY, health factor)
   const metricsDataHealth = [
@@ -65,6 +67,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     <div className="w-full pb-4">
       {/* Mobile and tablet views */}
       <div className="flex flex-col gap-4 xl:hidden">
+        {chainPicker && <div className="w-full">{chainPicker}</div>}
+
         {/* Supply/Borrow Toggle */}
         <div className="w-full">
           <SupplyBorrowToggle
@@ -87,31 +91,32 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         </div>
       </div>
 
-      {/* Desktop view with responsive layout - only show on xl screens */}
+      {/* Desktop */}
       <div className="hidden xl:block">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="flex-shrink-0 w-full xl:w-auto">
-            <SupplyBorrowToggle
-              activeTab={activeTab}
-              onTabChange={onTabChange}
+        <div className="grid grid-cols-3 gap-4 items-stretch">
+          <div className="flex flex-col justify-between h-full">
+            {chainPicker && (
+              <div className="w-full flex-shrink-0">{chainPicker}</div>
+            )}
+
+            <div className="w-full flex-shrink-0 mt-auto">
+              <SupplyBorrowToggle
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-center items-center h-full">
+            <MetricsCard
+              metrics={metricsDataHealth}
+              onButtonClick={handleButtonClick}
+              className="w-full"
             />
           </div>
 
-          {/* Metrics cards with responsive layout */}
-          <div className="flex flex-wrap justify-end gap-4 w-full xl:w-auto">
-            <div className="w-full xl:w-auto">
-              <MetricsCard
-                metrics={metricsDataHealth}
-                onButtonClick={handleButtonClick}
-                className="w-full xl:w-auto"
-              />
-            </div>
-            <div className="w-full xl:w-auto">
-              <MetricsCard
-                metrics={marketMetrics}
-                className="w-full xl:w-auto"
-              />
-            </div>
+          <div className="flex justify-center items-center h-full">
+            <MetricsCard metrics={marketMetrics} className="w-full" />
           </div>
         </div>
       </div>
