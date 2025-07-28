@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions, RateMode } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { getExplorerUrl } from "@/utils/ui/uiHelpers";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
@@ -275,7 +276,7 @@ const RepayModal: FC<RepayModalProps> = ({
                 label: "View Transaction",
                 onClick: () =>
                   window.open(
-                    `https://etherscan.io/tx/${result.txHash}`,
+                    getExplorerUrl(result.txHash!, currentChainId),
                     "_blank",
                   ),
               }
