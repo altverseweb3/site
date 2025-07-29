@@ -2,6 +2,8 @@
  * UI Helper functions for common interface operations
  */
 
+import { getChainByMayanName, getChainByChainId } from "@/config/chains";
+
 /**
  * Converts a hex color to CSS filter values for SVG coloring
  * This is useful for dynamically coloring SVG icons using CSS filters
@@ -117,4 +119,43 @@ export function getTokenGradient(token: string): string {
   };
 
   return gradients[token];
+}
+
+/**
+ * Generates blockchain explorer URL for a transaction hash
+ * Supports both chain name (for Mayan chains) and chain ID lookups
+ *
+ * @param txHash - Transaction hash to view
+ * @param chainIdentifier - Either chain name (string) or chain ID (number)
+ * @returns Full explorer URL for the transaction
+ *
+ * @example
+ * ```ts
+ * // Using chain name (for Mayan-style chains)
+ * const url1 = getExplorerUrl("0x123...", "Ethereum");
+ *
+ * // Using chain ID (for standard EVM chains)
+ * const url2 = getExplorerUrl("0x123...", 1);
+ * ```
+ */
+export function getExplorerUrl(
+  txHash: string,
+  chainIdentifier: string | number,
+): string {
+  let chain;
+
+  if (typeof chainIdentifier === "string") {
+    // For chain names (SwapHistorySheet usage)
+    chain = getChainByMayanName(chainIdentifier);
+  } else {
+    // For chain IDs (RepayModal usage)
+    chain = getChainByChainId(chainIdentifier);
+  }
+
+  if (!chain?.explorerUrl) {
+    // Fallback to Etherscan for Ethereum mainnet if no chain found
+    return `https://etherscan.io/tx/${txHash}`;
+  }
+
+  return `${chain.explorerUrl}/tx/${txHash}`;
 }

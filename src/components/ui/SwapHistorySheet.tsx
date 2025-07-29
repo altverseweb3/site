@@ -21,6 +21,7 @@ import { WalletFilter, WalletIcons } from "@/components/ui/WalletFilter";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletType, SwapData } from "@/types/web3";
 import { getChainByMayanChainId, getChainByMayanName } from "@/config/chains";
+import { getExplorerUrl } from "@/utils/ui/uiHelpers";
 import type { WalletFilterType } from "@/types/web3";
 
 interface SwapHistorySheetProps {
@@ -207,11 +208,6 @@ export function SwapHistorySheet({
     selectedWallet,
     walletConnectionChecker,
   );
-
-  const getExplorerUrl = (txHash: string, chainName: string): string => {
-    const chain = getChainByMayanName(chainName);
-    return `${chain?.explorerUrl}/tx/${txHash}`;
-  };
 
   const getEmptyStateMessage = (): string => {
     if (walletSummary.totalConnected === 0) {
