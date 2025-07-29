@@ -987,6 +987,14 @@ export const useSetActiveSwapSection = () => {
   return useWeb3Store((state) => state.setActiveSwapSection);
 };
 
+export const useAaveChain = (): Chain => {
+  return useWeb3Store((state) => state.aaveChain);
+};
+
+export const useSetAaveChain = () => {
+  return useWeb3Store((state) => state.setAaveChain);
+};
+
 export const useExtractUserWallets = (
   connectedWallets: Array<Omit<WalletInfo, "provider">>,
 ): UserWallets => {
