@@ -9,7 +9,10 @@ import React, { useState, useEffect } from "react";
 import {
   useSetActiveSwapSection,
   useIsWalletTypeConnected,
+  useAaveChain,
+  useSetAaveChain,
 } from "@/store/web3Store";
+import useWeb3Store from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import { AaveSDK } from "@/utils/aave/aaveSDK";
@@ -18,9 +21,12 @@ import { getChainById } from "@/config/chains";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
-  const [selectedChain, setSelectedChain] = useState<string>("");
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  const aaveChain = useAaveChain();
+  const setAaveChain = useSetAaveChain();
+
   const aaveLendingSupportedChains = chainList.filter((chain) =>
     AaveSDK.isChainSupported(chain.chainId),
   );
@@ -31,13 +37,39 @@ const BorrowLendComponent: React.FC = () => {
     setActiveSwapSection("lend");
   }, [setActiveSwapSection]);
 
-  const handleChainChange = async (value: string | string[]) => {
-    const newValue = typeof value === "string" ? value : "";
-    if (newValue !== "") {
-      setSelectedChain(newValue);
+  useEffect(() => {
+    const isCurrentChainSupported = AaveSDK.isChainSupported(aaveChain.chainId);
+    if (!isCurrentChainSupported && aaveLendingSupportedChains.length > 0) {
+      setAaveChain(aaveLendingSupportedChains[0]);
+    }
+  }, [aaveChain, aaveLendingSupportedChains, setAaveChain]);
 
-      const newChain = getChainById(newValue);
+  useEffect(() => {
+    const alignWalletWithPersistedChain = async () => {
+      if (isWalletConnected && aaveChain) {
+        const currentWallet = useWeb3Store
+          .getState()
+          .getWalletByType(WalletType.REOWN_EVM);
+
+        if (currentWallet && currentWallet.chainId !== aaveChain.chainId) {
+          console.log(
+            `Wallet on chain ${currentWallet.chainId}, switching to persisted aaveChain ${aaveChain.chainId}`,
+          );
+          await switchToChain(aaveChain);
+        }
+      }
+    };
+
+    alignWalletWithPersistedChain();
+  }, [isWalletConnected, aaveChain, switchToChain]);
+
+  const handleChainChange = async (value: string | string[]) => {
+    const newChainId = typeof value === "string" ? value : "";
+    if (newChainId !== "") {
+      const newChain = getChainById(newChainId);
       if (newChain) {
+        setAaveChain(newChain);
+
         await switchToChain(newChain);
       }
     }
@@ -53,7 +85,7 @@ const BorrowLendComponent: React.FC = () => {
             chainPicker={
               <ChainPicker
                 type="single"
-                value={selectedChain}
+                value={aaveChain.id}
                 onSelectionChange={handleChainChange}
                 chains={aaveLendingSupportedChains}
                 size="md"
