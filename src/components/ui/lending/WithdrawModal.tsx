@@ -21,6 +21,8 @@ import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { getHealthFactorColor } from "@/utils/aave/utils";
+import { formatBalance } from "@/utils/common";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForWithdraw = (
@@ -41,22 +43,6 @@ const calculateNewHealthFactorForWithdraw = (
 
   const adjustedCollateral = newTotalCollateral * liquidationThreshold;
   return adjustedCollateral / currentTotalDebtUSD;
-};
-
-// Health Factor Color Helper
-const getHealthFactorColor = (healthFactor: number): string => {
-  if (healthFactor >= 2) return "text-green-500";
-  if (healthFactor >= 1.5) return "text-yellow-500";
-  if (healthFactor >= 1.1) return "text-orange-500";
-  return "text-red-500";
-};
-
-// Format number helper
-const formatNumber = (num: number, decimals = 2): string => {
-  if (num >= 1e9) return (num / 1e9).toFixed(decimals) + "B";
-  if (num >= 1e6) return (num / 1e6).toFixed(decimals) + "M";
-  if (num >= 1e3) return (num / 1e3).toFixed(decimals) + "K";
-  return num.toFixed(decimals);
 };
 
 // Main Withdraw Modal Component
@@ -491,7 +477,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 <TrendingDown className="h-4 w-4 mr-2" />
                 Withdraw{" "}
                 {withdrawAmountNum > 0
-                  ? `${formatNumber(withdrawAmountNum, 4)} `
+                  ? `${formatBalance(withdrawAmountNum, 4)} `
                   : ""}
                 {tokenSymbol}
                 <ArrowRight className="h-4 w-4 ml-2" />

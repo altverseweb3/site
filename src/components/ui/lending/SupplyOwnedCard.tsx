@@ -17,7 +17,8 @@ import type { Token, Chain } from "@/types/web3";
 
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import { formatBalance, formatAPY } from "@/utils/aave/format";
+import { formatAPY } from "@/utils/aave/utils";
+import { formatBalance } from "@/utils/common";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 

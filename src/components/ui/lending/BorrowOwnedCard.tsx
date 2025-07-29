@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Card";
 import type { Token, Chain } from "@/types/web3";
 import { UserBorrowPosition } from "@/utils/aave/fetch";
-import { formatBalance } from "@/utils/aave/format";
+import { formatBalance } from "@/utils/common";
 import { getChainByChainId } from "@/config/chains";
 
 interface BorrowOwnedCardProps {

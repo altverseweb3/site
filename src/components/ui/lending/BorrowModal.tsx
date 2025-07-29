@@ -23,6 +23,8 @@ import { chainNames, SupportedChainId } from "@/config/aave";
 import type { Token, Chain, MayanChainName } from "@/types/web3";
 import { Network, WalletType } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { getHealthFactorColor } from "@/utils/aave/utils";
+import { formatBalance } from "@/utils/common";
 
 // Health Factor Calculator for Borrowing
 const calculateNewHealthFactorForBorrow = (
@@ -39,22 +41,6 @@ const calculateNewHealthFactorForBorrow = (
 
   const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
   return adjustedCollateral / newTotalDebt;
-};
-
-// Health Factor Color Helper
-const getHealthFactorColor = (healthFactor: number): string => {
-  if (healthFactor >= 2) return "text-green-500";
-  if (healthFactor >= 1.5) return "text-yellow-500";
-  if (healthFactor >= 1.1) return "text-orange-500";
-  return "text-red-500";
-};
-
-// Format number helper
-const formatNumber = (num: number, decimals = 2): string => {
-  if (num >= 1e9) return (num / 1e9).toFixed(decimals) + "B";
-  if (num >= 1e6) return (num / 1e6).toFixed(decimals) + "M";
-  if (num >= 1e3) return (num / 1e3).toFixed(decimals) + "K";
-  return num.toFixed(decimals);
 };
 
 // Main Borrow Modal Component
@@ -516,7 +502,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Borrow{" "}
                 {borrowAmountNum > 0
-                  ? `${formatNumber(borrowAmountNum, 4)} `
+                  ? `${formatBalance(borrowAmountNum, 4)} `
                   : ""}
                 {tokenSymbol}
                 <ArrowRight className="h-4 w-4 ml-2" />
