@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/Accordion";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import { useSourceChain, useIsWalletTypeConnected } from "@/store/web3Store";
+import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import {
   AaveReserveData,
   AaveReservesResult,
@@ -29,7 +29,7 @@ const BorrowComponent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
-  const sourceChain = useSourceChain();
+  const aaveChain = useAaveChain();
   const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
 
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
@@ -64,7 +64,7 @@ const BorrowComponent: React.FC = () => {
       // Skip if same chain and we have data (unless forced)
       if (
         !force &&
-        lastChainId === sourceChain.chainId &&
+        lastChainId === aaveChain.chainId &&
         borrowableReserves.length > 0
       ) {
         console.log("Data already loaded for this chain, skipping...");
@@ -75,7 +75,7 @@ const BorrowComponent: React.FC = () => {
         setLoading(true);
         setError(null);
         console.log(
-          `Fetching Aave reserves for borrowing on chain ${sourceChain.chainId}...`,
+          `Fetching Aave reserves for borrowing on chain ${aaveChain.chainId}...`,
         );
         if (!isWalletConnected) return;
         // Fetch reserves data using your enhanced function
@@ -85,7 +85,7 @@ const BorrowComponent: React.FC = () => {
           `Successfully loaded ${reservesResult.borrowAssets.length} borrowable assets`,
         );
         setBorrowableReserves(reservesResult.borrowAssets);
-        setLastChainId(sourceChain.chainId);
+        setLastChainId(aaveChain.chainId);
 
         // Now fetch user borrow positions
         await loadUserBorrowPositions(reservesResult.borrowAssets);
@@ -105,7 +105,7 @@ const BorrowComponent: React.FC = () => {
       loading,
       isWalletConnected,
       lastChainId,
-      sourceChain.chainId,
+      aaveChain.chainId,
       borrowableReserves.length,
       fetchAllReservesData,
       loadUserBorrowPositions, // Added this dependency
@@ -153,7 +153,7 @@ const BorrowComponent: React.FC = () => {
     if (isWalletConnected) {
       loadAaveReserves();
     }
-  }, [isWalletConnected, loadAaveReserves, sourceChain.chainId]);
+  }, [isWalletConnected, loadAaveReserves, aaveChain.chainId]);
 
   const hasData = borrowableReserves.length > 0;
   const hasBorrowPositions = userBorrowPositions.length > 0;
@@ -193,7 +193,7 @@ const BorrowComponent: React.FC = () => {
                 hasBorrowPositions &&
                 userBorrowPositions.map((borrowPosition) => (
                   <BorrowOwnedCard
-                    key={`${borrowPosition.asset.asset}-${sourceChain.chainId}`}
+                    key={`${borrowPosition.asset.asset}-${aaveChain.chainId}`}
                     borrowPosition={borrowPosition}
                     healthFactor="1.24" // You'll want to get real health factor
                     totalCollateralUSD={0} // You'll want to get real values
@@ -259,7 +259,7 @@ const BorrowComponent: React.FC = () => {
                     Failed to load reserves: {error}
                   </div>
                   <div className="text-sm text-gray-400 mb-4">
-                    Chain: {sourceChain.name}
+                    Chain: {aaveChain.name}
                   </div>
                   <button
                     disabled={loading}
@@ -286,7 +286,7 @@ const BorrowComponent: React.FC = () => {
                   const borrowData = calculateAvailableToBorrow(reserve);
                   return (
                     <BorrowUnownedCard
-                      key={`${reserve.asset}-${sourceChain.chainId}`}
+                      key={`${reserve.asset}-${aaveChain.chainId}`}
                       asset={reserve}
                       availableToBorrow={borrowData.amount}
                       availableToBorrowUSD={borrowData.amountUSD}
