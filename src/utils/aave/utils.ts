@@ -34,6 +34,8 @@ export const formatPercentage = (
   return `${value.toFixed(decimals)}%`;
 };
 
+// Aave uses RAY decimal precision (1e27) for all interest rate calculations.
+// This means: 1% APY = 0.01e27 = 10000000000000000000000000
 export function rayToPercentage(rayValue: string): string {
   const RAY = Math.pow(10, 27);
   const SECONDS_PER_YEAR = 31536000;

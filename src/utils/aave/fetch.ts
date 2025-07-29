@@ -5,6 +5,7 @@ import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
 import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
 import { getAaveMarket, chainNames } from "@/config/aave";
+import { rayToPercentage } from "@/utils/aave/utils";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
@@ -71,17 +72,6 @@ export interface UserBorrowPosition {
   stableBorrowRate: string;
   variableBorrowRate: string;
   currentBorrowAPY: string;
-}
-
-function rayToPercentage(rayValue: string): string {
-  const RAY = Math.pow(10, 27);
-  const SECONDS_PER_YEAR = 31536000;
-  const rayValueInDecimals = Number(rayValue) / RAY;
-  const aaveAPY =
-    (Math.pow(1 + rayValueInDecimals / SECONDS_PER_YEAR, SECONDS_PER_YEAR) -
-      1) *
-    100;
-  return Number(aaveAPY).toFixed(2);
 }
 
 // Rate limiting utility
