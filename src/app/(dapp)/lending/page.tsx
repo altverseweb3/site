@@ -13,25 +13,33 @@ import {
 import { WalletType } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import { AaveSDK } from "@/utils/aave/aaveSDK";
+import { useChainSwitch } from "@/utils/swap/walletMethods";
+import { getChainById } from "@/config/chains";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
-  const [selectedChain, setSelectedChain] = useState<string>(""); // Single chain selection
+  const [selectedChain, setSelectedChain] = useState<string>("");
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-
   const aaveLendingSupportedChains = chainList.filter((chain) =>
     AaveSDK.isChainSupported(chain.chainId),
   );
+
+  const { switchToChain } = useChainSwitch(aaveLendingSupportedChains[0]);
 
   useEffect(() => {
     setActiveSwapSection("lend");
   }, [setActiveSwapSection]);
 
-  const handleChainChange = (value: string | string[]) => {
+  const handleChainChange = async (value: string | string[]) => {
     const newValue = typeof value === "string" ? value : "";
     if (newValue !== "") {
       setSelectedChain(newValue);
+
+      const newChain = getChainById(newValue);
+      if (newChain) {
+        await switchToChain(newChain);
+      }
     }
   };
 
