@@ -1,11 +1,12 @@
 import { ethers } from "ethers";
 import { useCallback } from "react";
 import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3Abis";
-import { getAaveMarket, getChainByChainId } from "@/config/chains";
+import { getChainByChainId } from "@/config/chains";
 import { altverseAPI } from "@/api/altverse";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { ExtendedAssetDetails } from "@/utils/aave/calculations";
+import { getAaveMarket } from "@/config/aave";
 
 export const fetchExtendedAssetDetails = async (
   currentAsset: AaveReserveData,
