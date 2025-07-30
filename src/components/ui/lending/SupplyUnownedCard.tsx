@@ -17,13 +17,13 @@ import { SupplyModal } from "@/components/ui/lending/SupplyModal";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface SupplyUnownedCardProps {
   asset?: AaveReserveData;
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
   onSupply?: (asset: AaveReserveData) => void;
-  onDetails?: (asset: AaveReserveData) => void;
 }
 
 const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
@@ -31,7 +31,6 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   userBalance = "0",
   dollarAmount = "0.00",
   onSupply = () => {},
-  onDetails = () => {},
 }) => {
   // Default asset for demo purposes
   const defaultAsset: AaveReserveData = {
@@ -168,7 +167,9 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
         >
           <PrimaryButton>supply</PrimaryButton>
         </SupplyModal>
-        <GrayButton onClick={() => onDetails(currentAsset)}>details</GrayButton>
+        <AssetDetailsModal assetData={currentAsset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

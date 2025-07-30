@@ -493,7 +493,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <span className="text-sm text-zinc-400">max LTV</span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.ltv || "Loading..."}
+                    {currentAsset.ltv || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -501,7 +501,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation threshold
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationThreshold || "Loading..."}
+                    {currentAsset.liquidationThreshold || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -509,7 +509,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation penalty
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationPenalty || "Loading..."}
+                    {currentAsset.liquidationPenalty || "N/A"}
                   </div>
                 </div>
               </div>
