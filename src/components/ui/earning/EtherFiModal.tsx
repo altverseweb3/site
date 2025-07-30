@@ -264,14 +264,14 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 <div className="grid grid-cols-2 gap-8">
                   <div className="text-center">
                     <div className="text-sm text-[#A1A1AA] mb-1">APY</div>
-                    <div className="text-2xl font-bold text-green-500">
+                    <div className="text-2xl font-bold text-green-500 font-mono">
                       {data.apy === 0 ? "TBD" : `${data.apy.toFixed(1)}%`}
                     </div>
                   </div>
                   {!isDashboardRow(data) && (
                     <div className="text-center">
                       <div className="text-sm text-[#A1A1AA] mb-1">TVL</div>
-                      <div className="text-2xl font-bold text-[#FAFAFA]">
+                      <div className="text-2xl font-bold text-[#FAFAFA] font-mono">
                         {formatCurrency(data.tvl)}
                       </div>
                     </div>
