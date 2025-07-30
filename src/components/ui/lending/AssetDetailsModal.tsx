@@ -174,12 +174,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <button
                       onClick={() =>
                         window.open(
-                          `https://etherscan.io/token/${currentAsset.asset}`,
+                          `${chain.explorerUrl}/token/${currentAsset.asset}`,
                           "_blank",
                         )
                       }
                       className="p-1 hover:bg-[#1A1A1A] rounded-md transition-colors"
-                      title="View on Etherscan"
+                      title="view on block explorer"
                     >
                       <ExternalLink className="h-3 w-3 text-zinc-400" />
                     </button>
@@ -195,7 +195,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
                 <span className="ml-3 text-zinc-400">
-                  Loading asset details...
+                  loading asset details...
                 </span>
               </div>
             )}
@@ -215,7 +215,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#232326] p-6">
                       <div className="text-sm text-zinc-400 mb-2">
-                        Total supplied
+                        total supplied
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
                         {formatUSDValue(metrics.reserveSize, tokenPrice)}
@@ -253,7 +253,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           </>
                         ) : (
                           <div className="text-xs text-zinc-400">
-                            No supply cap
+                            no supply cap
                           </div>
                         )}
                       </div>
@@ -261,7 +261,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#232326] p-6">
                       <div className="text-sm text-zinc-400 mb-2">
-                        Total borrowed
+                        total borrowed
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
                         {formatUSDValue(metrics.totalBorrowed, tokenPrice)}
@@ -273,7 +273,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.borrowCapFormatted !== "No cap"
                           ? `of ${metrics.borrowCapFormatted} ${currentAsset.symbol} possible`
-                          : "No borrow cap"}
+                          : "no borrow cap"}
                       </div>
 
                       <div className="space-y-2">
@@ -299,7 +299,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           </>
                         ) : (
                           <div className="text-xs text-zinc-400">
-                            No borrow cap
+                            no borrow cap
                           </div>
                         )}
                       </div>
@@ -310,7 +310,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm text-zinc-400 mb-2">
-                          Utilization Rate
+                          utilization rate
                         </div>
                         <div className="text-3xl font-bold text-blue-500 mb-1">
                           {calculateUtilizationRate(currentAsset)}%
@@ -341,7 +341,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           Oracle price
                         </div>
                         <div className="text-2xl font-bold text-white">
-                          ${Math.round(tokenPrice * 100) / 100}
+                          {formatUSDValue(tokenPrice.toString())}
                         </div>
                       </div>
                       <div className="text-right">
@@ -354,7 +354,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#232326] p-6">
                       <h3 className="text-lg font-semibold text-white mb-4">
-                        Supply Info
+                        supply info
                       </h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
@@ -371,14 +371,14 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Supply APY</span>
+                          <span className="text-zinc-400">supply APY</span>
                           <span className="text-green-500 font-medium">
                             {currentAsset.supplyAPY}%
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Supply cap</span>
+                          <span className="text-zinc-400">supply cap</span>
                           <div className="text-right">
                             <div className="text-white">
                               {metrics.supplyCapFormatted}
@@ -393,7 +393,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                         <div className="flex justify-between items-center">
                           <span className="text-zinc-400">
-                            Can be collateral
+                            can be collateral
                           </span>
                           <span
                             className={cn(
@@ -411,11 +411,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#232326] p-6">
                       <h3 className="text-lg font-semibold text-white mb-4">
-                        Borrow Info
+                        borrow Info
                       </h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Total borrowed</span>
+                          <span className="text-zinc-400">total borrowed</span>
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.totalBorrowed)}{" "}
@@ -431,21 +431,21 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Variable APY</span>
+                          <span className="text-zinc-400">variable APY</span>
                           <span className="text-red-500 font-medium">
                             {currentAsset.variableBorrowAPY}%
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Stable APY</span>
+                          <span className="text-zinc-400">stable APY</span>
                           <span className="text-amber-500 font-medium">
                             {currentAsset.stableBorrowAPY}%
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Borrow cap</span>
+                          <span className="text-zinc-400">borrow cap</span>
                           <div className="text-right">
                             <div className="text-white">
                               {metrics.borrowCapFormatted}
@@ -459,7 +459,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Can be borrowed</span>
+                          <span className="text-zinc-400">can be borrowed</span>
                           <span
                             className={cn(
                               "font-medium",
@@ -479,17 +479,17 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             })()}
 
             <div className="p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-              <h3 className="text-sm font-semibold mb-3">Risk Parameters</h3>
+              <h3 className="text-sm font-semibold mb-3">risk parameters</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <span className="text-sm text-zinc-400">Max LTV</span>
+                  <span className="text-sm text-zinc-400">max LTV</span>
                   <div className="text-sm font-medium">
                     {extendedDetails?.ltv || "Loading..."}
                   </div>
                 </div>
                 <div>
                   <span className="text-sm text-zinc-400">
-                    Liquidation Threshold
+                    liquidation threshold
                   </span>
                   <div className="text-sm font-medium">
                     {extendedDetails?.liquidationThreshold || "Loading..."}
@@ -497,7 +497,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 </div>
                 <div>
                   <span className="text-sm text-zinc-400">
-                    Liquidation Penalty
+                    liquidation penalty
                   </span>
                   <div className="text-sm font-medium">
                     {extendedDetails?.liquidationPenalty || "Loading..."}
@@ -507,12 +507,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             </div>
 
             <div className="p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-              <h3 className="text-sm font-semibold mb-3">Configuration</h3>
+              <h3 className="text-sm font-semibold mb-3">configuration</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-zinc-400">
-                      Can be Collateral
+                      can be collateral
                     </span>
                     <span
                       className={cn(
@@ -527,7 +527,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-zinc-400">
-                      Can be Borrowed
+                      can be borrowed
                     </span>
                     <span
                       className={cn(
@@ -541,7 +541,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-zinc-400">Asset Status</span>
+                    <span className="text-sm text-zinc-400">asset status</span>
                     <span
                       className={cn(
                         "text-sm",
@@ -563,7 +563,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-zinc-400">
-                      Stable Borrow Enabled
+                      stable borrow enabled
                     </span>
                     <span
                       className={cn(
@@ -578,7 +578,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-zinc-400">
-                      Isolation Mode
+                      isolation mode
                     </span>
                     <span
                       className={cn(
@@ -597,7 +597,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     currentAsset.debtCeiling && (
                       <div className="flex justify-between">
                         <span className="text-sm text-zinc-400">
-                          Isolation Ceiling
+                          isolation ceiling
                         </span>
                         <span className="text-sm text-amber-500">
                           ${currentAsset.debtCeiling.toLocaleString()}
@@ -624,9 +624,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       }
                       className="text-zinc-400 hover:text-white"
                       title="Copy address"
-                    >
-                      📋
-                    </button>
+                    ></button>
                   </div>
                 </div>
                 {currentAsset.aTokenAddress && (
@@ -644,10 +642,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           )
                         }
                         className="text-zinc-400 hover:text-white"
-                        title="Copy address"
-                      >
-                        📋
-                      </button>
+                        title="copy address"
+                      ></button>
                     </div>
                   </div>
                 )}
@@ -666,10 +662,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           )
                         }
                         className="text-zinc-400 hover:text-white"
-                        title="Copy address"
-                      >
-                        📋
-                      </button>
+                        title="copy address"
+                      ></button>
                     </div>
                   </div>
                 )}
@@ -682,7 +676,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                   variant="outline"
                   className="border-[#232326] text-zinc-300 hover:bg-[#1A1A1A]"
                 >
-                  Close
+                  close
                 </Button>
               </DialogClose>
             </div>
