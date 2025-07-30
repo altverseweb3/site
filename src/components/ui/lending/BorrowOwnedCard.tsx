@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   BlueButton,
   GrayButton,
@@ -24,7 +24,7 @@ interface BorrowOwnedCardProps {
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
-  walletBalance?: string; // User's wallet balance of this token
+  walletBalance?: string;
   onRepay?: (
     position: UserBorrowPosition,
     amount: string,
@@ -43,7 +43,6 @@ const BorrowOwnedCard = ({
   onDetailsClick = () => {},
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
-  const [isRepaying] = useState(false);
 
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
@@ -150,9 +149,7 @@ const BorrowOwnedCard = ({
           tokenAddress={asset.asset}
           tokenDecimals={asset.decimals}
         >
-          <BlueButton disabled={isRepaying}>
-            {isRepaying ? "repaying..." : "repay"}
-          </BlueButton>
+          <BlueButton>repay</BlueButton>
         </RepayModal>
 
         <GrayButton onClick={handleDetailsClick}>details</GrayButton>
