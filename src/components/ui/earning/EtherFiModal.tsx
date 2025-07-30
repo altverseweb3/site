@@ -86,10 +86,9 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
         const balanceResult = await getUserVaultBalance(vault.id);
         const balanceNum = parseFloat(balanceResult.formatted);
 
-        // Only show balance if user has a position (balance > 0)
+        // Always set balance state, even if it's 0
+        let balanceUsd = 0;
         if (balanceNum > 0) {
-          // Calculate USD value using underlying asset price
-          let balanceUsd = 0;
           try {
             // Get the primary deposit asset to use for price estimation
             const primaryAsset = vault.supportedAssets.deposit[0];
@@ -103,14 +102,12 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
               error,
             );
           }
-
-          setUserVaultBalance({
-            balance: balanceResult.formatted,
-            balanceUsd,
-          });
-        } else {
-          setUserVaultBalance(null);
         }
+
+        setUserVaultBalance({
+          balance: balanceResult.formatted,
+          balanceUsd,
+        });
       } catch (error) {
         console.error("Failed to fetch user vault balance:", error);
         setUserVaultBalance(null);
@@ -184,9 +181,8 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Balance and Value - Show for dashboard rows or when user has a vault balance */}
-          {(isDashboardRow(data) ||
-            (isWalletConnected && (userVaultBalance || isLoadingBalance))) && (
+          {/* Balance and Value - Show for dashboard rows or when wallet is connected */}
+          {(isDashboardRow(data) || isWalletConnected) && (
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <h3 className="text-lg font-bold text-[#FAFAFA] mb-1 mt-1">
