@@ -158,7 +158,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-[#18181B] border-[#27272A] text-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-[#18181B] border-[#27272A] text-white max-h-[90vh] overflow-hidden flex flex-col rounded-lg">
           <DialogHeader className="pb-4">
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
@@ -180,7 +180,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             </div>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto flex-1 scrollbar-hide">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
