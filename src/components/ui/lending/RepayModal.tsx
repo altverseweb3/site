@@ -408,10 +408,12 @@ const RepayModal: FC<RepayModalProps> = ({
 
               {/* Insufficient balance warning (but don't prevent submission) */}
               {repayAmount && isAmountValid && hasInsufficientBalance && (
-                <div className="flex items-center gap-2 text-yellow-400 text-xs">
-                  <AlertCircle className="h-3 w-3" />
-                  insufficient wallet balance (have:{" "}
-                  {walletBalanceNum.toFixed(6)} {tokenSymbol})
+                <div className="flex items-start gap-2 text-yellow-400 text-xs">
+                  <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <div className="break-words">
+                    insufficient wallet balance (have:{" "}
+                    {walletBalanceNum.toFixed(6)} {tokenSymbol.toLowerCase()})
+                  </div>
                 </div>
               )}
             </div>
@@ -478,9 +480,7 @@ const RepayModal: FC<RepayModalProps> = ({
                     !isFormValid ? "opacity-50 cursor-not-allowed" : ""
                   }
                 >
-                  {isSubmitting
-                    ? "repaying..."
-                    : `repay ${tokenSymbol.toLowerCase()}`}
+                  {isSubmitting ? "repaying..." : `repay`}
                 </BlueButton>
               </div>
             </div>
