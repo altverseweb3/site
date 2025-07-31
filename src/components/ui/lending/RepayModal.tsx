@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  BlueButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions, RateMode } from "@/utils/aave/interact";
@@ -323,7 +326,7 @@ const RepayModal: FC<RepayModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-md bg-[#131313] border-[#232326] text-white">
+        <DialogContent className="sm:max-w-[460px] bg-[#18181B] border-[#27272A] text-white">
           <DialogHeader className="space-y-4">
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
@@ -461,24 +464,24 @@ const RepayModal: FC<RepayModalProps> = ({
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
               <DialogClose asChild>
-                <Button
-                  variant="outline"
-                  className="flex-1 border-[#232326] text-gray-300 hover:bg-[#1A1A1A]"
-                >
-                  Cancel
-                </Button>
+                <div className="flex-1">
+                  <GrayButton>Cancel</GrayButton>
+                </div>
               </DialogClose>
 
-              <Button
-                onClick={handleRepay}
-                disabled={!isFormValid}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Repaying..." : `Repay ${tokenSymbol}`}
-              </Button>
+              <div className="flex-1">
+                <BlueButton
+                  onClick={handleRepay}
+                  disabled={!isFormValid}
+                  className={
+                    !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                  }
+                >
+                  {isSubmitting ? "Repaying..." : `Repay ${tokenSymbol}`}
+                </BlueButton>
+              </div>
             </div>
           </div>
         </DialogContent>
