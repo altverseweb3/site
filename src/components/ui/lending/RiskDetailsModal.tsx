@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { useState, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import {
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/utils";
 import { getHealthFactorColor, getLTVColor } from "@/utils/aave/utils";
-import { formatCurrency } from "@/utils/formatters";
 
 export interface RiskDetailsModalProps {
   children: ReactNode;
@@ -32,6 +31,8 @@ const RiskDetailsModal = ({
   maxLTV,
   liquidationThreshold,
 }: RiskDetailsModalProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const healthFactor =
     propHealthFactor === null || propHealthFactor === Infinity
       ? Infinity
@@ -42,7 +43,7 @@ const RiskDetailsModal = ({
   const liquidationThresholdPercentage = liquidationThreshold;
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md bg-[#18181B] border-[#27272A] text-white rounded-lg">
         <DialogHeader className="pb-4">
@@ -66,7 +67,7 @@ const RiskDetailsModal = ({
               <span className="text-sm text-zinc-400">health factor</span>
               <span
                 className={cn(
-                  "text-lg font-semibold font-mono",
+                  "text-lg font-semibold",
                   getHealthFactorColor(healthFactor),
                 )}
               >
@@ -107,9 +108,7 @@ const RiskDetailsModal = ({
             )}
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1 font-mono">
-                1.00
-              </div>
+              <div className="text-lg font-semibold text-white mb-1">1.00</div>
               <div className="text-sm text-zinc-400">liquidation threshold</div>
             </div>
           </div>
@@ -118,12 +117,12 @@ const RiskDetailsModal = ({
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-zinc-400">current ltv</span>
-              <span className="text-lg font-semibold text-white font-mono">
+              <span className="text-lg font-semibold text-white">
                 {ltvPercentage.toFixed(2)}%
               </span>
             </div>
 
-            <div className="text-xs text-zinc-500 mb-2 font-mono">
+            <div className="text-xs text-zinc-500 mb-2">
               max ltv: {maxLTVPercentage.toFixed(1)}% | liquidation:{" "}
               {liquidationThresholdPercentage.toFixed(1)}%
             </div>
@@ -144,22 +143,22 @@ const RiskDetailsModal = ({
               />
               <div className="flex justify-between mt-2 text-xs text-zinc-500">
                 <span>0%</span>
-                <span className="text-amber-400 font-mono">
+                <span className="text-amber-400">
                   {maxLTVPercentage.toFixed(0)}% max
                 </span>
-                <span className="text-red-400 font-mono">
+                <span className="text-red-400">
                   {liquidationThresholdPercentage.toFixed(0)}% liq
                 </span>
               </div>
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1 font-mono">
+              <div className="text-lg font-semibold text-white mb-1">
                 {liquidationThresholdPercentage > 0
                   ? (
-                      (ltvPercentage / liquidationThresholdPercentage) *
-                      100
-                    ).toFixed(1)
+                    (ltvPercentage / liquidationThresholdPercentage) *
+                    100
+                  ).toFixed(1)
                   : "0.0"}
                 %
               </div>
@@ -180,15 +179,23 @@ const RiskDetailsModal = ({
           {/* Position Values */}
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-500 mb-1 font-mono">
-                {formatCurrency(totalCollateralUSD)}
+              <div className="text-2xl font-bold text-green-500 mb-1">
+                $
+                {totalCollateralUSD.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <div className="text-sm text-zinc-400">collateral</div>
             </div>
 
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-500 mb-1 font-mono">
-                {formatCurrency(totalDebtUSD)}
+              <div className="text-2xl font-bold text-red-500 mb-1">
+                $
+                {totalDebtUSD.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
               <div className="text-sm text-zinc-400">debt</div>
             </div>
