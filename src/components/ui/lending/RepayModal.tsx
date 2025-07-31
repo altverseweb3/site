@@ -326,7 +326,7 @@ const RepayModal: FC<RepayModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-[460px] bg-[#18181B] border-[#27272A] text-white">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[460px] bg-[#18181B] border-[#27272A] text-white">
           <DialogHeader className="space-y-4">
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
