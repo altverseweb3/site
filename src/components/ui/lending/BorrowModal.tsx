@@ -19,12 +19,12 @@ import { AaveTransactions } from "@/utils/aave/interact";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
-import { chainNames, SupportedChainId } from "@/config/aave";
-import type { Token, Chain, MayanChainName } from "@/types/web3";
-import { Network, WalletType } from "@/types/web3";
+import { SupportedChainId } from "@/config/aave";
+import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { getHealthFactorColor } from "@/utils/aave/utils";
 import { formatBalance } from "@/utils/common";
+import { getChainByChainId } from "@/config/chains";
 
 // Health Factor Calculator for Borrowing
 const calculateNewHealthFactorForBorrow = (
@@ -99,8 +99,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
 
-  const chainName = chainNames[chainId] || "ethereum";
-
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
     id: tokenAddress || `${tokenSymbol}-${chainId}`,
@@ -113,30 +111,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
     stringChainId: chainId.toString(),
   };
 
-  const chain: Chain = {
-    id: chainName,
-    name: chainName,
-    chainName: chainName,
-    mayanName: chainName as MayanChainName,
-    alchemyNetworkName: Network.ETH_MAINNET,
-    nativeGasToken: {
-      symbol: "ETH",
-      address: "",
-      decimals: 18,
-    },
-    icon: "",
-    brandedIcon: "",
-    chainTokenSymbol: "ETH",
-    currency: "USD",
-    backgroundColor: "",
-    fontColor: "",
-    chainId: chainId,
-    mayanChainId: 2,
-    decimals: 18,
-    l2: false,
-    gasDrop: 0,
-    walletType: WalletType.REOWN_EVM,
-  };
+  const chain = getChainByChainId(chainId);
 
   // Handle client-side mounting
   useEffect(() => {
