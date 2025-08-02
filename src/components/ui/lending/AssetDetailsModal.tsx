@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useMemo, FC, ReactNode } from "react";
+import { useState, useEffect, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import type { Token, Chain } from "@/types/web3";
+import type { Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 import {
   ExtendedAssetDetails,
@@ -25,10 +25,10 @@ import {
   calculateUtilizationRate,
 } from "@/utils/aave/calculations";
 import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
-import { formatBalance, formatCurrency } from "@/utils/formatters";
+import { formatBalance, formatCurrency, truncateAddress } from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
-  assetData?: AaveReserveData;
+  currentAsset: AaveReserveData;
   tokenSymbol?: string;
   tokenName?: string;
   tokenIcon?: string;
@@ -39,13 +39,8 @@ interface AssetDetailsModalProps {
 }
 
 const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
-  assetData,
-  tokenSymbol = "USDC",
-  tokenName = "USD Coin",
-  tokenIcon = "usdc.png",
+  currentAsset,
   chainId = 1,
-  tokenAddress = "",
-  tokenDecimals = 18,
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,52 +49,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-
-  const currentAsset: AaveReserveData = useMemo(
-    () =>
-      assetData || {
-        symbol: tokenSymbol,
-        name: tokenName,
-        asset: tokenAddress,
-        decimals: tokenDecimals,
-        chainId: chainId,
-        tokenIcon: tokenIcon,
-        aTokenAddress: "",
-        currentLiquidityRate: "0",
-        totalSupply: "0",
-        formattedSupply: "0",
-        supplyAPY: "0.00",
-        canBeCollateral: false,
-        variableBorrowRate: "0",
-        stableBorrowRate: "0",
-        variableBorrowAPY: "0.00",
-        stableBorrowAPY: "0.00",
-        stableBorrowEnabled: false,
-        borrowingEnabled: false,
-        totalBorrowed: "0",
-        formattedTotalBorrowed: "0",
-        availableLiquidity: "0",
-        formattedAvailableLiquidity: "0",
-        borrowCap: "0",
-        formattedBorrowCap: "0",
-        isActive: true,
-        isFrozen: false,
-        isIsolationModeAsset: false,
-        debtCeiling: 0,
-        userBalance: "0",
-        userBalanceFormatted: "0.00",
-        userBalanceUsd: "0.00",
-      },
-    [
-      assetData,
-      tokenSymbol,
-      tokenName,
-      tokenAddress,
-      tokenDecimals,
-      chainId,
-      tokenIcon,
-    ],
-  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -140,17 +89,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     return null;
   }
 
-  const token: Token = {
-    id: currentAsset.asset,
-    name: currentAsset.name,
-    ticker: currentAsset.symbol,
-    icon: currentAsset.tokenIcon || tokenIcon,
-    address: currentAsset.asset,
-    decimals: currentAsset.decimals,
-    chainId: currentAsset.chainId || chainId,
-    stringChainId: (currentAsset.chainId || chainId).toString(),
-  };
-
   const chain: Chain = getChainByChainId(currentAsset.chainId || chainId);
 
   return (
@@ -163,7 +101,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="rounded-full overflow-hidden">
-                  <TokenImage token={token} chain={chain} size="sm" />
+                  <TokenImage
+                    token={currentAsset.asset}
+                    chain={chain}
+                    size="sm"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -623,13 +565,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-zinc-400">Token</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono">
-                      {currentAsset.asset.slice(0, 10)}...
-                      {currentAsset.asset.slice(-8)}
-                    </span>
+                    <span className="font-mono">format</span>
                     <button
                       onClick={() =>
-                        navigator.clipboard.writeText(currentAsset.asset)
+                        navigator.clipboard.writeText(
+                          currentAsset.asset.address,
+                        )
                       }
                       className="text-zinc-400 hover:text-white"
                       title="Copy address"
@@ -641,8 +582,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <span className="text-zinc-400">aToken</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
-                        {currentAsset.aTokenAddress.slice(0, 10)}...
-                        {currentAsset.aTokenAddress.slice(-8)}
+                        {truncateAddress(currentAsset.aTokenAddress)}
                       </span>
                       <button
                         onClick={() =>
@@ -661,8 +601,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <span className="text-zinc-400">Variable Debt Token</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
-                        {extendedDetails.variableDebtTokenAddress.slice(0, 10)}
-                        ...{extendedDetails.variableDebtTokenAddress.slice(-8)}
+                        {truncateAddress(
+                          extendedDetails.variableDebtTokenAddress,
+                        )}
                       </span>
                       <button
                         onClick={() =>
