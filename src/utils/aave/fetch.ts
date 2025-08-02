@@ -6,9 +6,10 @@ import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
 import {
   getAaveMarket,
-  chainNames,
+  getChainName,
   SupportedChainId,
   ChainConfig,
+  isChainSupported,
 } from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
@@ -45,7 +46,7 @@ export async function fetchAllReservesData(
 
   console.log(`Fetching Aave reserves for chain ${chainId} with backoff...`);
 
-  const chainName = chainNames[chainId] || "ethereum";
+  const chainName = getChainName(chainId);
 
   // Load tokens for this chain once
   const chainTokens = await loadTokensForChain(chainName);
@@ -799,16 +800,6 @@ export const fetchExtendedAssetDetails = async (
 };
 
 /**
- * Check if a chain is supported by Aave V3
- */
-export function isChainSupported(chainId: number): chainId is SupportedChainId {
-  const supportedChains: number[] = [
-    1, 137, 42161, 10, 43114, 8453, 100, 56, 11155111,
-  ];
-  return supportedChains.includes(chainId);
-}
-
-/**
  * Get the Pool contract address for a chain
  */
 export function getPoolAddress(chainId: SupportedChainId): string {
@@ -1178,7 +1169,6 @@ export function useAaveFetch() {
     checkCollateralSafety,
 
     // SDK utility functions
-    isChainSupported: (chainId: number) => isChainSupported(chainId),
     getPoolAddress: (chainId: SupportedChainId) => getPoolAddress(chainId),
     getDataProviderAddress: (chainId: SupportedChainId) =>
       getDataProviderAddress(chainId),
