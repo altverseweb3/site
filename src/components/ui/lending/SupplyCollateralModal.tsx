@@ -15,12 +15,11 @@ import {
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
-
-import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
 
 // Health Factor Calculator Utility
@@ -95,13 +94,12 @@ const CollateralModal: FC<CollateralModalProps> = ({
   const [isMounted, setIsMounted] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
 
-  // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const chainName = chainNames[chainId] || "ethereum";
   const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
 
-  // Image path logic (same as SupplyModal)
   const getImagePath = () => {
     if (!tokenIcon || tokenIcon === "unknown.png" || hasImageError) {
       return null;
@@ -183,22 +181,13 @@ const CollateralModal: FC<CollateralModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Get current chain ID
       const currentChainId = evmNetwork?.chainId
         ? typeof evmNetwork.chainId === "string"
           ? parseInt(evmNetwork.chainId, 10)
           : evmNetwork.chainId
         : 1; // Default to Ethereum mainnet
 
-      // Get signer from window.ethereum
-      if (!window.ethereum) {
-        throw new Error("MetaMask not found");
-      }
-
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
-      const signer = await provider.getSigner();
+      const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       // Show initial toast

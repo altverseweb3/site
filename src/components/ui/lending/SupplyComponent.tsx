@@ -121,23 +121,23 @@ const SupplyComponent: React.FC = () => {
     }
   }, [sourceChain.chainId, lastChainId]);
 
-  // Add direct MetaMask chain change listener for immediate refresh
+  // Add direct wallet chain change listener for immediate refresh
   useEffect(() => {
     const handleChainChanged = () => {
-      console.log("MetaMask chain changed, clearing data and refreshing...");
+      console.log("Wallet chain changed, clearing data and refreshing...");
       // Immediately clear cards and show loading state
       setAaveReserves([]);
       setUserPositions([]);
       setError(null);
       setLoading(true);
 
-      // Force refresh when MetaMask chain changes
+      // Force refresh when wallet chain changes
       setTimeout(() => {
         loadAaveReserves(true);
       }, 200); // Small delay to ensure store has updated
     };
 
-    // Listen for MetaMask chain changes
+    // Listen for wallet chain changes (if available)
     if (typeof window !== "undefined" && window.ethereum) {
       const ethereum = window.ethereum as {
         on?: (event: string, callback: () => void) => void;

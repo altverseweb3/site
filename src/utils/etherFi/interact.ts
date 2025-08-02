@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { TELLER_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { ERC20_ABI } from "@/types/ERC20ABI";
@@ -149,7 +149,7 @@ export async function depositTokens(
  * React hook for etherFi interaction functions with wallet integration
  */
 export function useEtherFiInteract() {
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   return {
     approveToken: async (

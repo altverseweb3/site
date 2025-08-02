@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
 import { getChainByChainId } from "@/config/chains";
 import { altverseAPI } from "@/api/altverse";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { ExtendedAssetDetails } from "@/utils/aave/calculations";
 import { getAaveMarket } from "@/config/aave";
@@ -121,7 +121,7 @@ export const fetchExtendedAssetDetails = async (
 };
 
 export function useAaveFetch() {
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const fetchExtendedAssetDetailsMemoized = useCallback(
     async (currentAsset: AaveReserveData, chainId: number) => {
