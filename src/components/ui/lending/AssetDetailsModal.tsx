@@ -54,7 +54,10 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
       setError(null);
 
       try {
-        const details = await fetchExtendedAssetDetails(currentAsset, currentAsset.asset.chainId);
+        const details = await fetchExtendedAssetDetails(
+          currentAsset,
+          currentAsset.asset.chainId,
+        );
         setExtendedDetails(details);
       } catch (err) {
         console.error("Error fetching extended asset details:", err);

@@ -196,7 +196,7 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
-        <AssetDetailsModal assetData={asset}>
+        <AssetDetailsModal currentAsset={currentAsset}>
           <BlueButton>details</BlueButton>
         </AssetDetailsModal>
       </CardFooter>
