@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { AaveTransactions, RateMode } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
+import { RateMode } from "@/types/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getExplorerUrl } from "@/utils/common";
@@ -27,6 +28,7 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 
 const calculateNewHealthFactorForRepay = (
   currentTotalCollateralUSD: number,
@@ -42,14 +44,6 @@ const calculateNewHealthFactorForRepay = (
 
   const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
   return adjustedCollateral / newTotalDebt;
-};
-
-// Health Factor Color Helper
-const getHealthFactorColor = (healthFactor: number): string => {
-  if (healthFactor >= 2) return "text-green-500";
-  if (healthFactor >= 1.5) return "text-yellow-500";
-  if (healthFactor >= 1.1) return "text-orange-500";
-  return "text-red-500";
 };
 
 // Main Repay Modal Component
@@ -106,6 +100,7 @@ const RepayModal: FC<RepayModalProps> = ({
 
   const { isEvmConnected, evmNetwork } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { repay } = useAaveInteract();
 
   // Determine the appropriate repay mode based on debt composition
   useEffect(() => {
@@ -243,7 +238,7 @@ const RepayModal: FC<RepayModalProps> = ({
       );
 
       // Call the Aave repay transaction
-      const result = await AaveTransactions.repayAsset({
+      const result = await repay({
         tokenAddress,
         amount: repayAmount,
         rateMode: repayMode,
@@ -251,7 +246,6 @@ const RepayModal: FC<RepayModalProps> = ({
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

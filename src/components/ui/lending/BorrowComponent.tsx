@@ -7,15 +7,15 @@ import {
 } from "@/components/ui/Accordion";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
 import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
+import { useAaveFetch } from "@/utils/aave/fetch";
+import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
+import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
+import { WalletType } from "@/types/web3";
 import {
   AaveReserveData,
   AaveReservesResult,
   UserBorrowPosition,
-  useAaveFetch,
-} from "@/utils/aave/fetch";
-import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
-import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
-import { WalletType } from "@/types/web3";
+} from "@/types/aave";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
