@@ -17,6 +17,7 @@ import {
   UserPosition,
 } from "@/utils/aave/fetch";
 import { useAaveChain } from "@/store/web3Store";
+import { formatBalance } from "@/utils/formatters";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
@@ -215,8 +216,8 @@ const SupplyComponent: React.FC = () => {
                 hasUserPositions &&
                 userPositions.map((position, index) => (
                   <SupplyOwnedCard
-                    key={`${position.asset.asset}-${aaveChain.chainId}-${index}`}
-                    asset={position.asset}
+                    key={`${position.asset.asset.address}-${aaveChain.chainId}-${index}`}
+                    currentAsset={position.asset}
                     suppliedBalance={position.suppliedBalance}
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
                     isCollateral={position.isCollateral}
@@ -282,9 +283,11 @@ const SupplyComponent: React.FC = () => {
                 aaveReserves.map((reserve) => (
                   <SupplyUnownedCard
                     key={`${reserve.asset}-${aaveChain.chainId}`}
-                    asset={reserve}
-                    userBalance={reserve.userBalanceFormatted || "0.00"}
-                    dollarAmount={reserve.userBalanceUsd || "0.00"}
+                    currentAsset={reserve}
+                    userBalance={formatBalance(
+                      reserve.asset.userBalance || "0.00",
+                    )}
+                    dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     onDetails={handleDetails}
                   />

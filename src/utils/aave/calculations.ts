@@ -36,7 +36,7 @@ export const getReserveMetrics = (
   const totalBorrowedNum = parseFloat(totalBorrowed);
   const availableLiquidityNum = parseFloat(availableLiquidity);
 
-  console.log(`${currentAsset.symbol} using formatted values:`, {
+  console.log(`${currentAsset.asset.ticker} using formatted values:`, {
     reserveSize,
     availableLiquidity,
     totalBorrowed,

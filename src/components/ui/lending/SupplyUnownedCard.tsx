@@ -16,10 +16,10 @@ import { AaveReserveData } from "@/utils/aave/fetch";
 import { SupplyModal } from "@/components/ui/lending/SupplyModal";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
-import type { Token, Chain } from "@/types/web3";
+import type { Chain } from "@/types/web3";
 
 interface SupplyUnownedCardProps {
-  asset?: AaveReserveData;
+  currentAsset: AaveReserveData;
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
   onSupply?: (asset: AaveReserveData) => void;
@@ -27,49 +27,12 @@ interface SupplyUnownedCardProps {
 }
 
 const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
-  asset,
+  currentAsset,
   userBalance = "0",
   dollarAmount = "0.00",
   onSupply = () => {},
   onDetails = () => {},
 }) => {
-  // Default asset for demo purposes
-  const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
-    name: "Sample Token",
-    symbol: "SAMP",
-    decimals: 18,
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    isActive: true,
-    supplyAPY: "0.00",
-    canBeCollateral: true,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
-    variableBorrowRate: "",
-    stableBorrowRate: "",
-    variableBorrowAPY: "",
-    stableBorrowAPY: "",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "",
-    formattedTotalBorrowed: "",
-    availableLiquidity: "",
-    formattedAvailableLiquidity: "",
-    borrowCap: "",
-    formattedBorrowCap: "",
-    isFrozen: false,
-  };
-
-  const currentAsset = asset || defaultAsset;
-
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
   const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
@@ -79,19 +42,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  // Create Token and Chain objects for TokenImage component
-  const token: Token = {
-    id: currentAsset.asset,
-    name: currentAsset.name,
-    ticker: currentAsset.symbol,
-    icon: currentAsset.tokenIcon || "unknown.png",
-    address: currentAsset.asset,
-    decimals: currentAsset.decimals,
-    chainId: currentAsset.chainId || 1,
-    stringChainId: (currentAsset.chainId || 1).toString(),
-  };
-
-  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || 1);
 
   // Determine what to display for collateral status
   const getCollateralIndicator = () => {
@@ -110,14 +61,14 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         <div className="mr-3 rounded-full overflow-hidden">
-          <TokenImage token={token} chain={chain} size="md" />
+          <TokenImage token={currentAsset.asset} chain={chain} size="md" />
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {currentAsset.name}
+            {currentAsset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {currentAsset.symbol}
+            {currentAsset.asset.icon}
           </CardDescription>
         </div>
       </CardHeader>
@@ -147,10 +98,10 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <SupplyModal
-          tokenSymbol={currentAsset.symbol}
-          tokenName={currentAsset.name}
-          tokenIcon={currentAsset.tokenIcon}
-          chainId={currentAsset.chainId}
+          tokenSymbol={currentAsset.asset.ticker}
+          tokenName={currentAsset.asset.name}
+          tokenIcon={currentAsset.asset.icon}
+          chainId={currentAsset.asset.chainId}
           balance={userBalance}
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
@@ -159,8 +110,8 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           liquidationThreshold={0.85}
           totalCollateralUSD={0}
           totalDebtUSD={0}
-          tokenAddress={currentAsset.asset}
-          tokenDecimals={currentAsset.decimals}
+          tokenAddress={currentAsset.asset.address}
+          tokenDecimals={currentAsset.asset.decimals}
           onSupply={async () => {
             onSupply(currentAsset);
             return true;

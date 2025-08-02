@@ -9,10 +9,7 @@ import { ERC20_ABI } from "@/types/ERC20ABI";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
-  symbol: string;
-  name: string;
-  asset: string;
-  decimals: number;
+  asset: Token;
   aTokenAddress: string;
 
   // Supply data
@@ -41,11 +38,6 @@ export interface AaveReserveData {
   isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
-  userBalance?: string;
-  userBalanceFormatted?: string;
-  userBalanceUsd?: string;
-  tokenIcon?: string;
-  chainId?: number;
 }
 
 export interface AaveReservesResult {
@@ -95,11 +87,6 @@ export async function fetchAllReservesData(
   console.log(
     `Fetching Aave reserves for chain ${aaveChain.chainId} with backoff...`,
   );
-
-  const tokenLookup: Record<string, Token> = {};
-  chainTokens.forEach((token) => {
-    tokenLookup[token.address.toLowerCase()] = token;
-  });
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
@@ -170,8 +157,11 @@ export async function fetchAllReservesData(
               let tokenName = token.symbol;
               let tokenSymbol = token.symbol;
 
-              const tokenData = tokenLookup[token.tokenAddress.toLowerCase()];
-
+              // lookup token, otherwise create Token object from scratch
+              let tokenData = chainTokens.find(
+                (t) =>
+                  t.address.toLowerCase() === token.tokenAddress.toLowerCase(),
+              );
               if (tokenData) {
                 tokenName = tokenData.name;
                 tokenSymbol = tokenData.ticker;
@@ -197,13 +187,25 @@ export async function fetchAllReservesData(
                 }
               }
 
-              const tokenIcon = tokenData?.icon || "unknown.png";
               const decimals = Number(configData.decimals);
+
+              if (!tokenData) {
+                tokenData = {
+                  id: token.tokenAddress,
+                  address: token.tokenAddress,
+                  name: tokenName,
+                  ticker: tokenSymbol,
+                  icon: "unknown.png",
+                  decimals: decimals,
+                  chainId: aaveChain.chainId,
+                  stringChainId: aaveChain.id,
+                };
+              }
 
               return {
                 symbol: tokenSymbol,
                 name: tokenName,
-                asset: token.tokenAddress,
+                asset: tokenData,
                 decimals: decimals,
                 aTokenAddress: reserveData.aTokenAddress || "",
 
@@ -245,7 +247,7 @@ export async function fetchAllReservesData(
                 userBalance: "0",
                 userBalanceFormatted: "0.00",
                 userBalanceUsd: "0.00",
-                tokenIcon: tokenIcon,
+                tokenIcon: "unknown.png",
                 chainId: aaveChain.chainId,
               };
             } catch (error) {
@@ -361,7 +363,7 @@ export async function fetchUserPositions(
             // Format the balance using the asset's decimals
             const formattedBalance = ethers.formatUnits(
               aTokenBalance,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             // TODO: Replace this with actual price fetching
@@ -382,7 +384,10 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          console.log(
+            `Error fetching user data for ${reserve.asset.ticker}:`,
+            error,
+          );
           return null;
         }
       });
@@ -465,7 +470,7 @@ export async function fetchUserBorrowPositions(
             // Format the debt using the asset's decimals
             const formattedTotalDebt = ethers.formatUnits(
               totalDebt,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             //For Now Im mocking price I will update this when we integrate the token info
@@ -495,7 +500,7 @@ export async function fetchUserBorrowPositions(
           return null;
         } catch (error) {
           console.log(
-            `Error fetching user borrow data for ${reserve.symbol}:`,
+            `Error fetching user borrow data for ${reserve.asset.ticker}:`,
             error,
           );
           return null;
@@ -551,7 +556,7 @@ export async function fetchUserWalletBalances(
         try {
           // Get user's wallet balance for this token
           const tokenContract = new ethers.Contract(
-            reserve.asset,
+            reserve.asset.address,
             ERC20_ABI,
             provider,
           );
@@ -559,7 +564,7 @@ export async function fetchUserWalletBalances(
           const walletBalance = await tokenContract.balanceOf(userAddress);
           const formattedBalance = ethers.formatUnits(
             walletBalance,
-            reserve.decimals,
+            reserve.asset.decimals,
           );
 
           // TODO: Replace with actual price fetching
@@ -576,7 +581,7 @@ export async function fetchUserWalletBalances(
           };
         } catch (error) {
           console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
+            `Error fetching wallet balance for ${reserve.asset.ticker}:`,
             error,
           );
           // Return reserve with zero balance on error

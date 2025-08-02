@@ -16,13 +16,13 @@ export const fetchExtendedAssetDetails = async (
   let oraclePrice = 1;
 
   try {
-    const chainInfo = getChainByChainId(currentAsset.chainId || chainId);
-    console.log(`🔍 Fetching price for ${currentAsset.symbol}:`, {
-      assetChainId: currentAsset.chainId,
+    const chainInfo = getChainByChainId(currentAsset.asset.chainId || chainId);
+    console.log(`🔍 Fetching price for ${currentAsset.asset.ticker}:`, {
+      assetChainId: currentAsset.asset.chainId,
       modalChainId: chainId,
       chainInfo: chainInfo?.name,
       network: chainInfo?.alchemyNetworkName,
-      tokenAddress: currentAsset.asset,
+      tokenAddress: currentAsset.asset.address.toLowerCase(),
     });
 
     if (chainInfo?.alchemyNetworkName) {
@@ -30,12 +30,12 @@ export const fetchExtendedAssetDetails = async (
         addresses: [
           {
             network: chainInfo.alchemyNetworkName,
-            address: currentAsset.asset,
+            address: currentAsset.asset.address.toLowerCase(),
           },
         ],
       });
 
-      console.log(`📊 Price API response for ${currentAsset.symbol}:`, {
+      console.log(`📊 Price API response for ${currentAsset.asset.ticker}:`, {
         success: !priceResponse.error,
         error: priceResponse.error,
         dataExists: !!priceResponse.data,
@@ -50,22 +50,22 @@ export const fetchExtendedAssetDetails = async (
       ) {
         oraclePrice = parseFloat(priceResponse.data.data[0].prices[0].value);
         console.log(
-          `✅ Successfully fetched oracle price for ${currentAsset.symbol}: $${oraclePrice}`,
+          `✅ Successfully fetched oracle price for ${currentAsset.asset.ticker}: $${oraclePrice}`,
         );
       } else {
         console.warn(
-          `❌ No price data for ${currentAsset.symbol}. Error:`,
+          `❌ No price data for ${currentAsset.asset.ticker}. Error:`,
           priceResponse.error,
         );
       }
     } else {
       console.warn(
-        `❌ No network info for chainId ${currentAsset.chainId || chainId}`,
+        `❌ No network info for chainId ${currentAsset.asset.chainId || chainId}`,
       );
     }
   } catch (priceError) {
     console.error(
-      `❌ Price fetch error for ${currentAsset.symbol}:`,
+      `❌ Price fetch error for ${currentAsset.asset.ticker}:`,
       priceError,
     );
   }
