@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { AaveTransactions, RateMode } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
+import { RateMode } from "@/types/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getExplorerUrl } from "@/utils/common";
@@ -99,6 +100,7 @@ const RepayModal: FC<RepayModalProps> = ({
 
   const { isEvmConnected, evmNetwork } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { repay } = useAaveInteract();
 
   // Determine the appropriate repay mode based on debt composition
   useEffect(() => {
@@ -236,7 +238,7 @@ const RepayModal: FC<RepayModalProps> = ({
       );
 
       // Call the Aave repay transaction
-      const result = await AaveTransactions.repayAsset({
+      const result = await repay({
         tokenAddress,
         amount: repayAmount,
         rateMode: repayMode,
@@ -244,7 +246,6 @@ const RepayModal: FC<RepayModalProps> = ({
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

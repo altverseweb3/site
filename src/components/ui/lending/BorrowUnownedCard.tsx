@@ -12,7 +12,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import { AaveReserveData } from "@/utils/aave/fetch";
+import { AaveReserveData } from "@/types/aave";
 import { BorrowModal } from "@/components/ui/lending/BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";

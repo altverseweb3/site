@@ -11,11 +11,8 @@ import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
 import { useSourceChain } from "@/store/web3Store";
-import {
-  AaveReserveData,
-  useAaveFetch,
-  UserPosition,
-} from "@/utils/aave/fetch";
+import { AaveReserveData, UserPosition } from "@/types/aave";
+import { useAaveFetch } from "@/utils/aave/fetch";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
