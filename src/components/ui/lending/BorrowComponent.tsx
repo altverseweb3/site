@@ -19,7 +19,7 @@ import {
   AaveReservesResult,
   UserBorrowPosition,
 } from "@/types/aave";
-import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
+import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
