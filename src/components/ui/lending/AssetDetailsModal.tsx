@@ -16,17 +16,15 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { AaveReserveData } from "@/utils/aave/fetch";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { formatBalance, formatCurrency } from "@/utils/formatters";
+import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
 import {
-  ExtendedAssetDetails,
-  getReserveMetrics,
   calculateUtilizationRate,
-  formatUSDValue,
-} from "@/utils/aave/calculations";
-import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
-import { formatBalance } from "@/utils/formatters";
+  fetchExtendedAssetDetails,
+  getReserveMetrics,
+} from "@/utils/aave/fetch";
 
 interface AssetDetailsModalProps {
   assetData?: AaveReserveData;
@@ -218,7 +216,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         total supplied
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
-                        {formatUSDValue(metrics.reserveSize, tokenPrice)}
+                        {formatCurrency(
+                          parseFloat(metrics.reserveSize) * tokenPrice,
+                        )}
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.reserveSize)}{" "}
@@ -264,7 +264,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         total borrowed
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
-                        {formatUSDValue(metrics.totalBorrowed, tokenPrice)}
+                        {formatCurrency(
+                          parseFloat(metrics.totalBorrowed) * tokenPrice,
+                        )}
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.totalBorrowed)}{" "}
@@ -316,8 +318,13 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           {calculateUtilizationRate(currentAsset)}%
                         </div>
                         <div className="text-sm text-zinc-500">
-                          {formatUSDValue(metrics.totalBorrowed, tokenPrice)} of{" "}
-                          {formatUSDValue(metrics.reserveSize, tokenPrice)}
+                          {formatCurrency(
+                            parseFloat(metrics.totalBorrowed) * tokenPrice,
+                          )}{" "}
+                          of{" "}
+                          {formatCurrency(
+                            parseFloat(metrics.reserveSize) * tokenPrice,
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -341,7 +348,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           Oracle price
                         </div>
                         <div className="text-2xl font-bold text-white">
-                          {formatUSDValue(tokenPrice.toString())}
+                          {formatCurrency(tokenPrice)}
                         </div>
                       </div>
                       <div className="text-right">
@@ -365,7 +372,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                               {currentAsset.symbol}
                             </div>
                             <div className="text-sm text-zinc-500">
-                              {formatUSDValue(metrics.reserveSize, tokenPrice)}
+                              {formatCurrency(
+                                parseFloat(metrics.reserveSize) * tokenPrice,
+                              )}
                             </div>
                           </div>
                         </div>
@@ -422,9 +431,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                               {currentAsset.symbol}
                             </div>
                             <div className="text-sm text-zinc-500">
-                              {formatUSDValue(
-                                metrics.totalBorrowed,
-                                tokenPrice,
+                              {formatCurrency(
+                                parseFloat(metrics.totalBorrowed) * tokenPrice,
                               )}
                             </div>
                           </div>

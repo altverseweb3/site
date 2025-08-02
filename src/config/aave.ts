@@ -1,26 +1,22 @@
 import * as markets from "@bgd-labs/aave-address-book";
 
-export const chainNames: Record<number, string> = {
-  1: "ethereum",
-  137: "polygon",
-  42161: "arbitrum",
-  10: "optimism",
-  43114: "avalanche",
-  8453: "base",
-  100: "gnosis",
-  56: "bsc",
-};
+const CHAIN_CONFIG = {
+  1: { name: "ethereum", market: markets.AaveV3Ethereum },
+  137: { name: "polygon", market: markets.AaveV3Polygon },
+  42161: { name: "arbitrum", market: markets.AaveV3Arbitrum },
+  10: { name: "optimism", market: markets.AaveV3Optimism },
+  43114: { name: "avalanche", market: markets.AaveV3Avalanche },
+  8453: { name: "base", market: markets.AaveV3Base },
+  100: { name: "gnosis", market: markets.AaveV3Gnosis },
+  56: { name: "bsc", market: markets.AaveV3BNB },
+  11155111: { name: "sepolia", market: markets.AaveV3Sepolia },
+} as const;
 
-export type SupportedChainId =
-  | 1
-  | 137
-  | 42161
-  | 10
-  | 43114
-  | 8453
-  | 100
-  | 56
-  | 11155111;
+export type SupportedChainId = keyof typeof CHAIN_CONFIG;
+
+export const chainNames: Record<SupportedChainId, string> = Object.fromEntries(
+  Object.entries(CHAIN_CONFIG).map(([id, config]) => [Number(id), config.name]),
+) as Record<SupportedChainId, string>;
 
 export interface ChainConfig {
   poolAddress: string;
@@ -30,28 +26,21 @@ export interface ChainConfig {
   wethGatewayAddress?: string;
 }
 
-// Helper function to get the correct market based on chain ID
 export function getAaveMarket(chainId: number) {
-  switch (chainId) {
-    case 1:
-      return markets.AaveV3Ethereum;
-    case 137:
-      return markets.AaveV3Polygon;
-    case 42161:
-      return markets.AaveV3Arbitrum;
-    case 10:
-      return markets.AaveV3Optimism;
-    case 43114:
-      return markets.AaveV3Avalanche;
-    case 8453:
-      return markets.AaveV3Base;
-    case 100:
-      return markets.AaveV3Gnosis;
-    case 56:
-      return markets.AaveV3BNB;
-    case 11155111:
-      return markets.AaveV3Sepolia;
-    default:
-      throw new Error(`Aave V3 not supported on chain ${chainId}`);
+  const config = CHAIN_CONFIG[chainId as SupportedChainId];
+  if (!config) {
+    throw new Error(`Aave V3 not supported on chain ${chainId}`);
   }
+  return config.market;
+}
+
+export function isChainSupported(chainId: number): chainId is SupportedChainId {
+  return chainId in CHAIN_CONFIG;
+}
+
+export function getChainName(
+  chainId: number,
+  fallback: string = "ethereum",
+): string {
+  return CHAIN_CONFIG[chainId as SupportedChainId]?.name || fallback;
 }
