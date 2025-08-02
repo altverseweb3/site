@@ -24,20 +24,6 @@ export interface ExtendedAssetDetails {
   supplyCap?: string;
 }
 
-export const formatUSDValue = (
-  value: string | undefined,
-  tokenPrice = 1,
-): string => {
-  if (!value || value === "0") return "$0";
-  const num = parseFloat(value) * tokenPrice;
-  if (num >= 1000000) {
-    return `$${(num / 1000000).toFixed(2)}M`;
-  } else if (num >= 1000) {
-    return `$${(num / 1000).toFixed(2)}K`;
-  }
-  return `$${num.toLocaleString()}`;
-};
-
 export const getReserveMetrics = (
   currentAsset: AaveReserveData,
   extendedDetails: ExtendedAssetDetails | null,
