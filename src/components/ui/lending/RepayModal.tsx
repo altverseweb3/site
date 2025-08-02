@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  BlueButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions, RateMode } from "@/utils/aave/interact";
@@ -195,8 +198,8 @@ const RepayModal: FC<RepayModalProps> = ({
 
     // Check wallet connection
     if (!isEvmConnected) {
-      toast.error("Wallet not connected", {
-        description: "Please connect your wallet to continue",
+      toast.error("wallet not connected", {
+        description: "please connect your wallet to continue",
       });
       return;
     }
@@ -207,16 +210,16 @@ const RepayModal: FC<RepayModalProps> = ({
       tokenAddress === "" ||
       tokenAddress === "0x0000000000000000000000000000000000000000"
     ) {
-      toast.error("Token information missing", {
-        description: `Unable to find token contract address for ${tokenSymbol}`,
+      toast.error("token information missing", {
+        description: `unable to find token contract address for ${tokenSymbol}`,
       });
       return;
     }
 
     // Check if we have valid decimals
     if (!tokenDecimals || tokenDecimals <= 0) {
-      toast.error("Token decimals missing", {
-        description: `Invalid token decimals for ${tokenSymbol}: ${tokenDecimals}`,
+      toast.error("token decimals missing", {
+        description: `invalid token decimals for ${tokenSymbol}: ${tokenDecimals}`,
       });
       return;
     }
@@ -233,7 +236,7 @@ const RepayModal: FC<RepayModalProps> = ({
 
       // Get signer from window.ethereum
       if (!window.ethereum) {
-        throw new Error("No wallet detected");
+        throw new Error("no wallet detected");
       }
 
       const ethereum = window.ethereum as {
@@ -269,11 +272,11 @@ const RepayModal: FC<RepayModalProps> = ({
       });
 
       if (result.success) {
-        toast.success("Repayment successful!", {
-          description: `Successfully repaid ${repayAmount} ${tokenSymbol}`,
+        toast.success("repayment successful!", {
+          description: `successfully repaid ${repayAmount} ${tokenSymbol}`,
           action: result.txHash
             ? {
-                label: "View Transaction",
+                label: "view transaction",
                 onClick: () =>
                   window.open(
                     getExplorerUrl(result.txHash!, currentChainId),
@@ -290,15 +293,15 @@ const RepayModal: FC<RepayModalProps> = ({
         setIsOpen(false);
         setRepayAmount("");
       } else {
-        toast.error("Repayment failed", {
-          description: result.error || "Unknown error occurred",
+        toast.error("repayment failed", {
+          description: result.error || "unknown error occurred",
         });
       }
     } catch (error) {
       console.error("Repay error:", error);
-      toast.error("Repayment failed", {
+      toast.error("repayment failed", {
         description:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          error instanceof Error ? error.message : "unknown error occurred",
       });
     } finally {
       setIsSubmitting(false);
@@ -323,16 +326,13 @@ const RepayModal: FC<RepayModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-md bg-[#131313] border-[#232326] text-white">
-          <DialogHeader className="space-y-4">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[460px] bg-[#18181B] border-[#27272A] text-white">
+          <DialogHeader className="pb-4">
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
-              <div>
-                <DialogTitle className="text-lg font-semibold">
-                  Repay {tokenSymbol}
-                </DialogTitle>
-                <p className="text-sm text-gray-400">{tokenName}</p>
-              </div>
+              <DialogTitle className="text-lg font-semibold">
+                repay {tokenSymbol.toLowerCase()}
+              </DialogTitle>
             </div>
           </DialogHeader>
 
@@ -340,35 +340,44 @@ const RepayModal: FC<RepayModalProps> = ({
             {/* Current Debt Info */}
             <div className="space-y-3 p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Current Debt</span>
+                <span className="text-sm text-gray-400">current debt</span>
                 <div className="text-right">
                   <div className="text-sm font-medium">
-                    {currentDebt} {tokenSymbol}
+                    {currentDebt} {tokenSymbol.toLowerCase()}
                   </div>
                   <div className="text-xs text-gray-400">${debtUSD}</div>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Debt Type</span>
+                <span className="text-sm text-gray-400">debt type</span>
                 <span className="text-sm text-red-400">
                   {getDebtTypeDisplay()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Borrow APY</span>
+                <span className="text-sm text-gray-400">borrow apy</span>
                 <span className="text-sm text-red-400">{borrowAPY}</span>
               </div>
             </div>
 
             {/* Repay Amount Input */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-3">
                 <label className="text-sm font-medium text-gray-300">
-                  Repay Amount
+                  repay amount
                 </label>
-                <span className="text-xs text-gray-400">
-                  Wallet: {walletBalance} {tokenSymbol}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">
+                    wallet: {walletBalance} {tokenSymbol.toLowerCase()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleMaxClick}
+                    className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors"
+                  >
+                    max
+                  </button>
+                </div>
               </div>
 
               <div className="relative">
@@ -377,15 +386,8 @@ const RepayModal: FC<RepayModalProps> = ({
                   placeholder="0.00"
                   value={repayAmount}
                   onChange={handleAmountChange}
-                  className="bg-[#1A1A1A] border-[#232326] text-white pr-16"
+                  className="bg-[#1A1A1A] border-[#232326] text-white"
                 />
-                <button
-                  type="button"
-                  onClick={handleMaxClick}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  MAX
-                </button>
               </div>
 
               {repayAmountNum > 0 && (
@@ -399,17 +401,19 @@ const RepayModal: FC<RepayModalProps> = ({
                 <div className="flex items-center gap-2 text-red-400 text-xs">
                   <AlertCircle className="h-3 w-3" />
                   {repayAmountNum > maxDebtAmount
-                    ? `Amount exceeds debt (${maxDebtAmount.toFixed(6)} ${tokenSymbol})`
-                    : "Please enter a valid amount"}
+                    ? `amount exceeds debt (${maxDebtAmount.toFixed(6)} ${tokenSymbol})`
+                    : "please enter a valid amount"}
                 </div>
               )}
 
               {/* Insufficient balance warning (but don't prevent submission) */}
               {repayAmount && isAmountValid && hasInsufficientBalance && (
-                <div className="flex items-center gap-2 text-yellow-400 text-xs">
-                  <AlertCircle className="h-3 w-3" />
-                  Insufficient wallet balance (have:{" "}
-                  {walletBalanceNum.toFixed(6)} {tokenSymbol})
+                <div className="flex items-start gap-2 text-yellow-400 text-xs">
+                  <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <div className="break-words">
+                    insufficient wallet balance (have:{" "}
+                    {walletBalanceNum.toFixed(6)} {tokenSymbol.toLowerCase()})
+                  </div>
                 </div>
               )}
             </div>
@@ -420,12 +424,12 @@ const RepayModal: FC<RepayModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Info className="h-4 w-4 text-blue-400" />
                   <span className="text-sm font-medium">
-                    Health Factor Impact
+                    health factor impact
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Current</span>
+                  <span className="text-sm text-gray-400">current</span>
                   <span
                     className={cn(
                       "text-sm font-medium",
@@ -441,7 +445,7 @@ const RepayModal: FC<RepayModalProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">After Repayment</span>
+                  <span className="text-sm text-gray-400">after repayment</span>
                   <div className="text-right">
                     <span
                       className={cn(
@@ -461,24 +465,24 @@ const RepayModal: FC<RepayModalProps> = ({
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
               <DialogClose asChild>
-                <Button
-                  variant="outline"
-                  className="flex-1 border-[#232326] text-gray-300 hover:bg-[#1A1A1A]"
-                >
-                  Cancel
-                </Button>
+                <div className="flex-1">
+                  <GrayButton>cancel</GrayButton>
+                </div>
               </DialogClose>
 
-              <Button
-                onClick={handleRepay}
-                disabled={!isFormValid}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Repaying..." : `Repay ${tokenSymbol}`}
-              </Button>
+              <div className="flex-1">
+                <BlueButton
+                  onClick={handleRepay}
+                  disabled={!isFormValid}
+                  className={
+                    !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                  }
+                >
+                  {isSubmitting ? "repaying..." : `repay`}
+                </BlueButton>
+              </div>
             </div>
           </div>
         </DialogContent>
