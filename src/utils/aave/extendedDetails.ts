@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useCallback } from "react";
-import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3Abis";
+import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
 import { getChainByChainId } from "@/config/chains";
 import { altverseAPI } from "@/api/altverse";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
