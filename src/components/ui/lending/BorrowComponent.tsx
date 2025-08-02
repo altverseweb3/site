@@ -321,8 +321,8 @@ const BorrowComponent: React.FC = () => {
                   const borrowData = calculateAvailableToBorrow(reserve);
                   return (
                     <BorrowUnownedCard
-                      key={`${reserve.asset}-${aaveChain.chainId}`}
-                      asset={reserve}
+                      key={`${reserve.asset.address}-${aaveChain.chainId}`}
+                      currentAsset={reserve}
                       availableToBorrow={borrowData.amount}
                       availableToBorrowUSD={borrowData.amountUSD}
                       onBorrow={handleBorrow}
