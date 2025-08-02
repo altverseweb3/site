@@ -21,7 +21,7 @@ import { WalletFilter, WalletIcons } from "@/components/ui/WalletFilter";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletType, SwapData } from "@/types/web3";
 import { getChainByMayanChainId, getChainByMayanName } from "@/config/chains";
-import { getExplorerUrl } from "@/utils/ui/uiHelpers";
+import { getExplorerUrl } from "@/utils/common";
 import type { WalletFilterType } from "@/types/web3";
 
 interface SwapHistorySheetProps {

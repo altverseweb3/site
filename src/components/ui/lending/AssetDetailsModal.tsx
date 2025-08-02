@@ -26,7 +26,7 @@ import {
   formatUSDValue,
 } from "@/utils/aave/calculations";
 import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
-import { formatBalance } from "@/utils/common";
+import { formatBalance } from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
   assetData?: AaveReserveData;

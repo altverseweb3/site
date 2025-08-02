@@ -23,7 +23,7 @@ import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/common";
+import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 
 // Health Factor Calculator for Borrowing
