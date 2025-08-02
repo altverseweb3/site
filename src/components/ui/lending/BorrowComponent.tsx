@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -16,6 +16,7 @@ import {
 import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
 import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
 import { WalletType } from "@/types/web3";
+import useWeb3Store from "@/store/web3Store";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
@@ -25,14 +26,30 @@ const BorrowComponent: React.FC = () => {
     UserBorrowPosition[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const [tokensPreloaded, setTokensPreloaded] = useState(false); // Add this
   const [borrowPositionsLoading, setBorrowPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const aaveChain = useAaveChain();
+  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
+  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
+  const tokenCount = useWeb3Store((state) => state.allTokensList.length);
+  const loadTokens = useWeb3Store((state) => state.loadTokens); // Add this line!
+
+  const chainTokens = useMemo(() => {
+    return getTokensForChain(aaveChain.chainId);
+  }, [getTokensForChain, aaveChain.chainId]);
   const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
 
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  useEffect(() => {
+    if (tokenCount === 0 && !tokensLoading && !tokensPreloaded) {
+      setTokensPreloaded(true);
+      loadTokens();
+    }
+  }, [loadTokens, tokensLoading, tokenCount, tokensPreloaded]);
 
   // Load user borrow positions using real Aave data
   const loadUserBorrowPositions = useCallback(
@@ -61,6 +78,23 @@ const BorrowComponent: React.FC = () => {
         return;
       }
 
+      if (tokensLoading) {
+        console.log("Tokens still loading, skipping...");
+        return;
+      }
+
+      if (tokenCount === 0) {
+        console.log("No tokens loaded yet, skipping...");
+        return;
+      }
+
+      if (chainTokens.length === 0) {
+        console.log(
+          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
+        );
+        return;
+      }
+
       // Skip if same chain and we have data (unless forced)
       if (
         !force &&
@@ -68,6 +102,10 @@ const BorrowComponent: React.FC = () => {
         borrowableReserves.length > 0
       ) {
         console.log("Data already loaded for this chain, skipping...");
+        return;
+      }
+      if (!isWalletConnected) {
+        console.log("Wallet not connected, skipping...");
         return;
       }
 
@@ -78,12 +116,13 @@ const BorrowComponent: React.FC = () => {
           `Fetching Aave reserves for borrowing on chain ${aaveChain.chainId}...`,
         );
         if (!isWalletConnected) return;
-        // Fetch reserves data using your enhanced function
-        const reservesResult: AaveReservesResult = await fetchAllReservesData();
 
-        console.log(
-          `Successfully loaded ${reservesResult.borrowAssets.length} borrowable assets`,
+        // Fetch reserves data using your enhanced function
+        const reservesResult: AaveReservesResult = await fetchAllReservesData(
+          aaveChain,
+          chainTokens,
         );
+
         setBorrowableReserves(reservesResult.borrowAssets);
         setLastChainId(aaveChain.chainId);
 
@@ -103,15 +142,17 @@ const BorrowComponent: React.FC = () => {
     },
     [
       loading,
+      tokensLoading,
+      tokenCount,
       isWalletConnected,
       lastChainId,
-      aaveChain.chainId,
+      aaveChain,
+      chainTokens,
       borrowableReserves.length,
       fetchAllReservesData,
-      loadUserBorrowPositions, // Added this dependency
+      loadUserBorrowPositions,
     ],
   );
-
   // Calculate available to borrow for each reserve based on user's collateral
   const calculateAvailableToBorrow = (
     reserve: AaveReserveData,
@@ -149,11 +190,22 @@ const BorrowComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    // Only load if wallet is connected
-    if (isWalletConnected) {
+    if (
+      isWalletConnected &&
+      !tokensLoading &&
+      tokenCount > 0 &&
+      chainTokens.length > 0
+    ) {
       loadAaveReserves();
     }
-  }, [isWalletConnected, loadAaveReserves, aaveChain.chainId]);
+  }, [
+    isWalletConnected,
+    tokensLoading,
+    tokenCount,
+    chainTokens.length,
+    loadAaveReserves,
+    aaveChain.chainId,
+  ]);
 
   const hasData = borrowableReserves.length > 0;
   const hasBorrowPositions = userBorrowPositions.length > 0;
