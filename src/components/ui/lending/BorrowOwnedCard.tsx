@@ -41,7 +41,6 @@ const BorrowOwnedCard = ({
   totalDebtUSD = 0,
   walletBalance = "0.00",
   onRepay = async () => true,
-  onDetailsClick = () => {},
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
 
