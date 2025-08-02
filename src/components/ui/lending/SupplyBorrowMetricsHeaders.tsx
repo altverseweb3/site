@@ -32,7 +32,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const chainTokens = getTokensForChain(aaveChain.chainId);
   const hasConnectedWallet = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
-  // State for AAVE data - following SupplyComponent pattern
   const [userSupplyPositions, setUserSupplyPositions] = useState<
     UserPosition[]
   >([]);
@@ -81,7 +80,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     [aaveChain.chainId],
   );
 
-  // Load user positions - following SupplyComponent pattern
   const loadUserPositions = useCallback(
     async (
       supplyAssets: AaveReserveData[],
@@ -106,9 +104,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     [hasConnectedWallet, fetchUserPositions, fetchUserBorrowPositions],
   );
 
-  // Store all reserves for market calculations
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
-  // Store oracle prices for accurate USD calculations
   const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
 
   const loadAaveData = useCallback(
@@ -171,12 +167,10 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     ],
   );
 
-  // Load data when component mounts or chain changes
   useEffect(() => {
     loadAaveData();
   }, [loadAaveData]);
 
-  // Reset data when chain changes
   useEffect(() => {
     if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
       setUserSupplyPositions([]);
@@ -390,7 +384,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     netWorth: rawNetWorth,
     netAPY: rawNetAPY,
     healthFactor: rawHealthFactor,
-    totalCollateralUSD: totalCollateralUSD, // Use actual collateral USD, not all supplied USD
+    totalCollateralUSD: totalCollateralUSD,
     totalDebtUSD: totalBorrowedUSD,
     currentLTV: ltvData.currentLTV,
     maxLTV: ltvData.maxLTV,
@@ -527,9 +521,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     },
   ];
 
-  const handleButtonClick = (): void => {
-    // This will be handled by the RiskDetailsModal trigger
-  };
+  const handleButtonClick = (): void => {};
 
   return (
     <div className="w-full pb-4">
