@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Card";
 import type { Token, Chain } from "@/types/web3";
 import { UserBorrowPosition } from "@/utils/aave/fetch";
-import { formatBalance } from "@/utils/common";
+import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
 import { RateMode } from "@/utils/aave/interact";

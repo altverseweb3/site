@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/Card";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { SupplyModal } from "@/components/ui/lending/SupplyModal";
-import { formatAPY } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/common";
+import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 

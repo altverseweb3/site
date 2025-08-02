@@ -11,7 +11,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import React from "react";
-import { getTokenGradient } from "@/utils/ui/uiHelpers";
+import { getTokenGradient } from "@/utils/common";
 
 type TokenName =
   | "1INCH"

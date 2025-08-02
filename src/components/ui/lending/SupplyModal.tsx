@@ -24,7 +24,7 @@ import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/common";
+import { formatBalance } from "@/utils/formatters";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (

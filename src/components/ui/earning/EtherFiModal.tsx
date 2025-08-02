@@ -18,7 +18,7 @@ import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
-import { formatCurrency } from "@/utils/ui/uiHelpers";
+import { formatCurrency } from "@/utils/formatters";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 
 interface EtherFiModalProps {

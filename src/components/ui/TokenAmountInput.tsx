@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Wallet } from "lucide-react";
 import PersistentAmountDisplay from "@/components/ui/PersistentAmountDisplay";
 import useWeb3Store, { useSourceToken } from "@/store/web3Store";
-import { formatBalance } from "@/utils/common";
+import { formatBalance } from "@/utils/formatters";
 
 interface TokenAmountInputProps {
   amount: string;

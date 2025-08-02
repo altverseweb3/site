@@ -2,7 +2,7 @@
 import React from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import Image from "next/image";
-import { getTokenGradient } from "@/utils/ui/uiHelpers";
+import { getTokenGradient } from "@/utils/common";
 import { Chain } from "@/types/web3";
 
 interface ChainPickerProps {

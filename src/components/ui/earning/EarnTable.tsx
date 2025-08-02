@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { chains } from "@/config/chains";
+import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface EarnTableProps {
   type: EarnTableType;
@@ -94,22 +95,6 @@ const EarnTable: React.FC<EarnTableProps> = ({
   itemsPerPage,
   totalItems,
 }) => {
-  const formatCurrency = (value: number) => {
-    if (value === 0) return "$0";
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-    if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
-    return `$${value.toFixed(2)}`;
-  };
-
-  const formatAPY = (apy: number) => {
-    // Handle special case for TBD (fallback vaults with no APY data)
-    if (apy === 0 || apy === null || apy === undefined) {
-      return "TBD";
-    }
-    return `${apy.toFixed(1)}%`;
-  };
-
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, data.length);
   const tableHeaderClass = `px-4 py-2 text-left text-sm font-semibold text-zinc-300 lowercase tracking-wider`;

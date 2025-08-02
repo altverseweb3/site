@@ -14,11 +14,9 @@ import {
 } from "@/components/ui/Card";
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
 import type { Token, Chain } from "@/types/web3";
-
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
-import { formatAPY } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/common";
+import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 

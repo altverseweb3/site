@@ -13,7 +13,7 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { chains } from "@/config/chains";
-import { formatCurrency } from "@/utils/ui/uiHelpers";
+import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface EarnCardProps {
   type: EarnTableType;
@@ -22,13 +22,6 @@ interface EarnCardProps {
 }
 
 const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
-  const formatAPY = (apy: number) => {
-    if (apy === 0 || apy === null || apy === undefined) {
-      return "TBD";
-    }
-    return `${apy.toFixed(1)}%`;
-  };
-
   const formatLimitedList = (items: string[], maxDisplay: number = 3) => {
     if (items.length <= maxDisplay) {
       return items.join(", ");
