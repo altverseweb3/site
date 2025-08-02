@@ -68,7 +68,7 @@ const RiskDetailsModal = ({
               <span className="text-sm text-zinc-400">health factor</span>
               <span
                 className={cn(
-                  "text-lg font-semibold",
+                  "text-lg font-semibold font-mono",
                   getHealthFactorColor(healthFactor),
                 )}
               >
@@ -109,7 +109,9 @@ const RiskDetailsModal = ({
             )}
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1">1.00</div>
+              <div className="text-lg font-semibold text-white mb-1 font-mono">
+                1.00
+              </div>
               <div className="text-sm text-zinc-400">liquidation threshold</div>
             </div>
           </div>
@@ -118,12 +120,12 @@ const RiskDetailsModal = ({
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-zinc-400">current ltv</span>
-              <span className="text-lg font-semibold text-white">
+              <span className="text-lg font-semibold text-white font-mono">
                 {ltvPercentage.toFixed(2)}%
               </span>
             </div>
 
-            <div className="text-xs text-zinc-500 mb-2">
+            <div className="text-xs text-zinc-500 mb-2 font-mono">
               max ltv: {maxLTVPercentage.toFixed(1)}% | liquidation:{" "}
               {liquidationThresholdPercentage.toFixed(1)}%
             </div>
@@ -144,17 +146,17 @@ const RiskDetailsModal = ({
               />
               <div className="flex justify-between mt-2 text-xs text-zinc-500">
                 <span>0%</span>
-                <span className="text-amber-400">
+                <span className="text-amber-400 font-mono">
                   {maxLTVPercentage.toFixed(0)}% max
                 </span>
-                <span className="text-red-400">
+                <span className="text-red-400 font-mono">
                   {liquidationThresholdPercentage.toFixed(0)}% liq
                 </span>
               </div>
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1">
+              <div className="text-lg font-semibold text-white mb-1 font-mono">
                 {liquidationThresholdPercentage > 0
                   ? (
                     (ltvPercentage / liquidationThresholdPercentage) *
@@ -180,14 +182,14 @@ const RiskDetailsModal = ({
           {/* Position Values */}
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-500 mb-1">
+              <div className="text-2xl font-bold text-green-500 mb-1 font-mono">
                 {formatCurrency(totalCollateralUSD)}
               </div>
               <div className="text-sm text-zinc-400">collateral</div>
             </div>
 
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-500 mb-1">
+              <div className="text-2xl font-bold text-red-500 mb-1 font-mono">
                 {formatCurrency(totalDebtUSD)}
               </div>
               <div className="text-sm text-zinc-400">debt</div>
