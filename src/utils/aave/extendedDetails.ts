@@ -30,7 +30,7 @@ export const fetchExtendedAssetDetails = async (
         addresses: [
           {
             network: chainInfo.alchemyNetworkName,
-            address: currentAsset.asset,
+            address: currentAsset.asset.address.toLowerCase(),
           },
         ],
       });
