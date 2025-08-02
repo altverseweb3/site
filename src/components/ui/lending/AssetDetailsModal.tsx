@@ -25,7 +25,11 @@ import {
   calculateUtilizationRate,
 } from "@/utils/aave/calculations";
 import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
-import { formatBalance, formatCurrency, truncateAddress } from "@/utils/formatters";
+import {
+  formatBalance,
+  formatCurrency,
+  truncateAddress,
+} from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
   currentAsset: AaveReserveData;
@@ -89,7 +93,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     return null;
   }
 
-  const chain: Chain = getChainByChainId(currentAsset.chainId || chainId);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || chainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -110,7 +114,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <DialogTitle className="text-lg font-semibold">
-                      {currentAsset.symbol} Details
+                      {currentAsset.asset.ticker} Details
                     </DialogTitle>
                     <button
                       onClick={() =>
@@ -125,7 +129,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       <ExternalLink className="h-3 w-3 text-zinc-400" />
                     </button>
                   </div>
-                  <p className="text-sm text-zinc-400">{currentAsset.name}</p>
+                  <p className="text-sm text-zinc-400">
+                    {currentAsset.asset.name}
+                  </p>
                 </div>
               </div>
             </div>
@@ -165,11 +171,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.reserveSize)}{" "}
-                        {currentAsset.symbol}
+                        {currentAsset.asset.ticker}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.supplyCapFormatted !== "Unlimited"
-                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.symbol} possible`
+                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.asset.ticker} possible`
                           : "Unlimited supply cap"}
                       </div>
 
@@ -213,11 +219,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.totalBorrowed)}{" "}
-                        {currentAsset.symbol}
+                        {currentAsset.asset.ticker}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.borrowCapFormatted !== "No cap"
-                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.symbol} possible`
+                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.asset.ticker} possible`
                           : "no borrow cap"}
                       </div>
 
@@ -312,7 +318,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.reserveSize)}{" "}
-                              {currentAsset.symbol}
+                              {currentAsset.asset.ticker}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(
@@ -371,7 +377,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.totalBorrowed)}{" "}
-                              {currentAsset.symbol}
+                              {currentAsset.asset.ticker}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(

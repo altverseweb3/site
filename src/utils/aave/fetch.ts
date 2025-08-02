@@ -9,10 +9,7 @@ import { ERC20_ABI } from "@/types/ERC20ABI";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
-  symbol: string;
-  name: string;
   asset: Token;
-  decimals: number;
   aTokenAddress: string;
 
   // Supply data
@@ -41,11 +38,6 @@ export interface AaveReserveData {
   isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
-  userBalance?: string;
-  userBalanceFormatted?: string;
-  userBalanceUsd?: string;
-  tokenIcon?: string;
-  chainId?: number;
 }
 
 export interface AaveReservesResult {
@@ -371,7 +363,7 @@ export async function fetchUserPositions(
             // Format the balance using the asset's decimals
             const formattedBalance = ethers.formatUnits(
               aTokenBalance,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             // TODO: Replace this with actual price fetching
@@ -392,7 +384,10 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          console.log(
+            `Error fetching user data for ${reserve.asset.ticker}:`,
+            error,
+          );
           return null;
         }
       });
@@ -475,7 +470,7 @@ export async function fetchUserBorrowPositions(
             // Format the debt using the asset's decimals
             const formattedTotalDebt = ethers.formatUnits(
               totalDebt,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             //For Now Im mocking price I will update this when we integrate the token info
@@ -505,7 +500,7 @@ export async function fetchUserBorrowPositions(
           return null;
         } catch (error) {
           console.log(
-            `Error fetching user borrow data for ${reserve.symbol}:`,
+            `Error fetching user borrow data for ${reserve.asset.ticker}:`,
             error,
           );
           return null;
@@ -569,7 +564,7 @@ export async function fetchUserWalletBalances(
           const walletBalance = await tokenContract.balanceOf(userAddress);
           const formattedBalance = ethers.formatUnits(
             walletBalance,
-            reserve.decimals,
+            reserve.asset.decimals,
           );
 
           // TODO: Replace with actual price fetching
@@ -586,7 +581,7 @@ export async function fetchUserWalletBalances(
           };
         } catch (error) {
           console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
+            `Error fetching wallet balance for ${reserve.asset.ticker}:`,
             error,
           );
           // Return reserve with zero balance on error
