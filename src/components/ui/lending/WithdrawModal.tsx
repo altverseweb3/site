@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
-import { chainNames, SupportedChainId } from "@/config/aave";
+import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
@@ -97,7 +97,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
   const { getEvmSigner } = useReownWalletProviderAndSigner();
   const { withdraw } = useAaveInteract();
 
-  const chainName = chainNames[chainId] || "ethereum";
+  const chainName = getChainName(chainId);
   const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
 
   const getImagePath = () => {
