@@ -17,6 +17,7 @@ import type { Token, Chain } from "@/types/web3";
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
 import { AaveReserveData } from "@/utils/aave/fetch";
 import { formatBalance, formatAPY } from "@/utils/formatters";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
 
@@ -244,6 +245,9 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
+        <AssetDetailsModal assetData={asset}>
+          <BlueButton>details</BlueButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

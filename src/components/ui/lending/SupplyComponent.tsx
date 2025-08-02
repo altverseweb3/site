@@ -156,11 +156,6 @@ const SupplyComponent: React.FC = () => {
     // TODO: Implement supply functionality
   };
 
-  const handleDetails = (asset: AaveReserveData) => {
-    console.log("View asset details:", asset);
-    // TODO: Implement details modal
-  };
-
   const handleSwitch = (asset: AaveReserveData) => {
     console.log("Switch collateral for asset:", asset);
     // TODO: Implement collateral switch functionality
@@ -286,7 +281,6 @@ const SupplyComponent: React.FC = () => {
                     userBalance={reserve.userBalanceFormatted || "0.00"}
                     dollarAmount={reserve.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
-                    onDetails={handleDetails}
                   />
                 ))}
             </ScrollBoxSupplyBorrowAssets>

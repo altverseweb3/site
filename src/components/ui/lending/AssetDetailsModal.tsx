@@ -158,38 +158,29 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-2xl bg-[#131313] border-[#232326] text-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full overflow-hidden">
-                  <TokenImage token={token} chain={chain} size="sm" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <DialogTitle className="text-lg font-semibold">
-                      {currentAsset.symbol} Details
-                    </DialogTitle>
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `${chain.explorerUrl}/token/${currentAsset.asset}`,
-                          "_blank",
-                        )
-                      }
-                      className="p-1 hover:bg-[#1A1A1A] rounded-md transition-colors"
-                      title="view on block explorer"
-                    >
-                      <ExternalLink className="h-3 w-3 text-zinc-400" />
-                    </button>
-                  </div>
-                  <p className="text-sm text-zinc-400">{currentAsset.name}</p>
-                </div>
-              </div>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-[#18181B] border-[#27272A] text-white max-h-[90vh] overflow-hidden flex flex-col rounded-lg">
+          <DialogHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <TokenImage token={token} chain={chain} size="sm" />
+              <DialogTitle className="text-lg font-semibold">
+                {currentAsset.symbol.toLowerCase()} details
+              </DialogTitle>
+              <button
+                onClick={() =>
+                  window.open(
+                    `${chain.explorerUrl}/token/${currentAsset.asset}`,
+                    "_blank",
+                  )
+                }
+                className="p-1 hover:bg-[#1A1A1A] rounded-md transition-colors"
+                title="view on block explorer"
+              >
+                <ExternalLink className="h-3 w-3 text-zinc-400" />
+              </button>
             </div>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto flex-1 scrollbar-hide">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
@@ -223,12 +214,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.reserveSize)}{" "}
-                        {currentAsset.symbol}
+                        {currentAsset.symbol.toLowerCase()}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.supplyCapFormatted !== "Unlimited"
-                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.symbol} possible`
-                          : "Unlimited supply cap"}
+                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.symbol.toLowerCase()} possible`
+                          : "unlimited supply cap"}
                       </div>
 
                       <div className="space-y-2">
@@ -271,11 +262,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.totalBorrowed)}{" "}
-                        {currentAsset.symbol}
+                        {currentAsset.symbol.toLowerCase()}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.borrowCapFormatted !== "No cap"
-                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.symbol} possible`
+                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.symbol.toLowerCase()} possible`
                           : "no borrow cap"}
                       </div>
 
@@ -346,15 +337,15 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm text-zinc-400 mb-2">
-                          Oracle price
+                          oracle price
                         </div>
                         <div className="text-2xl font-bold text-white">
                           {formatCurrency(tokenPrice)}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-zinc-400 mb-2">Market</div>
-                        <div className="text-lg text-zinc-300">Aave V3</div>
+                        <div className="text-sm text-zinc-400 mb-2">market</div>
+                        <div className="text-lg text-zinc-300">aave v3</div>
                       </div>
                     </div>
                   </div>
@@ -366,11 +357,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Total supplied</span>
+                          <span className="text-zinc-400">total supplied</span>
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.reserveSize)}{" "}
-                              {currentAsset.symbol}
+                              {currentAsset.symbol.toLowerCase()}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(
@@ -413,7 +404,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                                 : "text-red-500",
                             )}
                           >
-                            {currentAsset.canBeCollateral ? "Yes" : "No"}
+                            {currentAsset.canBeCollateral ? "yes" : "no"}
                           </span>
                         </div>
                       </div>
@@ -421,7 +412,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#232326] p-6">
                       <h3 className="text-lg font-semibold text-white mb-4">
-                        borrow Info
+                        borrow info
                       </h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
@@ -429,7 +420,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.totalBorrowed)}{" "}
-                              {currentAsset.symbol}
+                              {currentAsset.symbol.toLowerCase()}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(
@@ -477,7 +468,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                                 : "text-red-500",
                             )}
                           >
-                            {currentAsset.borrowingEnabled ? "Yes" : "No"}
+                            {currentAsset.borrowingEnabled ? "yes" : "no"}
                           </span>
                         </div>
                       </div>
@@ -493,7 +484,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <span className="text-sm text-zinc-400">max LTV</span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.ltv || "Loading..."}
+                    {currentAsset.ltv || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -501,7 +492,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation threshold
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationThreshold || "Loading..."}
+                    {currentAsset.liquidationThreshold || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -509,7 +500,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation penalty
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationPenalty || "Loading..."}
+                    {currentAsset.liquidationPenalty || "N/A"}
                   </div>
                 </div>
               </div>
@@ -531,7 +522,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           : "text-red-500",
                       )}
                     >
-                      {currentAsset.canBeCollateral ? "Yes" : "No"}
+                      {currentAsset.canBeCollateral ? "yes" : "no"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -546,7 +537,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           : "text-red-500",
                       )}
                     >
-                      {currentAsset.borrowingEnabled ? "Yes" : "No"}
+                      {currentAsset.borrowingEnabled ? "yes" : "no"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -562,10 +553,10 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       )}
                     >
                       {currentAsset.isFrozen
-                        ? "Frozen"
+                        ? "frozen"
                         : currentAsset.isActive
-                          ? "Active"
-                          : "Inactive"}
+                          ? "active"
+                          : "inactive"}
                     </span>
                   </div>
                 </div>
@@ -582,7 +573,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           : "text-red-500",
                       )}
                     >
-                      {currentAsset.stableBorrowEnabled ? "Yes" : "No"}
+                      {currentAsset.stableBorrowEnabled ? "yes" : "no"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -598,8 +589,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       )}
                     >
                       {currentAsset.isIsolationModeAsset
-                        ? "Enabled"
-                        : "Disabled"}
+                        ? "enabled"
+                        : "disabled"}
                     </span>
                   </div>
                   {currentAsset.isIsolationModeAsset &&
@@ -618,10 +609,10 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             </div>
 
             <div className="p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-              <h3 className="text-sm font-semibold mb-3">Contract Addresses</h3>
+              <h3 className="text-sm font-semibold mb-3">contract addresses</h3>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-400">Token</span>
+                  <span className="text-zinc-400">token</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono">
                       {currentAsset.asset.slice(0, 10)}...
@@ -638,7 +629,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 </div>
                 {currentAsset.aTokenAddress && (
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">aToken</span>
+                    <span className="text-zinc-400">atoken</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
                         {currentAsset.aTokenAddress.slice(0, 10)}...
@@ -658,7 +649,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 )}
                 {extendedDetails?.variableDebtTokenAddress && (
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">Variable Debt Token</span>
+                    <span className="text-zinc-400">variable debt token</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
                         {extendedDetails.variableDebtTokenAddress.slice(0, 10)}

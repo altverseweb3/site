@@ -1,7 +1,7 @@
 // aaveFetch.ts - Essential Aave fetch functionality using wallet provider
 import { ethers } from "ethers";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
+import { POOL_DATA_PROVIDER_ABI, POOL_ABI } from "@/types/aaveV3ABIs";
 import { Token, Chain } from "@/types/web3";
 import { getAaveMarket } from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
@@ -46,6 +46,11 @@ export interface AaveReserveData {
   userBalanceUsd?: string;
   tokenIcon?: string;
   chainId?: number;
+
+  // Risk parameters
+  ltv?: string;
+  liquidationThreshold?: string;
+  liquidationPenalty?: string;
 }
 
 export interface AaveReservesResult {
@@ -151,6 +156,39 @@ export async function fetchAllReservesData(
               const isIsolationModeAsset = Number(debtCeiling) > 0;
               const canBeCollateral = configData.usageAsCollateralEnabled;
 
+              let ltvBps = 0;
+              let liquidationThresholdBps = 0;
+              let liquidationBonusBps = 0;
+
+              try {
+                const market = getAaveMarket(aaveChain.chainId);
+                if (market?.POOL) {
+                  const poolContract = new ethers.Contract(
+                    market.POOL,
+                    POOL_ABI,
+                    provider,
+                  );
+
+                  const configBitmask = await poolContract.getConfiguration(
+                    token.tokenAddress,
+                  );
+
+                  ltvBps = Number(configBitmask & BigInt(0xffff));
+                  liquidationThresholdBps = Number(
+                    (configBitmask >> BigInt(16)) & BigInt(0xffff),
+                  );
+                  liquidationBonusBps = Number(
+                    (configBitmask >> BigInt(32)) & BigInt(0xffff),
+                  );
+                }
+              } catch {
+                ltvBps = Number(configData.ltv || 0);
+                liquidationThresholdBps = Number(
+                  configData.liquidationThreshold || 0,
+                );
+                liquidationBonusBps = Number(configData.liquidationBonus || 0);
+              }
+
               const supplyAPY = rayToPercentage(
                 reserveData.liquidityRate.toString(),
               );
@@ -247,6 +285,12 @@ export async function fetchAllReservesData(
                 userBalanceUsd: "0.00",
                 tokenIcon: tokenIcon,
                 chainId: aaveChain.chainId,
+
+                ltv: (ltvBps / 100).toFixed(2) + "%",
+                liquidationThreshold:
+                  (liquidationThresholdBps / 100).toFixed(2) + "%",
+                liquidationPenalty:
+                  ((liquidationBonusBps - 10000) / 100).toFixed(2) + "%",
               };
             } catch (error) {
               console.log(

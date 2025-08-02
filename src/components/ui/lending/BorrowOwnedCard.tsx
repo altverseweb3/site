@@ -18,6 +18,7 @@ import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
 import { RateMode } from "@/utils/aave/interact";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface BorrowOwnedCardProps {
   borrowPosition: UserBorrowPosition;
@@ -40,7 +41,6 @@ const BorrowOwnedCard = ({
   totalDebtUSD = 0,
   walletBalance = "0.00",
   onRepay = async () => true,
-  onDetailsClick = () => {},
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
 
@@ -70,10 +70,6 @@ const BorrowOwnedCard = ({
       console.error("Error completing repay:", error);
       return false;
     }
-  };
-
-  const handleDetailsClick = () => {
-    onDetailsClick(borrowPosition);
   };
 
   const debtTypeDisplay = () => {
@@ -152,7 +148,9 @@ const BorrowOwnedCard = ({
           <BlueButton>repay</BlueButton>
         </RepayModal>
 
-        <GrayButton onClick={handleDetailsClick}>details</GrayButton>
+        <AssetDetailsModal assetData={asset}>
+          <GrayButton>details</GrayButton>
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );
