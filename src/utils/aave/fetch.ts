@@ -2,9 +2,8 @@
 import { ethers } from "ethers";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
-import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
-import { Token } from "@/types/web3";
-import { getAaveMarket, chainNames } from "@/config/aave";
+import { Token, Chain } from "@/types/web3";
+import { getAaveMarket } from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
 
@@ -83,22 +82,20 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export async function fetchAllReservesData(
   signer: ethers.Signer,
+  aaveChain: Chain,
+  chainTokens: Token[],
 ): Promise<AaveReservesResult> {
   const provider = signer.provider;
   if (!provider) {
     throw new Error("Signer must have a provider");
   }
 
-  const network = await provider.getNetwork();
-  const chainId = Number(network.chainId);
-  const market = getAaveMarket(chainId);
+  const market = getAaveMarket(aaveChain.chainId);
 
-  console.log(`Fetching Aave reserves for chain ${chainId} with backoff...`);
+  console.log(
+    `Fetching Aave reserves for chain ${aaveChain.chainId} with backoff...`,
+  );
 
-  const chainName = chainNames[chainId] || "ethereum";
-
-  // Load tokens for this chain once
-  const chainTokens = await loadTokensForChain(chainName);
   const tokenLookup: Record<string, Token> = {};
   chainTokens.forEach((token) => {
     tokenLookup[token.address.toLowerCase()] = token;
@@ -249,7 +246,7 @@ export async function fetchAllReservesData(
                 userBalanceFormatted: "0.00",
                 userBalanceUsd: "0.00",
                 tokenIcon: tokenIcon,
-                chainId: chainId,
+                chainId: aaveChain.chainId,
               };
             } catch (error) {
               console.log(
@@ -625,9 +622,9 @@ export async function fetchUserWalletBalances(
 export function useAaveFetch() {
   const { getEvmSigner } = useReownWalletProviderAndSigner();
   return {
-    fetchAllReservesData: async () => {
+    fetchAllReservesData: async (aaveChain: Chain, chainTokens: Token[]) => {
       const signer = await getEvmSigner();
-      return fetchAllReservesData(signer);
+      return fetchAllReservesData(signer, aaveChain, chainTokens);
     },
 
     fetchUserPositions: async (reservesData: AaveReserveData[]) => {
@@ -649,12 +646,19 @@ export function useAaveFetch() {
     },
 
     // Combined fetch that gets reserves and updates them with user data
-    fetchAllReservesWithUserData: async () => {
+    fetchAllReservesWithUserData: async (
+      aaveChain: Chain,
+      chainTokens: Token[],
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       // First get all reserves
-      const reserves = await fetchAllReservesData(signer);
+      const reserves = await fetchAllReservesData(
+        signer,
+        aaveChain,
+        chainTokens,
+      );
 
       // Then update with user wallet balances
       const reservesWithBalances = await fetchUserWalletBalances(

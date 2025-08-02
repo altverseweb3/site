@@ -10,12 +10,13 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import { useSourceChain } from "@/store/web3Store";
+import { useTokensForChain } from "@/store/web3Store";
 import {
   AaveReserveData,
   useAaveFetch,
   UserPosition,
 } from "@/utils/aave/fetch";
+import { useAaveChain } from "@/store/web3Store";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
@@ -24,8 +25,8 @@ const SupplyComponent: React.FC = () => {
   const [positionsLoading, setPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
-
-  const sourceChain = useSourceChain();
+  const aaveChain = useAaveChain();
+  const chainTokens = useTokensForChain(aaveChain.chainId);
   const { fetchAllReservesData, fetchUserPositions } = useAaveFetch();
 
   // Move loadUserPositions to useCallback to fix dependency warning
@@ -61,7 +62,7 @@ const SupplyComponent: React.FC = () => {
       // Skip if same chain and we have data (unless forced)
       if (
         !force &&
-        lastChainId === sourceChain.chainId &&
+        lastChainId === aaveChain.chainId &&
         aaveReserves.length > 0
       ) {
         console.log("Data already loaded for this chain, skipping...");
@@ -71,17 +72,15 @@ const SupplyComponent: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log(
-          `Fetching Aave reserves for chain ${sourceChain.chainId}...`,
-        );
+        console.log(`Fetching Aave reserves for chain ${aaveChain.chainId}...`);
 
-        const reservesData = await fetchAllReservesData();
+        const reservesData = await fetchAllReservesData(aaveChain, chainTokens);
 
         console.log(
           `Successfully loaded ${reservesData.supplyAssets.length} Aave reserves`,
         );
         setAaveReserves(reservesData.supplyAssets);
-        setLastChainId(sourceChain.chainId);
+        setLastChainId(aaveChain.chainId);
 
         // Now fetch user positions (supplied assets)
         await loadUserPositions(reservesData.supplyAssets);
@@ -100,10 +99,11 @@ const SupplyComponent: React.FC = () => {
     [
       loading,
       lastChainId,
-      sourceChain.chainId,
+      aaveChain,
       aaveReserves.length,
       fetchAllReservesData,
       loadUserPositions, // Added this dependency
+      chainTokens,
     ],
   );
 
@@ -114,12 +114,12 @@ const SupplyComponent: React.FC = () => {
 
   // Reset data when chain changes (before new data loads)
   useEffect(() => {
-    if (lastChainId !== null && lastChainId !== sourceChain.chainId) {
+    if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
       setAaveReserves([]);
       setUserPositions([]);
       setError(null);
     }
-  }, [sourceChain.chainId, lastChainId]);
+  }, [aaveChain.chainId, lastChainId]);
 
   // Add direct wallet chain change listener for immediate refresh
   useEffect(() => {
@@ -215,7 +215,7 @@ const SupplyComponent: React.FC = () => {
                 hasUserPositions &&
                 userPositions.map((position, index) => (
                   <SupplyOwnedCard
-                    key={`${position.asset.asset}-${sourceChain.chainId}-${index}`}
+                    key={`${position.asset.asset}-${aaveChain.chainId}-${index}`}
                     asset={position.asset}
                     suppliedBalance={position.suppliedBalance}
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
@@ -252,7 +252,7 @@ const SupplyComponent: React.FC = () => {
                     Failed to load reserves: {error}
                   </div>
                   <div className="text-sm text-gray-400 mb-4">
-                    Chain: {sourceChain.name}
+                    Chain: {aaveChain.name}
                   </div>
                   <button
                     onClick={handleRefresh}
@@ -281,7 +281,7 @@ const SupplyComponent: React.FC = () => {
               {hasData &&
                 aaveReserves.map((reserve) => (
                   <SupplyUnownedCard
-                    key={`${reserve.asset}-${sourceChain.chainId}`}
+                    key={`${reserve.asset}-${aaveChain.chainId}`}
                     asset={reserve}
                     userBalance={reserve.userBalanceFormatted || "0.00"}
                     dollarAmount={reserve.userBalanceUsd || "0.00"}
