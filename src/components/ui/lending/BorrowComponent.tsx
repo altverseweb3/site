@@ -16,7 +16,7 @@ import {
 import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
 import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
 import { WalletType } from "@/types/web3";
-import SupplyAvailablePositionsHeader from "./SupplyAvailablePositionsHeader";
+import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
 const BorrowComponent: React.FC = () => {
   const [borrowableReserves, setBorrowableReserves] = useState<
