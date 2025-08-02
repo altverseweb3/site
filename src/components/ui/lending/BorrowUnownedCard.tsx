@@ -47,7 +47,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
   const isFrozen = currentAsset.isFrozen ?? false;
 
-  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || 1);
 
   // Get borrowing status display
   const getBorrowingStatusDisplay = () => {
@@ -76,10 +76,10 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {currentAsset.name}
+            {currentAsset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {currentAsset.symbol}
+            {currentAsset.asset.ticker}
           </CardDescription>
         </div>
       </CardHeader>
@@ -111,10 +111,10 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <BorrowModal
-          tokenSymbol={currentAsset.symbol}
-          tokenName={currentAsset.name}
-          tokenIcon={currentAsset.tokenIcon}
-          chainId={currentAsset.chainId}
+          tokenSymbol={currentAsset.asset.ticker}
+          tokenName={currentAsset.asset.name}
+          tokenIcon={currentAsset.asset.icon}
+          chainId={currentAsset.asset.chainId}
           availableToBorrow={availableToBorrow}
           availableToBorrowUSD={availableToBorrowUSD}
           variableBorrowAPY={borrowAPY}
@@ -126,7 +126,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset.address}
-          tokenDecimals={currentAsset.decimals}
+          tokenDecimals={currentAsset.asset.decimals}
           onBorrow={async () => {
             onBorrow(currentAsset);
             return true;

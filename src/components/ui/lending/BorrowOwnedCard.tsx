@@ -46,13 +46,13 @@ const BorrowOwnedCard = ({
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
 
-  const chain: Chain = getChainByChainId(asset.chainId || 1);
+  const chain: Chain = getChainByChainId(asset.asset.chainId || 1);
 
   const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
     try {
       const success = await onRepay(borrowPosition, amount, rateMode);
       if (success) {
-        console.log(`Successfully repaid ${amount} ${asset.symbol}`);
+        console.log(`Successfully repaid ${amount} ${asset.asset.ticker}`);
       }
       return success;
     } catch (error) {
@@ -83,10 +83,10 @@ const BorrowOwnedCard = ({
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {asset.name}
+            {asset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {asset.symbol}
+            {asset.asset.ticker}
           </CardDescription>
         </div>
       </CardHeader>
@@ -115,10 +115,10 @@ const BorrowOwnedCard = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <RepayModal
-          tokenSymbol={asset.symbol}
-          tokenName={asset.name}
-          tokenIcon={asset.tokenIcon}
-          chainId={asset.chainId}
+          tokenSymbol={asset.asset.ticker}
+          tokenName={asset.asset.name}
+          tokenIcon={asset.asset.icon}
+          chainId={asset.asset.chainId}
           walletBalance={walletBalance}
           currentDebt={borrowPosition.formattedTotalDebt}
           debtUSD={borrowPosition.totalDebtUSD}
@@ -132,7 +132,7 @@ const BorrowOwnedCard = ({
           totalDebtUSD={totalDebtUSD}
           onRepay={handleRepayComplete}
           tokenAddress={asset.asset.address}
-          tokenDecimals={asset.decimals}
+          tokenDecimals={asset.asset.decimals}
         >
           <BlueButton>repay</BlueButton>
         </RepayModal>

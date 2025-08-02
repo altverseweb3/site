@@ -96,7 +96,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             <div className="flex items-center gap-3">
               <TokenImage token={currentAsset.asset} chain={chain} size="sm" />
               <DialogTitle className="text-lg font-semibold">
-                {currentAsset.symbol.toLowerCase()} details
+                {currentAsset.asset.ticker} details
               </DialogTitle>
               <button
                 onClick={() =>
@@ -147,12 +147,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.reserveSize)}{" "}
-                        {currentAsset.symbol.toLowerCase()}
+                        {currentAsset.asset.ticker}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.supplyCapFormatted !== "Unlimited"
-                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.symbol.toLowerCase()} possible`
-                          : "unlimited supply cap"}
+                          ? `of ${metrics.supplyCapFormatted} ${currentAsset.asset.ticker} possible`
+                          : "Unlimited supply cap"}
                       </div>
 
                       <div className="space-y-2">
@@ -195,11 +195,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.totalBorrowed)}{" "}
-                        {currentAsset.symbol.toLowerCase()}
+                        {currentAsset.asset.ticker}
                       </div>
                       <div className="text-xs text-zinc-400 mb-3">
                         {metrics.borrowCapFormatted !== "No cap"
-                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.symbol.toLowerCase()} possible`
+                          ? `of ${metrics.borrowCapFormatted} ${currentAsset.asset.ticker} possible`
                           : "no borrow cap"}
                       </div>
 
@@ -294,7 +294,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.reserveSize)}{" "}
-                              {currentAsset.symbol.toLowerCase()}
+                              {currentAsset.asset.ticker}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(
@@ -353,7 +353,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           <div className="text-right">
                             <div className="text-white font-medium">
                               {formatBalance(metrics.totalBorrowed)}{" "}
-                              {currentAsset.symbol.toLowerCase()}
+                              {currentAsset.asset.ticker}
                             </div>
                             <div className="text-sm text-zinc-500">
                               {formatCurrency(

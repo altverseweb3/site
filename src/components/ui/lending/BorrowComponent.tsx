@@ -245,12 +245,17 @@ const BorrowComponent: React.FC = () => {
                     totalCollateralUSD={0} // You'll want to get real values
                     totalDebtUSD={0} // You'll want to get real values
                     onRepay={async (position, amount) => {
-                      console.log("Repay", amount, "of", position.asset.symbol);
+                      console.log(
+                        "Repay",
+                        amount,
+                        "of",
+                        position.asset.asset.ticker,
+                      );
                       // TODO: Implement repay functionality
                       return true;
                     }}
                     onDetailsClick={(position) => {
-                      console.log("Details for", position.asset.symbol);
+                      console.log("Details for", position.asset.asset.ticker);
                       // TODO: Implement details modal
                     }}
                   />

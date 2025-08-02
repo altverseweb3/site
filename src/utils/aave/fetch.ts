@@ -355,7 +355,7 @@ export async function fetchUserPositions(
             // Format the balance using the asset's decimals
             const formattedBalance = ethers.formatUnits(
               aTokenBalance,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             // TODO: Replace this with actual price fetching
@@ -376,7 +376,10 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          console.log(
+            `Error fetching user data for ${reserve.asset.ticker}:`,
+            error,
+          );
           return null;
         }
       });
@@ -459,7 +462,7 @@ export async function fetchUserBorrowPositions(
             // Format the debt using the asset's decimals
             const formattedTotalDebt = ethers.formatUnits(
               totalDebt,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             //For Now Im mocking price I will update this when we integrate the token info
@@ -489,7 +492,7 @@ export async function fetchUserBorrowPositions(
           return null;
         } catch (error) {
           console.log(
-            `Error fetching user borrow data for ${reserve.symbol}:`,
+            `Error fetching user borrow data for ${reserve.asset.ticker}:`,
             error,
           );
           return null;
@@ -553,7 +556,7 @@ export async function fetchUserWalletBalances(
           const walletBalance = await tokenContract.balanceOf(userAddress);
           const formattedBalance = ethers.formatUnits(
             walletBalance,
-            reserve.decimals,
+            reserve.asset.decimals,
           );
 
           // TODO: Replace with actual price fetching
@@ -570,7 +573,7 @@ export async function fetchUserWalletBalances(
           };
         } catch (error) {
           console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
+            `Error fetching wallet balance for ${reserve.asset.ticker}:`,
             error,
           );
           // Return reserve with zero balance on error
@@ -735,9 +738,9 @@ export const fetchExtendedAssetDetails = async (
   let oraclePrice = 1;
 
   try {
-    const chainInfo = getChainByChainId(currentAsset.chainId || chainId);
+    const chainInfo = getChainByChainId(currentAsset.asset.chainId);
     console.log(`🔍 Fetching price for ${currentAsset.symbol}:`, {
-      assetChainId: currentAsset.chainId,
+      assetChainId: currentAsset.asset.chainId,
       modalChainId: chainId,
       chainInfo: chainInfo?.name,
       network: chainInfo?.alchemyNetworkName,
@@ -779,7 +782,7 @@ export const fetchExtendedAssetDetails = async (
       }
     } else {
       console.warn(
-        `❌ No network info for chainId ${currentAsset.chainId || chainId}`,
+        `❌ No network info for chainId ${currentAsset.asset.chainId}`,
       );
     }
   } catch (priceError) {
