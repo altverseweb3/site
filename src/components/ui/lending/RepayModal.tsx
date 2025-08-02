@@ -27,6 +27,7 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 
 const calculateNewHealthFactorForRepay = (
   currentTotalCollateralUSD: number,
@@ -42,14 +43,6 @@ const calculateNewHealthFactorForRepay = (
 
   const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
   return adjustedCollateral / newTotalDebt;
-};
-
-// Health Factor Color Helper
-const getHealthFactorColor = (healthFactor: number): string => {
-  if (healthFactor >= 2) return "text-green-500";
-  if (healthFactor >= 1.5) return "text-yellow-500";
-  if (healthFactor >= 1.1) return "text-orange-500";
-  return "text-red-500";
 };
 
 // Main Repay Modal Component
