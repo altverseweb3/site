@@ -54,7 +54,7 @@ import useVaultDepositStore, {
   useActiveVaultDepositProcess,
 } from "@/store/vaultDepositStore";
 import { GasDrop } from "@/components/ui/GasDrop";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import TokenImage from "@/components/ui/TokenImage";
 import {
   queryVaultConversionRate,
@@ -121,7 +121,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   );
 
   // Wallet hooks for address retrieval
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   // Vault Deposit Store integration
   const {

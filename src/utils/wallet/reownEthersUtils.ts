@@ -13,7 +13,7 @@ import { Transaction } from "@solana/web3.js";
  * Enhanced hook for accessing wallet providers and signers for both EVM and Solana
  * Returns appropriate providers and signing functions based on current wallet type
  */
-export function useWalletProviderAndSigner() {
+export function useReownWalletProviderAndSigner() {
   // Get providers for both EVM and Solana namespaces
   const { walletProvider: evmProvider } = useAppKitProvider("eip155");
   const { walletProvider: solanaProvider } = useAppKitProvider("solana");

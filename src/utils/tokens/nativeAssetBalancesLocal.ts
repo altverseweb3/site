@@ -5,7 +5,7 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { SuiClient } from "@mysten/sui/client";
 import { chains, chainList } from "@/config/chains";
 import { WalletType, Chain } from "@/types/web3";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { useWallet } from "@suiet/wallet-kit";
 import { createEthersJsonRpcProvider } from "@/utils/wallet/ethersJsonRpcProvider";
 
@@ -325,7 +325,7 @@ export function formatNativeBalance(
  */
 export function useNativeBalances() {
   const { evmProvider, solanaProvider, getEvmSigner, getSolanaSigner } =
-    useWalletProviderAndSigner();
+    useReownWalletProviderAndSigner();
   const { address: suiAddress, connected: suiConnected } = useWallet();
 
   const fetchBalances = async (): Promise<NativeBalanceResult> => {

@@ -392,11 +392,9 @@ export class AaveTransactions {
     userAddress: string,
     amount: string,
     tokenDecimals: number,
+    provider: ethers.Provider,
   ): Promise<boolean> {
     try {
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
       const tokenContract = new ethers.Contract(
         tokenAddress,
         ERC20_ABI,
@@ -421,17 +419,15 @@ export class AaveTransactions {
     userAddress: string,
     chainId: SupportedChainId,
     tokenDecimals: number,
+    signer: ethers.Signer,
   ): Promise<string> {
     try {
       const poolAddress = AaveSDK.getPoolAddress(chainId);
 
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
       const tokenContract = new ethers.Contract(
         tokenAddress,
         ERC20_ABI,
-        provider,
+        signer,
       );
 
       const allowance = await tokenContract.allowance(userAddress, poolAddress);
@@ -448,6 +444,7 @@ export class AaveTransactions {
   static async getUserAccountData(
     userAddress: string,
     chainId: SupportedChainId,
+    provider: ethers.Provider,
   ): Promise<UserAccountData | null> {
     try {
       if (!AaveSDK.isChainSupported(chainId)) {
@@ -455,9 +452,6 @@ export class AaveTransactions {
       }
 
       const poolAddress = AaveSDK.getPoolAddress(chainId);
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
       const poolContract = new ethers.Contract(poolAddress, POOL_ABI, provider);
 
       const accountData = await poolContract.getUserAccountData(userAddress);
@@ -484,10 +478,15 @@ export class AaveTransactions {
     tokenAddress: string,
     userAddress: string,
     chainId: SupportedChainId,
+    provider: ethers.Provider,
   ): Promise<{ canDisable: boolean; reason?: string }> {
     try {
       // Get current account data
-      const accountData = await this.getUserAccountData(userAddress, chainId);
+      const accountData = await this.getUserAccountData(
+        userAddress,
+        chainId,
+        provider,
+      );
       if (!accountData) {
         return { canDisable: false, reason: "Unable to fetch account data" };
       }

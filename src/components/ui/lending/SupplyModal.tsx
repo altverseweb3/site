@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
-import { ethers } from "ethers";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
@@ -96,6 +96,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
@@ -201,22 +202,13 @@ const SupplyModal: FC<SupplyModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Get current chain ID
       const currentChainId = evmNetwork?.chainId
         ? typeof evmNetwork.chainId === "string"
           ? parseInt(evmNetwork.chainId, 10)
           : evmNetwork.chainId
         : 1; // Default to Ethereum mainnet
 
-      // Get signer from window.ethereum
-      if (!window.ethereum) {
-        throw new Error("MetaMask not found");
-      }
-
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
-      const signer = await provider.getSigner();
+      const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       // Show initial toast

@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/Input";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
 import { AaveTransactions } from "@/utils/aave/interact";
-import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
 import { formatBalance } from "@/utils/common";
 import { getChainByChainId } from "@/config/chains";
@@ -98,6 +98,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
@@ -191,22 +192,13 @@ const BorrowModal: FC<BorrowModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Get current chain ID
       const currentChainId = evmNetwork?.chainId
         ? typeof evmNetwork.chainId === "string"
           ? parseInt(evmNetwork.chainId, 10)
           : evmNetwork.chainId
         : 1;
 
-      // Get signer
-      if (!window.ethereum) {
-        throw new Error("MetaMask not found");
-      }
-
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as unknown as ethers.Eip1193Provider,
-      );
-      const signer = await provider.getSigner();
+      const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       // Show initial toast

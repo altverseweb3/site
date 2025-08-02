@@ -20,7 +20,7 @@ import {
 } from "@/utils/swap/mayanSwapMethods";
 import { Quote } from "@mayanfinance/swap-sdk";
 import { toast } from "sonner";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 import { SwapStatus } from "@/types/web3";
@@ -713,7 +713,7 @@ export function useTokenTransfer(
   const receiveAddress = options.transactionDetails.receiveAddress;
 
   // Get wallet providers and signers
-  const { getEvmSigner, getSolanaSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner, getSolanaSigner } = useReownWalletProviderAndSigner();
 
   // Add the chain switch hook
   const { switchToSourceChain, isLoading: isChainSwitching } = useChainSwitch(

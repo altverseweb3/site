@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useCallback } from "react";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import {
   ETHERFI_VAULTS,
   DEPOSIT_ASSETS,
@@ -227,7 +227,7 @@ export async function queryAllVaultsForAsset(
 // React hook for vault share conversion queries with wallet integration
 
 export function useVaultShares() {
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const queryVaultConversionRateMemoized = useCallback(
     async (vaultId: number, depositAsset: string, depositAmount: string) => {

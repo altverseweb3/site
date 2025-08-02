@@ -20,8 +20,8 @@ import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { AaveTransactions, RateMode } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getExplorerUrl } from "@/utils/ui/uiHelpers";
-import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
@@ -105,6 +105,7 @@ const RepayModal: FC<RepayModalProps> = ({
   const [repayMode, setRepayMode] = useState<RateMode>(RateMode.Variable); // Default to variable
 
   const { isEvmConnected, evmNetwork } = useWalletConnection();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   // Determine the appropriate repay mode based on debt composition
   useEffect(() => {
@@ -234,25 +235,7 @@ const RepayModal: FC<RepayModalProps> = ({
           : evmNetwork.chainId
         : 1;
 
-      // Get signer from window.ethereum
-      if (!window.ethereum) {
-        throw new Error("no wallet detected");
-      }
-
-      const ethereum = window.ethereum as {
-        request: (args: {
-          method: string;
-          params?: unknown[];
-        }) => Promise<unknown>;
-        on?: (event: string, callback: (...args: unknown[]) => void) => void;
-        removeListener?: (
-          event: string,
-          callback: (...args: unknown[]) => void,
-        ) => void;
-      };
-
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
+      const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       console.log(

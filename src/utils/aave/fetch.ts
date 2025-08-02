@@ -1,6 +1,6 @@
 // aaveFetch.ts - Essential Aave fetch functionality using wallet provider
 import { ethers } from "ethers";
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
 import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
@@ -623,7 +623,7 @@ export async function fetchUserWalletBalances(
  * Updated React hook
  */
 export function useAaveFetch() {
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
   return {
     fetchAllReservesData: async () => {
       const signer = await getEvmSigner();

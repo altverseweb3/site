@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useCallback } from "react"; // Add this import
-import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
@@ -212,7 +212,7 @@ export async function getUserVaultBalance(
  * React hook for etherFi fetch functions with wallet integration
  */
 export function useEtherFiFetch() {
-  const { getEvmSigner } = useWalletProviderAndSigner();
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const fetchVaultTVLMemoized = useCallback(
     async (vaultId: number) => {
