@@ -296,7 +296,6 @@ export async function fetchAllReservesData(
   console.log(`Found ${supplyAssets.length} supply assets`);
   console.log(`Found ${borrowAssets.length} borrow assets`);
 
-  debugger;
   return {
     allReserves,
     supplyAssets,
