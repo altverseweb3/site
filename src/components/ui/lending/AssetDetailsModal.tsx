@@ -16,16 +16,15 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { AaveReserveData } from "@/utils/aave/fetch";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
-import {
-  ExtendedAssetDetails,
-  getReserveMetrics,
-  calculateUtilizationRate,
-} from "@/utils/aave/calculations";
-import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
 import { formatBalance, formatCurrency } from "@/utils/formatters";
+import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
+import {
+  calculateUtilizationRate,
+  fetchExtendedAssetDetails,
+  getReserveMetrics,
+} from "@/utils/aave/fetch";
 
 interface AssetDetailsModalProps {
   assetData?: AaveReserveData;
