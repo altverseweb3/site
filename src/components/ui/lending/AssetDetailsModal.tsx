@@ -16,16 +16,15 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { AaveReserveData } from "@/utils/aave/fetch";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
-import {
-  ExtendedAssetDetails,
-  getReserveMetrics,
-  calculateUtilizationRate,
-} from "@/utils/aave/calculations";
-import { fetchExtendedAssetDetails } from "@/utils/aave/extendedDetails";
 import { formatBalance, formatCurrency } from "@/utils/formatters";
+import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
+import {
+  calculateUtilizationRate,
+  fetchExtendedAssetDetails,
+  getReserveMetrics,
+} from "@/utils/aave/fetch";
 
 interface AssetDetailsModalProps {
   assetData?: AaveReserveData;
@@ -484,7 +483,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <span className="text-sm text-zinc-400">max LTV</span>
                   <div className="text-sm font-medium">
-                    {currentAsset.ltv || "N/A"}
+                    {extendedDetails?.ltv || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -492,7 +491,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation threshold
                   </span>
                   <div className="text-sm font-medium">
-                    {currentAsset.liquidationThreshold || "N/A"}
+                    {extendedDetails?.liquidationThreshold || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -500,7 +499,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation penalty
                   </span>
                   <div className="text-sm font-medium">
-                    {currentAsset.liquidationPenalty || "N/A"}
+                    {extendedDetails?.liquidationPenalty || "N/A"}
                   </div>
                 </div>
               </div>

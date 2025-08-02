@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { AaveTransactions } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
@@ -95,6 +95,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
 
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { withdraw } = useAaveInteract();
 
   const chainName = chainNames[chainId] || "ethereum";
   const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
@@ -208,14 +209,13 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
       );
 
       // Call the Aave withdraw function
-      const result = await AaveTransactions.withdrawAsset({
+      const result = await withdraw({
         tokenAddress,
         amount: withdrawAmount,
         tokenDecimals,
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

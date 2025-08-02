@@ -12,7 +12,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import { AaveReserveData } from "@/utils/aave/fetch";
+import { AaveReserveData } from "@/types/aave";
 import { SupplyModal } from "@/components/ui/lending/SupplyModal";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";

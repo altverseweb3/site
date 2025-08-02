@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { AaveTransactions } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { toast } from "sonner";
@@ -97,6 +97,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { supply } = useAaveInteract();
 
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
@@ -220,14 +221,13 @@ const SupplyModal: FC<SupplyModalProps> = ({
       );
 
       // Call the real Aave supply function
-      const result = await AaveTransactions.supplyAsset({
+      const result = await supply({
         tokenAddress,
         amount: supplyAmount,
         tokenDecimals,
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

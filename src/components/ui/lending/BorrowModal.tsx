@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
-import { AaveTransactions } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
+import { RateMode } from "@/types/aave";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
@@ -99,6 +100,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { borrow } = useAaveInteract();
 
   // Create Token and Chain objects for TokenImage component
   const token: Token = {
@@ -210,15 +212,14 @@ const BorrowModal: FC<BorrowModalProps> = ({
       );
 
       // Call the Aave borrow function
-      const result = await AaveTransactions.borrowAsset({
+      const result = await borrow({
         tokenAddress,
         amount: borrowAmount,
-        rateMode: rateMode === "variable" ? 2 : 1, // Aave rate mode: 1 = stable, 2 = variable
+        rateMode: rateMode === "variable" ? RateMode.Variable : RateMode.Stable,
         tokenDecimals,
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

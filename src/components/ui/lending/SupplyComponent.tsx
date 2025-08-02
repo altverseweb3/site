@@ -10,13 +10,9 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import { useTokensForChain } from "@/store/web3Store";
-import {
-  AaveReserveData,
-  useAaveFetch,
-  UserPosition,
-} from "@/utils/aave/fetch";
-import { useAaveChain } from "@/store/web3Store";
+import { useAaveChain, useTokensForChain } from "@/store/web3Store";
+import { AaveReserveData, UserPosition } from "@/types/aave";
+import { useAaveFetch } from "@/utils/aave/fetch";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
