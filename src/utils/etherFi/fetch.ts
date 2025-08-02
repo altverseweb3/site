@@ -1,10 +1,11 @@
 import { ethers } from "ethers";
 import { useCallback } from "react"; // Add this import
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { ERC20_ABI, TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
+import { TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
 import { chains } from "@/config/chains";
+import { ERC20_ABI } from "@/types/ERC20ABI";
 
 export async function fetchVaultTVL(
   vaultId: number,

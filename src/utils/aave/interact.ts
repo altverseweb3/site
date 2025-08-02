@@ -1,8 +1,9 @@
 // Aave Data Provider - For fetching information from contracts
 import { ethers } from "ethers";
 import { AaveSDK } from "@/utils/aave/aaveSDK";
-import { ERC20_ABI, POOL_ABI } from "@/types/aaveV3Abis";
+import { POOL_ABI } from "@/types/aaveV3ABIs";
 import { SupportedChainId } from "@/config/aave";
+import { ERC20_ABI } from "@/types/ERC20ABI";
 
 export enum RateMode {
   Stable = 1,

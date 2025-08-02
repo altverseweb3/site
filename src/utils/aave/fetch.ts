@@ -1,11 +1,12 @@
 // aaveFetch.ts - Essential Aave fetch functionality using wallet provider
 import { ethers } from "ethers";
 import { useWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { POOL_DATA_PROVIDER_ABI, ERC20_ABI } from "@/types/aaveV3Abis";
+import { POOL_DATA_PROVIDER_ABI } from "@/types/aaveV3ABIs";
 import { loadTokensForChain } from "@/utils/tokens/tokenMethods";
 import { Token } from "@/types/web3";
 import { getAaveMarket, chainNames } from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
+import { ERC20_ABI } from "@/types/ERC20ABI";
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
