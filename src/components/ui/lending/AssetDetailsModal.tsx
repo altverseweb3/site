@@ -24,7 +24,11 @@ import {
   getReserveMetrics,
 } from "@/utils/aave/fetch";
 import { getChainByChainId } from "@/config/chains";
-import { formatBalance, formatCurrency, truncateAddress } from "@/utils/formatters";
+import {
+  formatBalance,
+  formatCurrency,
+  truncateAddress,
+} from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
   currentAsset: AaveReserveData;

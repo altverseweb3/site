@@ -27,7 +27,6 @@ export interface ReserveData {
 
 // Enhanced interface that includes both supply and borrow data
 export interface AaveReserveData {
-  symbol: string;
   name: string;
   asset: Token;
   aTokenAddress: string;
@@ -58,7 +57,6 @@ export interface AaveReserveData {
   isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
-
 }
 
 export interface AaveReservesResult {

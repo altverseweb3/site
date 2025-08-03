@@ -3,7 +3,12 @@ import { ethers } from "ethers";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, POOL_ABI } from "@/types/aaveV3ABIs";
 import { Token, Chain } from "@/types/web3";
-import { getAaveMarket, SupportedChainId, ChainConfig, isChainSupported } from "@/config/aave";
+import {
+  getAaveMarket,
+  SupportedChainId,
+  ChainConfig,
+  isChainSupported,
+} from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
 import { useCallback } from "react";
@@ -625,7 +630,7 @@ export const getReserveMetrics = (
   const totalBorrowedNum = parseFloat(totalBorrowed);
   const availableLiquidityNum = parseFloat(availableLiquidity);
 
-  console.log(`${currentAsset.symbol} using formatted values:`, {
+  console.log(`${currentAsset.asset.ticker} using formatted values:`, {
     reserveSize,
     availableLiquidity,
     totalBorrowed,
@@ -739,7 +744,7 @@ export const fetchExtendedAssetDetails = async (
 
   try {
     const chainInfo = getChainByChainId(currentAsset.asset.chainId);
-    console.log(`🔍 Fetching price for ${currentAsset.symbol}:`, {
+    console.log(`🔍 Fetching price for ${currentAsset.asset.ticker}:`, {
       assetChainId: currentAsset.asset.chainId,
       modalChainId: chainId,
       chainInfo: chainInfo?.name,
@@ -757,7 +762,7 @@ export const fetchExtendedAssetDetails = async (
         ],
       });
 
-      console.log(`📊 Price API response for ${currentAsset.symbol}:`, {
+      console.log(`📊 Price API response for ${currentAsset.asset.ticker}:`, {
         success: !priceResponse.error,
         error: priceResponse.error,
         dataExists: !!priceResponse.data,
@@ -772,11 +777,11 @@ export const fetchExtendedAssetDetails = async (
       ) {
         oraclePrice = parseFloat(priceResponse.data.data[0].prices[0].value);
         console.log(
-          `✅ Successfully fetched oracle price for ${currentAsset.symbol}: $${oraclePrice}`,
+          `✅ Successfully fetched oracle price for ${currentAsset.asset.ticker}: $${oraclePrice}`,
         );
       } else {
         console.warn(
-          `❌ No price data for ${currentAsset.symbol}. Error:`,
+          `❌ No price data for ${currentAsset.asset.ticker}. Error:`,
           priceResponse.error,
         );
       }
@@ -787,7 +792,7 @@ export const fetchExtendedAssetDetails = async (
     }
   } catch (priceError) {
     console.error(
-      `❌ Price fetch error for ${currentAsset.symbol}:`,
+      `❌ Price fetch error for ${currentAsset.asset.ticker}:`,
       priceError,
     );
   }
