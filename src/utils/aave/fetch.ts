@@ -3,7 +3,12 @@ import { ethers } from "ethers";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, POOL_ABI } from "@/types/aaveV3ABIs";
 import { Token, Chain } from "@/types/web3";
-import { getAaveMarket, SupportedChainId, ChainConfig, isChainSupported } from "@/config/aave";
+import {
+  getAaveMarket,
+  SupportedChainId,
+  ChainConfig,
+  isChainSupported,
+} from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
 import { useCallback } from "react";
@@ -355,7 +360,7 @@ export async function fetchUserPositions(
             // Format the balance using the asset's decimals
             const formattedBalance = ethers.formatUnits(
               aTokenBalance,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             // TODO: Replace this with actual price fetching
@@ -376,7 +381,10 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(`Error fetching user data for ${reserve.symbol}:`, error);
+          console.log(
+            `Error fetching user data for ${reserve.asset.ticker}:`,
+            error,
+          );
           return null;
         }
       });
@@ -459,7 +467,7 @@ export async function fetchUserBorrowPositions(
             // Format the debt using the asset's decimals
             const formattedTotalDebt = ethers.formatUnits(
               totalDebt,
-              reserve.decimals,
+              reserve.asset.decimals,
             );
 
             //For Now Im mocking price I will update this when we integrate the token info
@@ -489,7 +497,7 @@ export async function fetchUserBorrowPositions(
           return null;
         } catch (error) {
           console.log(
-            `Error fetching user borrow data for ${reserve.symbol}:`,
+            `Error fetching user borrow data for ${reserve.asset.ticker}:`,
             error,
           );
           return null;
@@ -553,7 +561,7 @@ export async function fetchUserWalletBalances(
           const walletBalance = await tokenContract.balanceOf(userAddress);
           const formattedBalance = ethers.formatUnits(
             walletBalance,
-            reserve.decimals,
+            reserve.asset.decimals,
           );
 
           // TODO: Replace with actual price fetching
@@ -570,7 +578,7 @@ export async function fetchUserWalletBalances(
           };
         } catch (error) {
           console.log(
-            `Error fetching wallet balance for ${reserve.symbol}:`,
+            `Error fetching wallet balance for ${reserve.asset.ticker}:`,
             error,
           );
           // Return reserve with zero balance on error
@@ -622,7 +630,7 @@ export const getReserveMetrics = (
   const totalBorrowedNum = parseFloat(totalBorrowed);
   const availableLiquidityNum = parseFloat(availableLiquidity);
 
-  console.log(`${currentAsset.symbol} using formatted values:`, {
+  console.log(`${currentAsset.asset.ticker} using formatted values:`, {
     reserveSize,
     availableLiquidity,
     totalBorrowed,
@@ -735,9 +743,9 @@ export const fetchExtendedAssetDetails = async (
   let oraclePrice = 1;
 
   try {
-    const chainInfo = getChainByChainId(currentAsset.chainId || chainId);
-    console.log(`🔍 Fetching price for ${currentAsset.symbol}:`, {
-      assetChainId: currentAsset.chainId,
+    const chainInfo = getChainByChainId(currentAsset.asset.chainId);
+    console.log(`🔍 Fetching price for ${currentAsset.asset.ticker}:`, {
+      assetChainId: currentAsset.asset.chainId,
       modalChainId: chainId,
       chainInfo: chainInfo?.name,
       network: chainInfo?.alchemyNetworkName,
@@ -754,7 +762,7 @@ export const fetchExtendedAssetDetails = async (
         ],
       });
 
-      console.log(`📊 Price API response for ${currentAsset.symbol}:`, {
+      console.log(`📊 Price API response for ${currentAsset.asset.ticker}:`, {
         success: !priceResponse.error,
         error: priceResponse.error,
         dataExists: !!priceResponse.data,
@@ -769,22 +777,22 @@ export const fetchExtendedAssetDetails = async (
       ) {
         oraclePrice = parseFloat(priceResponse.data.data[0].prices[0].value);
         console.log(
-          `✅ Successfully fetched oracle price for ${currentAsset.symbol}: $${oraclePrice}`,
+          `✅ Successfully fetched oracle price for ${currentAsset.asset.ticker}: $${oraclePrice}`,
         );
       } else {
         console.warn(
-          `❌ No price data for ${currentAsset.symbol}. Error:`,
+          `❌ No price data for ${currentAsset.asset.ticker}. Error:`,
           priceResponse.error,
         );
       }
     } else {
       console.warn(
-        `❌ No network info for chainId ${currentAsset.chainId || chainId}`,
+        `❌ No network info for chainId ${currentAsset.asset.chainId}`,
       );
     }
   } catch (priceError) {
     console.error(
-      `❌ Price fetch error for ${currentAsset.symbol}:`,
+      `❌ Price fetch error for ${currentAsset.asset.ticker}:`,
       priceError,
     );
   }

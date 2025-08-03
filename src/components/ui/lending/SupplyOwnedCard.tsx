@@ -64,7 +64,7 @@ const SupplyOwnedCard = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Handle collateral change from modal
   const handleCollateralChange = async (enabled: boolean) => {
@@ -86,7 +86,9 @@ const SupplyOwnedCard = ({
       const success = await onWithdrawComplete(currentAsset, amount);
       if (success) {
         // Optionally trigger a refresh of the component data
-        console.log(`Successfully withdrew ${amount} ${currentAsset.symbol}`);
+        console.log(
+          `Successfully withdrew ${amount} ${currentAsset.asset.ticker}`,
+        );
       }
       return success;
     } catch (error) {
@@ -108,10 +110,10 @@ const SupplyOwnedCard = ({
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {currentAsset.name}
+            {currentAsset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {currentAsset.symbol}
+            {currentAsset.asset.ticker}
           </CardDescription>
         </div>
       </CardHeader>
@@ -137,10 +139,10 @@ const SupplyOwnedCard = ({
           <div className="text-gray-400 text-sm mt-0">used as collateral</div>
           {canBeCollateral ? (
             <CollateralModal
-              tokenSymbol={currentAsset.symbol}
-              tokenName={currentAsset.name}
-              tokenIcon={currentAsset.tokenIcon}
-              chainId={currentAsset.chainId}
+              tokenSymbol={currentAsset.asset.ticker}
+              tokenName={currentAsset.asset.name}
+              tokenIcon={currentAsset.asset.icon}
+              chainId={currentAsset.asset.chainId}
               suppliedBalance={suppliedBalance}
               suppliedBalanceUSD={suppliedBalanceUSD}
               supplyAPY={supplyAPY}
@@ -154,7 +156,7 @@ const SupplyOwnedCard = ({
               totalDebtUSD={totalDebtUSD}
               onCollateralChange={handleCollateralChange}
               tokenAddress={currentAsset.asset.address}
-              tokenDecimals={currentAsset.decimals}
+              tokenDecimals={currentAsset.asset.decimals}
             >
               <button className="focus:outline-none">
                 <SupplyCollateralSwitch
@@ -176,10 +178,10 @@ const SupplyOwnedCard = ({
 
         {/* Wrap withdraw button in WithdrawModal */}
         <WithdrawModal
-          tokenSymbol={currentAsset.symbol}
-          tokenName={currentAsset.name}
-          tokenIcon={currentAsset.tokenIcon}
-          chainId={currentAsset.chainId}
+          tokenSymbol={currentAsset.asset.ticker}
+          tokenName={currentAsset.asset.name}
+          tokenIcon={currentAsset.asset.icon}
+          chainId={currentAsset.asset.chainId}
           suppliedBalance={suppliedBalance}
           suppliedBalanceUSD={suppliedBalanceUSD}
           supplyAPY={supplyAPY}
@@ -191,7 +193,7 @@ const SupplyOwnedCard = ({
           totalDebtUSD={totalDebtUSD}
           onWithdraw={handleWithdrawComplete}
           tokenAddress={currentAsset.asset.address}
-          tokenDecimals={currentAsset.decimals}
+          tokenDecimals={currentAsset.asset.decimals}
           aTokenAddress={currentAsset.aTokenAddress}
         >
           <BlueButton>withdraw</BlueButton>

@@ -41,7 +41,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Determine what to display for collateral status
   const getCollateralIndicator = () => {
@@ -64,10 +64,10 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
-            {currentAsset.name}
+            {currentAsset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {currentAsset.symbol}
+            {currentAsset.asset.icon}
           </CardDescription>
         </div>
       </CardHeader>
@@ -97,10 +97,10 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <SupplyModal
-          tokenSymbol={currentAsset.symbol}
-          tokenName={currentAsset.name}
-          tokenIcon={currentAsset.tokenIcon}
-          chainId={currentAsset.chainId}
+          tokenSymbol={currentAsset.asset.ticker}
+          tokenName={currentAsset.asset.name}
+          tokenIcon={currentAsset.asset.icon}
+          chainId={currentAsset.asset.chainId}
           balance={userBalance}
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
@@ -110,7 +110,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           totalCollateralUSD={0}
           totalDebtUSD={0}
           tokenAddress={currentAsset.asset.address}
-          tokenDecimals={currentAsset.decimals}
+          tokenDecimals={currentAsset.asset.decimals}
           onSupply={async () => {
             onSupply(currentAsset);
             return true;

@@ -13,6 +13,7 @@ import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSu
 import { useAaveChain, useTokensForChain } from "@/store/web3Store";
 import { AaveReserveData, UserPosition } from "@/types/aave";
 import { useAaveFetch } from "@/utils/aave/fetch";
+import { formatBalance } from "@/utils/formatters";
 
 const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
@@ -274,8 +275,10 @@ const SupplyComponent: React.FC = () => {
                   <SupplyUnownedCard
                     key={`${reserve.asset}-${aaveChain.chainId}`}
                     currentAsset={reserve}
-                    userBalance={reserve.userBalanceFormatted || "0.00"}
-                    dollarAmount={reserve.userBalanceUsd || "0.00"}
+                    userBalance={formatBalance(
+                      reserve.asset.userBalance || "0.00",
+                    )}
+                    dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                   />
                 ))}
