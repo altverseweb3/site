@@ -67,7 +67,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
             {currentAsset.asset.name}
           </CardTitle>
           <CardDescription className="text-gray-400 text-xs mt-1">
-            {currentAsset.asset.icon}
+            {currentAsset.asset.ticker}
           </CardDescription>
         </div>
       </CardHeader>
