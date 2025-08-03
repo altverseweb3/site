@@ -46,6 +46,54 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
+  const currentAsset: AaveReserveData = useMemo(
+    () =>
+      assetData || {
+        symbol: tokenSymbol,
+        name: tokenName,
+        asset: tokenAddress,
+        decimals: tokenDecimals,
+        chainId: chainId,
+        tokenIcon: tokenIcon,
+        aTokenAddress: "",
+        currentLiquidityRate: "0",
+        totalSupply: "0",
+        formattedSupply: "0",
+        supplyAPY: "0.00",
+        canBeCollateral: false,
+        variableBorrowRate: "0",
+        stableBorrowRate: "0",
+        variableBorrowAPY: "0.00",
+        stableBorrowAPY: "0.00",
+        stableBorrowEnabled: false,
+        borrowingEnabled: false,
+        totalBorrowed: "0",
+        formattedTotalBorrowed: "0",
+        availableLiquidity: "0",
+        formattedAvailableLiquidity: "0",
+        borrowCap: "0",
+        formattedBorrowCap: "0",
+        supplyCap: "0",
+        formattedSupplyCap: "0",
+        isActive: true,
+        isFrozen: false,
+        isIsolationModeAsset: false,
+        debtCeiling: 0,
+        userBalance: "0",
+        userBalanceFormatted: "0.00",
+        userBalanceUsd: "0.00",
+      },
+    [
+      assetData,
+      tokenSymbol,
+      tokenName,
+      tokenAddress,
+      tokenDecimals,
+      chainId,
+      tokenIcon,
+    ],
+  );
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
