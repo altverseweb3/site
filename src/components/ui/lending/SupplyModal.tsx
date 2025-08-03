@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  AmberButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
@@ -24,7 +27,6 @@ import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (
@@ -305,9 +307,9 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -414,30 +416,27 @@ const SupplyModal: FC<SupplyModalProps> = ({
               )}
           </div>
 
-          {/* Supply Button */}
-          <Button
-            onClick={handleSupply}
-            disabled={!isFormValid}
-            className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <AmberButton
+                onClick={handleSupply}
+                disabled={!isFormValid}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                )}
+              >
+                {isSubmitting ? "supplying..." : "supply"}
+              </AmberButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : (
-              <>
-                Supply{" "}
-                {supplyAmountNum > 0
-                  ? `${formatBalance(supplyAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
             By supplying, you agree to Aave&apos;s terms and conditions. Your

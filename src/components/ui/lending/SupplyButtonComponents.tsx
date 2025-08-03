@@ -128,5 +128,46 @@ const GrayButton: React.FC<BaseButtonProps> = ({
   );
 };
 
+/**
+ * Amber button - for 'supply' and 'collateral' actions
+ */
+const AmberButton: React.FC<BaseButtonProps> = ({
+  onClick,
+  children,
+  className = "",
+  disabled = false,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        inline-flex 
+        items-center 
+        justify-center 
+        font-medium 
+        transition-colors 
+        focus-visible:outline-none 
+        border 
+        border-amber-500/25 
+        rounded-[3px]
+        text-sm 
+        bg-amber-500/10
+        hover:bg-amber-500/20 
+        text-amber-500
+        hover:text-amber-400 
+        py-1
+        px-4
+        h-6
+        w-full
+        ${className}
+      `}
+    >
+      {children}
+    </button>
+  );
+};
+
 // Only export once at the end of the file
-export { PrimaryButton, BlueButton, GrayButton };
+export { PrimaryButton, BlueButton, GrayButton, AmberButton };

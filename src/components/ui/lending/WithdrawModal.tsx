@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AlertCircle, ArrowRight, TrendingDown } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  BlueButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
@@ -22,7 +25,6 @@ import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForWithdraw = (
@@ -329,9 +331,9 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -394,7 +396,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {/* APY Loss Warning */}
           {withdrawAmountNum > 0 && (
             <div className="flex items-center gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-              <TrendingDown className="h-4 w-4 text-orange-500" />
+              <Info className="h-4 w-4 text-orange-500" />
               <div className="text-sm">
                 <div className="text-[#FAFAFA] font-medium">
                   Interest Impact
@@ -440,41 +442,36 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             </div>
           )}
 
-          {/* Withdraw Button */}
-          <Button
-            onClick={handleWithdraw}
-            disabled={!isFormValid}
-            className={cn(
-              "w-full disabled:opacity-50",
-              isDangerous
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-orange-600 text-white hover:bg-orange-700",
-            )}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <BlueButton
+                onClick={handleWithdraw}
+                disabled={!isFormValid || isDangerous}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid || isDangerous
+                    ? "opacity-50 cursor-not-allowed"
+                    : "",
+                  isDangerous
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                    : "",
+                )}
+              >
+                {isSubmitting
+                  ? "withdrawing..."
+                  : isDangerous
+                    ? "too risky to withdraw"
+                    : "withdraw"}
+              </BlueButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : isDangerous ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Too Risky to Withdraw
-              </>
-            ) : (
-              <>
-                <TrendingDown className="h-4 w-4 mr-2" />
-                Withdraw{" "}
-                {withdrawAmountNum > 0
-                  ? `${formatBalance(withdrawAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
             By withdrawing, you will reduce your earning potential and may

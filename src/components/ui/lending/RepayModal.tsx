@@ -443,23 +443,24 @@ const RepayModal: FC<RepayModalProps> = ({
             )}
 
             <div className="flex gap-3 pt-2">
-              <DialogClose asChild>
-                <div className="flex-1">
-                  <GrayButton>cancel</GrayButton>
-                </div>
-              </DialogClose>
-
               <div className="flex-1">
                 <BlueButton
                   onClick={handleRepay}
                   disabled={!isFormValid}
-                  className={
-                    !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                  }
+                  className={cn(
+                    "h-8 py-2",
+                    !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                  )}
                 >
                   {isSubmitting ? "repaying..." : `repay`}
                 </BlueButton>
               </div>
+
+              <DialogClose asChild>
+                <div className="flex-1">
+                  <GrayButton className="h-8 py-2">cancel</GrayButton>
+                </div>
+              </DialogClose>
             </div>
           </div>
         </DialogContent>

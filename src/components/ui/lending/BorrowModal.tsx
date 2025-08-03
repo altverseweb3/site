@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowRight, TrendingUp } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  AmberButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
@@ -24,7 +27,6 @@ import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 
 // Health Factor Calculator for Borrowing
@@ -316,9 +318,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-500 hover:text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -440,43 +442,38 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
           )}
 
-          {/* Borrow Button */}
-          <Button
-            onClick={handleBorrow}
-            disabled={!isFormValid}
-            className={cn(
-              "w-full disabled:opacity-50",
-              isDangerous
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-red-600 text-white hover:bg-red-700",
-            )}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <AmberButton
+                onClick={handleBorrow}
+                disabled={!isFormValid || isDangerous}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid || isDangerous
+                    ? "opacity-50 cursor-not-allowed"
+                    : "",
+                  isDangerous
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                    : "",
+                )}
+              >
+                {isSubmitting
+                  ? "borrowing..."
+                  : !borrowingEnabled
+                    ? "borrowing disabled"
+                    : isDangerous
+                      ? "too risky to borrow"
+                      : "borrow"}
+              </AmberButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : !borrowingEnabled ? (
-              "Borrowing Disabled"
-            ) : isDangerous ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Too Risky to Borrow
-              </>
-            ) : (
-              <>
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Borrow{" "}
-                {borrowAmountNum > 0
-                  ? `${formatBalance(borrowAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
             By borrowing, you will pay interest at the {rateMode} rate. Ensure
