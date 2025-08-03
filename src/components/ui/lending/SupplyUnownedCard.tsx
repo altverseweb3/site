@@ -41,7 +41,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Determine what to display for collateral status
   const getCollateralIndicator = () => {

@@ -47,7 +47,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
   const isFrozen = currentAsset.isFrozen ?? false;
 
-  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Get borrowing status display
   const getBorrowingStatusDisplay = () => {

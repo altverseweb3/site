@@ -64,7 +64,7 @@ const SupplyOwnedCard = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
-  const chain: Chain = getChainByChainId(currentAsset.asset.chainId || 1);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Handle collateral change from modal
   const handleCollateralChange = async (enabled: boolean) => {

@@ -46,7 +46,7 @@ const BorrowOwnedCard = ({
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
 
-  const chain: Chain = getChainByChainId(asset.asset.chainId || 1);
+  const chain: Chain = getChainByChainId(asset.asset.chainId);
 
   const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
     try {
