@@ -23,7 +23,7 @@ export const useAaveDataLoader = () => {
 
         const addresses = reserves.map((reserve) => ({
           network: chainInfo.alchemyNetworkName,
-          address: reserve.asset,
+          address: reserve.asset.address,
         }));
 
         const priceResponse = await altverseAPI.getTokenPrices({ addresses });
@@ -38,7 +38,7 @@ export const useAaveDataLoader = () => {
           const price = tokenData.prices?.[0]?.value
             ? parseFloat(tokenData.prices[0].value)
             : 1;
-          priceMap[reserve.asset.toLowerCase()] = price;
+          priceMap[reserve.asset.address.toLowerCase()] = price;
         });
 
         return priceMap;

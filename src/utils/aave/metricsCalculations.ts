@@ -46,7 +46,7 @@ export const calculateHealthFactor = (
     } else {
       // Skip assets without liquidation threshold data
       console.warn(
-        `No liquidation threshold data for ${position.asset.symbol}, excluding from health factor calculation`,
+        `No liquidation threshold data for ${position.asset.asset.ticker}, excluding from health factor calculation`,
       );
       return;
     }
@@ -134,7 +134,7 @@ export const calculateLTVData = (
       // Skip assets without proper LTV/liquidation threshold data
       if (!assetLTV || !assetLiqThreshold) {
         console.warn(
-          `Missing LTV/liquidation threshold data for ${position.asset.symbol}, excluding from LTV calculation`,
+          `Missing LTV/liquidation threshold data for ${position.asset.asset.ticker}, excluding from LTV calculation`,
         );
         return;
       }
