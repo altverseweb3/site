@@ -1,4 +1,4 @@
-import { UserPosition, UserBorrowPosition } from "./fetch";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
 
 export interface UserMetrics {
   netWorth: number;
