@@ -62,6 +62,7 @@ export const truncateAddress = (
 
 export function formatCurrency(value: number): string {
   if (value === 0) return "$0";
+  if (value > 0 && value < 0.01) return "<$0.01";
   if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
   if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;

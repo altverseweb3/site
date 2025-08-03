@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,8 +31,6 @@ const RiskDetailsModal = ({
   maxLTV,
   liquidationThreshold,
 }: RiskDetailsModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   const healthFactor =
     propHealthFactor === null || propHealthFactor === Infinity
       ? Infinity
@@ -43,7 +41,7 @@ const RiskDetailsModal = ({
   const liquidationThresholdPercentage = liquidationThreshold;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md bg-[#18181B] border-[#27272A] text-white rounded-lg">
         <DialogHeader className="pb-4">
@@ -53,7 +51,6 @@ const RiskDetailsModal = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Safety Description */}
           <div className="text-center">
             <p className="text-sm text-zinc-400 mb-4">
               safety of your deposited collateral against the borrowed assets
@@ -61,7 +58,6 @@ const RiskDetailsModal = ({
             </p>
           </div>
 
-          {/* Health Factor Chart */}
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-zinc-400">health factor</span>
@@ -113,7 +109,13 @@ const RiskDetailsModal = ({
             </div>
           </div>
 
-          {/* Current LTV Chart */}
+          <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
+            <p className="text-sm text-zinc-400 text-center">
+              if the health factor goes below 1, the liquidation of your
+              collateral might be triggered.
+            </p>
+          </div>
+
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-zinc-400">current ltv</span>
@@ -168,15 +170,13 @@ const RiskDetailsModal = ({
             </div>
           </div>
 
-          {/* Warning Message */}
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <p className="text-sm text-zinc-400 text-center">
-              if the health factor goes below 1, the liquidation of your
-              collateral might be triggered.
+              if your loan to value goes above the liquidation threshold your
+              collateral supplied may be liquidated.
             </p>
           </div>
 
-          {/* Position Values */}
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-500 mb-1">
