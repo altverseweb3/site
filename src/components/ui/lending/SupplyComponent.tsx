@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -10,7 +10,11 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import { useAaveChain, useTokensForChain } from "@/store/web3Store";
+import useWeb3Store, {
+  useAaveChain,
+  useIsWalletTypeConnected,
+} from "@/store/web3Store";
+import { WalletType } from "@/types/web3";
 import { AaveReserveData, UserPosition } from "@/types/aave";
 import { useAaveFetch } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/formatters";
@@ -19,12 +23,31 @@ const SupplyComponent: React.FC = () => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
   const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tokensPreloaded, setTokensPreloaded] = useState(false);
   const [positionsLoading, setPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
+
   const aaveChain = useAaveChain();
-  const chainTokens = useTokensForChain(aaveChain.chainId);
-  const { fetchAllReservesData, fetchUserPositions } = useAaveFetch();
+  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
+  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
+  const tokenCount = useWeb3Store((state) => state.allTokensList.length);
+  const loadTokens = useWeb3Store((state) => state.loadTokens);
+
+  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  const chainTokens = useMemo(() => {
+    return getTokensForChain(aaveChain.chainId);
+  }, [getTokensForChain, aaveChain.chainId]);
+
+  const { fetchUserPositions, fetchAllReservesData } = useAaveFetch();
+
+  useEffect(() => {
+    if (tokenCount === 0 && !tokensLoading && !tokensPreloaded) {
+      setTokensPreloaded(true);
+      loadTokens();
+    }
+  }, [loadTokens, tokensLoading, tokenCount, tokensPreloaded]);
 
   // Move loadUserPositions to useCallback to fix dependency warning
   const loadUserPositions = useCallback(
@@ -53,6 +76,23 @@ const SupplyComponent: React.FC = () => {
       // Skip if already loading
       if (loading && !force) {
         console.log("Already loading, skipping...");
+        return;
+      }
+
+      if (tokensLoading) {
+        console.log("Tokens still loading, skipping...");
+        return;
+      }
+
+      if (tokenCount === 0) {
+        console.log("No tokens loaded yet, skipping...");
+        return;
+      }
+
+      if (chainTokens.length === 0) {
+        console.log(
+          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
+        );
         return;
       }
 
@@ -95,58 +135,34 @@ const SupplyComponent: React.FC = () => {
     },
     [
       loading,
+      tokensLoading,
+      tokenCount,
       lastChainId,
       aaveChain,
+      chainTokens,
       aaveReserves.length,
       fetchAllReservesData,
-      loadUserPositions, // Added this dependency
-      chainTokens,
+      loadUserPositions,
     ],
   );
 
-  // Load data when component mounts or chain changes
   useEffect(() => {
-    loadAaveReserves();
-  }, [loadAaveReserves]);
-
-  // Reset data when chain changes (before new data loads)
-  useEffect(() => {
-    if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
-      setAaveReserves([]);
-      setUserPositions([]);
-      setError(null);
+    if (
+      isWalletConnected &&
+      !tokensLoading &&
+      tokenCount > 0 &&
+      chainTokens.length > 0
+    ) {
+      loadAaveReserves();
     }
-  }, [aaveChain.chainId, lastChainId]);
-
-  // Add direct wallet chain change listener for immediate refresh
-  useEffect(() => {
-    const handleChainChanged = () => {
-      console.log("Wallet chain changed, clearing data and refreshing...");
-      // Immediately clear cards and show loading state
-      setAaveReserves([]);
-      setUserPositions([]);
-      setError(null);
-      setLoading(true);
-
-      // Force refresh when wallet chain changes
-      setTimeout(() => {
-        loadAaveReserves(true);
-      }, 200); // Small delay to ensure store has updated
-    };
-
-    // Listen for wallet chain changes (if available)
-    if (typeof window !== "undefined" && window.ethereum) {
-      const ethereum = window.ethereum as {
-        on?: (event: string, callback: () => void) => void;
-        removeListener?: (event: string, callback: () => void) => void;
-      };
-      ethereum.on?.("chainChanged", handleChainChanged);
-
-      return () => {
-        ethereum.removeListener?.("chainChanged", handleChainChanged);
-      };
-    }
-  }, [loadAaveReserves]);
+  }, [
+    isWalletConnected,
+    tokensLoading,
+    tokenCount,
+    chainTokens.length,
+    loadAaveReserves,
+    aaveChain.chainId,
+  ]);
 
   const handleSupply = (asset: AaveReserveData) => {
     console.log("Supply asset:", asset);
@@ -273,7 +289,7 @@ const SupplyComponent: React.FC = () => {
               {hasData &&
                 aaveReserves.map((reserve) => (
                   <SupplyUnownedCard
-                    key={`${reserve.asset}-${aaveChain.chainId}`}
+                    key={`${reserve.asset.address}-${aaveChain.chainId}`}
                     currentAsset={reserve}
                     userBalance={formatBalance(
                       reserve.asset.userBalance || "0.00",
