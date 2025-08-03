@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AlertCircle, ArrowRight, Shield, ShieldOff } from "lucide-react";
+import { AlertCircle, Shield, ShieldOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
 import { toast } from "sonner";
@@ -21,6 +20,7 @@ import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
+import { AmberButton, GrayButton } from "./SupplyButtonComponents";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForCollateral = (
@@ -127,8 +127,6 @@ const CollateralModal: FC<CollateralModalProps> = ({
   // Determine action (enabling or disabling collateral)
   const isEnabling = !isCurrentlyCollateral;
   const actionText = isEnabling ? "Enable" : "Disable";
-  const actionIcon = isEnabling ? Shield : ShieldOff;
-  const ActionIcon = actionIcon;
 
   // Calculate new health factor
   const newHealthFactor =
@@ -261,7 +259,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 </span>
               </div>
             )}
-            {actionText} {tokenSymbol} Collateral
+            {actionText.toLowerCase()} {tokenSymbol} collateral
           </DialogTitle>
         </DialogHeader>
 
@@ -269,7 +267,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
           {/* Current Position Info */}
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">Supplied Amount</span>
+              <span className="text-sm text-[#A1A1AA]">supplied amount</span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
                   {suppliedBalance} {tokenSymbol}
@@ -280,19 +278,19 @@ const CollateralModal: FC<CollateralModalProps> = ({
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">Supply APY</span>
+              <span className="text-sm text-[#A1A1AA]">supply APY</span>
               <span className="text-sm text-green-500">{supplyAPY}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">Current Status</span>
+              <span className="text-sm text-[#A1A1AA]">current status</span>
               <span
                 className={
                   isCurrentlyCollateral ? "text-green-500" : "text-[#A1A1AA]"
                 }
               >
                 {isCurrentlyCollateral
-                  ? "Collateral Enabled"
-                  : "Collateral Disabled"}
+                  ? "collateral enabled"
+                  : "collateral disabled"}
               </span>
             </div>
           </div>
@@ -304,10 +302,10 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 <Shield className="h-4 w-4 text-green-500" />
                 <div className="text-sm">
                   <div className="text-[#FAFAFA] font-medium">
-                    Enable as Collateral
+                    enable as collateral
                   </div>
                   <div className="text-[#A1A1AA] text-xs">
-                    This asset will be used to back your borrowing power
+                    this asset will be used to back your borrowing power
                   </div>
                 </div>
               </div>
@@ -316,10 +314,10 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 <ShieldOff className="h-4 w-4 text-orange-500" />
                 <div className="text-sm">
                   <div className="text-[#FAFAFA] font-medium">
-                    Disable as Collateral
+                    disable as collateral
                   </div>
                   <div className="text-[#A1A1AA] text-xs">
-                    This asset will no longer back your borrowing power
+                    this asset will no longer back your borrowing power
                   </div>
                 </div>
               </div>
@@ -331,10 +329,10 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <div className="text-sm">
                   <div className="text-[#FAFAFA] font-medium">
-                    Isolation Mode Active
+                    isolation mode active
                   </div>
                   <div className="text-[#A1A1AA] text-xs">
-                    You can only borrow stablecoins with this asset as
+                    you can only borrow stablecoins with this asset as
                     collateral
                   </div>
                 </div>
@@ -346,9 +344,9 @@ const CollateralModal: FC<CollateralModalProps> = ({
               <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-red-500" />
                 <div className="text-sm">
-                  <div className="text-red-500 font-medium">Risk Warning</div>
+                  <div className="text-red-500 font-medium">risk warning</div>
                   <div className="text-[#A1A1AA] text-xs">
-                    Disabling this collateral would reduce your health factor
+                    disabling this collateral would reduce your health factor
                     below 1.1, putting you at risk of liquidation
                   </div>
                 </div>
@@ -360,7 +358,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
           {totalDebtUSD > 0 && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">Current Health Factor</span>
+                <span className="text-[#A1A1AA]">current health factor</span>
                 <span className={getHealthFactorColor(currentHealthFactor)}>
                   {currentHealthFactor.toFixed(2)}
                 </span>
@@ -368,7 +366,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
 
               {Math.abs(healthFactorChange) > 0.01 && (
                 <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">New Health Factor</span>
+                  <span className="text-[#A1A1AA]">new health factor</span>
                   <span className={getHealthFactorColor(newHealthFactor)}>
                     {newHealthFactor.toFixed(2)}
                     <span
@@ -391,7 +389,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
           {/* Asset Details */}
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Asset</span>
+              <span className="text-[#A1A1AA]">asset</span>
               <div className="flex items-center gap-2">
                 {imagePath ? (
                   <Image
@@ -414,50 +412,48 @@ const CollateralModal: FC<CollateralModalProps> = ({
             </div>
 
             <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Liquidation Threshold</span>
+              <span className="text-[#A1A1AA]">liquidation threshold</span>
               <span className="text-[#FAFAFA]">
                 {(liquidationThreshold * 100).toFixed(0)}%
               </span>
             </div>
           </div>
 
-          {/* Action Button */}
-          <Button
-            onClick={handleCollateralToggle}
-            disabled={!isFormValid}
-            className={cn(
-              "w-full disabled:opacity-50",
-              isEnabling
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-orange-600 text-white hover:bg-orange-700",
-              isDangerous && "bg-red-600 hover:bg-red-700",
-            )}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <AmberButton
+                onClick={handleCollateralToggle}
+                disabled={!isFormValid || isDangerous}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid || isDangerous
+                    ? "opacity-50 cursor-not-allowed"
+                    : "",
+                  isDangerous
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                    : "",
+                )}
+              >
+                {isSubmitting
+                  ? `${actionText.toLowerCase()}...`
+                  : isDangerous
+                    ? "too risky"
+                    : `${actionText.toLowerCase()} collateral`}
+              </AmberButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : isDangerous ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Too Risky
-              </>
-            ) : (
-              <>
-                <ActionIcon className="h-4 w-4 mr-2" />
-                {actionText} as Collateral
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
             {isEnabling
-              ? "Enabling this asset as collateral will increase your borrowing power."
-              : "Disabling this asset as collateral will reduce your borrowing power."}
+              ? "enabling this asset as collateral will increase your borrowing power."
+              : "disabling this asset as collateral will reduce your borrowing power."}
           </p>
         </div>
       </DialogContent>
