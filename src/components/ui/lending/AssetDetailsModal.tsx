@@ -101,6 +101,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
               <TokenImage token={currentAsset.asset} chain={chain} size="sm" />
               <DialogTitle className="text-lg font-semibold">
                 {currentAsset.asset.ticker} details
+
               </DialogTitle>
               <button
                 onClick={() =>
