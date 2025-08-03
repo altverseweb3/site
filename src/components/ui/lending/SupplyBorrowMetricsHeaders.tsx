@@ -5,16 +5,16 @@ import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
 import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import useWeb3Store from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import {
-  useAaveFetch,
-  UserPosition,
-  UserBorrowPosition,
-  AaveReserveData,
-} from "@/utils/aave/fetch";
-import { getReserveMetrics } from "@/utils/aave/calculations";
+import { useAaveFetch, getReserveMetrics } from "@/utils/aave/fetch";
+
 import { formatCurrency } from "@/utils/formatters";
 import { altverseAPI } from "@/api/altverse";
 import { getChainByChainId } from "@/config/chains";
+import {
+  AaveReserveData,
+  UserBorrowPosition,
+  UserPosition,
+} from "@/types/aave";
 
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
@@ -301,19 +301,16 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     let weightedLiquidationThreshold = 0;
     let totalCollateralValue = 0;
 
-    userSupplyPositions.forEach((position) => {
+    userSupplyPositionsUSD.forEach((position) => {
       if (position.isCollateral) {
-        const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
+        const suppliedUSD = position.suppliedBalanceUSD;
 
         const reserveData = allReserves.find(
           (reserve) =>
             reserve.asset.toLowerCase() === position.asset.asset.toLowerCase(),
         );
 
-        let assetLTV =
-          typeof position.asset.ltv === "string"
-            ? parseFloat(position.asset.ltv.replace("%", ""))
-            : position.asset.ltv || 0;
+        let assetLTV = 0;
         let assetLiqThreshold = 0;
 
         if (reserveData && reserveData.liquidationThreshold) {
@@ -327,11 +324,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
                 ? parseFloat(reserveData.ltv.replace("%", ""))
                 : reserveData.ltv;
           }
-        } else if (position.asset.liquidationThreshold) {
-          assetLiqThreshold =
-            typeof position.asset.liquidationThreshold === "string"
-              ? parseFloat(position.asset.liquidationThreshold.replace("%", ""))
-              : position.asset.liquidationThreshold;
         }
 
         if (!assetLTV || !assetLiqThreshold) {

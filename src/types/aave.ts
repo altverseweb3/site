@@ -63,6 +63,11 @@ export interface AaveReserveData {
   userBalanceUsd?: string;
   tokenIcon?: string;
   chainId?: number;
+
+  // Risk parameters
+  ltv?: number | string;
+  liquidationThreshold?: number | string;
+  liquidationPenalty?: number | string;
 }
 
 export interface AaveReservesResult {
