@@ -71,16 +71,15 @@ const MetricsCard: React.FC<MetricsCardProps> = ({
               )}
 
               {/* Button inline with the value */}
-              {metric.customButton ? (
-                metric.customButton
-              ) : metric.showButton && metric.buttonText ? (
-                <button
-                  onClick={() => onButtonClick?.(metric.label)}
-                  className="ml-2 rounded bg-[#232326] px-2 py-[2px] text-xs text-[#FFFFFF80] font-['Urbanist'] leading-none whitespace-nowrap hover:bg-[#2a2a2e]"
-                >
-                  {metric.buttonText}
-                </button>
-              ) : null}
+              {metric.customButton ||
+                (metric.showButton && metric.buttonText && (
+                  <button
+                    onClick={() => onButtonClick?.(metric.label)}
+                    className="ml-2 rounded bg-[#232326] px-2 py-[2px] text-xs text-[#FFFFFF80] leading-none whitespace-nowrap hover:bg-[#2a2a2e]"
+                  >
+                    {metric.buttonText}
+                  </button>
+                ))}
             </div>
           </div>
         ))}
