@@ -12,7 +12,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import type { Token, Chain } from "@/types/web3";
+import type { Chain } from "@/types/web3";
 import { UserBorrowPosition, RateMode } from "@/types/aave";
 import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
@@ -45,16 +45,6 @@ const BorrowOwnedCard = ({
 
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
-  const token: Token = {
-    id: asset.asset,
-    name: asset.name,
-    ticker: asset.symbol,
-    icon: asset.tokenIcon || "unknown.png",
-    address: asset.asset,
-    decimals: asset.decimals,
-    chainId: asset.chainId || 1,
-    stringChainId: (asset.chainId || 1).toString(),
-  };
 
   const chain: Chain = getChainByChainId(asset.chainId || 1);
 
@@ -89,7 +79,7 @@ const BorrowOwnedCard = ({
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         <div className="mr-3">
-          <TokenImage token={token} chain={chain} size="md" />
+          <TokenImage token={asset.asset} chain={chain} size="md" />
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
@@ -141,13 +131,13 @@ const BorrowOwnedCard = ({
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           onRepay={handleRepayComplete}
-          tokenAddress={asset.asset}
+          tokenAddress={asset.asset.address}
           tokenDecimals={asset.decimals}
         >
           <BlueButton>repay</BlueButton>
         </RepayModal>
 
-        <AssetDetailsModal assetData={asset}>
+        <AssetDetailsModal currentAsset={asset}>
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

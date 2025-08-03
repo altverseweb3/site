@@ -15,11 +15,11 @@ import {
 import { AaveReserveData } from "@/types/aave";
 import { BorrowModal } from "@/components/ui/lending/BorrowModal";
 import { getChainByChainId } from "@/config/chains";
-import type { Token, Chain } from "@/types/web3";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import type { Chain } from "@/types/web3";
 
 interface BorrowUnownedCardProps {
-  asset?: AaveReserveData;
+  currentAsset: AaveReserveData;
   availableToBorrow?: string; // Amount user can borrow based on collateral
   availableToBorrowUSD?: string; // USD value of borrowable amount
   onBorrow?: (asset: AaveReserveData) => void;
@@ -30,7 +30,7 @@ interface BorrowUnownedCardProps {
 }
 
 const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
-  asset,
+  currentAsset,
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
   onBorrow = () => {},
@@ -38,43 +38,6 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
 }) => {
-  // Default asset for demo purposes
-  const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
-    name: "Sample Token",
-    symbol: "SAMP",
-    decimals: 18,
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    isActive: true,
-    supplyAPY: "0.00",
-    canBeCollateral: true,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
-    variableBorrowRate: "",
-    stableBorrowRate: "",
-    variableBorrowAPY: "",
-    stableBorrowAPY: "",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "",
-    formattedTotalBorrowed: "",
-    availableLiquidity: "",
-    formattedAvailableLiquidity: "",
-    borrowCap: "",
-    formattedBorrowCap: "",
-    isFrozen: false,
-  };
-
-  const currentAsset = asset || defaultAsset;
-
   // Get borrow APY (variable rate) from your enhanced data
   const borrowAPY = currentAsset.variableBorrowAPY || "0.00";
   const stableBorrowAPY = currentAsset.stableBorrowAPY || "0.00";
@@ -83,18 +46,6 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   const borrowingEnabled = currentAsset.borrowingEnabled ?? true;
   const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
   const isFrozen = currentAsset.isFrozen ?? false;
-
-  // Create Token and Chain objects for TokenImage component
-  const token: Token = {
-    id: currentAsset.asset,
-    name: currentAsset.name,
-    ticker: currentAsset.symbol,
-    icon: currentAsset.tokenIcon || "unknown.png",
-    address: currentAsset.asset,
-    decimals: currentAsset.decimals,
-    chainId: currentAsset.chainId || 1,
-    stringChainId: (currentAsset.chainId || 1).toString(),
-  };
 
   const chain: Chain = getChainByChainId(currentAsset.chainId || 1);
 
@@ -121,7 +72,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
     <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         <div className="mr-3 rounded-full overflow-hidden">
-          <TokenImage token={token} chain={chain} size="md" />
+          <TokenImage token={currentAsset.asset} chain={chain} size="md" />
         </div>
         <div>
           <CardTitle className="text-sm font-medium leading-none">
@@ -174,7 +125,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
           tokenPrice={1}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
-          tokenAddress={currentAsset.asset}
+          tokenAddress={currentAsset.asset.address}
           tokenDecimals={currentAsset.decimals}
           onBorrow={async () => {
             onBorrow(currentAsset);
@@ -185,7 +136,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
             {canBorrow ? "borrow" : "unavailable"}
           </PrimaryButton>
         </BorrowModal>
-        <AssetDetailsModal assetData={asset}>
+        <AssetDetailsModal currentAsset={currentAsset}>
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

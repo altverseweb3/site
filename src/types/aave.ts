@@ -1,5 +1,6 @@
 import { SupportedChainId } from "@/config/aave";
 import { ethers } from "ethers";
+import { Token } from "@/types/web3";
 
 export interface ReserveData {
   symbol: string;
@@ -28,7 +29,7 @@ export interface ReserveData {
 export interface AaveReserveData {
   symbol: string;
   name: string;
-  asset: string;
+  asset: Token;
   decimals: number;
   aTokenAddress: string;
 

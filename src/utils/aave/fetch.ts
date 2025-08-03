@@ -41,11 +41,6 @@ export async function fetchAllReservesData(
     `Fetching Aave reserves for chain ${aaveChain.chainId} with backoff...`,
   );
 
-  const tokenLookup: Record<string, Token> = {};
-  chainTokens.forEach((token) => {
-    tokenLookup[token.address.toLowerCase()] = token;
-  });
-
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
     POOL_DATA_PROVIDER_ABI,
@@ -148,8 +143,11 @@ export async function fetchAllReservesData(
               let tokenName = token.symbol;
               let tokenSymbol = token.symbol;
 
-              const tokenData = tokenLookup[token.tokenAddress.toLowerCase()];
-
+              // lookup token, otherwise create Token object from scratch
+              let tokenData = chainTokens.find(
+                (t) =>
+                  t.address.toLowerCase() === token.tokenAddress.toLowerCase(),
+              );
               if (tokenData) {
                 tokenName = tokenData.name;
                 tokenSymbol = tokenData.ticker;
@@ -175,13 +173,25 @@ export async function fetchAllReservesData(
                 }
               }
 
-              const tokenIcon = tokenData?.icon || "unknown.png";
               const decimals = Number(configData.decimals);
+
+              if (!tokenData) {
+                tokenData = {
+                  id: token.tokenAddress,
+                  address: token.tokenAddress,
+                  name: tokenName,
+                  ticker: tokenSymbol,
+                  icon: "unknown.png",
+                  decimals: decimals,
+                  chainId: aaveChain.chainId,
+                  stringChainId: aaveChain.id,
+                };
+              }
 
               return {
                 symbol: tokenSymbol,
                 name: tokenName,
-                asset: token.tokenAddress,
+                asset: tokenData,
                 decimals: decimals,
                 aTokenAddress: reserveData.aTokenAddress || "",
 
@@ -223,7 +233,7 @@ export async function fetchAllReservesData(
                 userBalance: "0",
                 userBalanceFormatted: "0.00",
                 userBalanceUsd: "0.00",
-                tokenIcon: tokenIcon,
+                tokenIcon: "unknown.png",
                 chainId: aaveChain.chainId,
 
                 ltv: (ltvBps / 100).toFixed(2) + "%",
@@ -535,7 +545,7 @@ export async function fetchUserWalletBalances(
         try {
           // Get user's wallet balance for this token
           const tokenContract = new ethers.Contract(
-            reserve.asset,
+            reserve.asset.address,
             ERC20_ABI,
             provider,
           );
@@ -739,7 +749,7 @@ export const fetchExtendedAssetDetails = async (
         addresses: [
           {
             network: chainInfo.alchemyNetworkName,
-            address: currentAsset.asset,
+            address: currentAsset.asset.address.toLowerCase(),
           },
         ],
       });

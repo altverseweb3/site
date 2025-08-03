@@ -14,37 +14,25 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useMemo, FC, ReactNode } from "react";
+import { useState, useEffect, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import type { Token, Chain } from "@/types/web3";
-import { getChainByChainId } from "@/config/chains";
-import { formatBalance, formatCurrency } from "@/utils/formatters";
+import type { Chain } from "@/types/web3";
 import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
 import {
   calculateUtilizationRate,
   fetchExtendedAssetDetails,
   getReserveMetrics,
 } from "@/utils/aave/fetch";
+import { getChainByChainId } from "@/config/chains";
+import { formatBalance, formatCurrency, truncateAddress } from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
-  assetData?: AaveReserveData;
-  tokenSymbol?: string;
-  tokenName?: string;
-  tokenIcon?: string;
-  chainId?: number;
-  tokenAddress?: string;
-  tokenDecimals?: number;
+  currentAsset: AaveReserveData;
   children: ReactNode;
 }
 
 const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
-  assetData,
-  tokenSymbol = "USDC",
-  tokenName = "USD Coin",
-  tokenIcon = "usdc.png",
-  chainId = 1,
-  tokenAddress = "",
-  tokenDecimals = 18,
+  currentAsset,
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,52 +41,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-
-  const currentAsset: AaveReserveData = useMemo(
-    () =>
-      assetData || {
-        symbol: tokenSymbol,
-        name: tokenName,
-        asset: tokenAddress,
-        decimals: tokenDecimals,
-        chainId: chainId,
-        tokenIcon: tokenIcon,
-        aTokenAddress: "",
-        currentLiquidityRate: "0",
-        totalSupply: "0",
-        formattedSupply: "0",
-        supplyAPY: "0.00",
-        canBeCollateral: false,
-        variableBorrowRate: "0",
-        stableBorrowRate: "0",
-        variableBorrowAPY: "0.00",
-        stableBorrowAPY: "0.00",
-        stableBorrowEnabled: false,
-        borrowingEnabled: false,
-        totalBorrowed: "0",
-        formattedTotalBorrowed: "0",
-        availableLiquidity: "0",
-        formattedAvailableLiquidity: "0",
-        borrowCap: "0",
-        formattedBorrowCap: "0",
-        isActive: true,
-        isFrozen: false,
-        isIsolationModeAsset: false,
-        debtCeiling: 0,
-        userBalance: "0",
-        userBalanceFormatted: "0.00",
-        userBalanceUsd: "0.00",
-      },
-    [
-      assetData,
-      tokenSymbol,
-      tokenName,
-      tokenAddress,
-      tokenDecimals,
-      chainId,
-      tokenIcon,
-    ],
-  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -112,7 +54,10 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
       setError(null);
 
       try {
-        const details = await fetchExtendedAssetDetails(currentAsset, chainId);
+        const details = await fetchExtendedAssetDetails(
+          currentAsset,
+          currentAsset.asset.chainId,
+        );
         setExtendedDetails(details);
       } catch (err) {
         console.error("Error fetching extended asset details:", err);
@@ -133,24 +78,13 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     };
 
     fetchDetails();
-  }, [isOpen, isMounted, currentAsset, chainId]);
+  }, [isOpen, isMounted, currentAsset]);
 
   if (!isMounted) {
     return null;
   }
 
-  const token: Token = {
-    id: currentAsset.asset,
-    name: currentAsset.name,
-    ticker: currentAsset.symbol,
-    icon: currentAsset.tokenIcon || tokenIcon,
-    address: currentAsset.asset,
-    decimals: currentAsset.decimals,
-    chainId: currentAsset.chainId || chainId,
-    stringChainId: (currentAsset.chainId || chainId).toString(),
-  };
-
-  const chain: Chain = getChainByChainId(currentAsset.chainId || chainId);
+  const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -160,7 +94,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-[#18181B] border-[#27272A] text-white max-h-[90vh] overflow-hidden flex flex-col rounded-lg">
           <DialogHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <TokenImage token={token} chain={chain} size="sm" />
+              <TokenImage token={currentAsset.asset} chain={chain} size="sm" />
               <DialogTitle className="text-lg font-semibold">
                 {currentAsset.symbol.toLowerCase()} details
               </DialogTitle>
@@ -613,13 +547,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-zinc-400">token</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono">
-                      {currentAsset.asset.slice(0, 10)}...
-                      {currentAsset.asset.slice(-8)}
-                    </span>
+                    <span className="font-mono">format</span>
                     <button
                       onClick={() =>
-                        navigator.clipboard.writeText(currentAsset.asset)
+                        navigator.clipboard.writeText(
+                          currentAsset.asset.address,
+                        )
                       }
                       className="text-zinc-400 hover:text-white"
                       title="Copy address"
@@ -631,8 +564,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <span className="text-zinc-400">atoken</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
-                        {currentAsset.aTokenAddress.slice(0, 10)}...
-                        {currentAsset.aTokenAddress.slice(-8)}
+                        {truncateAddress(currentAsset.aTokenAddress)}
                       </span>
                       <button
                         onClick={() =>
@@ -651,8 +583,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     <span className="text-zinc-400">variable debt token</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono">
-                        {extendedDetails.variableDebtTokenAddress.slice(0, 10)}
-                        ...{extendedDetails.variableDebtTokenAddress.slice(-8)}
+                        {truncateAddress(
+                          extendedDetails.variableDebtTokenAddress,
+                        )}
                       </span>
                       <button
                         onClick={() =>
