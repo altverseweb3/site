@@ -164,7 +164,7 @@ const SupplyOwnedCard = ({
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => { }} />
           )}
         </div>
       </CardContent>
