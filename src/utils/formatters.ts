@@ -104,3 +104,17 @@ export const formatNetWorth = (netWorth: number): string => {
     maximumFractionDigits: 2,
   });
 };
+
+export const formatHealthFactor = (healthFactor: number | null): string => {
+  if (healthFactor === null) return "--";
+  if (healthFactor === Infinity) return "∞";
+  return healthFactor.toFixed(2);
+};
+
+export const getHealthFactorColor = (healthFactor: number | null): string => {
+  if (healthFactor === null) return "text-white";
+  if (healthFactor === Infinity) return "text-green-500";
+  if (healthFactor >= 2) return "text-green-500";
+  if (healthFactor >= 1.1) return "text-amber-500";
+  return "text-red-500";
+};

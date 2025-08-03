@@ -11,6 +11,8 @@ import {
   formatCurrency,
   formatNetAPY,
   formatNetWorth,
+  formatHealthFactor,
+  getHealthFactorColor,
 } from "@/utils/formatters";
 import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import {
@@ -189,21 +191,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         borrows: "--",
       };
     }
-  };
-
-  const getHealthFactorColor = (healthFactor: number | null) => {
-    if (healthFactor === null) return "text-white";
-    if (healthFactor === Infinity) return "text-green-500";
-    if (healthFactor >= 2) return "text-green-500";
-    if (healthFactor >= 1.5) return "text-amber-500";
-    if (healthFactor >= 1.1) return "text-orange-500";
-    return "text-red-500";
-  };
-
-  const formatHealthFactor = (healthFactor: number | null) => {
-    if (healthFactor === null) return "--";
-    if (healthFactor === Infinity) return "∞";
-    return healthFactor.toFixed(2);
   };
 
   const metricsDataHealth = [
