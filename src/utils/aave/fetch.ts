@@ -3,81 +3,21 @@ import { ethers } from "ethers";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { POOL_DATA_PROVIDER_ABI, POOL_ABI } from "@/types/aaveV3ABIs";
 import { Token, Chain } from "@/types/web3";
-import { getAaveMarket } from "@/config/aave";
+import { getAaveMarket, SupportedChainId, ChainConfig } from "@/config/aave";
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
-
-// Enhanced interface that includes both supply and borrow data
-export interface AaveReserveData {
-  symbol: string;
-  name: string;
-  asset: string;
-  decimals: number;
-  aTokenAddress: string;
-
-  // Supply data
-  currentLiquidityRate: string;
-  totalSupply: string;
-  formattedSupply: string;
-  supplyAPY: string;
-  canBeCollateral: boolean;
-
-  // Borrow data
-  variableBorrowRate: string;
-  stableBorrowRate: string;
-  variableBorrowAPY: string;
-  stableBorrowAPY: string;
-  stableBorrowEnabled: boolean;
-  borrowingEnabled: boolean;
-  totalBorrowed: string;
-  formattedTotalBorrowed: string;
-  availableLiquidity: string;
-  formattedAvailableLiquidity: string;
-  borrowCap: string;
-  formattedBorrowCap: string;
-
-  // General data
-  isActive: boolean;
-  isFrozen: boolean;
-  isIsolationModeAsset?: boolean;
-  debtCeiling?: number;
-  userBalance?: string;
-  userBalanceFormatted?: string;
-  userBalanceUsd?: string;
-  tokenIcon?: string;
-  chainId?: number;
-
-  // Risk parameters
-  ltv?: string;
-  liquidationThreshold?: string;
-  liquidationPenalty?: string;
-}
-
-export interface AaveReservesResult {
-  allReserves: AaveReserveData[];
-  supplyAssets: AaveReserveData[];
-  borrowAssets: AaveReserveData[];
-}
-
-export interface UserPosition {
-  asset: AaveReserveData;
-  suppliedBalance: string;
-  suppliedBalanceUSD: string;
-  isCollateral: boolean;
-  aTokenBalance: string;
-}
-
-export interface UserBorrowPosition {
-  asset: AaveReserveData;
-  stableDebt: string;
-  variableDebt: string;
-  totalDebt: string;
-  formattedTotalDebt: string;
-  totalDebtUSD: string;
-  stableBorrowRate: string;
-  variableBorrowRate: string;
-  currentBorrowAPY: string;
-}
+import { useCallback } from "react";
+import { getChainByChainId } from "@/config/chains";
+import { altverseAPI } from "@/api/altverse";
+import {
+  AaveReserveData,
+  AaveReservesResult,
+  ExtendedAssetDetails,
+  ReserveMetrics,
+  UserBorrowPosition,
+  UserPosition,
+  UserAccountData,
+} from "@/types/aave";
 
 // Rate limiting utility
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -660,11 +600,551 @@ export async function fetchUserWalletBalances(
   return updatedReserves;
 }
 
+export const getReserveMetrics = (
+  currentAsset: AaveReserveData,
+  extendedDetails: ExtendedAssetDetails | null,
+): ReserveMetrics => {
+  const reserveSize = currentAsset.formattedSupply || "0";
+  const availableLiquidity = currentAsset.formattedAvailableLiquidity || "0";
+  const totalBorrowed = currentAsset.formattedTotalBorrowed || "0";
+
+  const totalSupplyNum = parseFloat(reserveSize);
+  const totalBorrowedNum = parseFloat(totalBorrowed);
+  const availableLiquidityNum = parseFloat(availableLiquidity);
+
+  console.log(`${currentAsset.symbol} using formatted values:`, {
+    reserveSize,
+    availableLiquidity,
+    totalBorrowed,
+    mathCheck: (
+      totalSupplyNum -
+      (totalBorrowedNum + availableLiquidityNum)
+    ).toFixed(6),
+  });
+
+  let borrowedPercentage = 0;
+  let availablePercentage = 0;
+
+  if (totalSupplyNum > 0) {
+    borrowedPercentage = (totalBorrowedNum / totalSupplyNum) * 100;
+    availablePercentage = (availableLiquidityNum / totalSupplyNum) * 100;
+  }
+
+  let supplyCapUtilization = 0;
+  let borrowCapUtilization = 0;
+  let supplyCapFormatted = "Unlimited";
+  let borrowCapFormatted = "No cap";
+
+  if (
+    extendedDetails?.supplyCap &&
+    extendedDetails.supplyCap !== "Unlimited" &&
+    extendedDetails.supplyCap !== "0"
+  ) {
+    try {
+      const supplyCapInTokens = parseFloat(extendedDetails.supplyCap);
+
+      if (supplyCapInTokens > 0) {
+        supplyCapUtilization = (totalSupplyNum / supplyCapInTokens) * 100;
+        if (supplyCapInTokens >= 1000000) {
+          supplyCapFormatted = (supplyCapInTokens / 1000000).toFixed(1) + "M";
+        } else if (supplyCapInTokens >= 1000) {
+          supplyCapFormatted = (supplyCapInTokens / 1000).toFixed(1) + "K";
+        } else {
+          supplyCapFormatted = supplyCapInTokens.toFixed(0);
+        }
+      }
+    } catch (error) {
+      console.warn("Error calculating supply cap:", error);
+    }
+  }
+
+  if (currentAsset.borrowCap && currentAsset.borrowCap !== "0") {
+    try {
+      const borrowCapInTokens = parseFloat(currentAsset.borrowCap);
+
+      if (borrowCapInTokens > 0) {
+        borrowCapUtilization = (totalBorrowedNum / borrowCapInTokens) * 100;
+        if (borrowCapInTokens >= 1000000) {
+          borrowCapFormatted = (borrowCapInTokens / 1000000).toFixed(1) + "M";
+        } else if (borrowCapInTokens >= 1000) {
+          borrowCapFormatted = (borrowCapInTokens / 1000).toFixed(1) + "K";
+        } else {
+          borrowCapFormatted = borrowCapInTokens.toFixed(0);
+        }
+      }
+    } catch (error) {
+      console.warn("Error calculating borrow cap:", error);
+    }
+  }
+
+  return {
+    reserveSize,
+    availableLiquidity,
+    totalBorrowed,
+    borrowedPercentage: Number(borrowedPercentage.toFixed(2)),
+    availablePercentage: Number(availablePercentage.toFixed(2)),
+    supplyCapUtilization: Number(supplyCapUtilization.toFixed(2)),
+    borrowCapUtilization: Number(borrowCapUtilization.toFixed(2)),
+    supplyCapFormatted,
+    borrowCapFormatted,
+  };
+};
+
+export const calculateUtilizationRate = (
+  currentAsset: AaveReserveData,
+): string => {
+  if (!currentAsset.totalSupply || !currentAsset.totalBorrowed) return "0.00";
+
+  try {
+    const totalSupplyBigInt = BigInt(currentAsset.totalSupply);
+    const totalBorrowedBigInt = BigInt(currentAsset.totalBorrowed);
+
+    if (totalSupplyBigInt === BigInt(0)) return "0.00";
+
+    const utilizationBasisPoints =
+      (totalBorrowedBigInt * BigInt(10000)) / totalSupplyBigInt;
+    const utilizationPercentage = Number(utilizationBasisPoints) / 100;
+
+    return utilizationPercentage.toFixed(2);
+  } catch (error) {
+    console.warn("Error calculating utilization rate:", error);
+    const totalSupply = parseFloat(currentAsset.formattedSupply || "0");
+    const totalBorrowed = parseFloat(
+      currentAsset.formattedTotalBorrowed || "0",
+    );
+    if (totalSupply === 0) return "0.00";
+    return ((totalBorrowed / totalSupply) * 100).toFixed(2);
+  }
+};
+
+export const fetchExtendedAssetDetails = async (
+  currentAsset: AaveReserveData,
+  chainId: number,
+  provider?: ethers.Provider,
+): Promise<ExtendedAssetDetails> => {
+  let oraclePrice = 1;
+
+  try {
+    const chainInfo = getChainByChainId(currentAsset.chainId || chainId);
+    console.log(`🔍 Fetching price for ${currentAsset.symbol}:`, {
+      assetChainId: currentAsset.chainId,
+      modalChainId: chainId,
+      chainInfo: chainInfo?.name,
+      network: chainInfo?.alchemyNetworkName,
+      tokenAddress: currentAsset.asset,
+    });
+
+    if (chainInfo?.alchemyNetworkName) {
+      const priceResponse = await altverseAPI.getTokenPrices({
+        addresses: [
+          {
+            network: chainInfo.alchemyNetworkName,
+            address: currentAsset.asset,
+          },
+        ],
+      });
+
+      console.log(`📊 Price API response for ${currentAsset.symbol}:`, {
+        success: !priceResponse.error,
+        error: priceResponse.error,
+        dataExists: !!priceResponse.data,
+        dataLength: priceResponse.data?.data?.length,
+        firstResult: priceResponse.data?.data?.[0],
+        fullResponse: priceResponse,
+      });
+
+      if (
+        !priceResponse.error &&
+        priceResponse.data?.data?.[0]?.prices?.[0]?.value
+      ) {
+        oraclePrice = parseFloat(priceResponse.data.data[0].prices[0].value);
+        console.log(
+          `✅ Successfully fetched oracle price for ${currentAsset.symbol}: $${oraclePrice}`,
+        );
+      } else {
+        console.warn(
+          `❌ No price data for ${currentAsset.symbol}. Error:`,
+          priceResponse.error,
+        );
+      }
+    } else {
+      console.warn(
+        `❌ No network info for chainId ${currentAsset.chainId || chainId}`,
+      );
+    }
+  } catch (priceError) {
+    console.error(
+      `❌ Price fetch error for ${currentAsset.symbol}:`,
+      priceError,
+    );
+  }
+
+  if (provider) {
+    const network = await provider.getNetwork();
+    const chainId = Number(network.chainId);
+    const market = getAaveMarket(chainId);
+
+    if (!market?.AAVE_PROTOCOL_DATA_PROVIDER) {
+      throw new Error(`Aave market not found for chain ${chainId}`);
+    }
+
+    const poolDataProvider = new ethers.Contract(
+      market.AAVE_PROTOCOL_DATA_PROVIDER,
+      POOL_DATA_PROVIDER_ABI,
+      provider,
+    );
+
+    const [configData, tokenAddresses, reserveCaps] = await Promise.all([
+      poolDataProvider.getReserveConfigurationData(currentAsset.asset),
+      poolDataProvider.getReserveTokensAddresses(currentAsset.asset),
+      poolDataProvider.getReserveCaps(currentAsset.asset),
+    ]);
+
+    const ltvBps = Number(configData.ltv);
+    const liquidationThresholdBps = Number(configData.liquidationThreshold);
+    const liquidationBonusBps = Number(configData.liquidationBonus);
+
+    return {
+      ltv: (ltvBps / 100).toFixed(2) + "%",
+      liquidationThreshold: (liquidationThresholdBps / 100).toFixed(2) + "%",
+      liquidationPenalty:
+        ((liquidationBonusBps - 10000) / 100).toFixed(2) + "%",
+      stableDebtTokenAddress: tokenAddresses.stableDebtTokenAddress,
+      variableDebtTokenAddress: tokenAddresses.variableDebtTokenAddress,
+      supplyCap:
+        reserveCaps.supplyCap.toString() === "0"
+          ? "Unlimited"
+          : reserveCaps.supplyCap.toString(),
+      oraclePrice: oraclePrice,
+      currentPrice: oraclePrice,
+    };
+  }
+
+  return {
+    ltv: "80.00%",
+    liquidationThreshold: "85.00%",
+    liquidationPenalty: "5.00%",
+    oraclePrice: oraclePrice,
+    currentPrice: oraclePrice,
+  };
+};
+
 /**
- * Updated React hook
+ * Check if a chain is supported by Aave V3
  */
+export function isChainSupported(chainId: number): chainId is SupportedChainId {
+  const supportedChains: number[] = [
+    1, 137, 42161, 10, 43114, 8453, 100, 56, 11155111,
+  ];
+  return supportedChains.includes(chainId);
+}
+
+/**
+ * Get the Pool contract address for a chain
+ */
+export function getPoolAddress(chainId: SupportedChainId): string {
+  const market = getAaveMarket(chainId);
+  return market.POOL;
+}
+
+/**
+ * Get the Protocol Data Provider address for a chain
+ */
+export function getDataProviderAddress(chainId: SupportedChainId): string {
+  const market = getAaveMarket(chainId);
+  return market.AAVE_PROTOCOL_DATA_PROVIDER;
+}
+
+/**
+ * Get the UI Data Provider address for a chain (if available)
+ */
+export function getUiDataProviderAddress(
+  chainId: SupportedChainId,
+): string | undefined {
+  const market = getAaveMarket(chainId);
+  return market.UI_POOL_DATA_PROVIDER;
+}
+
+/**
+ * Get the Pool Addresses Provider address for a chain
+ */
+export function getAddressesProviderAddress(chainId: SupportedChainId): string {
+  const market = getAaveMarket(chainId);
+  return market.POOL_ADDRESSES_PROVIDER;
+}
+
+/**
+ * Get the WETH Gateway address for a chain (if available)
+ */
+export function getWethGatewayAddress(
+  chainId: SupportedChainId,
+): string | undefined {
+  const market = getAaveMarket(chainId);
+  return market.WETH_GATEWAY;
+}
+
+/**
+ * Get the complete chain configuration
+ */
+export function getChainConfig(chainId: SupportedChainId): ChainConfig {
+  const market = getAaveMarket(chainId);
+
+  return {
+    poolAddress: market.POOL,
+    dataProviderAddress: market.AAVE_PROTOCOL_DATA_PROVIDER,
+    uiDataProviderAddress: market.UI_POOL_DATA_PROVIDER,
+    addressesProviderAddress: market.POOL_ADDRESSES_PROVIDER,
+    wethGatewayAddress: market.WETH_GATEWAY,
+  };
+}
+
+/**
+ * Check if the chain supports a specific feature
+ */
+export function hasWethGateway(chainId: SupportedChainId): boolean {
+  try {
+    const wethGateway = getWethGatewayAddress(chainId);
+    return !!wethGateway;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if the chain has UI data provider
+ */
+export function hasUiDataProvider(chainId: SupportedChainId): boolean {
+  try {
+    const uiDataProvider = getUiDataProviderAddress(chainId);
+    return !!uiDataProvider;
+  } catch {
+    return false;
+  }
+}
+
+export async function checkBalance(
+  tokenAddress: string,
+  userAddress: string,
+  amount: string,
+  tokenDecimals: number,
+  provider: ethers.Provider,
+): Promise<boolean> {
+  try {
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ERC20_ABI,
+      provider,
+    );
+
+    const balance = await tokenContract.balanceOf(userAddress);
+    const amountWei = ethers.parseUnits(amount, tokenDecimals);
+
+    return balance >= amountWei;
+  } catch (error) {
+    console.error("Error checking balance:", error);
+    return false;
+  }
+}
+
+export async function getAllowance(
+  tokenAddress: string,
+  userAddress: string,
+  chainId: SupportedChainId,
+  tokenDecimals: number,
+  signer: ethers.Signer,
+): Promise<string> {
+  try {
+    const poolAddress = getPoolAddress(chainId);
+
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+
+    const allowance = await tokenContract.allowance(userAddress, poolAddress);
+    return ethers.formatUnits(allowance, tokenDecimals);
+  } catch (error) {
+    console.error("Error getting allowance:", error);
+    return "0";
+  }
+}
+
+/**
+ * Get user account data (health factor, total collateral, etc.)
+ */
+export async function getUserAccountData(
+  userAddress: string,
+  chainId: SupportedChainId,
+  provider: ethers.Provider,
+): Promise<UserAccountData | null> {
+  try {
+    if (!isChainSupported(chainId)) {
+      throw new Error(`Chain ${chainId} not supported`);
+    }
+
+    const poolAddress = getPoolAddress(chainId);
+    const poolContract = new ethers.Contract(poolAddress, POOL_ABI, provider);
+
+    const accountData = await poolContract.getUserAccountData(userAddress);
+
+    return {
+      totalCollateralBase: accountData.totalCollateralBase.toString(),
+      totalDebtBase: accountData.totalDebtBase.toString(),
+      availableBorrowsBase: accountData.availableBorrowsBase.toString(),
+      currentLiquidationThreshold:
+        Number(accountData.currentLiquidationThreshold) / 10000, // Convert from basis points
+      ltv: Number(accountData.ltv) / 10000, // Convert from basis points
+      healthFactor: ethers.formatUnits(accountData.healthFactor, 18),
+    };
+  } catch (error) {
+    console.error("Error getting user account data:", error);
+    return null;
+  }
+}
+
+export async function canDisableCollateral(
+  tokenAddress: string,
+  userAddress: string,
+  chainId: SupportedChainId,
+  provider: ethers.Provider,
+): Promise<{ canDisable: boolean; reason?: string }> {
+  try {
+    // Get current account data
+    const accountData = await getUserAccountData(
+      userAddress,
+      chainId,
+      provider,
+    );
+    if (!accountData) {
+      return { canDisable: false, reason: "Unable to fetch account data" };
+    }
+
+    const currentHealthFactor = parseFloat(accountData.healthFactor);
+
+    // If no debt, can always disable collateral
+    if (parseFloat(accountData.totalDebtBase) === 0) {
+      return { canDisable: true };
+    }
+
+    // If health factor is very low, probably can't disable
+    if (currentHealthFactor < 1.2) {
+      return {
+        canDisable: false,
+        reason: "Health factor too low - disabling would risk liquidation",
+      };
+    }
+
+    // For more precise checking, you could simulate the transaction
+    // or calculate the exact impact of removing this collateral
+    return { canDisable: true };
+  } catch (error) {
+    console.error("Error checking collateral disable safety:", error);
+    return {
+      canDisable: false,
+      reason: "Unable to verify safety of disabling collateral",
+    };
+  }
+}
+
 export function useAaveFetch() {
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+
+  const fetchExtendedAssetDetailsMemoized = useCallback(
+    async (currentAsset: AaveReserveData, chainId: number) => {
+      const signer = await getEvmSigner();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return fetchExtendedAssetDetails(currentAsset, chainId, provider);
+    },
+    [getEvmSigner],
+  );
+
+  const getReserveMetricsMemoized = useCallback(
+    (
+      currentAsset: AaveReserveData,
+      extendedDetails: ExtendedAssetDetails | null,
+    ) => {
+      return getReserveMetrics(currentAsset, extendedDetails);
+    },
+    [],
+  );
+
+  const calculateUtilizationRateMemoized = useCallback(
+    (currentAsset: AaveReserveData) => {
+      return calculateUtilizationRate(currentAsset);
+    },
+    [],
+  );
+
+  const checkUserBalance = useCallback(
+    async (
+      tokenAddress: string,
+      userAddress: string,
+      amount: string,
+      tokenDecimals: number,
+    ) => {
+      const signer = await getEvmSigner();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return checkBalance(
+        tokenAddress,
+        userAddress,
+        amount,
+        tokenDecimals,
+        provider,
+      );
+    },
+    [getEvmSigner],
+  );
+
+  const getUserAllowance = useCallback(
+    async (
+      tokenAddress: string,
+      userAddress: string,
+      chainId: SupportedChainId,
+      tokenDecimals: number,
+    ) => {
+      const signer = await getEvmSigner();
+      return getAllowance(
+        tokenAddress,
+        userAddress,
+        chainId,
+        tokenDecimals,
+        signer,
+      );
+    },
+    [getEvmSigner],
+  );
+
+  const getAccountData = useCallback(
+    async (userAddress: string, chainId: SupportedChainId) => {
+      const signer = await getEvmSigner();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return getUserAccountData(userAddress, chainId, provider);
+    },
+    [getEvmSigner],
+  );
+
+  const checkCollateralSafety = useCallback(
+    async (
+      tokenAddress: string,
+      userAddress: string,
+      chainId: SupportedChainId,
+    ) => {
+      const signer = await getEvmSigner();
+      const provider = signer.provider;
+      if (!provider) {
+        throw new Error("Signer must have a provider");
+      }
+      return canDisableCollateral(tokenAddress, userAddress, chainId, provider);
+    },
+    [getEvmSigner],
+  );
+
   return {
     fetchAllReservesData: async (aaveChain: Chain, chainTokens: Token[]) => {
       const signer = await getEvmSigner();
@@ -688,6 +1168,8 @@ export function useAaveFetch() {
       const userAddress = await signer.getAddress();
       return fetchUserWalletBalances(signer, userAddress, reservesData);
     },
+
+    fetchExtendedAssetDetails: fetchExtendedAssetDetailsMemoized,
 
     // Combined fetch that gets reserves and updates them with user data
     fetchAllReservesWithUserData: async (
@@ -721,5 +1203,31 @@ export function useAaveFetch() {
         ),
       };
     },
+
+    // Utility functions
+    getReserveMetrics: getReserveMetricsMemoized,
+    calculateUtilizationRate: calculateUtilizationRateMemoized,
+
+    // User account and balance functions
+    checkUserBalance,
+    getUserAllowance,
+    getAccountData,
+    checkCollateralSafety,
+
+    // SDK utility functions
+    isChainSupported: (chainId: number) => isChainSupported(chainId),
+    getPoolAddress: (chainId: SupportedChainId) => getPoolAddress(chainId),
+    getDataProviderAddress: (chainId: SupportedChainId) =>
+      getDataProviderAddress(chainId),
+    getUiDataProviderAddress: (chainId: SupportedChainId) =>
+      getUiDataProviderAddress(chainId),
+    getAddressesProviderAddress: (chainId: SupportedChainId) =>
+      getAddressesProviderAddress(chainId),
+    getWethGatewayAddress: (chainId: SupportedChainId) =>
+      getWethGatewayAddress(chainId),
+    getChainConfig: (chainId: SupportedChainId) => getChainConfig(chainId),
+    hasWethGateway: (chainId: SupportedChainId) => hasWethGateway(chainId),
+    hasUiDataProvider: (chainId: SupportedChainId) =>
+      hasUiDataProvider(chainId),
   };
 }

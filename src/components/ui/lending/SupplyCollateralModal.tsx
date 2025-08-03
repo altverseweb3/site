@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { AaveTransactions } from "@/utils/aave/interact";
+import { useAaveInteract } from "@/utils/aave/interact";
 import { toast } from "sonner";
 import { useState, useEffect, FC, ReactNode } from "react";
 import { chainNames, SupportedChainId } from "@/config/aave";
@@ -96,6 +96,7 @@ const CollateralModal: FC<CollateralModalProps> = ({
 
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { setCollateral } = useAaveInteract();
 
   const chainName = chainNames[chainId] || "ethereum";
   const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
@@ -199,13 +200,12 @@ const CollateralModal: FC<CollateralModalProps> = ({
       );
 
       // Call the real Aave collateral toggle function
-      const result = await AaveTransactions.setUserUseReserveAsCollateral({
+      const result = await setCollateral({
         tokenAddress,
         useAsCollateral: isEnabling,
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
-        signer,
       });
 
       if (result.success) {

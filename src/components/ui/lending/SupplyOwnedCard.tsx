@@ -15,7 +15,7 @@ import {
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
 import type { Token, Chain } from "@/types/web3";
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
-import { AaveReserveData } from "@/utils/aave/fetch";
+import { AaveReserveData } from "@/types/aave";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";

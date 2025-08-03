@@ -15,7 +15,7 @@ import {
 import useWeb3Store from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { chainList } from "@/config/chains";
-import { AaveSDK } from "@/utils/aave/aaveSDK";
+import { isChainSupported } from "@/utils/aave/fetch";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
 
@@ -28,7 +28,7 @@ const BorrowLendComponent: React.FC = () => {
   const setAaveChain = useSetAaveChain();
 
   const aaveLendingSupportedChains = chainList.filter((chain) =>
-    AaveSDK.isChainSupported(chain.chainId),
+    isChainSupported(chain.chainId),
   );
 
   const { switchToChain } = useChainSwitch(aaveLendingSupportedChains[0]);
@@ -38,7 +38,7 @@ const BorrowLendComponent: React.FC = () => {
   }, [setActiveSwapSection]);
 
   useEffect(() => {
-    const isCurrentChainSupported = AaveSDK.isChainSupported(aaveChain.chainId);
+    const isCurrentChainSupported = isChainSupported(aaveChain.chainId);
     if (!isCurrentChainSupported && aaveLendingSupportedChains.length > 0) {
       setAaveChain(aaveLendingSupportedChains[0]);
     }
