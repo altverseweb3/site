@@ -14,10 +14,9 @@ import {
 } from "@/store/web3Store";
 import useWeb3Store from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import { chainList } from "@/config/chains";
-import { isChainSupported } from "@/utils/aave/fetch";
+import { chainList, getChainById } from "@/config/chains";
+import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { getChainById } from "@/config/chains";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");

@@ -5,13 +5,13 @@ import { POOL_ABI } from "@/types/aaveV3ABIs";
 import { SupportedChainId } from "@/config/aave";
 import { ERC20_ABI } from "@/types/ERC20ABI";
 import {
-  isChainSupported,
   getPoolAddress,
   checkBalance,
   getAllowance,
   getUserAccountData,
   canDisableCollateral,
 } from "@/utils/aave/fetch";
+import { isChainSupported } from "@/config/aave";
 import {
   WithdrawParams,
   WithdrawResult,
