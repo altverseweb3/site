@@ -18,3 +18,16 @@ export function getHealthFactorColor(healthFactor: number): string {
   if (healthFactor >= 1.1) return "text-orange-500";
   return "text-red-500";
 }
+
+// LTV Color Helper
+export function getLTVColor(
+  ltv: number,
+  liquidationThresh: number,
+): "green" | "yellow" | "amber" | "red" {
+  if (liquidationThresh === 0) return "green";
+  const usage = ltv / liquidationThresh;
+  if (usage < 0.6) return "green";
+  if (usage < 0.8) return "yellow";
+  if (usage < 0.95) return "amber";
+  return "red";
+}
