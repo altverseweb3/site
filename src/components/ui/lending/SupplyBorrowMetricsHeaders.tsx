@@ -5,16 +5,20 @@ import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
 import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
 import useWeb3Store from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import { useAaveFetch, getReserveMetrics } from "@/utils/aave/fetch";
+import { getReserveMetrics } from "@/utils/aave/fetch";
 
-import { formatCurrency } from "@/utils/formatters";
-import { altverseAPI } from "@/api/altverse";
-import { getChainByChainId } from "@/config/chains";
+import {
+  formatCurrency,
+  formatNetAPY,
+  formatNetWorth,
+} from "@/utils/formatters";
+import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import {
   AaveReserveData,
   UserBorrowPosition,
   UserPosition,
 } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
@@ -41,73 +45,12 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const [loading, setLoading] = useState(false);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
-  const { fetchAllReservesData, fetchUserPositions, fetchUserBorrowPositions } =
-    useAaveFetch();
-
-  const fetchOraclePrices = useCallback(
-    async (reserves: AaveReserveData[]) => {
-      try {
-        const chainInfo = getChainByChainId(aaveChain.chainId);
-        if (!chainInfo?.alchemyNetworkName) {
-          return {};
-        }
-
-        const addresses = reserves.map((reserve) => ({
-          network: chainInfo.alchemyNetworkName,
-          address: reserve.asset,
-        }));
-
-        const priceResponse = await altverseAPI.getTokenPrices({ addresses });
-
-        if (priceResponse.error || !priceResponse.data?.data) {
-          return {};
-        }
-
-        const priceMap: Record<string, number> = {};
-        priceResponse.data.data.forEach((tokenData, index) => {
-          const reserve = reserves[index];
-          const price = tokenData.prices?.[0]?.value
-            ? parseFloat(tokenData.prices[0].value)
-            : 1;
-          priceMap[reserve.asset.toLowerCase()] = price;
-        });
-
-        return priceMap;
-      } catch {
-        return {};
-      }
-    },
-    [aaveChain.chainId],
-  );
-
-  const loadUserPositions = useCallback(
-    async (
-      supplyAssets: AaveReserveData[],
-      borrowAssets: AaveReserveData[],
-    ) => {
-      if (!hasConnectedWallet) return;
-
-      try {
-        const [supplyPositions, borrowPositions] = await Promise.all([
-          fetchUserPositions(supplyAssets),
-          fetchUserBorrowPositions(borrowAssets),
-        ]);
-
-        setUserSupplyPositions(supplyPositions);
-        setUserBorrowPositions(borrowPositions);
-      } catch (err) {
-        console.error("Error loading user positions:", err);
-        setUserSupplyPositions([]);
-        setUserBorrowPositions([]);
-      }
-    },
-    [hasConnectedWallet, fetchUserPositions, fetchUserBorrowPositions],
-  );
+  const { loadAaveData } = useAaveDataLoader();
 
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
 
-  const loadAaveData = useCallback(
+  const loadAaveDataCallback = useCallback(
     async (force = false) => {
       if (loading && !force) {
         return;
@@ -123,28 +66,23 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
       try {
         setLoading(true);
-        const reservesResult = await fetchAllReservesData(
+        const result = await loadAaveData({
           aaveChain,
           chainTokens,
-        );
-        setLastChainId(aaveChain.chainId);
+          hasConnectedWallet,
+          force,
+          loading,
+          lastChainId,
+          allReservesLength: allReserves.length,
+        });
 
-        const allReservesData = [
-          ...reservesResult.supplyAssets,
-          ...reservesResult.borrowAssets,
-        ];
-        const uniqueReserves = allReservesData.filter(
-          (reserve, index, self) =>
-            index === self.findIndex((r) => r.asset === reserve.asset),
-        );
-        setAllReserves(uniqueReserves);
-
-        const prices = await fetchOraclePrices(uniqueReserves);
-        setOraclePrices(prices);
-        await loadUserPositions(
-          reservesResult.supplyAssets,
-          reservesResult.borrowAssets,
-        );
+        if (result) {
+          setLastChainId(aaveChain.chainId);
+          setAllReserves(result.allReserves);
+          setOraclePrices(result.oraclePrices);
+          setUserSupplyPositions(result.userSupplyPositions);
+          setUserBorrowPositions(result.userBorrowPositions);
+        }
       } catch (err) {
         console.error("Error loading Aave data:", err);
         setUserSupplyPositions([]);
@@ -159,17 +97,16 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       loading,
       lastChainId,
       allReserves.length,
-      fetchAllReservesData,
-      loadUserPositions,
-      fetchOraclePrices,
+      loadAaveData,
       aaveChain,
       chainTokens,
+      hasConnectedWallet,
     ],
   );
 
   useEffect(() => {
-    loadAaveData();
-  }, [loadAaveData]);
+    loadAaveDataCallback();
+  }, [loadAaveDataCallback]);
 
   useEffect(() => {
     if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
@@ -185,7 +122,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     const oraclePrice = oraclePrices[position.asset.asset.toLowerCase()] || 1;
     return {
       ...position,
-      suppliedBalanceUSD: suppliedBalance * oraclePrice,
+      suppliedBalanceUSD: (suppliedBalance * oraclePrice).toFixed(2),
     };
   });
 
@@ -194,194 +131,23 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     const oraclePrice = oraclePrices[position.asset.asset.toLowerCase()] || 1;
     return {
       ...position,
-      totalDebtUSD: formattedTotalDebt * oraclePrice,
+      totalDebtUSD: (formattedTotalDebt * oraclePrice).toFixed(2),
     };
   });
 
-  const calculateNetWorth = () => {
-    if (!hasConnectedWallet || loading) return 0;
-
-    const totalSuppliedUSD = userSupplyPositionsUSD.reduce((sum, position) => {
-      return sum + position.suppliedBalanceUSD;
-    }, 0);
-
-    const totalBorrowedUSD = userBorrowPositionsUSD.reduce((sum, position) => {
-      return sum + position.totalDebtUSD;
-    }, 0);
-
-    return totalSuppliedUSD - totalBorrowedUSD;
-  };
-
-  const getHealthFactor = () => {
-    if (!hasConnectedWallet || loading) return null;
-
-    let totalCollateralWeighted = 0;
-    let totalDebtUSD = 0;
-
-    userSupplyPositionsUSD.forEach((position) => {
-      const suppliedUSD = position.suppliedBalanceUSD;
-      const reserveData = allReserves.find(
-        (reserve) =>
-          reserve.asset.toLowerCase() === position.asset.asset.toLowerCase(),
-      );
-
-      let liquidationThreshold = 0;
-      if (reserveData && reserveData.liquidationThreshold) {
-        liquidationThreshold =
-          typeof reserveData.liquidationThreshold === "string"
-            ? parseFloat(reserveData.liquidationThreshold.replace("%", ""))
-            : reserveData.liquidationThreshold;
-      } else if (position.asset.liquidationThreshold) {
-        liquidationThreshold =
-          typeof position.asset.liquidationThreshold === "string"
-            ? parseFloat(position.asset.liquidationThreshold.replace("%", ""))
-            : position.asset.liquidationThreshold;
-      } else {
-        return;
-      }
-
-      if (position.isCollateral) {
-        const liquidationThresholdDecimal =
-          liquidationThreshold > 1
-            ? liquidationThreshold / 100
-            : liquidationThreshold;
-        totalCollateralWeighted += suppliedUSD * liquidationThresholdDecimal;
-      }
-    });
-
-    userBorrowPositionsUSD.forEach((position) => {
-      totalDebtUSD += position.totalDebtUSD;
-    });
-
-    if (totalDebtUSD === 0) return Infinity;
-    return totalCollateralWeighted / totalDebtUSD;
-  };
-
-  const calculateWeightedNetAPY = () => {
-    if (!hasConnectedWallet || loading) return null;
-
-    let totalSupplyEarnings = 0;
-    let totalBorrowCosts = 0;
-    let totalSuppliedUSD = 0;
-    let totalBorrowedUSD = 0;
-
-    userSupplyPositionsUSD.forEach((position) => {
-      const suppliedUSD = position.suppliedBalanceUSD;
-      const supplyAPY = parseFloat(position.asset.supplyAPY || "0");
-      const earnings = suppliedUSD * (supplyAPY / 100);
-
-      totalSupplyEarnings += earnings;
-      totalSuppliedUSD += suppliedUSD;
-    });
-
-    userBorrowPositionsUSD.forEach((position) => {
-      const borrowedUSD = position.totalDebtUSD;
-      const borrowAPY = parseFloat(position.asset.variableBorrowAPY || "0");
-      const cost = borrowedUSD * (borrowAPY / 100);
-
-      totalBorrowCosts += cost;
-      totalBorrowedUSD += borrowedUSD;
-    });
-
-    const netWorth = totalSuppliedUSD - totalBorrowedUSD;
-    if (netWorth === 0) return 0;
-
-    return ((totalSupplyEarnings - totalBorrowCosts) / netWorth) * 100;
-  };
-
-  const calculateLTVData = () => {
-    if (!hasConnectedWallet || loading)
-      return { currentLTV: 0, maxLTV: 0, liquidationThreshold: 0 };
-
-    const totalBorrowedUSD = userBorrowPositionsUSD.reduce((sum, position) => {
-      return sum + position.totalDebtUSD;
-    }, 0);
-
-    let weightedMaxLTV = 0;
-    let weightedLiquidationThreshold = 0;
-    let totalCollateralValue = 0;
-
-    userSupplyPositionsUSD.forEach((position) => {
-      if (position.isCollateral) {
-        const suppliedUSD = position.suppliedBalanceUSD;
-
-        const reserveData = allReserves.find(
-          (reserve) =>
-            reserve.asset.toLowerCase() === position.asset.asset.toLowerCase(),
-        );
-
-        let assetLTV = 0;
-        let assetLiqThreshold = 0;
-
-        if (reserveData && reserveData.liquidationThreshold) {
-          assetLiqThreshold =
-            typeof reserveData.liquidationThreshold === "string"
-              ? parseFloat(reserveData.liquidationThreshold.replace("%", ""))
-              : reserveData.liquidationThreshold;
-          if (reserveData.ltv) {
-            assetLTV =
-              typeof reserveData.ltv === "string"
-                ? parseFloat(reserveData.ltv.replace("%", ""))
-                : reserveData.ltv;
-          }
-        }
-
-        if (!assetLTV || !assetLiqThreshold) {
-          return;
-        }
-
-        const assetLTVDecimal = assetLTV > 1 ? assetLTV / 100 : assetLTV;
-        const assetLiqThresholdDecimal =
-          assetLiqThreshold > 1 ? assetLiqThreshold / 100 : assetLiqThreshold;
-
-        weightedMaxLTV += suppliedUSD * assetLTVDecimal;
-        weightedLiquidationThreshold += suppliedUSD * assetLiqThresholdDecimal;
-        totalCollateralValue += suppliedUSD;
-      }
-    });
-
-    const maxLTV =
-      totalCollateralValue > 0
-        ? (weightedMaxLTV / totalCollateralValue) * 100
-        : 0;
-    const liquidationThreshold =
-      totalCollateralValue > 0
-        ? (weightedLiquidationThreshold / totalCollateralValue) * 100
-        : 0;
-    const currentLTV =
-      totalCollateralValue > 0
-        ? (totalBorrowedUSD / totalCollateralValue) * 100
-        : 0;
-
-    return { currentLTV, maxLTV, liquidationThreshold };
-  };
-
-  const rawNetWorth = calculateNetWorth();
-  const rawNetAPY = calculateWeightedNetAPY();
-  const rawHealthFactor = getHealthFactor();
-  const ltvData = calculateLTVData();
-
-  const totalCollateralUSD = userSupplyPositionsUSD.reduce((sum, position) => {
-    if (position.isCollateral) {
-      return sum + position.suppliedBalanceUSD;
-    }
-    return sum;
-  }, 0);
-
-  const totalBorrowedUSD = userBorrowPositionsUSD.reduce((sum, position) => {
-    return sum + position.totalDebtUSD;
-  }, 0);
-
-  const userMetrics = {
-    netWorth: rawNetWorth,
-    netAPY: rawNetAPY,
-    healthFactor: rawHealthFactor,
-    totalCollateralUSD: totalCollateralUSD,
-    totalDebtUSD: totalBorrowedUSD,
-    currentLTV: ltvData.currentLTV,
-    maxLTV: ltvData.maxLTV,
-    liquidationThreshold: ltvData.liquidationThreshold,
-  };
+  const userMetrics =
+    hasConnectedWallet && !loading
+      ? calculateUserMetrics(userSupplyPositionsUSD, userBorrowPositionsUSD)
+      : {
+          netWorth: 0,
+          netAPY: null,
+          healthFactor: null,
+          totalCollateralUSD: 0,
+          totalDebtUSD: 0,
+          currentLTV: 0,
+          maxLTV: 0,
+          liquidationThreshold: 0,
+        };
 
   const getMarketMetrics = () => {
     if (loading || !hasConnectedWallet || allReserves.length === 0) {
@@ -432,19 +198,6 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     if (healthFactor >= 1.5) return "text-amber-500";
     if (healthFactor >= 1.1) return "text-orange-500";
     return "text-red-500";
-  };
-
-  const formatNetWorth = (netWorth: number) => {
-    if (netWorth === 0) return "--";
-    return netWorth.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
-  const formatNetAPY = (netAPY: number | null) => {
-    if (netAPY === null) return "--";
-    return netAPY.toFixed(2);
   };
 
   const formatHealthFactor = (healthFactor: number | null) => {
