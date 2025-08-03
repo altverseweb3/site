@@ -166,17 +166,10 @@ const SupplyComponent: React.FC = () => {
 
   const handleSupply = (asset: AaveReserveData) => {
     console.log("Supply asset:", asset);
-    // TODO: Implement supply functionality
-  };
-
-  const handleSwitch = (asset: AaveReserveData) => {
-    console.log("Switch collateral for asset:", asset);
-    // TODO: Implement collateral switch functionality
   };
 
   const handleWithdraw = (asset: AaveReserveData) => {
     console.log("Withdraw asset:", asset);
-    // TODO: Implement withdraw functionality
   };
 
   const handleRefresh = () => {
@@ -228,7 +221,6 @@ const SupplyComponent: React.FC = () => {
                     suppliedBalance={position.suppliedBalance}
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
                     isCollateral={position.isCollateral}
-                    onSwitch={handleSwitch}
                     onWithdraw={handleWithdraw}
                   />
                 ))}
