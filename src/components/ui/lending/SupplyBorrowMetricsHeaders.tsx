@@ -121,7 +121,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
   const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
     const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice = oraclePrices[position.asset.asset.toLowerCase()] || 1;
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()] || 1;
     return {
       ...position,
       suppliedBalanceUSD: (suppliedBalance * oraclePrice).toFixed(2),
@@ -130,7 +131,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
   const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
     const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice = oraclePrices[position.asset.asset.toLowerCase()] || 1;
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()] || 1;
     return {
       ...position,
       totalDebtUSD: (formattedTotalDebt * oraclePrice).toFixed(2),
@@ -171,7 +173,8 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
       activeReserves.forEach((reserve) => {
         const metrics = getReserveMetrics(reserve, null);
-        const tokenPrice = oraclePrices[reserve.asset.toLowerCase()] || 1;
+        const tokenPrice =
+          oraclePrices[reserve.asset.address.toLowerCase()] || 1;
 
         totalMarketSizeUSD += parseFloat(metrics.reserveSize) * tokenPrice;
         totalAvailableUSD +=
