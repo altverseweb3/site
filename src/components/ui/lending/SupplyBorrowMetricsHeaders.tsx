@@ -170,7 +170,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       );
 
       activeReserves.forEach((reserve) => {
-        const metrics = getReserveMetrics(reserve, null);
+        const metrics = getReserveMetrics(reserve);
         const tokenPrice = oraclePrices[reserve.asset.address.toLowerCase()];
 
         if (tokenPrice !== undefined) {

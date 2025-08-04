@@ -93,7 +93,6 @@ const BorrowLendComponent: React.FC = () => {
 
     loadOraclePrices();
   }, [
-    aaveChain.chainId,
     chainTokens.length,
     isWalletConnected,
     loadAaveData,
