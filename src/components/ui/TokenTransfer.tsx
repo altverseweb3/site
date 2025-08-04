@@ -30,6 +30,8 @@ interface TokenTransferProps {
   receiveAmount?: string;
   isLoadingQuote?: boolean;
   estimatedTimeSeconds?: number | null;
+  showTransactionDetails: boolean;
+  onToggleTransactionDetails: () => void;
   // Token selection state
   hasSourceToken?: boolean;
   hasDestinationToken?: boolean;
@@ -54,6 +56,8 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   receiveAmount = "",
   isLoadingQuote = false,
   estimatedTimeSeconds = null,
+  showTransactionDetails = false,
+  onToggleTransactionDetails,
   // Token selection state
   hasSourceToken = false,
   hasDestinationToken = false,
@@ -63,7 +67,6 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
 }) => {
   // State to track if the input should be enabled
   const [isInputEnabled, setIsInputEnabled] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [sourceAmountValue, setSourceAmountValue] = useState(0);
   const [destinationAmountValue, setDestinationAmountValue] = useState(0);
   const tokensByCompositeKey = useWeb3Store(
@@ -107,7 +110,7 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   ]);
 
   const defaultSettingsButton = (
-    <button onClick={() => setShowDetails(!showDetails)}>
+    <button onClick={onToggleTransactionDetails}>
       <Settings className="h-5 w-5 text-zinc-400 hover:text-zinc-50 transition-colors" />
     </button>
   );
@@ -212,9 +215,9 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
           protocolFeeUsd={protocolFeeUsd}
           relayerFeeUsd={relayerFeeUsd}
           totalFeeUsd={totalFeeUsd}
-          detailsOpen={showDetails}
-          onDetailsToggle={() => setShowDetails(!showDetails)}
-          isLoadingQuote={isLoadingQuote} // Pass the loading state to SwapInterface
+          detailsOpen={showTransactionDetails}
+          onDetailsToggle={onToggleTransactionDetails}
+          isLoadingQuote={isLoadingQuote}
         >
           {transferContent}
         </SwapInterface>

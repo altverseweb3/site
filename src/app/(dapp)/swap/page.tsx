@@ -1,7 +1,8 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { TokenTransfer } from "@/components/ui/TokenTransfer";
+import { toast } from "sonner";
 import {
   useSourceToken,
   useDestinationToken,
@@ -9,6 +10,7 @@ import {
   useDestinationChain,
   useTransactionDetails,
   useGetWalletBySourceChain,
+  useGetWalletByDestinationChain,
   useSetActiveSwapSection,
 } from "@/store/web3Store";
 
@@ -16,6 +18,9 @@ const SwapComponent: React.FC = () => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const setActiveSwapSection = useSetActiveSwapSection();
+  const destinationWallet = useGetWalletByDestinationChain();
+  const transactionDetails = useTransactionDetails();
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
 
   // Use the shared hook with tracking enabled
   const {
@@ -36,17 +41,14 @@ const SwapComponent: React.FC = () => {
     destinationChain: useDestinationChain(),
     sourceToken: sourceToken,
     destinationToken: destinationToken,
-    transactionDetails: useTransactionDetails(), // Use the shared transaction details
-    enableTracking: true, // Enable automatic tracking
+    transactionDetails: transactionDetails,
+    enableTracking: true,
     onSuccess: (amount, sourceToken, destinationToken) => {
-      // This now fires when the swap actually completes (after tracking)
       console.log(
         `Swap completed: ${amount} ${sourceToken.ticker} → ${destinationToken?.ticker}`,
       );
-      // Any additional success logic can go here
     },
     onSwapInitiated: (swapId: string) => {
-      // Optional: Log when swap transaction is submitted
       console.log("Swap initiated with ID:", swapId);
     },
   });
@@ -55,13 +57,28 @@ const SwapComponent: React.FC = () => {
     setActiveSwapSection("swap");
   }, [setActiveSwapSection]);
 
+  const handleSwapClick = async (): Promise<string | void> => {
+    if (!destinationWallet && !transactionDetails.receiveAddress) {
+      setShowTransactionDetails(true);
+      toast.info(
+        "Please connect your destination wallet, or enter a destination address to proceed with the swap.",
+      );
+      return;
+    }
+    return await handleTransfer();
+  };
+
+  const handleToggleTransactionDetails = () => {
+    setShowTransactionDetails((prev) => !prev);
+  };
+
   return (
     <TokenTransfer
       amount={amount}
       onAmountChange={handleAmountChange}
       isButtonDisabled={isButtonDisabled}
       hasActiveWallet={!!useGetWalletBySourceChain()}
-      onTransfer={handleTransfer}
+      onTransfer={handleSwapClick}
       swapAmounts={swapAmounts}
       transferType="swap"
       actionIcon="Coins"
@@ -71,6 +88,8 @@ const SwapComponent: React.FC = () => {
       hasSourceToken={!!sourceToken}
       hasDestinationToken={!!destinationToken}
       estimatedTimeSeconds={estimatedTimeSeconds}
+      showTransactionDetails={showTransactionDetails}
+      onToggleTransactionDetails={handleToggleTransactionDetails}
       protocolFeeUsd={protocolFeeUsd ?? undefined}
       relayerFeeUsd={relayerFeeUsd ?? undefined}
       totalFeeUsd={totalFeeUsd ?? undefined}
