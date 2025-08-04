@@ -21,7 +21,13 @@ import {
 } from "@/types/aave";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
-const BorrowComponent: React.FC = () => {
+interface BorrowComponentProps {
+  oraclePrices?: Record<string, number>;
+}
+
+const BorrowComponent: React.FC<BorrowComponentProps> = ({
+  oraclePrices = {},
+}) => {
   const [borrowableReserves, setBorrowableReserves] = useState<
     AaveReserveData[]
   >([]);
@@ -258,6 +264,7 @@ const BorrowComponent: React.FC = () => {
                       console.log("Details for", position.asset.asset.ticker);
                       // TODO: Implement details modal
                     }}
+                    oraclePrices={oraclePrices}
                   />
                 ))}
 
@@ -335,6 +342,7 @@ const BorrowComponent: React.FC = () => {
                       healthFactor="1.24" // You'll want to get real health factor
                       totalCollateralUSD={0} // You'll want to get real values
                       totalDebtUSD={0} // You'll want to get real values
+                      oraclePrices={oraclePrices}
                     />
                   );
                 })}

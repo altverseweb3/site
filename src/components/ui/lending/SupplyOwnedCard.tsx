@@ -29,6 +29,8 @@ interface SupplyOwnedCardProps {
   healthFactor?: string; // User's current health factor
   totalCollateralUSD?: number; // User's total collateral value
   totalDebtUSD?: number; // User's total debt value
+  oraclePrices?: Record<string, number>; // Oracle prices for all assets
+  onSwitch?: (asset: AaveReserveData) => void;
   onWithdraw?: (asset: AaveReserveData) => void;
   onCollateralChange?: (
     asset: AaveReserveData,
@@ -48,6 +50,8 @@ const SupplyOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  oraclePrices,
+  onSwitch = () => { },
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -148,7 +152,9 @@ const SupplyOwnedCard = ({
               isolationModeEnabled={isIsolationMode}
               canBeCollateral={canBeCollateral}
               healthFactor={healthFactor}
-              tokenPrice={1} // You might want to pass real price data
+              tokenPrice={
+                oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
+              }
               liquidationThreshold={0.85} // You might want to get this from asset data
               totalCollateralUSD={totalCollateralUSD}
               totalDebtUSD={totalDebtUSD}
@@ -164,7 +170,7 @@ const SupplyOwnedCard = ({
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => { }} />
           )}
         </div>
       </CardContent>
@@ -181,7 +187,9 @@ const SupplyOwnedCard = ({
           supplyAPY={supplyAPY}
           isCollateral={collateral}
           healthFactor={healthFactor}
-          tokenPrice={1} // You might want to pass real price data
+          tokenPrice={
+            oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
+          }
           liquidationThreshold={0.85} // You might want to get this from asset data
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
@@ -192,8 +200,11 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
-        <AssetDetailsModal currentAsset={currentAsset}>
-          <GrayButton>details</GrayButton>
+        <AssetDetailsModal
+          currentAsset={currentAsset}
+          oraclePrices={oraclePrices}
+        >
+          <BlueButton>details</BlueButton>
         </AssetDetailsModal>
       </CardFooter>
     </Card>

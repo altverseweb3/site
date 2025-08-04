@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, FC, ReactNode } from "react";
+import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import type { Chain } from "@/types/web3";
 import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
@@ -33,11 +33,13 @@ import {
 interface AssetDetailsModalProps {
   currentAsset: AaveReserveData;
   children: ReactNode;
+  oraclePrices?: Record<string, number>;
 }
 
 const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   currentAsset,
   children,
+  oraclePrices,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [extendedDetails, setExtendedDetails] =
@@ -45,6 +47,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  const stableOraclePrices = useMemo(() => oraclePrices || {}, [oraclePrices]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,6 +65,8 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
         const details = await fetchExtendedAssetDetails(
           currentAsset,
           currentAsset.asset.chainId,
+          undefined, // provider
+          stableOraclePrices,
         );
         setExtendedDetails(details);
       } catch (err) {
@@ -82,7 +88,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     };
 
     fetchDetails();
-  }, [isOpen, isMounted, currentAsset]);
+  }, [isOpen, isMounted, currentAsset, stableOraclePrices]);
 
   if (!isMounted) {
     return null;

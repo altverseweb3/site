@@ -25,6 +25,7 @@ interface BorrowOwnedCardProps {
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
   walletBalance?: string;
+  oraclePrices?: Record<string, number>; // Oracle prices for all assets
   onRepay?: (
     position: UserBorrowPosition,
     amount: string,
@@ -39,6 +40,7 @@ const BorrowOwnedCard = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   walletBalance = "0.00",
+  oraclePrices,
   onRepay = async () => true,
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
@@ -126,7 +128,7 @@ const BorrowOwnedCard = ({
           stableDebt={borrowPosition.stableDebt}
           variableDebt={borrowPosition.variableDebt}
           healthFactor={healthFactor}
-          tokenPrice={1}
+          tokenPrice={oraclePrices?.[asset.asset.address.toLowerCase()] || 1}
           liquidationThreshold={0.85}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
@@ -137,7 +139,7 @@ const BorrowOwnedCard = ({
           <BlueButton>repay</BlueButton>
         </RepayModal>
 
-        <AssetDetailsModal currentAsset={asset}>
+        <AssetDetailsModal currentAsset={asset} oraclePrices={oraclePrices}>
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

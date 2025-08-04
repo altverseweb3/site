@@ -22,6 +22,7 @@ interface BorrowUnownedCardProps {
   currentAsset: AaveReserveData;
   availableToBorrow?: string; // Amount user can borrow based on collateral
   availableToBorrowUSD?: string; // USD value of borrowable amount
+  oraclePrices?: Record<string, number>; // Oracle prices for all assets
   onBorrow?: (asset: AaveReserveData) => void;
   onDetails?: (asset: AaveReserveData) => void;
   healthFactor?: string;
@@ -33,7 +34,8 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   currentAsset,
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
-  onBorrow = () => {},
+  oraclePrices,
+  onBorrow = () => { },
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
@@ -122,7 +124,9 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
           borrowingEnabled={borrowingEnabled}
           isIsolationMode={isIsolationMode}
           healthFactor={healthFactor}
-          tokenPrice={1}
+          tokenPrice={
+            oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
+          }
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset.address}
@@ -136,7 +140,10 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
             {canBorrow ? "borrow" : "unavailable"}
           </PrimaryButton>
         </BorrowModal>
-        <AssetDetailsModal currentAsset={currentAsset}>
+        <AssetDetailsModal
+          currentAsset={currentAsset}
+          oraclePrices={oraclePrices}
+        >
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

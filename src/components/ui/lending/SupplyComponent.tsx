@@ -19,7 +19,13 @@ import { AaveReserveData, UserPosition } from "@/types/aave";
 import { useAaveFetch } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/formatters";
 
-const SupplyComponent: React.FC = () => {
+interface SupplyComponentProps {
+  oraclePrices?: Record<string, number>;
+}
+
+const SupplyComponent: React.FC<SupplyComponentProps> = ({
+  oraclePrices = {},
+}) => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
   const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
   const [loading, setLoading] = useState(false);
@@ -222,6 +228,7 @@ const SupplyComponent: React.FC = () => {
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
                     isCollateral={position.isCollateral}
                     onWithdraw={handleWithdraw}
+                    oraclePrices={oraclePrices}
                   />
                 ))}
             </ScrollBoxSupplyBorrowAssets>
@@ -288,6 +295,7 @@ const SupplyComponent: React.FC = () => {
                     )}
                     dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
+                    oraclePrices={oraclePrices}
                   />
                 ))}
             </ScrollBoxSupplyBorrowAssets>

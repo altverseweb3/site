@@ -52,59 +52,51 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
 
-  const loadAaveDataCallback = useCallback(
-    async (force = false) => {
-      if (loading && !force) {
-        return;
-      }
+  const loadAaveDataCallback = useCallback(async () => {
+    if (loading) {
+      return;
+    }
 
-      if (
-        !force &&
-        lastChainId === aaveChain.chainId &&
-        allReserves.length > 0
-      ) {
-        return;
-      }
+    if (lastChainId === aaveChain.chainId && allReserves.length > 0) {
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const result = await loadAaveData({
-          aaveChain,
-          chainTokens,
-          hasConnectedWallet,
-          force,
-          loading,
-          lastChainId,
-          allReservesLength: allReserves.length,
-        });
+    try {
+      setLoading(true);
+      const result = await loadAaveData({
+        aaveChain,
+        chainTokens,
+        hasConnectedWallet,
+        loading,
+        lastChainId,
+        allReservesLength: allReserves.length,
+      });
 
-        if (result) {
-          setLastChainId(aaveChain.chainId);
-          setAllReserves(result.allReserves);
-          setOraclePrices(result.oraclePrices);
-          setUserSupplyPositions(result.userSupplyPositions);
-          setUserBorrowPositions(result.userBorrowPositions);
-        }
-      } catch (err) {
-        console.error("Error loading Aave data:", err);
-        setUserSupplyPositions([]);
-        setUserBorrowPositions([]);
-        setAllReserves([]);
-        setOraclePrices({});
-      } finally {
-        setLoading(false);
+      if (result) {
+        setLastChainId(aaveChain.chainId);
+        setAllReserves(result.allReserves);
+        setOraclePrices(result.oraclePrices);
+        setUserSupplyPositions(result.userSupplyPositions);
+        setUserBorrowPositions(result.userBorrowPositions);
       }
-    },
-    [
-      loading,
-      lastChainId,
-      allReserves.length,
-      loadAaveData,
-      aaveChain,
-      chainTokens,
-      hasConnectedWallet,
-    ],
-  );
+    } catch (err) {
+      console.error("Error loading Aave data:", err);
+      setUserSupplyPositions([]);
+      setUserBorrowPositions([]);
+      setAllReserves([]);
+      setOraclePrices({});
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    loading,
+    lastChainId,
+    allReserves.length,
+    loadAaveData,
+    aaveChain,
+    chainTokens,
+    hasConnectedWallet,
+  ]);
 
   useEffect(() => {
     loadAaveDataCallback();
@@ -122,20 +114,26 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
     const suppliedBalance = parseFloat(position.suppliedBalance || "0");
     const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()] || 1;
+      oraclePrices[position.asset.asset.address.toLowerCase()];
     return {
       ...position,
-      suppliedBalanceUSD: (suppliedBalance * oraclePrice).toFixed(2),
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toFixed(2)
+          : "0.00",
     };
   });
 
   const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
     const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
     const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()] || 1;
+      oraclePrices[position.asset.asset.address.toLowerCase()];
     return {
       ...position,
-      totalDebtUSD: (formattedTotalDebt * oraclePrice).toFixed(2),
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toFixed(2)
+          : "0.00",
     };
   });
 
@@ -173,13 +171,14 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
 
       activeReserves.forEach((reserve) => {
         const metrics = getReserveMetrics(reserve, null);
-        const tokenPrice =
-          oraclePrices[reserve.asset.address.toLowerCase()] || 1;
+        const tokenPrice = oraclePrices[reserve.asset.address.toLowerCase()];
 
-        totalMarketSizeUSD += parseFloat(metrics.reserveSize) * tokenPrice;
-        totalAvailableUSD +=
-          parseFloat(metrics.availableLiquidity) * tokenPrice;
-        totalBorrowsUSD += parseFloat(metrics.totalBorrowed) * tokenPrice;
+        if (tokenPrice !== undefined) {
+          totalMarketSizeUSD += parseFloat(metrics.reserveSize) * tokenPrice;
+          totalAvailableUSD +=
+            parseFloat(metrics.availableLiquidity) * tokenPrice;
+          totalBorrowsUSD += parseFloat(metrics.totalBorrowed) * tokenPrice;
+        }
       });
 
       return {
