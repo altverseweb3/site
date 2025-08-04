@@ -134,7 +134,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
             )}
 
             {(() => {
-              const metrics = getReserveMetrics(currentAsset, extendedDetails);
+              const metrics = getReserveMetrics(currentAsset);
               const tokenPrice = extendedDetails?.oraclePrice || 1;
 
               return (
@@ -161,7 +161,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                       <div className="space-y-2">
                         {metrics.supplyCapFormatted !== "Unlimited" &&
-                        metrics.supplyCapUtilization > 0 ? (
+                          metrics.supplyCapUtilization > 0 ? (
                           <>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-zinc-400">
@@ -209,7 +209,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
 
                       <div className="space-y-2">
                         {metrics.borrowCapFormatted !== "No cap" &&
-                        metrics.borrowCapUtilization > 0 ? (
+                          metrics.borrowCapUtilization > 0 ? (
                           <>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-zinc-400">
@@ -421,7 +421,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 <div>
                   <span className="text-sm text-zinc-400">max LTV</span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.ltv || "N/A"}
+                    {currentAsset?.ltv || extendedDetails?.ltv || "N/A"}
                   </div>
                 </div>
                 <div>
@@ -429,7 +429,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation threshold
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationThreshold || "N/A"}
+                    {currentAsset?.liquidationThreshold ||
+                      extendedDetails?.liquidationThreshold ||
+                      "N/A"}
                   </div>
                 </div>
                 <div>
@@ -437,7 +439,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                     liquidation penalty
                   </span>
                   <div className="text-sm font-medium">
-                    {extendedDetails?.liquidationPenalty || "N/A"}
+                    {currentAsset?.liquidationPenalty ||
+                      extendedDetails?.liquidationPenalty ||
+                      "N/A"}
                   </div>
                 </div>
               </div>

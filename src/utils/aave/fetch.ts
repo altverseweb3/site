@@ -229,6 +229,11 @@ export async function fetchAllReservesData(
                   reserveCaps.borrowCap,
                   decimals,
                 ),
+                supplyCap: reserveCaps.supplyCap.toString(),
+                formattedSupplyCap: ethers.formatUnits(
+                  reserveCaps.supplyCap,
+                  decimals,
+                ),
 
                 // General data
                 isActive: configData.isActive,
@@ -620,7 +625,6 @@ export async function fetchUserWalletBalances(
 
 export const getReserveMetrics = (
   currentAsset: AaveReserveData,
-  extendedDetails: ExtendedAssetDetails | null,
 ): ReserveMetrics => {
   const reserveSize = currentAsset.formattedSupply || "0";
   const availableLiquidity = currentAsset.formattedAvailableLiquidity || "0";
@@ -653,13 +657,9 @@ export const getReserveMetrics = (
   let supplyCapFormatted = "Unlimited";
   let borrowCapFormatted = "No cap";
 
-  if (
-    extendedDetails?.supplyCap &&
-    extendedDetails.supplyCap !== "Unlimited" &&
-    extendedDetails.supplyCap !== "0"
-  ) {
+  if (currentAsset.supplyCap && currentAsset.supplyCap !== "0") {
     try {
-      const supplyCapInTokens = parseFloat(extendedDetails.supplyCap);
+      const supplyCapInTokens = parseFloat(currentAsset.supplyCap);
 
       if (supplyCapInTokens > 0) {
         supplyCapUtilization = (totalSupplyNum / supplyCapInTokens) * 100;
@@ -1067,11 +1067,8 @@ export function useAaveFetch() {
   );
 
   const getReserveMetricsMemoized = useCallback(
-    (
-      currentAsset: AaveReserveData,
-      extendedDetails: ExtendedAssetDetails | null,
-    ) => {
-      return getReserveMetrics(currentAsset, extendedDetails);
+    (currentAsset: AaveReserveData) => {
+      return getReserveMetrics(currentAsset);
     },
     [],
   );

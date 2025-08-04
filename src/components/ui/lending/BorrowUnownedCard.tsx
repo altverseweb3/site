@@ -33,7 +33,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   currentAsset,
   availableToBorrow = "0.00",
   availableToBorrowUSD = "0.00",
-  onBorrow = () => {},
+  onBorrow = () => { },
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,

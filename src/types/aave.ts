@@ -51,12 +51,24 @@ export interface AaveReserveData {
   formattedAvailableLiquidity: string;
   borrowCap: string;
   formattedBorrowCap: string;
+  supplyCap: string;
+  formattedSupplyCap: string;
 
   // General data
   isActive: boolean;
   isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
+  userBalance?: string;
+  userBalanceFormatted?: string;
+  userBalanceUsd?: string;
+  tokenIcon?: string;
+  chainId?: number;
+
+  // Risk parameters
+  ltv?: string;
+  liquidationThreshold?: string;
+  liquidationPenalty?: string;
 }
 
 export interface AaveReservesResult {
