@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   BlueButton,
-  GrayButton,
 } from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {

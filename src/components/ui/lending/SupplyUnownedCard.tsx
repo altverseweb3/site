@@ -32,7 +32,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   userBalance = "0",
   dollarAmount = "0.00",
   oraclePrices,
-  onSupply = () => { },
+  onSupply = () => {},
 }) => {
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
