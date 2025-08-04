@@ -759,7 +759,6 @@ const useWeb3Store = create<Web3StoreState>()(
           let updatedSourceToken = integration.sourceToken;
           let updatedDestinationToken = integration.destinationToken;
 
-          // Update source token if it exists and was updated
           if (integration.sourceToken) {
             const sourceCompositeKey = `${integration.sourceToken.stringChainId}-${integration.sourceToken.address.toLowerCase()}`;
             const refreshedSourceToken =
@@ -769,7 +768,6 @@ const useWeb3Store = create<Web3StoreState>()(
             }
           }
 
-          // Update destination token if it exists and was updated
           if (integration.destinationToken) {
             const destCompositeKey = `${integration.destinationToken.stringChainId}-${integration.destinationToken.address.toLowerCase()}`;
             const refreshedDestinationToken =
