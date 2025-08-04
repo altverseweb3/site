@@ -55,10 +55,17 @@ const SupplyOwnedCard = ({
 
   // Default asset for demo purposes (fallback)
   const defaultAsset: AaveReserveData = {
-    asset: "0x0000000000000000000000000000000000000000",
+    asset: {
+      id: "default-usdc",
+      name: "USD Coin",
+      ticker: "USDC",
+      icon: "unknown.png",
+      address: "0x0000000000000000000000000000000000000000",
+      decimals: 18,
+      chainId: 1,
+      stringChainId: "1",
+    },
     name: "USD Coin",
-    symbol: "USDC",
-    decimals: 18,
     aTokenAddress: "0x0000000000000000000000000000000000000000",
     currentLiquidityRate: "0",
     totalSupply: "0",
@@ -86,11 +93,9 @@ const SupplyOwnedCard = ({
     userBalance: "0",
     userBalanceFormatted: "0.00",
     userBalanceUsd: "0.00",
-    tokenIcon: "unknown.png",
-    chainId: 1,
   };
 
-  const currentAsset = asset || defaultAsset;
+  const asset = currentAsset || defaultAsset;
 
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
@@ -203,7 +208,7 @@ const SupplyOwnedCard = ({
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch isCollateral={false} onToggle={() => { }} />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
           )}
         </div>
       </CardContent>
@@ -231,7 +236,7 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
-        <AssetDetailsModal assetData={asset}>
+        <AssetDetailsModal currentAsset={asset}>
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>
