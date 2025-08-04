@@ -73,33 +73,36 @@ export const calculateWeightedNetAPY = (
   userSupplyPositions: UserPosition[],
   userBorrowPositions: UserBorrowPosition[],
 ): number | null => {
-  let totalSupplyEarnings = 0;
-  let totalBorrowCosts = 0;
+  let totalSupplyEarningsBP = 0; // in basis points
+  let totalBorrowCostsBP = 0;
   let totalSuppliedUSD = 0;
   let totalBorrowedUSD = 0;
 
   userSupplyPositions.forEach((position) => {
     const suppliedUSD = parseFloat(position.suppliedBalanceUSD || "0");
     const supplyAPY = parseFloat(position.asset.supplyAPY || "0");
-    const earnings = suppliedUSD * (supplyAPY / 100);
 
-    totalSupplyEarnings += earnings;
+    // Convert to basis points: 4.32% → 432 basis points
+    const earningsBP = suppliedUSD * supplyAPY * 100;
+    totalSupplyEarningsBP += earningsBP;
     totalSuppliedUSD += suppliedUSD;
   });
 
   userBorrowPositions.forEach((position) => {
     const borrowedUSD = parseFloat(position.totalDebtUSD || "0");
     const borrowAPY = parseFloat(position.asset.variableBorrowAPY || "0");
-    const cost = borrowedUSD * (borrowAPY / 100);
 
-    totalBorrowCosts += cost;
+    const costsBP = borrowedUSD * borrowAPY * 100;
+    totalBorrowCostsBP += costsBP;
     totalBorrowedUSD += borrowedUSD;
   });
 
   const netWorth = totalSuppliedUSD - totalBorrowedUSD;
-  if (netWorth === 0) return 0;
+  if (Math.abs(netWorth) < 0.0001) return 0;
 
-  return ((totalSupplyEarnings - totalBorrowCosts) / netWorth) * 100;
+  // Calculate in basis points, then convert back to percentage
+  const netEarningsBP = totalSupplyEarningsBP - totalBorrowCostsBP;
+  return netEarningsBP / (netWorth * 100); // Converts back to percentage
 };
 
 export const calculateLTVData = (

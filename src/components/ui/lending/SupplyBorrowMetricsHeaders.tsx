@@ -119,7 +119,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       ...position,
       suppliedBalanceUSD:
         oraclePrice !== undefined
-          ? (suppliedBalance * oraclePrice).toFixed(2)
+          ? (suppliedBalance * oraclePrice).toString()
           : "0.00",
     };
   });
@@ -132,7 +132,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       ...position,
       totalDebtUSD:
         oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toFixed(2)
+          ? (formattedTotalDebt * oraclePrice).toString()
           : "0.00",
     };
   });
