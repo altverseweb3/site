@@ -154,9 +154,9 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   const getMarketMetrics = () => {
     if (loading || !hasConnectedWallet || allReserves.length === 0) {
       return {
-        marketSize: "--",
-        available: "--",
-        borrows: "--",
+        marketSize: null,
+        available: null,
+        borrows: null,
       };
     }
 
@@ -188,9 +188,9 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
       };
     } catch {
       return {
-        marketSize: "--",
-        available: "--",
-        borrows: "--",
+        marketSize: null,
+        available: null,
+        borrows: null,
       };
     }
   };
