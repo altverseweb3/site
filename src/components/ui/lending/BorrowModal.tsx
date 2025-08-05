@@ -273,7 +273,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
             <div className="rounded-full overflow-hidden">
               <TokenImage token={token} chain={chain} size="sm" />
             </div>
-            Borrow {tokenSymbol}
+            borrow {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
@@ -282,7 +282,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-[#A1A1AA]">
-                Available to Borrow
+                available to borrow
               </span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
@@ -295,7 +295,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-[#A1A1AA]">
-                Current Health Factor
+                current health factor
               </span>
               <span
                 className={`text-sm ${getHealthFactorColor(currentHealthFactor)}`}
@@ -309,11 +309,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Borrow Amount
+                borrow amount
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  Max: {availableToBorrow} {tokenSymbol}
+                  max: {availableToBorrow} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
@@ -362,7 +362,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           {/* Rate Mode Selection */}
           <div>
             <label className="text-sm font-medium text-[#A1A1AA] mb-3 block">
-              Interest Rate
+              interest rate
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -398,10 +398,10 @@ const BorrowModal: FC<BorrowModalProps> = ({
               <AlertCircle className="h-4 w-4 text-red-500" />
               <div className="text-sm">
                 <div className="text-red-500 font-medium">
-                  High Risk Warning
+                  high risk warning
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  Borrowing this amount would reduce your health factor below
+                  borrowing this amount would reduce your health factor below
                   1.2, putting you at high risk of liquidation
                 </div>
               </div>
@@ -413,9 +413,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
             <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <AlertCircle className="h-4 w-4 text-yellow-500" />
               <div className="text-sm">
-                <div className="text-[#FAFAFA] font-medium">Isolation Mode</div>
+                <div className="text-[#FAFAFA] font-medium">isolation mode</div>
                 <div className="text-[#A1A1AA] text-xs">
-                  You can only borrow stablecoins in isolation mode
+                  you can only borrow stablecoins in isolation mode
                 </div>
               </div>
             </div>
@@ -425,7 +425,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           {borrowAmountNum > 0 && Math.abs(healthFactorChange) > 0.01 && (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">New Health Factor</span>
+                <span className="text-[#A1A1AA]">new health factor</span>
                 <span className={getHealthFactorColor(newHealthFactor)}>
                   {newHealthFactor.toFixed(2)}
                   <span
@@ -476,7 +476,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            By borrowing, you will pay interest at the {rateMode} rate. Ensure
+            by borrowing, you will pay interest at the {rateMode} rate. ensure
             you can repay to avoid liquidation.
           </p>
         </div>

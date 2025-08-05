@@ -286,7 +286,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 </span>
               </div>
             )}
-            Withdraw {tokenSymbol}
+            withdraw {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
@@ -294,7 +294,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {/* Current Position Info */}
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">Supplied Balance</span>
+              <span className="text-sm text-[#A1A1AA]">supplied balance</span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
                   {suppliedBalance} {tokenSymbol}
@@ -322,11 +322,11 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Withdraw Amount
+                withdraw amount
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  Available: {suppliedBalance} {tokenSymbol}
+                  available: {suppliedBalance} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
@@ -366,7 +366,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
               <div className="flex items-center gap-1 mt-2">
                 <AlertCircle size={14} className="text-red-500" />
                 <p className="text-red-500 text-xs">
-                  Amount exceeds supplied balance
+                  amount exceeds supplied balance
                 </p>
               </div>
             )}
@@ -384,9 +384,9 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <div className="text-sm">
-                <div className="text-red-500 font-medium">Risk Warning</div>
+                <div className="text-red-500 font-medium">risk warning</div>
                 <div className="text-[#A1A1AA] text-xs">
-                  Withdrawing this amount would reduce your health factor below
+                  withdrawing this amount would reduce your health factor below
                   1.1, putting you at risk of liquidation
                 </div>
               </div>
@@ -399,10 +399,10 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
               <Info className="h-4 w-4 text-orange-500" />
               <div className="text-sm">
                 <div className="text-[#FAFAFA] font-medium">
-                  Interest Impact
+                  interest impact
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  You will stop earning {supplyAPY} APY on the withdrawn amount
+                  you will stop earning {supplyAPY} APY on the withdrawn amount
                 </div>
               </div>
             </div>
@@ -412,7 +412,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {totalDebtUSD > 0 && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">Current Health Factor</span>
+                <span className="text-[#A1A1AA]">current health factor</span>
                 <span className={getHealthFactorColor(currentHealthFactor)}>
                   {currentHealthFactor.toFixed(2)}
                 </span>
@@ -422,7 +422,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 isCollateral &&
                 withdrawAmountNum > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-[#A1A1AA]">New Health Factor</span>
+                    <span className="text-[#A1A1AA]">new health factor</span>
                     <span className={getHealthFactorColor(newHealthFactor)}>
                       {newHealthFactor.toFixed(2)}
                       <span
@@ -474,7 +474,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            By withdrawing, you will reduce your earning potential and may
+            by withdrawing, you will reduce your earning potential and may
             affect your borrowing capacity.
           </p>
         </div>

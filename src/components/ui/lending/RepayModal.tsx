@@ -308,7 +308,7 @@ const RepayModal: FC<RepayModalProps> = ({
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
               <DialogTitle className="text-lg font-semibold">
-                repay {tokenSymbol.toLowerCase()}
+                repay {tokenSymbol}
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -320,7 +320,7 @@ const RepayModal: FC<RepayModalProps> = ({
                 <span className="text-sm text-gray-400">current debt</span>
                 <div className="text-right">
                   <div className="text-sm font-medium">
-                    {currentDebt} {tokenSymbol.toLowerCase()}
+                    {currentDebt} {tokenSymbol}
                   </div>
                   <div className="text-xs text-gray-400">${debtUSD}</div>
                 </div>
