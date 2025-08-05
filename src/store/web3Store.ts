@@ -1007,6 +1007,10 @@ export const useGetWalletBySourceChain = (): WalletInfo | null => {
   return useWeb3Store((state) => state.getWalletBySourceChain());
 };
 
+export const useGetWalletByDestinationChain = (): WalletInfo | null => {
+  return useWeb3Store((state) => state.getWalletByDestinationChain());
+};
+
 export const useLoadTokens = () => {
   return useWeb3Store((state) => state.loadTokens);
 };
