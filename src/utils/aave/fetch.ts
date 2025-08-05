@@ -353,7 +353,7 @@ export async function fetchUserPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset,
+            reserve.asset.address,
             userAddress,
           );
 
@@ -455,7 +455,7 @@ export async function fetchUserBorrowPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset,
+            reserve.asset.address,
             userAddress,
           );
 
