@@ -135,7 +135,7 @@ export function SiteHeader(): JSX.Element {
                   variant="outline"
                   size="sm"
                   onClick={handleMobileHistoryClick}
-                  className="w-full flex items-center bg-amber-500/10 border-amber-500/30 text-amber-200 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-100 transition-all duration-300 h-[30px]"
+                  className="w-full flex items-center bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg transition-all duration-300 h-[30px]"
                 >
                   <History className="h-4 w-4 mr-2" />
                   transaction history
@@ -153,7 +153,7 @@ export function SiteHeader(): JSX.Element {
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden md:flex items-center gap-2 bg-amber-500/20 border-amber-500/30 text-amber-500 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 h-[30px]"
+                className="hidden md:flex items-center gap-2 bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg transition-all duration-300 h-[30px]"
               >
                 <History className="h-4 w-4" />
                 <span className="sr-only">transaction history</span>
