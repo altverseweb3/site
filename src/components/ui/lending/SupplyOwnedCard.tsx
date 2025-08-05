@@ -53,50 +53,6 @@ const SupplyOwnedCard = ({
 }: SupplyOwnedCardProps) => {
   const [collateral, setCollateral] = useState(isCollateral);
 
-  // Default asset for demo purposes (fallback)
-  const defaultAsset: AaveReserveData = {
-    asset: {
-      id: "default-usdc",
-      name: "USD Coin",
-      ticker: "USDC",
-      icon: "unknown.png",
-      address: "0x0000000000000000000000000000000000000000",
-      decimals: 18,
-      chainId: 1,
-      stringChainId: "1",
-    },
-    name: "USD Coin",
-    aTokenAddress: "0x0000000000000000000000000000000000000000",
-    currentLiquidityRate: "0",
-    totalSupply: "0",
-    formattedSupply: "0",
-    supplyAPY: "2.74",
-    canBeCollateral: true,
-    variableBorrowRate: "0",
-    stableBorrowRate: "0",
-    variableBorrowAPY: "0",
-    stableBorrowAPY: "0",
-    stableBorrowEnabled: false,
-    borrowingEnabled: false,
-    totalBorrowed: "0",
-    formattedTotalBorrowed: "0",
-    availableLiquidity: "0",
-    formattedAvailableLiquidity: "0",
-    borrowCap: "0",
-    formattedBorrowCap: "0",
-    supplyCap: "0",
-    formattedSupplyCap: "0",
-    isActive: true,
-    isFrozen: false,
-    isIsolationModeAsset: false,
-    debtCeiling: 0,
-    userBalance: "0",
-    userBalanceFormatted: "0.00",
-    userBalanceUsd: "0.00",
-  };
-
-  const asset = currentAsset || defaultAsset;
-
   // Determine collateral status and isolation mode
   const canBeCollateral = currentAsset.canBeCollateral ?? true;
   const isIsolationMode = currentAsset.isIsolationModeAsset ?? false;
@@ -236,7 +192,7 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
-        <AssetDetailsModal currentAsset={asset}>
+        <AssetDetailsModal currentAsset={currentAsset}>
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>
