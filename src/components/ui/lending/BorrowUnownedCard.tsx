@@ -124,9 +124,7 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
           borrowingEnabled={borrowingEnabled}
           isIsolationMode={isIsolationMode}
           healthFactor={healthFactor}
-          tokenPrice={
-            oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
-          }
+          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
           tokenAddress={currentAsset.asset.address}

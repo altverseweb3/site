@@ -107,9 +107,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
           healthFactor="0"
-          tokenPrice={
-            oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
-          }
+          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85}
           totalCollateralUSD={0}
           totalDebtUSD={0}

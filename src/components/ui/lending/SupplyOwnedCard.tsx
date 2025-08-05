@@ -152,7 +152,7 @@ const SupplyOwnedCard = ({
               canBeCollateral={canBeCollateral}
               healthFactor={healthFactor}
               tokenPrice={
-                oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
+                oraclePrices?.[currentAsset.asset.address.toLowerCase()]
               }
               liquidationThreshold={0.85} // You might want to get this from asset data
               totalCollateralUSD={totalCollateralUSD}
@@ -186,9 +186,7 @@ const SupplyOwnedCard = ({
           supplyAPY={supplyAPY}
           isCollateral={collateral}
           healthFactor={healthFactor}
-          tokenPrice={
-            oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 1
-          }
+          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85} // You might want to get this from asset data
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
