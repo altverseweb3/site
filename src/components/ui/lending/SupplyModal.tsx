@@ -307,7 +307,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:text-sky-400 hover:bg-sky-500/30 transition-colors disabled:opacity-50"
                 >
                   max
                 </button>
