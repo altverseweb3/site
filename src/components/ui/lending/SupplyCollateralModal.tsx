@@ -20,7 +20,10 @@ import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { AmberButton, GrayButton } from "./SupplyButtonComponents";
+import {
+  AmberButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForCollateral = (
