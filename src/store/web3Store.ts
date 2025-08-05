@@ -577,48 +577,42 @@ const useWeb3Store = create<Web3StoreState>()(
       },
 
       updateTokenBalances: (chainId, userAddress, balances) => {
-        const { tokenBalancesByWallet, allTokensList, tokensByCompositeKey } =
-          get();
+        const {
+          tokenBalancesByWallet,
+          allTokensList,
+          tokensByCompositeKey,
+          swapIntegrations,
+        } = get();
 
-        // Create a wallet key for storing balances
-        const chain = getChainByChainId(chainId); // Ensure chain exists
+        const chain = getChainByChainId(chainId);
         const walletKey = `${chain.id}-${userAddress.toLowerCase()}`;
 
-        // Get existing balances or create a new record
         const existingBalances = tokenBalancesByWallet[walletKey] || {};
         const updatedBalances = { ...existingBalances };
 
-        // Create a map to track which tokens have been updated
         const updatedTokens: Record<string, Token> = {};
 
-        // Process each balance
         balances.forEach((balance) => {
           const tokenAddress = balance.contractAddress.toLowerCase();
 
-          // Store the balance (keeping it as a string)
           updatedBalances[tokenAddress] = balance.tokenBalance;
 
-          // Find token in our collections
           const compositeKey = `${chain.id}-${tokenAddress}`;
           const token = tokensByCompositeKey[compositeKey];
           if (token) {
-            // Create updated token with balance info
             const tokenWithBalance: Token = {
               ...token,
               userBalance: balance.tokenBalance,
               isWalletToken: true,
             };
 
-            // Calculate USD balance if price is available in the token
             if (token.priceUsd) {
               try {
-                // Convert balance from Wei to token units based on decimals
                 let numericalBalance = balance.tokenBalance;
                 if (numericalBalance.startsWith("0x")) {
                   numericalBalance = BigInt(numericalBalance).toString();
                 }
 
-                // Format with 2 decimal places for currency display
                 tokenWithBalance.userBalanceUsd = (
                   Number(numericalBalance) * Number(token.priceUsd)
                 ).toFixed(2);
@@ -631,20 +625,48 @@ const useWeb3Store = create<Web3StoreState>()(
           }
         });
 
-        // Update tokens in our main list
         const newTokensList = allTokensList.map((token) => {
           const compositeKey = `${token.stringChainId}-${token.address.toLowerCase()}`;
           return updatedTokens[compositeKey] || token;
         });
 
-        // Get updated derived collections
         const {
           tokensByCompositeKey: updatedByCompositeKey,
           tokensByChainId: updatedByChainId,
           tokensByAddress: updatedByAddress,
         } = updateTokenCollections(newTokensList);
 
-        // Update the store
+        const updatedIntegrations: Record<string, SwapStateForSection> = {};
+
+        Object.entries(swapIntegrations).forEach(([key, integration]) => {
+          let updatedSourceToken = integration.sourceToken;
+          let updatedDestinationToken = integration.destinationToken;
+
+          if (integration.sourceToken) {
+            const sourceCompositeKey = `${integration.sourceToken.stringChainId}-${integration.sourceToken.address.toLowerCase()}`;
+            const refreshedSourceToken =
+              updatedByCompositeKey[sourceCompositeKey];
+            if (refreshedSourceToken) {
+              updatedSourceToken = refreshedSourceToken;
+            }
+          }
+
+          if (integration.destinationToken) {
+            const destCompositeKey = `${integration.destinationToken.stringChainId}-${integration.destinationToken.address.toLowerCase()}`;
+            const refreshedDestinationToken =
+              updatedByCompositeKey[destCompositeKey];
+            if (refreshedDestinationToken) {
+              updatedDestinationToken = refreshedDestinationToken;
+            }
+          }
+
+          updatedIntegrations[key] = {
+            ...integration,
+            sourceToken: updatedSourceToken,
+            destinationToken: updatedDestinationToken,
+          };
+        });
+
         set({
           tokenBalancesByWallet: {
             ...tokenBalancesByWallet,
@@ -654,18 +676,20 @@ const useWeb3Store = create<Web3StoreState>()(
           tokensByCompositeKey: updatedByCompositeKey,
           tokensByChainId: updatedByChainId,
           tokensByAddress: updatedByAddress,
+          swapIntegrations: updatedIntegrations,
         });
       },
-
       updateTokenPrices: (priceResults) => {
-        const { tokenPricesUsd, allTokensList, tokensByCompositeKey } = get();
-        // Create a copy of current prices
+        const {
+          tokenPricesUsd,
+          allTokensList,
+          tokensByCompositeKey,
+          swapIntegrations,
+        } = get();
         const updatedPrices = { ...tokenPricesUsd };
 
-        // Create a map to track which tokens have been updated
         const updatedTokens: Record<string, Token> = {};
 
-        // Process each price result
         priceResults.forEach((result) => {
           if (result.error) {
             console.error(
@@ -675,7 +699,6 @@ const useWeb3Store = create<Web3StoreState>()(
             return;
           }
 
-          // Find the chain for this network
           const chain = Object.values(chains).find(
             (c) => c.alchemyNetworkName === result.network,
           );
@@ -688,24 +711,19 @@ const useWeb3Store = create<Web3StoreState>()(
           const tokenAddress = result.address.toLowerCase();
           const compositeKey = `${chain.id}-${tokenAddress}`;
 
-          // Find USD price if available
           const usdPrice = result.prices.find(
             (p: TokenPrice) => p.currency.toLowerCase() === "usd",
           );
           if (usdPrice) {
-            // Store price in the prices map
             updatedPrices[compositeKey] = usdPrice.value;
 
-            // Find token in our collections
             const token = tokensByCompositeKey[compositeKey];
 
             if (token) {
               let userBalanceUsd: string | undefined = undefined;
 
-              // Calculate USD balance if we have both price and balance
               if (token.userBalance) {
                 try {
-                  // Handle hex balance
                   let balance = token.userBalance;
                   if (balance.startsWith("0x")) {
                     balance = BigInt(balance).toString();
@@ -719,30 +737,58 @@ const useWeb3Store = create<Web3StoreState>()(
                 }
               }
 
-              // Update token with price info
               updatedTokens[compositeKey] = {
                 ...token,
-                priceUsd: usdPrice.value, // Store the price in the token object
+                priceUsd: usdPrice.value,
                 userBalanceUsd,
               };
             }
           }
         });
 
-        // Update tokens in our main list
         const newTokensList = allTokensList.map((token) => {
           const compositeKey = `${token.stringChainId}-${token.address.toLowerCase()}`;
           return updatedTokens[compositeKey] || token;
         });
 
-        // Get updated derived collections
         const updatedCollections = updateTokenCollections(newTokensList);
 
-        // Update the store
+        const updatedIntegrations: Record<string, SwapStateForSection> = {};
+
+        Object.entries(swapIntegrations).forEach(([key, integration]) => {
+          let updatedSourceToken = integration.sourceToken;
+          let updatedDestinationToken = integration.destinationToken;
+
+          if (integration.sourceToken) {
+            const sourceCompositeKey = `${integration.sourceToken.stringChainId}-${integration.sourceToken.address.toLowerCase()}`;
+            const refreshedSourceToken =
+              updatedCollections.tokensByCompositeKey[sourceCompositeKey];
+            if (refreshedSourceToken) {
+              updatedSourceToken = refreshedSourceToken;
+            }
+          }
+
+          if (integration.destinationToken) {
+            const destCompositeKey = `${integration.destinationToken.stringChainId}-${integration.destinationToken.address.toLowerCase()}`;
+            const refreshedDestinationToken =
+              updatedCollections.tokensByCompositeKey[destCompositeKey];
+            if (refreshedDestinationToken) {
+              updatedDestinationToken = refreshedDestinationToken;
+            }
+          }
+
+          updatedIntegrations[key] = {
+            ...integration,
+            sourceToken: updatedSourceToken,
+            destinationToken: updatedDestinationToken,
+          };
+        });
+
         set({
           tokenPricesUsd: updatedPrices,
           allTokensList: newTokensList,
           ...updatedCollections,
+          swapIntegrations: updatedIntegrations,
         });
       },
 
