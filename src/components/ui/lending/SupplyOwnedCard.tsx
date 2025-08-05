@@ -50,7 +50,7 @@ const SupplyOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
-  onSwitch = () => {},
+  onSwitch = () => { },
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -167,7 +167,7 @@ const SupplyOwnedCard = ({
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => { }} />
           )}
         </div>
       </CardContent>
