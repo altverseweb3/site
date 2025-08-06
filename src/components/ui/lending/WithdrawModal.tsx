@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AlertCircle, ArrowRight, TrendingDown } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  BlueButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
@@ -22,7 +25,6 @@ import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactorForWithdraw = (
@@ -278,13 +280,13 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 onError={() => setHasImageError(true)}
               />
             ) : (
-              <div className="bg-blue-500 rounded-full p-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">
+              <div className="bg-sky-500 rounded-full p-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">
                 <span className="text-white text-xs font-bold">
                   {fallbackIcon}
                 </span>
               </div>
             )}
-            Withdraw {tokenSymbol}
+            withdraw {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
@@ -292,7 +294,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {/* Current Position Info */}
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">Supplied Balance</span>
+              <span className="text-sm text-[#A1A1AA]">supplied balance</span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
                   {suppliedBalance} {tokenSymbol}
@@ -320,18 +322,18 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Withdraw Amount
+                withdraw amount
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  Available: {suppliedBalance} {tokenSymbol}
+                  available: {suppliedBalance} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:text-sky-400 hover:bg-sky-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -364,7 +366,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
               <div className="flex items-center gap-1 mt-2">
                 <AlertCircle size={14} className="text-red-500" />
                 <p className="text-red-500 text-xs">
-                  Amount exceeds supplied balance
+                  amount exceeds supplied balance
                 </p>
               </div>
             )}
@@ -382,9 +384,9 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <div className="text-sm">
-                <div className="text-red-500 font-medium">Risk Warning</div>
+                <div className="text-red-500 font-medium">risk warning</div>
                 <div className="text-[#A1A1AA] text-xs">
-                  Withdrawing this amount would reduce your health factor below
+                  withdrawing this amount would reduce your health factor below
                   1.1, putting you at risk of liquidation
                 </div>
               </div>
@@ -394,13 +396,13 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {/* APY Loss Warning */}
           {withdrawAmountNum > 0 && (
             <div className="flex items-center gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-              <TrendingDown className="h-4 w-4 text-orange-500" />
+              <Info className="h-4 w-4 text-orange-500" />
               <div className="text-sm">
                 <div className="text-[#FAFAFA] font-medium">
-                  Interest Impact
+                  interest impact
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  You will stop earning {supplyAPY} APY on the withdrawn amount
+                  you will stop earning {supplyAPY} APY on the withdrawn amount
                 </div>
               </div>
             </div>
@@ -410,7 +412,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           {totalDebtUSD > 0 && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">Current Health Factor</span>
+                <span className="text-[#A1A1AA]">current health factor</span>
                 <span className={getHealthFactorColor(currentHealthFactor)}>
                   {currentHealthFactor.toFixed(2)}
                 </span>
@@ -420,7 +422,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 isCollateral &&
                 withdrawAmountNum > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-[#A1A1AA]">New Health Factor</span>
+                    <span className="text-[#A1A1AA]">new health factor</span>
                     <span className={getHealthFactorColor(newHealthFactor)}>
                       {newHealthFactor.toFixed(2)}
                       <span
@@ -440,44 +442,39 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             </div>
           )}
 
-          {/* Withdraw Button */}
-          <Button
-            onClick={handleWithdraw}
-            disabled={!isFormValid}
-            className={cn(
-              "w-full disabled:opacity-50",
-              isDangerous
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-orange-600 text-white hover:bg-orange-700",
-            )}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <BlueButton
+                onClick={handleWithdraw}
+                disabled={!isFormValid || isDangerous}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid || isDangerous
+                    ? "opacity-50 cursor-not-allowed"
+                    : "",
+                  isDangerous
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                    : "",
+                )}
+              >
+                {isSubmitting
+                  ? "withdrawing..."
+                  : isDangerous
+                    ? "too risky to withdraw"
+                    : "withdraw"}
+              </BlueButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : isDangerous ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Too Risky to Withdraw
-              </>
-            ) : (
-              <>
-                <TrendingDown className="h-4 w-4 mr-2" />
-                Withdraw{" "}
-                {withdrawAmountNum > 0
-                  ? `${formatBalance(withdrawAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            By withdrawing, you will reduce your earning potential and may
+            by withdrawing, you will reduce your earning potential and may
             affect your borrowing capacity.
           </p>
         </div>

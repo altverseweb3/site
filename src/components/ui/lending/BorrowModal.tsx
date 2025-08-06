@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowRight, TrendingUp } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  AmberButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { cn } from "@/lib/utils";
@@ -24,7 +27,6 @@ import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 
 // Health Factor Calculator for Borrowing
@@ -271,7 +273,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
             <div className="rounded-full overflow-hidden">
               <TokenImage token={token} chain={chain} size="sm" />
             </div>
-            Borrow {tokenSymbol}
+            borrow {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
@@ -280,7 +282,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-[#A1A1AA]">
-                Available to Borrow
+                available to borrow
               </span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
@@ -293,7 +295,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-[#A1A1AA]">
-                Current Health Factor
+                current health factor
               </span>
               <span
                 className={`text-sm ${getHealthFactorColor(currentHealthFactor)}`}
@@ -307,18 +309,18 @@ const BorrowModal: FC<BorrowModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Borrow Amount
+                borrow amount
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  Max: {availableToBorrow} {tokenSymbol}
+                  max: {availableToBorrow} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
-                  className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-500 hover:text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:text-sky-400 hover:bg-sky-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -360,7 +362,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           {/* Rate Mode Selection */}
           <div>
             <label className="text-sm font-medium text-[#A1A1AA] mb-3 block">
-              Interest Rate
+              interest rate
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -380,8 +382,8 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={cn(
                   "p-3 rounded-lg border text-left transition-colors",
                   rateMode === "stable"
-                    ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
-                    : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-blue-500/30",
+                    ? "bg-sky-500/10 border-sky-500/50 text-sky-400"
+                    : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-sky-500/30",
                 )}
               >
                 <div className="font-medium text-sm">Stable</div>
@@ -396,10 +398,10 @@ const BorrowModal: FC<BorrowModalProps> = ({
               <AlertCircle className="h-4 w-4 text-red-500" />
               <div className="text-sm">
                 <div className="text-red-500 font-medium">
-                  High Risk Warning
+                  high risk warning
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  Borrowing this amount would reduce your health factor below
+                  borrowing this amount would reduce your health factor below
                   1.2, putting you at high risk of liquidation
                 </div>
               </div>
@@ -411,9 +413,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
             <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <AlertCircle className="h-4 w-4 text-yellow-500" />
               <div className="text-sm">
-                <div className="text-[#FAFAFA] font-medium">Isolation Mode</div>
+                <div className="text-[#FAFAFA] font-medium">isolation mode</div>
                 <div className="text-[#A1A1AA] text-xs">
-                  You can only borrow stablecoins in isolation mode
+                  you can only borrow stablecoins in isolation mode
                 </div>
               </div>
             </div>
@@ -423,7 +425,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
           {borrowAmountNum > 0 && Math.abs(healthFactorChange) > 0.01 && (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">New Health Factor</span>
+                <span className="text-[#A1A1AA]">new health factor</span>
                 <span className={getHealthFactorColor(newHealthFactor)}>
                   {newHealthFactor.toFixed(2)}
                   <span
@@ -440,46 +442,41 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
           )}
 
-          {/* Borrow Button */}
-          <Button
-            onClick={handleBorrow}
-            disabled={!isFormValid}
-            className={cn(
-              "w-full disabled:opacity-50",
-              isDangerous
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-red-600 text-white hover:bg-red-700",
-            )}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <AmberButton
+                onClick={handleBorrow}
+                disabled={!isFormValid || isDangerous}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid || isDangerous
+                    ? "opacity-50 cursor-not-allowed"
+                    : "",
+                  isDangerous
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                    : "",
+                )}
+              >
+                {isSubmitting
+                  ? "borrowing..."
+                  : !borrowingEnabled
+                    ? "borrowing disabled"
+                    : isDangerous
+                      ? "too risky to borrow"
+                      : "borrow"}
+              </AmberButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : !borrowingEnabled ? (
-              "Borrowing Disabled"
-            ) : isDangerous ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Too Risky to Borrow
-              </>
-            ) : (
-              <>
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Borrow{" "}
-                {borrowAmountNum > 0
-                  ? `${formatBalance(borrowAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            By borrowing, you will pay interest at the {rateMode} rate. Ensure
+            by borrowing, you will pay interest at the {rateMode} rate. ensure
             you can repay to avoid liquidation.
           </p>
         </div>

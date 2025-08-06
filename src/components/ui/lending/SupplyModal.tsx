@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -12,7 +12,10 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { Button } from "@/components/ui/Button";
+import {
+  AmberButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { useAaveInteract } from "@/utils/aave/interact";
@@ -24,7 +27,6 @@ import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
 import { getHealthFactorColor } from "@/utils/aave/utils";
-import { formatBalance } from "@/utils/formatters";
 
 // Health Factor Calculator Utility
 const calculateNewHealthFactor = (
@@ -287,7 +289,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
             <div className="rounded-full overflow-hidden">
               <TokenImage token={token} chain={chain} size="sm" />
             </div>
-            Supply {tokenSymbol}
+            supply {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
@@ -296,18 +298,18 @@ const SupplyModal: FC<SupplyModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Amount
+                amount
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  Balance: {balance} {tokenSymbol}
+                  balance: {balance} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || isSubmitting}
                   className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
                 >
-                  Max
+                  max
                 </button>
               </div>
             </div>
@@ -338,7 +340,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
             {!isAmountValid && supplyAmount && (
               <div className="flex items-center gap-1 mt-2">
                 <AlertCircle size={14} className="text-red-500" />
-                <p className="text-red-500 text-xs">Enter a valid amount</p>
+                <p className="text-red-500 text-xs">enter a valid amount</p>
               </div>
             )}
           </div>
@@ -349,7 +351,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
             <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
               <Info className="h-4 w-4 text-green-500" />
               <span className="text-sm text-[#FAFAFA]">
-                Supply APY:{" "}
+                supply APY:{" "}
                 <span className="text-green-500 font-semibold">
                   {supplyAPY}
                 </span>
@@ -362,10 +364,10 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <div className="text-sm">
                   <div className="text-[#FAFAFA] font-medium">
-                    Isolation Mode Active
+                    isolation mode active
                   </div>
                   <div className="text-[#A1A1AA] text-xs">
-                    You can only borrow stablecoins with this asset as
+                    you can only borrow stablecoins with this asset as
                     collateral
                   </div>
                 </div>
@@ -376,7 +378,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
           {/* Asset Details */}
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Asset</span>
+              <span className="text-[#A1A1AA]">asset</span>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full overflow-hidden">
                   <TokenImage token={token} chain={chain} size="sm" />
@@ -385,14 +387,14 @@ const SupplyModal: FC<SupplyModalProps> = ({
               </div>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Can be Collateral</span>
+              <span className="text-[#A1A1AA]">can be collateral</span>
               <span className={collateralDisplay.color}>
                 {collateralDisplay.text}
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">Current Health Factor</span>
+              <span className="text-[#A1A1AA]">current health factor</span>
               <span className={getHealthFactorColor(currentHealthFactor)}>
                 {currentHealthFactor.toFixed(2)}
               </span>
@@ -403,7 +405,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
               Math.abs(healthFactorChange) > 0.01 &&
               canBeCollateral && (
                 <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">New Health Factor</span>
+                  <span className="text-[#A1A1AA]">new health factor</span>
                   <span className={getHealthFactorColor(newHealthFactor)}>
                     {newHealthFactor.toFixed(2)}
                     <span className="text-green-500 ml-1">
@@ -414,33 +416,30 @@ const SupplyModal: FC<SupplyModalProps> = ({
               )}
           </div>
 
-          {/* Supply Button */}
-          <Button
-            onClick={handleSupply}
-            disabled={!isFormValid}
-            className="w-full bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                Processing...
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1">
+              <AmberButton
+                onClick={handleSupply}
+                disabled={!isFormValid}
+                className={cn(
+                  "h-8 py-2",
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                )}
+              >
+                {isSubmitting ? "supplying..." : "supply"}
+              </AmberButton>
+            </div>
+
+            <DialogClose asChild>
+              <div className="flex-1">
+                <GrayButton className="h-8 py-2">cancel</GrayButton>
               </div>
-            ) : isLoading ? (
-              "Loading..."
-            ) : (
-              <>
-                Supply{" "}
-                {supplyAmountNum > 0
-                  ? `${formatBalance(supplyAmountNum, 4)} `
-                  : ""}
-                {tokenSymbol}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            </DialogClose>
+          </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            By supplying, you agree to Aave&apos;s terms and conditions. Your
+            by supplying, you agree to Aave&apos;s terms and conditions. your
             supply will start earning yield immediately.
           </p>
         </div>
