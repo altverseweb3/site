@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   BlueButton,
   GrayButton,
-  PrimaryButton,
 } from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
@@ -30,7 +29,6 @@ interface SupplyOwnedCardProps {
   healthFactor?: string; // User's current health factor
   totalCollateralUSD?: number; // User's total collateral value
   totalDebtUSD?: number; // User's total debt value
-  onSwitch?: (asset: AaveReserveData) => void;
   onWithdraw?: (asset: AaveReserveData) => void;
   onCollateralChange?: (
     asset: AaveReserveData,
@@ -50,7 +48,6 @@ const SupplyOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
-  onSwitch = () => {},
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -173,10 +170,6 @@ const SupplyOwnedCard = ({
       </CardContent>
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
-        <PrimaryButton onClick={() => onSwitch(currentAsset)}>
-          switch
-        </PrimaryButton>
-
         {/* Wrap withdraw button in WithdrawModal */}
         <WithdrawModal
           tokenSymbol={currentAsset.asset.ticker}

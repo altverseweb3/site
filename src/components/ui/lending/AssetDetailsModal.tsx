@@ -105,7 +105,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
               <button
                 onClick={() =>
                   window.open(
-                    `${chain.explorerUrl}/token/${currentAsset.asset}`,
+                    `${chain.explorerUrl}/token/${currentAsset.asset.address}`,
                     "_blank",
                   )
                 }

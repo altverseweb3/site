@@ -69,12 +69,13 @@ const BlueButton: React.FC<BaseButtonProps> = ({
         transition-colors 
         focus-visible:outline-none 
         border 
-        border-blue-500/20 
+        border-[#0EA5E9]/25 
         rounded-[3px]
         text-sm 
-        bg-blue-500/10
-        hover:bg-blue-500/20 
-        text-blue-500 
+        bg-[#0EA5E9]/10
+        hover:bg-[#0b466b] 
+        text-sky-500
+        hover:text-sky-400 
         py-1
         px-4
         h-6
