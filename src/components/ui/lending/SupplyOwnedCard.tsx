@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import {
-  BlueButton,
-} from "@/components/ui/lending/SupplyButtonComponents";
+import { BlueButton } from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
@@ -50,7 +48,6 @@ const SupplyOwnedCard = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   oraclePrices,
-  onSwitch = () => { },
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -169,7 +166,7 @@ const SupplyOwnedCard = ({
               </button>
             </CollateralModal>
           ) : (
-            <SupplyCollateralSwitch isCollateral={false} onToggle={() => { }} />
+            <SupplyCollateralSwitch isCollateral={false} onToggle={() => {}} />
           )}
         </div>
       </CardContent>
