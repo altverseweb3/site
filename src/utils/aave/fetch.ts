@@ -318,6 +318,7 @@ export async function fetchUserPositions(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<UserPosition[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -366,11 +367,11 @@ export async function fetchUserPositions(
               reserve.asset.decimals,
             );
 
-            // TODO: Replace this with actual price fetching
-            // For now, we'll use a mock price - you should integrate with a price oracle
-            const mockPrice = Math.random() * 2 + 0.5; // Mock price between 0.5-2.5
+            // Use oracle price if available, otherwise fallback to 1
+            const oraclePrice =
+              oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
             const balanceUSD = (
-              parseFloat(formattedBalance) * mockPrice
+              parseFloat(formattedBalance) * oraclePrice
             ).toFixed(2);
 
             return {
@@ -420,6 +421,7 @@ export async function fetchUserBorrowPositions(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<UserBorrowPosition[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -473,10 +475,11 @@ export async function fetchUserBorrowPositions(
               reserve.asset.decimals,
             );
 
-            //For Now Im mocking price I will update this when we integrate the token info
-            const mockPrice = 1; // Mock price between 0.5-2.5
+            // Use oracle price if available, otherwise fallback to 1
+            const oraclePrice =
+              oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
             const debtUSD = (
-              parseFloat(formattedTotalDebt) * mockPrice
+              parseFloat(formattedTotalDebt) * oraclePrice
             ).toFixed(2);
 
             const currentBorrowAPY =
@@ -535,6 +538,7 @@ export async function fetchUserWalletBalances(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<AaveReserveData[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -567,11 +571,12 @@ export async function fetchUserWalletBalances(
             reserve.asset.decimals,
           );
 
-          // TODO: Replace with actual price fetching
-          const mockPrice = Math.random() * 2 + 0.5;
-          const balanceUSD = (parseFloat(formattedBalance) * mockPrice).toFixed(
-            2,
-          );
+          // Use oracle price if available, otherwise fallback to 1
+          const oraclePrice =
+            oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
+          const balanceUSD = (
+            parseFloat(formattedBalance) * oraclePrice
+          ).toFixed(2);
 
           return {
             ...reserve,
@@ -1113,22 +1118,46 @@ export function useAaveFetch() {
       return fetchAllReservesData(signer, aaveChain, chainTokens);
     },
 
-    fetchUserPositions: async (reservesData: AaveReserveData[]) => {
+    fetchUserPositions: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserPositions(signer, userAddress, reservesData);
+      return fetchUserPositions(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
-    fetchUserBorrowPositions: async (reservesData: AaveReserveData[]) => {
+    fetchUserBorrowPositions: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserBorrowPositions(signer, userAddress, reservesData);
+      return fetchUserBorrowPositions(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
-    fetchUserWalletBalances: async (reservesData: AaveReserveData[]) => {
+    fetchUserWalletBalances: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserWalletBalances(signer, userAddress, reservesData);
+      return fetchUserWalletBalances(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
     fetchExtendedAssetDetails: fetchExtendedAssetDetailsMemoized,

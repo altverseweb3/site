@@ -17,18 +17,13 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, FC, ReactNode } from "react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import type { Chain } from "@/types/web3";
-import { AaveReserveData, ExtendedAssetDetails } from "@/types/aave";
+import { AaveReserveData } from "@/types/aave";
 import {
   calculateUtilizationRate,
-  fetchExtendedAssetDetails,
   getReserveMetrics,
 } from "@/utils/aave/fetch";
 import { getChainByChainId } from "@/config/chains";
-import {
-  formatBalance,
-  formatCurrency,
-  truncateAddress,
-} from "@/utils/formatters";
+import { formatBalance, formatCurrency } from "@/utils/formatters";
 
 interface AssetDetailsModalProps {
   currentAsset: AaveReserveData;
@@ -42,10 +37,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   oraclePrices,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [extendedDetails, setExtendedDetails] =
-    useState<ExtendedAssetDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   const stableOraclePrices = useMemo(() => oraclePrices || {}, [oraclePrices]);
@@ -54,41 +45,25 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!isMounted || !isOpen || !currentAsset.asset) return;
+  // Calculate extended details from existing data without fetching
+  const extendedDetails = useMemo(() => {
+    const oraclePrice =
+      stableOraclePrices[currentAsset.asset.address.toLowerCase()] || 1;
 
-    const fetchDetails = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const details = await fetchExtendedAssetDetails(
-          currentAsset,
-          currentAsset.asset.chainId,
-          undefined, // provider
-          stableOraclePrices,
-        );
-        setExtendedDetails(details);
-      } catch (err) {
-        console.error("Error fetching extended asset details:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch extended details",
-        );
-
-        setExtendedDetails({
-          ltv: "80.00%",
-          liquidationThreshold: "85.00%",
-          liquidationPenalty: "5.00%",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+    return {
+      ltv: currentAsset.ltv || "80.00%",
+      liquidationThreshold: currentAsset.liquidationThreshold || "85.00%",
+      liquidationPenalty: currentAsset.liquidationPenalty || "5.00%",
+      oraclePrice: oraclePrice,
+      currentPrice: oraclePrice,
     };
-
-    fetchDetails();
-  }, [isOpen, isMounted, currentAsset, stableOraclePrices]);
+  }, [
+    currentAsset.ltv,
+    currentAsset.liquidationThreshold,
+    currentAsset.liquidationPenalty,
+    currentAsset.asset.address,
+    stableOraclePrices,
+  ]);
 
   if (!isMounted) {
     return null;
@@ -124,21 +99,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
           </DialogHeader>
 
           <div className="space-y-6 overflow-y-auto flex-1 scrollbar-hide">
-            {isLoading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
-                <span className="ml-3 text-zinc-400">
-                  loading asset details...
-                </span>
-              </div>
-            )}
-
-            {error && (
-              <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg">
-                <p className="text-red-500 text-sm">{error}</p>
-              </div>
-            )}
-
             {(() => {
               const metrics = getReserveMetrics(currentAsset);
               const tokenPrice = extendedDetails?.oraclePrice || 1;
@@ -554,68 +514,6 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                 </div>
               </div>
             </div>
-
-            <div className="p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-              <h3 className="text-sm font-semibold mb-3">contract addresses</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-400">token</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono">format</span>
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          currentAsset.asset.address,
-                        )
-                      }
-                      className="text-zinc-400 hover:text-white"
-                      title="Copy address"
-                    ></button>
-                  </div>
-                </div>
-                {currentAsset.aTokenAddress && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">atoken</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono">
-                        {truncateAddress(currentAsset.aTokenAddress)}
-                      </span>
-                      <button
-                        onClick={() =>
-                          navigator.clipboard.writeText(
-                            currentAsset.aTokenAddress,
-                          )
-                        }
-                        className="text-zinc-400 hover:text-white"
-                        title="copy address"
-                      ></button>
-                    </div>
-                  </div>
-                )}
-                {extendedDetails?.variableDebtTokenAddress && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">variable debt token</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono">
-                        {truncateAddress(
-                          extendedDetails.variableDebtTokenAddress,
-                        )}
-                      </span>
-                      <button
-                        onClick={() =>
-                          navigator.clipboard.writeText(
-                            extendedDetails.variableDebtTokenAddress!,
-                          )
-                        }
-                        className="text-zinc-400 hover:text-white"
-                        title="copy address"
-                      ></button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="flex justify-end pt-2">
               <DialogClose asChild>
                 <Button

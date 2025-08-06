@@ -52,24 +52,54 @@ export const useAaveDataLoader = () => {
             provider,
           );
 
-          const addresses = reserves.map((reserve) => reserve.asset.address);
-          const prices = await oracleContract.getAssetsPrices(addresses);
+          try {
+            await oracleContract.BASE_CURRENCY();
+          } catch {
+            return priceMapFromTokens;
+          }
 
           const priceMap: Record<string, number> = {};
-          reserves.forEach((reserve, index) => {
-            const priceInWei = prices[index];
-            const price = parseFloat(ethers.formatUnits(priceInWei, 8));
+          const BATCH_SIZE = 5;
 
-            if (!isNaN(price) && price > 0) {
-              priceMap[reserve.asset.address.toLowerCase()] = price;
-            } else {
-              const fallbackPrice =
-                priceMapFromTokens[reserve.asset.address.toLowerCase()];
-              if (fallbackPrice) {
-                priceMap[reserve.asset.address.toLowerCase()] = fallbackPrice;
-              }
+          for (let i = 0; i < reserves.length; i += BATCH_SIZE) {
+            const batch = reserves.slice(i, i + BATCH_SIZE);
+            const batchAddresses = batch.map(
+              (reserve) => reserve.asset.address,
+            );
+
+            try {
+              const batchPrices =
+                await oracleContract.getAssetsPrices(batchAddresses);
+
+              batch.forEach((reserve, batchIndex) => {
+                const priceInWei = batchPrices[batchIndex];
+                const price = parseFloat(ethers.formatUnits(priceInWei, 8));
+
+                if (!isNaN(price) && price > 0) {
+                  priceMap[reserve.asset.address.toLowerCase()] = price;
+                } else {
+                  const fallbackPrice =
+                    priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                  if (fallbackPrice) {
+                    priceMap[reserve.asset.address.toLowerCase()] =
+                      fallbackPrice;
+                  }
+                }
+              });
+            } catch {
+              batch.forEach((reserve) => {
+                const fallbackPrice =
+                  priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                if (fallbackPrice) {
+                  priceMap[reserve.asset.address.toLowerCase()] = fallbackPrice;
+                }
+              });
             }
-          });
+
+            if (i + BATCH_SIZE < reserves.length) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+          }
 
           return priceMap;
         } catch (oracleError) {
@@ -89,6 +119,7 @@ export const useAaveDataLoader = () => {
       supplyAssets: AaveReserveData[],
       borrowAssets: AaveReserveData[],
       hasConnectedWallet: boolean,
+      oraclePrices: Record<string, number>,
     ): Promise<{
       userSupplyPositions: UserPosition[];
       userBorrowPositions: UserBorrowPosition[];
@@ -102,8 +133,8 @@ export const useAaveDataLoader = () => {
 
       try {
         const [supplyPositions, borrowPositions] = await Promise.all([
-          fetchUserPositions(supplyAssets),
-          fetchUserBorrowPositions(borrowAssets),
+          fetchUserPositions(supplyAssets, oraclePrices),
+          fetchUserBorrowPositions(borrowAssets, oraclePrices),
         ]);
 
         return {
@@ -171,6 +202,7 @@ export const useAaveDataLoader = () => {
             reservesResult.supplyAssets,
             reservesResult.borrowAssets,
             hasConnectedWallet,
+            prices,
           );
 
         return {

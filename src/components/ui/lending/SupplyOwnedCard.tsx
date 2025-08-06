@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { BlueButton } from "@/components/ui/lending/SupplyButtonComponents";
+import {
+  BlueButton,
+  GrayButton,
+} from "@/components/ui/lending/SupplyButtonComponents";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Card,
@@ -198,7 +201,7 @@ const SupplyOwnedCard = ({
           currentAsset={currentAsset}
           oraclePrices={oraclePrices}
         >
-          <BlueButton>details</BlueButton>
+          <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>
     </Card>
