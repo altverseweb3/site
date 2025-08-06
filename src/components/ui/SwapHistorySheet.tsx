@@ -283,7 +283,7 @@ export function SwapHistorySheet({
       {[...Array(3)].map((_, i: number) => (
         <div
           key={i}
-          className="border border-amber-500/10 rounded-xl p-4 space-y-3 bg-gradient-to-r from-amber-500/5 to-sky-500/5 backdrop-blur-sm"
+          className="border border-amber-500/10 rounded-xl p-4 space-y-3 bg-amber-500/20 backdrop-blur-sm"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -331,10 +331,10 @@ export function SwapHistorySheet({
 
   const renderEmptyState = (): JSX.Element => (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500/20 to-sky-500/20 border border-amber-500/30 flex items-center justify-center mb-6 animate-pulse">
+      <div className="w-20 h-20 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-6 animate-pulse">
         <Clock className="h-10 w-10 text-amber-500" />
       </div>
-      <h3 className="text-lg font-medium mb-3 bg-gradient-to-r from-amber-500 to-sky-500 bg-clip-text text-transparent">
+      <h3 className="text-lg font-medium mb-3 bg-amber-500 bg-clip-text text-transparent">
         {getEmptyStateTitle()}
       </h3>
       <p className="text-muted-foreground text-sm max-w-[300px] leading-relaxed">
@@ -349,7 +349,7 @@ export function SwapHistorySheet({
   ): JSX.Element => (
     <div
       key={tx.id}
-      className="group border border-amber-500/10 rounded-xl p-5 space-y-4 bg-gradient-to-r from-amber-500/5 to-sky-500/5 backdrop-blur-sm hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-500 ease-out animate-fade-in-up"
+      className="group border border-amber-500/10 rounded-xl p-5 space-y-4 bg-amber-500/5 backdrop-blur-sm hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-500 ease-out animate-fade-in-up"
       style={{
         animationDelay: `${index * 100}ms`,
         animationFillMode: "both",
@@ -488,7 +488,7 @@ export function SwapHistorySheet({
         </SheetHeader>
 
         <div className="flex flex-col h-full max-h-[calc(100vh-8rem)] mt-6">
-          <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-sky-500/5 rounded-lg p-3 backdrop-blur-sm flex-shrink-0 relative z-50">
+          <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-amber-500/20 bg-amber-500/5 rounded-lg p-3 backdrop-blur-sm flex-shrink-0 relative z-50">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Filter className="h-4 w-4 text-amber-500" />
               <span>filter by wallet:</span>
@@ -502,7 +502,7 @@ export function SwapHistorySheet({
           </div>
 
           {isLoading && loadingProgress && (
-            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-sky-500/10 border border-amber-500/20 backdrop-blur-sm">
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-sm">
               <div className="flex items-center gap-3 mb-3">
                 <div className="relative">
                   <div className="w-8 h-8 rounded-full border-2 border-amber-500/30">
@@ -546,7 +546,7 @@ export function SwapHistorySheet({
                 </div>
 
                 {isLoading && (
-                  <div className="mt-6 mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-sky-500/10 border border-amber-500/20 backdrop-blur-sm">
+                  <div className="mt-6 mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="relative">
                         <div className="w-6 h-6 rounded-full border-2 border-amber-500/30">
@@ -568,7 +568,7 @@ export function SwapHistorySheet({
                         {loadingProgress && (
                           <div className="w-full bg-amber-500/20 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-amber-500 to-sky-500 transition-all duration-500 ease-out animate-progress-pulse"
+                              className="h-full bg-amber-500 transition-all duration-500 ease-out animate-progress-pulse"
                               style={{
                                 width: `${Math.min((loadingProgress.current / loadingProgress.total) * 100, 100)}%`,
                               }}
@@ -591,7 +591,7 @@ export function SwapHistorySheet({
             <div className="pt-6 mt-2 border-t border-amber-500/20 flex-shrink-0 bg-background/80 backdrop-blur-sm">
               <Button
                 variant="outline"
-                className="w-full bg-gradient-to-r from-amber-500/10 to-sky-500/10 border-amber-500/30 text-amber-200 hover:from-amber-500/20 hover:to-sky-500/20 hover:border-amber-500/50 hover:text-amber-100 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 backdrop-blur-sm"
+                className="w-full bg-amber-500/25 border-[#61410B] text-amber-500 hover:bg-amber-500/50 hover:border-amber-500/50 hover:text-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 backdrop-blur-sm"
                 size="sm"
                 onClick={handleLoadMore}
                 disabled={isLoading || isLoadingMore}
