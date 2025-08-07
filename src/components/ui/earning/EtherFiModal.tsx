@@ -18,7 +18,7 @@ import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
-import { formatCurrency } from "@/utils/formatters";
+import { formatBalance, formatCurrency } from "@/utils/formatters";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import { useEtherFiFetch } from "@/utils/etherFi/fetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
@@ -194,9 +194,9 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                   ) : (
                     <span className="text-[#FAFAFA] font-mono">
                       {isDashboardRow(data)
-                        ? data.balance.toFixed(6)
+                        ? formatBalance(data.balance)
                         : userVaultBalance?.balance
-                          ? parseFloat(userVaultBalance.balance).toFixed(6)
+                          ? formatBalance(userVaultBalance.balance)
                           : "0.000000"}
                     </span>
                   )}
