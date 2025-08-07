@@ -48,7 +48,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
   // Calculate extended details from existing data without fetching
   const extendedDetails = useMemo(() => {
     const oraclePrice =
-      stableOraclePrices[currentAsset.asset.address.toLowerCase()] || 1;
+      stableOraclePrices[currentAsset.asset.address.toLowerCase()];
 
     return {
       ltv: currentAsset.ltv || "80.00%",
@@ -101,7 +101,7 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
           <div className="space-y-6 overflow-y-auto flex-1 scrollbar-hide">
             {(() => {
               const metrics = getReserveMetrics(currentAsset);
-              const tokenPrice = extendedDetails?.oraclePrice || 1;
+              const tokenPrice = extendedDetails?.oraclePrice;
 
               return (
                 <div className="space-y-6">
@@ -111,9 +111,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         total supplied
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
-                        {formatCurrency(
-                          parseFloat(metrics.reserveSize) * tokenPrice,
-                        )}
+                        {tokenPrice
+                          ? formatCurrency(
+                              parseFloat(metrics.reserveSize) * tokenPrice,
+                            )
+                          : "No price data"}
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.reserveSize)}{" "}
@@ -159,9 +161,11 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                         total borrowed
                       </div>
                       <div className="text-3xl font-bold text-white mb-1">
-                        {formatCurrency(
-                          parseFloat(metrics.totalBorrowed) * tokenPrice,
-                        )}
+                        {tokenPrice
+                          ? formatCurrency(
+                              parseFloat(metrics.totalBorrowed) * tokenPrice,
+                            )
+                          : "No price data"}
                       </div>
                       <div className="text-sm text-zinc-500 mb-1">
                         {formatBalance(metrics.totalBorrowed)}{" "}
@@ -213,13 +217,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           {calculateUtilizationRate(currentAsset)}%
                         </div>
                         <div className="text-sm text-zinc-500">
-                          {formatCurrency(
-                            parseFloat(metrics.totalBorrowed) * tokenPrice,
-                          )}{" "}
-                          of{" "}
-                          {formatCurrency(
-                            parseFloat(metrics.reserveSize) * tokenPrice,
-                          )}
+                          {tokenPrice
+                            ? `${formatCurrency(parseFloat(metrics.totalBorrowed) * tokenPrice)} of ${formatCurrency(parseFloat(metrics.reserveSize) * tokenPrice)}`
+                            : "No price data"}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -243,7 +243,9 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                           oracle price
                         </div>
                         <div className="text-2xl font-bold text-white">
-                          {formatCurrency(tokenPrice)}
+                          {tokenPrice
+                            ? formatCurrency(tokenPrice)
+                            : "No price data"}
                         </div>
                       </div>
                       <div className="text-right">
@@ -267,9 +269,12 @@ const AssetDetailsModal: FC<AssetDetailsModalProps> = ({
                               {currentAsset.asset.ticker}
                             </div>
                             <div className="text-sm text-zinc-500">
-                              {formatCurrency(
-                                parseFloat(metrics.reserveSize) * tokenPrice,
-                              )}
+                              {tokenPrice
+                                ? formatCurrency(
+                                    parseFloat(metrics.reserveSize) *
+                                      tokenPrice,
+                                  )
+                                : "No price data"}
                             </div>
                           </div>
                         </div>

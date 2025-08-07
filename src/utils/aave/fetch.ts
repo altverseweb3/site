@@ -367,12 +367,12 @@ export async function fetchUserPositions(
               reserve.asset.decimals,
             );
 
-            // Use oracle price if available, otherwise fallback to 1
+            // Use oracle price if available
             const oraclePrice =
-              oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
-            const balanceUSD = (
-              parseFloat(formattedBalance) * oraclePrice
-            ).toFixed(2);
+              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const balanceUSD = oraclePrice
+              ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
+              : "0.00";
 
             return {
               asset: reserve,
@@ -475,12 +475,12 @@ export async function fetchUserBorrowPositions(
               reserve.asset.decimals,
             );
 
-            // Use oracle price if available, otherwise fallback to 1
+            // Use oracle price if available
             const oraclePrice =
-              oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
-            const debtUSD = (
-              parseFloat(formattedTotalDebt) * oraclePrice
-            ).toFixed(2);
+              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const debtUSD = oraclePrice
+              ? (parseFloat(formattedTotalDebt) * oraclePrice).toFixed(2)
+              : "0.00";
 
             const currentBorrowAPY =
               BigInt(variableDebt) > 0
@@ -571,12 +571,12 @@ export async function fetchUserWalletBalances(
             reserve.asset.decimals,
           );
 
-          // Use oracle price if available, otherwise fallback to 1
+          // Use oracle price if available
           const oraclePrice =
-            oraclePrices?.[reserve.asset.address.toLowerCase()] || 1;
-          const balanceUSD = (
-            parseFloat(formattedBalance) * oraclePrice
-          ).toFixed(2);
+            oraclePrices?.[reserve.asset.address.toLowerCase()];
+          const balanceUSD = oraclePrice
+            ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
+            : "0.00";
 
           return {
             ...reserve,
