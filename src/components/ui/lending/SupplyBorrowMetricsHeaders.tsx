@@ -12,8 +12,8 @@ import {
   formatNetAPY,
   formatNetWorth,
   formatHealthFactor,
-  getHealthFactorColor,
 } from "@/utils/formatters";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import {
   AaveReserveData,
