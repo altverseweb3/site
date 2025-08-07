@@ -12,7 +12,9 @@ export function rayToPercentage(rayValue: string): string {
 }
 
 // Health Factor Color Helper
-export function getHealthFactorColor(healthFactor: number): string {
+export function getHealthFactorColor(healthFactor: number | null): string {
+  if (healthFactor === null) return "text-white";
+  if (healthFactor === Infinity) return "text-green-500";
   if (healthFactor >= 2) return "text-green-500";
   if (healthFactor >= 1.5) return "text-yellow-500";
   if (healthFactor >= 1.1) return "text-orange-500";

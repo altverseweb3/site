@@ -91,3 +91,22 @@ export const formatAPY = (apy: number | string): string => {
   // If the input was a number (likely already a percentage), format directly
   return `${numericAPY.toFixed(1)}%`;
 };
+
+export const formatNetAPY = (netAPY: number | null): string => {
+  if (netAPY === null) return "--";
+  return netAPY.toFixed(2);
+};
+
+export const formatNetWorth = (netWorth: number): string => {
+  if (netWorth === 0) return "--";
+  return netWorth.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+export const formatHealthFactor = (healthFactor: number | null): string => {
+  if (healthFactor === null) return "--";
+  if (healthFactor === Infinity) return "∞";
+  return healthFactor.toFixed(2);
+};

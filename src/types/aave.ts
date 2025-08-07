@@ -59,11 +59,6 @@ export interface AaveReserveData {
   isFrozen: boolean;
   isIsolationModeAsset?: boolean;
   debtCeiling?: number;
-  userBalance?: string;
-  userBalanceFormatted?: string;
-  userBalanceUsd?: string;
-  tokenIcon?: string;
-  chainId?: number;
 
   // Risk parameters
   ltv?: string;

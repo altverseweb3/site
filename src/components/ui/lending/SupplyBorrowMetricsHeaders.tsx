@@ -1,6 +1,26 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MetricsCard from "@/components/ui/lending/SupplyBorrowMetricsCard";
 import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
+import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
+import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
+import useWeb3Store from "@/store/web3Store";
+import { WalletType } from "@/types/web3";
+import { getReserveMetrics } from "@/utils/aave/fetch";
+
+import {
+  formatCurrency,
+  formatNetAPY,
+  formatNetWorth,
+  formatHealthFactor,
+} from "@/utils/formatters";
+import { getHealthFactorColor } from "@/utils/aave/utils";
+import { useAaveDataLoader } from "@/utils/aave/dataLoader";
+import {
+  AaveReserveData,
+  UserBorrowPosition,
+  UserPosition,
+} from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 
 interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
@@ -13,69 +33,242 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   onTabChange,
   chainPicker,
 }) => {
-  // First card metrics (networth, net APY, health factor)
+  const aaveChain = useAaveChain();
+  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
+  const chainTokens = getTokensForChain(aaveChain.chainId);
+  const hasConnectedWallet = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  const [userSupplyPositions, setUserSupplyPositions] = useState<
+    UserPosition[]
+  >([]);
+  const [userBorrowPositions, setUserBorrowPositions] = useState<
+    UserBorrowPosition[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [lastChainId, setLastChainId] = useState<number | null>(null);
+
+  const { loadAaveData } = useAaveDataLoader();
+
+  const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
+  const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
+
+  const loadAaveDataCallback = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
+    if (lastChainId === aaveChain.chainId && allReserves.length > 0) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await loadAaveData({
+        aaveChain,
+        chainTokens,
+        hasConnectedWallet,
+        loading,
+        lastChainId,
+        allReservesLength: allReserves.length,
+      });
+
+      if (result) {
+        setLastChainId(aaveChain.chainId);
+        setAllReserves(result.allReserves);
+        setOraclePrices(result.oraclePrices);
+        setUserSupplyPositions(result.userSupplyPositions);
+        setUserBorrowPositions(result.userBorrowPositions);
+      }
+    } catch (err) {
+      console.error("Error loading Aave data:", err);
+      setUserSupplyPositions([]);
+      setUserBorrowPositions([]);
+      setAllReserves([]);
+      setOraclePrices({});
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    loading,
+    lastChainId,
+    allReserves.length,
+    loadAaveData,
+    aaveChain,
+    chainTokens,
+    hasConnectedWallet,
+  ]);
+
+  useEffect(() => {
+    loadAaveDataCallback();
+  }, [loadAaveDataCallback]);
+
+  useEffect(() => {
+    if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
+      setUserSupplyPositions([]);
+      setUserBorrowPositions([]);
+      setAllReserves([]);
+      setOraclePrices({});
+    }
+  }, [aaveChain.chainId, lastChainId]);
+
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const userMetrics =
+    hasConnectedWallet && !loading
+      ? calculateUserMetrics(userSupplyPositionsUSD, userBorrowPositionsUSD)
+      : {
+          netWorth: 0,
+          netAPY: null,
+          healthFactor: null,
+          totalCollateralUSD: 0,
+          totalDebtUSD: 0,
+          currentLTV: 0,
+          maxLTV: 0,
+          liquidationThreshold: 0,
+        };
+
+  const getMarketMetrics = () => {
+    if (loading || !hasConnectedWallet || allReserves.length === 0) {
+      return {
+        marketSize: null,
+        available: null,
+        borrows: null,
+      };
+    }
+
+    try {
+      let totalMarketSizeUSD = 0;
+      let totalAvailableUSD = 0;
+      let totalBorrowsUSD = 0;
+
+      const activeReserves = allReserves.filter(
+        (reserve) => reserve.isActive && !reserve.isFrozen,
+      );
+
+      activeReserves.forEach((reserve) => {
+        const metrics = getReserveMetrics(reserve);
+        const tokenPrice = oraclePrices[reserve.asset.address.toLowerCase()];
+
+        if (tokenPrice !== undefined) {
+          totalMarketSizeUSD += parseFloat(metrics.reserveSize) * tokenPrice;
+          totalAvailableUSD +=
+            parseFloat(metrics.availableLiquidity) * tokenPrice;
+          totalBorrowsUSD += parseFloat(metrics.totalBorrowed) * tokenPrice;
+        }
+      });
+
+      return {
+        marketSize: formatCurrency(totalMarketSizeUSD),
+        available: formatCurrency(totalAvailableUSD),
+        borrows: formatCurrency(totalBorrowsUSD),
+      };
+    } catch {
+      return {
+        marketSize: null,
+        available: null,
+        borrows: null,
+      };
+    }
+  };
+
   const metricsDataHealth = [
     {
       label: "Net Worth",
-      value: "0.21",
+      value: formatNetWorth(userMetrics.netWorth),
       prefix: "$",
       color: "text-white",
     },
     {
       label: "Net APY",
-      value: "2.07",
+      value: formatNetAPY(userMetrics.netAPY),
       suffix: "%",
-      color: "text-white",
+      color:
+        hasConnectedWallet &&
+        userMetrics.netAPY !== null &&
+        userMetrics.netAPY >= 0
+          ? "text-green-500"
+          : "text-white",
     },
     {
       label: "Health Factor",
-      value: "1.59",
-      color: "text-amber-500",
-      showButton: true,
+      value: formatHealthFactor(userMetrics.healthFactor),
+      color: getHealthFactorColor(userMetrics.healthFactor),
+      showButton: hasConnectedWallet,
       buttonText: "risk details",
+      customButton: hasConnectedWallet ? (
+        <RiskDetailsModal
+          healthFactor={userMetrics.healthFactor}
+          totalCollateralUSD={userMetrics.totalCollateralUSD}
+          totalDebtUSD={userMetrics.totalDebtUSD}
+          currentLTV={userMetrics.currentLTV}
+          maxLTV={userMetrics.maxLTV}
+          liquidationThreshold={userMetrics.liquidationThreshold}
+        >
+          <button className="ml-2 rounded bg-[#232326] px-2 py-[2px] text-xs text-[#FFFFFF80] font-['Urbanist'] leading-none whitespace-nowrap hover:bg-[#2a2a2e]">
+            risk details
+          </button>
+        </RiskDetailsModal>
+      ) : undefined,
     },
   ];
 
-  // Second card metrics (market size, available, borrows)
-  const marketMetrics = [
+  const currentMarketMetrics = getMarketMetrics();
+  const marketMetricsData = [
     {
       label: "Market Size",
-      value: "23.35B",
-      prefix: "$",
+      value: currentMarketMetrics.marketSize,
       color: "text-white",
     },
     {
       label: "Available",
-      value: "14.18B",
-      prefix: "$",
+      value: currentMarketMetrics.available,
       color: "text-white",
     },
     {
       label: "Borrows",
-      value: "8.53B",
-      prefix: "$",
+      value: currentMarketMetrics.borrows,
       color: "text-white",
     },
   ];
 
-  const handleButtonClick = (metricLabel: string): void => {
-    console.log(`Button clicked for ${metricLabel}`);
-    // Add your logic for showing risk details here
-  };
+  const handleButtonClick = (): void => {};
 
   return (
     <div className="w-full pb-4">
       {/* Mobile and tablet views */}
       <div className="flex flex-col gap-4 xl:hidden">
-        {chainPicker && <div className="w-full">{chainPicker}</div>}
-
-        {/* Supply/Borrow Toggle */}
-        <div className="w-full">
+        {/* Supply/Borrow Toggle and Chain Picker */}
+        <div className="flex flex-col gap-2 w-full">
           <SupplyBorrowToggle
             activeTab={activeTab}
             onTabChange={onTabChange}
             className="w-full"
           />
+          {chainPicker && <div className="w-full">{chainPicker}</div>}
         </div>
 
         {/* Metrics cards stacked vertically with full width */}
@@ -87,36 +280,36 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
           />
         </div>
         <div className="w-full">
-          <MetricsCard metrics={marketMetrics} className="w-full" />
+          <MetricsCard metrics={marketMetricsData} className="w-full" />
         </div>
       </div>
 
-      {/* Desktop */}
+      {/* Desktop view with responsive layout - only show on xl screens */}
       <div className="hidden xl:block">
-        <div className="grid grid-cols-3 gap-4 items-stretch">
-          <div className="flex flex-col justify-between h-full">
-            {chainPicker && (
-              <div className="w-full flex-shrink-0">{chainPicker}</div>
-            )}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex gap-4 items-end flex-shrink-0 w-full xl:w-auto">
+            <SupplyBorrowToggle
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+            />
+            {chainPicker && <div>{chainPicker}</div>}
+          </div>
 
-            <div className="w-full flex-shrink-0 mt-auto">
-              <SupplyBorrowToggle
-                activeTab={activeTab}
-                onTabChange={onTabChange}
+          {/* Metrics cards with responsive layout */}
+          <div className="flex flex-wrap justify-end gap-4 w-full xl:w-auto">
+            <div className="w-full xl:w-auto">
+              <MetricsCard
+                metrics={metricsDataHealth}
+                onButtonClick={handleButtonClick}
+                className="w-full xl:w-auto"
               />
             </div>
-          </div>
-
-          <div className="flex justify-center items-center h-full">
-            <MetricsCard
-              metrics={metricsDataHealth}
-              onButtonClick={handleButtonClick}
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex justify-center items-center h-full">
-            <MetricsCard metrics={marketMetrics} className="w-full" />
+            <div className="w-full xl:w-auto">
+              <MetricsCard
+                metrics={marketMetricsData}
+                className="w-full xl:w-auto"
+              />
+            </div>
           </div>
         </div>
       </div>

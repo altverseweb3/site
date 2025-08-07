@@ -23,6 +23,7 @@ interface SupplyUnownedCardProps {
   currentAsset: AaveReserveData;
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
+  oraclePrices?: Record<string, number>; // Oracle prices for all assets
   onSupply?: (asset: AaveReserveData) => void;
 }
 
@@ -30,6 +31,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   currentAsset,
   userBalance = "0",
   dollarAmount = "0.00",
+  oraclePrices,
   onSupply = () => {},
 }) => {
   // Determine collateral status and isolation mode
@@ -105,7 +107,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
           healthFactor="0"
-          tokenPrice={1}
+          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85}
           totalCollateralUSD={0}
           totalDebtUSD={0}
@@ -118,7 +120,10 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
         >
           <PrimaryButton>supply</PrimaryButton>
         </SupplyModal>
-        <AssetDetailsModal currentAsset={currentAsset}>
+        <AssetDetailsModal
+          currentAsset={currentAsset}
+          oraclePrices={oraclePrices}
+        >
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

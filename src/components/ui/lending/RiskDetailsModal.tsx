@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +32,6 @@ const RiskDetailsModal = ({
   maxLTV,
   liquidationThreshold,
 }: RiskDetailsModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   const healthFactor =
     propHealthFactor === null || propHealthFactor === Infinity
       ? Infinity
@@ -44,7 +42,7 @@ const RiskDetailsModal = ({
   const liquidationThresholdPercentage = liquidationThreshold;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md bg-[#18181B] border-[#27272A] text-white rounded-lg">
         <DialogHeader className="pb-4">

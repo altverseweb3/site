@@ -12,8 +12,6 @@ import {
 import { rayToPercentage } from "@/utils/aave/utils";
 import { ERC20_ABI } from "@/types/ERC20ABI";
 import { useCallback } from "react";
-import { getChainByChainId } from "@/config/chains";
-import { altverseAPI } from "@/api/altverse";
 import {
   AaveReserveData,
   AaveReservesResult,
@@ -320,6 +318,7 @@ export async function fetchUserPositions(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<UserPosition[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -368,12 +367,12 @@ export async function fetchUserPositions(
               reserve.asset.decimals,
             );
 
-            // TODO: Replace this with actual price fetching
-            // For now, we'll use a mock price - you should integrate with a price oracle
-            const mockPrice = Math.random() * 2 + 0.5; // Mock price between 0.5-2.5
-            const balanceUSD = (
-              parseFloat(formattedBalance) * mockPrice
-            ).toFixed(2);
+            // Use oracle price if available
+            const oraclePrice =
+              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const balanceUSD = oraclePrice
+              ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
+              : "0.00";
 
             return {
               asset: reserve,
@@ -422,6 +421,7 @@ export async function fetchUserBorrowPositions(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<UserBorrowPosition[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -475,11 +475,12 @@ export async function fetchUserBorrowPositions(
               reserve.asset.decimals,
             );
 
-            //For Now Im mocking price I will update this when we integrate the token info
-            const mockPrice = 1; // Mock price between 0.5-2.5
-            const debtUSD = (
-              parseFloat(formattedTotalDebt) * mockPrice
-            ).toFixed(2);
+            // Use oracle price if available
+            const oraclePrice =
+              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const debtUSD = oraclePrice
+              ? (parseFloat(formattedTotalDebt) * oraclePrice).toFixed(2)
+              : "0.00";
 
             const currentBorrowAPY =
               BigInt(variableDebt) > 0
@@ -537,6 +538,7 @@ export async function fetchUserWalletBalances(
   signer: ethers.Signer,
   userAddress: string,
   reservesData: AaveReserveData[],
+  oraclePrices?: Record<string, number>,
 ): Promise<AaveReserveData[]> {
   const provider = signer.provider;
   if (!provider) {
@@ -569,11 +571,12 @@ export async function fetchUserWalletBalances(
             reserve.asset.decimals,
           );
 
-          // TODO: Replace with actual price fetching
-          const mockPrice = Math.random() * 2 + 0.5;
-          const balanceUSD = (parseFloat(formattedBalance) * mockPrice).toFixed(
-            2,
-          );
+          // Use oracle price if available
+          const oraclePrice =
+            oraclePrices?.[reserve.asset.address.toLowerCase()];
+          const balanceUSD = oraclePrice
+            ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
+            : "0.00";
 
           return {
             ...reserve,
@@ -739,62 +742,21 @@ export const fetchExtendedAssetDetails = async (
   currentAsset: AaveReserveData,
   chainId: number,
   provider?: ethers.Provider,
+  oraclePrices?: Record<string, number>,
 ): Promise<ExtendedAssetDetails> => {
   let oraclePrice = 1;
 
-  try {
-    const chainInfo = getChainByChainId(currentAsset.asset.chainId);
-    console.log(`🔍 Fetching price for ${currentAsset.asset.ticker}:`, {
-      assetChainId: currentAsset.asset.chainId,
-      modalChainId: chainId,
-      chainInfo: chainInfo?.name,
-      network: chainInfo?.alchemyNetworkName,
-      tokenAddress: currentAsset.asset,
-    });
-
-    if (chainInfo?.alchemyNetworkName) {
-      const priceResponse = await altverseAPI.getTokenPrices({
-        addresses: [
-          {
-            network: chainInfo.alchemyNetworkName,
-            address: currentAsset.asset.address.toLowerCase(),
-          },
-        ],
-      });
-
-      console.log(`📊 Price API response for ${currentAsset.asset.ticker}:`, {
-        success: !priceResponse.error,
-        error: priceResponse.error,
-        dataExists: !!priceResponse.data,
-        dataLength: priceResponse.data?.data?.length,
-        firstResult: priceResponse.data?.data?.[0],
-        fullResponse: priceResponse,
-      });
-
-      if (
-        !priceResponse.error &&
-        priceResponse.data?.data?.[0]?.prices?.[0]?.value
-      ) {
-        oraclePrice = parseFloat(priceResponse.data.data[0].prices[0].value);
-        console.log(
-          `✅ Successfully fetched oracle price for ${currentAsset.asset.ticker}: $${oraclePrice}`,
-        );
-      } else {
-        console.warn(
-          `❌ No price data for ${currentAsset.asset.ticker}. Error:`,
-          priceResponse.error,
-        );
-      }
+  // Use centralized oracle prices if available
+  if (oraclePrices) {
+    const cachedPrice = oraclePrices[currentAsset.asset.address.toLowerCase()];
+    if (cachedPrice !== undefined) {
+      oraclePrice = cachedPrice;
+      // Successfully using cached price
     } else {
       console.warn(
-        `❌ No network info for chainId ${currentAsset.asset.chainId}`,
+        `No cached price found for ${currentAsset.asset.ticker}, using fallback`,
       );
     }
-  } catch (priceError) {
-    console.error(
-      `❌ Price fetch error for ${currentAsset.asset.ticker}:`,
-      priceError,
-    );
   }
 
   if (provider) {
@@ -813,9 +775,9 @@ export const fetchExtendedAssetDetails = async (
     );
 
     const [configData, tokenAddresses, reserveCaps] = await Promise.all([
-      poolDataProvider.getReserveConfigurationData(currentAsset.asset),
-      poolDataProvider.getReserveTokensAddresses(currentAsset.asset),
-      poolDataProvider.getReserveCaps(currentAsset.asset),
+      poolDataProvider.getReserveConfigurationData(currentAsset.asset.address),
+      poolDataProvider.getReserveTokensAddresses(currentAsset.asset.address),
+      poolDataProvider.getReserveCaps(currentAsset.asset.address),
     ]);
 
     const ltvBps = Number(configData.ltv);
@@ -1156,22 +1118,46 @@ export function useAaveFetch() {
       return fetchAllReservesData(signer, aaveChain, chainTokens);
     },
 
-    fetchUserPositions: async (reservesData: AaveReserveData[]) => {
+    fetchUserPositions: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserPositions(signer, userAddress, reservesData);
+      return fetchUserPositions(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
-    fetchUserBorrowPositions: async (reservesData: AaveReserveData[]) => {
+    fetchUserBorrowPositions: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserBorrowPositions(signer, userAddress, reservesData);
+      return fetchUserBorrowPositions(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
-    fetchUserWalletBalances: async (reservesData: AaveReserveData[]) => {
+    fetchUserWalletBalances: async (
+      reservesData: AaveReserveData[],
+      oraclePrices?: Record<string, number>,
+    ) => {
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-      return fetchUserWalletBalances(signer, userAddress, reservesData);
+      return fetchUserWalletBalances(
+        signer,
+        userAddress,
+        reservesData,
+        oraclePrices,
+      );
     },
 
     fetchExtendedAssetDetails: fetchExtendedAssetDetailsMemoized,

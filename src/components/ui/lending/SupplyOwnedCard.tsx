@@ -29,6 +29,8 @@ interface SupplyOwnedCardProps {
   healthFactor?: string; // User's current health factor
   totalCollateralUSD?: number; // User's total collateral value
   totalDebtUSD?: number; // User's total debt value
+  oraclePrices?: Record<string, number>; // Oracle prices for all assets
+  onSwitch?: (asset: AaveReserveData) => void;
   onWithdraw?: (asset: AaveReserveData) => void;
   onCollateralChange?: (
     asset: AaveReserveData,
@@ -48,6 +50,7 @@ const SupplyOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  oraclePrices,
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -148,7 +151,9 @@ const SupplyOwnedCard = ({
               isolationModeEnabled={isIsolationMode}
               canBeCollateral={canBeCollateral}
               healthFactor={healthFactor}
-              tokenPrice={1} // You might want to pass real price data
+              tokenPrice={
+                oraclePrices?.[currentAsset.asset.address.toLowerCase()]
+              }
               liquidationThreshold={0.85} // You might want to get this from asset data
               totalCollateralUSD={totalCollateralUSD}
               totalDebtUSD={totalDebtUSD}
@@ -181,7 +186,7 @@ const SupplyOwnedCard = ({
           supplyAPY={supplyAPY}
           isCollateral={collateral}
           healthFactor={healthFactor}
-          tokenPrice={1} // You might want to pass real price data
+          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85} // You might want to get this from asset data
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
@@ -192,7 +197,10 @@ const SupplyOwnedCard = ({
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>
-        <AssetDetailsModal currentAsset={currentAsset}>
+        <AssetDetailsModal
+          currentAsset={currentAsset}
+          oraclePrices={oraclePrices}
+        >
           <GrayButton>details</GrayButton>
         </AssetDetailsModal>
       </CardFooter>

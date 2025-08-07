@@ -17,14 +17,20 @@ import { WalletType } from "@/types/web3";
 import { chainList, getChainById } from "@/config/chains";
 import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
+import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
+  const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   const aaveChain = useAaveChain();
   const setAaveChain = useSetAaveChain();
+  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
+  const chainTokens = getTokensForChain(aaveChain.chainId);
+
+  const { loadAaveData } = useAaveDataLoader();
 
   const aaveLendingSupportedChains = chainList.filter((chain) =>
     isChainSupported(chain.chainId),
@@ -62,6 +68,38 @@ const BorrowLendComponent: React.FC = () => {
     alignWalletWithPersistedChain();
   }, [isWalletConnected, aaveChain, switchToChain]);
 
+  // Load oracle prices for all components to use
+  useEffect(() => {
+    const loadOraclePrices = async () => {
+      if (chainTokens.length > 0) {
+        try {
+          const result = await loadAaveData({
+            aaveChain,
+            chainTokens,
+            hasConnectedWallet: isWalletConnected,
+            loading: false,
+            lastChainId: null,
+            allReservesLength: 0,
+          });
+
+          if (result?.oraclePrices) {
+            setOraclePrices(result.oraclePrices);
+          }
+        } catch (error) {
+          console.error("Error loading oracle prices for page:", error);
+        }
+      }
+    };
+
+    loadOraclePrices();
+  }, [
+    chainTokens.length,
+    isWalletConnected,
+    loadAaveData,
+    aaveChain,
+    chainTokens,
+  ]);
+
   const handleChainChange = async (value: string | string[]) => {
     const newChainId = typeof value === "string" ? value : "";
     if (newChainId !== "") {
@@ -91,7 +129,11 @@ const BorrowLendComponent: React.FC = () => {
               />
             }
           />
-          {activeTab === "supply" ? <SupplyComponent /> : <BorrowComponent />}
+          {activeTab === "supply" ? (
+            <SupplyComponent oraclePrices={oraclePrices} />
+          ) : (
+            <BorrowComponent oraclePrices={oraclePrices} />
+          )}
           <PoweredByAave />
         </>
       ) : (
