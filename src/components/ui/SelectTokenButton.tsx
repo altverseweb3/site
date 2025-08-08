@@ -30,6 +30,7 @@ import { SkeletonTokenList } from "@/components/ui/SkeletonTokenList";
 import { getTokenMetadata } from "@/utils/tokens/tokenApiMethods";
 import useUIStore from "@/store/uiStore";
 import { parseDecimalNumber } from "@/utils/tokens/tokenMethods";
+import { truncateAddress, formatBalance } from "@/utils/formatters";
 
 interface TokenListItemProps {
   token: Token;
@@ -41,14 +42,6 @@ interface TokenListItemProps {
 
 const TokenListItem: React.FC<TokenListItemProps> = React.memo(
   ({ token, onSelect, copiedAddresses, onCopy, chain }) => {
-    const formatAddress = (address: string) => {
-      if (!address) return "";
-      if (address.length <= 8) return address;
-      return `${address.substring(0, 6)}...${address.substring(
-        address.length - 4,
-      )}`;
-    };
-
     const handleClick = useCallback(() => {
       onSelect(token);
     }, [onSelect, token]);
@@ -95,7 +88,7 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
                 </span>
                 <div className="flex items-center">
                   <span className="numeric-input text-sm flex items-center">
-                    {formatAddress(token.address)}
+                    {truncateAddress(token.address)}
                   </span>
                   <button
                     className="ml-1 text-[#FAFAFA40] hover:text-[#FAFAFA80] focus:outline-none transition-colors opacity-0 group-hover:opacity-100"
@@ -127,7 +120,9 @@ const TokenListItem: React.FC<TokenListItemProps> = React.memo(
           </div>
           <div className="text-right">
             <div className="font-regular text-[#FAFAFA] numeric-input">
-              {token.userBalanceUsd ? `$${token.userBalanceUsd}` : ""}
+              {token.userBalanceUsd
+                ? `$${formatBalance(token.userBalanceUsd)}`
+                : ""}
             </div>
             <div className="text-sm text-[#FAFAFA55] numeric-input">
               <FormattedNumber value={token.userBalance || "0"} />
