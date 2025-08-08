@@ -59,11 +59,9 @@ export function AssetBox({
         }
 
         // Only allow click if no token is selected
-        // debugger;
         if (!allowClick) {
           setIsOpen(true);
         }
-        console.log("TokenInputGroup clicked", e.target);
       }}
     >
       <div className="flex justify-between items-center mb-2">

@@ -19,7 +19,6 @@ export function useSwapTracking(
   const startTracking = useCallback(async () => {
     if (!swapId) return;
 
-    console.log("Starting tracking for:", swapId);
     setIsLoading(true);
     setError(null);
     setStatus(null);
@@ -38,13 +37,8 @@ export function useSwapTracking(
         optionsRef.current.onStatusUpdate?.(newStatus);
       },
       onComplete: (finalStatus: SwapStatus) => {
-        console.log("Tracking completed:", finalStatus.clientStatus);
-
         // Prevent multiple completion calls
-        if (hasCompletedRef.current) {
-          console.log("Already completed, ignoring duplicate completion");
-          return;
-        }
+        if (hasCompletedRef.current) return;
 
         hasCompletedRef.current = true;
         setIsLoading(false);
@@ -54,10 +48,9 @@ export function useSwapTracking(
         optionsRef.current.onComplete?.(finalStatus);
       },
       onError: (err: Error) => {
-        console.log("Tracking error:", err.message);
+        console.error("Tracking error:", err.message);
 
         if (hasCompletedRef.current) {
-          console.log("Already completed, ignoring error");
           return;
         }
 
@@ -82,7 +75,6 @@ export function useSwapTracking(
   }, [swapId]); // Now only depends on swapId
 
   const stopTracking = useCallback(() => {
-    console.log("Stopping tracking");
     if (trackerRef.current) {
       trackerRef.current.stopPolling();
       trackerRef.current = null;

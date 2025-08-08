@@ -133,10 +133,6 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
     }));
 
     try {
-      // Use the userWallets that were extracted at the top level
-      console.log("Connected Wallets Summary:", walletSummary);
-      console.log("Querying swap history for wallets:", userWallets);
-
       // Check if any wallets are connected
       if (connectedWallets.length === 0) {
         throw new Error("No wallets connected");
@@ -179,13 +175,9 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
 
       // Flatten all swaps from all results
       const allSwapsRaw = result.results.flatMap((r) => r.response.data);
-      console.log(`Raw swaps before deduplication: ${allSwapsRaw.length}`);
 
       // Deduplicate swaps to remove duplicates from multiple referrer queries
       const deduplicatedSwaps = deduplicateSwaps(allSwapsRaw);
-      console.log(
-        `Swaps after deduplication: ${deduplicatedSwaps.length} (removed ${allSwapsRaw.length - deduplicatedSwaps.length} duplicates)`,
-      );
 
       // Sort by initiation date (most recent first)
       deduplicatedSwaps.sort(
@@ -208,15 +200,6 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
         error: null,
         summary: updatedSummary,
       });
-
-      console.log("✅ Swap history successfully loaded:", {
-        connectedWallets: connectedWallets.length,
-        totalQueries: result.summary.totalQueries,
-        totalSwapsRaw: allSwapsRaw.length,
-        totalSwapsUnique: deduplicatedSwaps.length,
-        duplicatesRemoved: allSwapsRaw.length - deduplicatedSwaps.length,
-        swapsByChain: result.summary.swapsByChain,
-      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to fetch swap history";
@@ -229,7 +212,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
       }));
       console.error("❌ Error fetching swap history:", error);
     }
-  }, [connectedWallets, walletSummary, userWallets]); // Added userWallets to dependencies
+  }, [connectedWallets, userWallets]); // Added userWallets to dependencies
 
   return {
     ...state,

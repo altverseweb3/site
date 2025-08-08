@@ -57,9 +57,6 @@ const BorrowLendComponent: React.FC = () => {
           .getWalletByType(WalletType.REOWN_EVM);
 
         if (currentWallet && currentWallet.chainId !== aaveChain.chainId) {
-          console.log(
-            `Wallet on chain ${currentWallet.chainId}, switching to persisted aaveChain ${aaveChain.chainId}`,
-          );
           await switchToChain(aaveChain);
         }
       }

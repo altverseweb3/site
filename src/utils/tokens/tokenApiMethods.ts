@@ -80,9 +80,6 @@ export async function getPricesAndBalances(
       ),
     ]);
 
-    console.log("Source chain fetch result:", sourceResult);
-    console.log("Destination chain fetch result:", destinationResult);
-
     // Check if both operations succeeded
     const sourceSuccess =
       sourceResult.status === "fulfilled" && sourceResult.value;
@@ -104,10 +101,6 @@ export async function getPricesAndBalancesForChain(
   chainType: "source" | "destination" = "source",
 ): Promise<boolean> {
   try {
-    console.log(
-      `Starting ${userAddress ? "balance and " : ""}price fetch for ${chainType} chain (ID: ${chainId})${userAddress ? `, user: ${userAddress}` : ""}`,
-    );
-
     // 1. Get Chain Info
     const chain = getChainByChainId(chainId);
     if (!chain) {
@@ -124,10 +117,6 @@ export async function getPricesAndBalancesForChain(
 
     if (userAddress) {
       try {
-        console.log(
-          `Fetching balances for address ${userAddress} on ${chainType} chain (${networkName})`,
-        );
-
         let balanceResponse:
           | ApiResponse<SuiBalanceResult[]>
           | ApiResponse<SolanaTokenBalance[]>
@@ -199,7 +188,7 @@ export async function getPricesAndBalancesForChain(
           }
 
           if (!balanceData || balanceData.length === 0) {
-            console.log(
+            console.warn(
               `No token balances found for ${userAddress} on ${chainType} chain ${chainId}.`,
             );
             // Update store with empty balances
@@ -207,10 +196,6 @@ export async function getPricesAndBalancesForChain(
               .getState()
               .updateTokenBalances(chainId, userAddress, []);
           } else {
-            console.log(
-              `Found ${balanceData.length} token balances for ${userAddress} on ${chainType} chain.`,
-            );
-
             // Extract addresses with balance - preserve case for Solana and Sui, lowercase for others
             addressesWithBalance = balanceData.map(
               (balance) =>
@@ -227,15 +212,13 @@ export async function getPricesAndBalancesForChain(
         // Continue to fetch alwaysLoadPrice tokens even if balance fetch fails (except for Sui)
       }
     } else {
-      console.log(
+      console.warn(
         `No wallet connected. Fetching only prices for tokens with alwaysLoadPrice on ${chainType} chain.`,
       );
     }
 
     // 3. Skip price fetching for Sui chains
     if (chain.id === "sui") {
-      console.log(`Skipping price fetch for Sui chain as requested.`);
-
       // 6. Process Balances for Sui if userAddress is provided and we have balance data
       if (userAddress && balanceData && balanceData.length > 0) {
         // Get token metadata for formatting
@@ -290,14 +273,8 @@ export async function getPricesAndBalancesForChain(
         useWeb3Store
           .getState()
           .updateTokenBalances(chainId, userAddress, processedBalances);
-        console.log(
-          `Updated ${processedBalances.length} processed token balances in the store for user ${userAddress} on ${chainType} chain ${chainId}.`,
-        );
       }
 
-      console.log(
-        `Successfully completed fetch for ${chainType} chain (ID: ${chainId}) - Sui balances only`,
-      );
       return true;
     }
 
@@ -321,7 +298,7 @@ export async function getPricesAndBalancesForChain(
     ];
 
     if (uniqueAddresses.length === 0) {
-      console.log(
+      console.warn(
         `No tokens to fetch prices for on ${chainType} chain ${chainId}.`,
       );
       return true; // Successfully determined there are no tokens to fetch prices for
@@ -334,10 +311,6 @@ export async function getPricesAndBalancesForChain(
       }),
     );
 
-    console.log(
-      `Fetching prices for ${tokenAddressesForPriceFetch.length} tokens on ${chainType} chain`,
-    );
-
     // 4. Fetch Prices in Batches
     const batchSize = 25;
     const batches: TokenAddressInfo[][] = [];
@@ -348,9 +321,6 @@ export async function getPricesAndBalancesForChain(
     const allFetchedPrices: TokenPriceResult[] = [];
     const batchPromises = batches.map(async (batch, i) => {
       try {
-        console.log(
-          `Processing price batch ${i + 1}/${batches.length} for ${chainType} chain`,
-        );
         const response = await altverseAPI.getTokenPrices({ addresses: batch });
 
         if (response.error || !response.data) {
@@ -373,16 +343,10 @@ export async function getPricesAndBalancesForChain(
 
     // Wait for all price batches to complete
     await Promise.all(batchPromises);
-    console.log(
-      `All price batches processed for ${chainType} chain. Fetched ${allFetchedPrices.length} prices.`,
-    );
 
     // 5. Update Token Prices in the Store
     if (allFetchedPrices.length > 0) {
       useWeb3Store.getState().updateTokenPrices(allFetchedPrices);
-      console.log(
-        `Updated ${allFetchedPrices.length} token prices in the store for ${chainType} chain.`,
-      );
     }
 
     // 6. Process Balances only if userAddress is provided and we have balance data
@@ -520,14 +484,8 @@ export async function getPricesAndBalancesForChain(
       useWeb3Store
         .getState()
         .updateTokenBalances(chainId, userAddress, processedBalances);
-      console.log(
-        `Updated ${processedBalances.length} processed token balances in the store for user ${userAddress} on ${chainType} chain ${chainId}.`,
-      );
     }
 
-    console.log(
-      `Successfully completed fetch for ${chainType} chain (ID: ${chainId})`,
-    );
     return true;
   } catch (error) {
     console.error(
@@ -552,10 +510,6 @@ export async function getTokenMetadata(
   contractAddress: string,
 ): Promise<TokenMetadata | null> {
   try {
-    console.log(
-      `Fetching token metadata for ${contractAddress} on chain ID ${chainId}`,
-    );
-
     // Get chain info
     const chain = getChainByChainId(chainId);
     if (!chain) {
@@ -574,10 +528,6 @@ export async function getTokenMetadata(
       console.error(`Error fetching token metadata:`, response.error);
       return null;
     }
-
-    console.log(
-      `Successfully fetched metadata for ${contractAddress} on chain ${chainId}`,
-    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching token metadata:`, error);

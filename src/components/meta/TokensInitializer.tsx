@@ -44,10 +44,7 @@ const TokenInitializer: React.FC = () => {
       // Function to fetch data
       const fetchData = () => {
         if (!isIdle) {
-          console.log("Fetching token data - user is active");
           getPricesAndBalances(sourceChain, destinationChain);
-        } else {
-          console.log("Skipping token data fetch - user is idle");
         }
       };
 

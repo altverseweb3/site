@@ -156,11 +156,6 @@ export function useWalletConnection() {
       // Update our app's store
       const store = useWeb3Store.getState();
       store.addWallet(walletInfo);
-
-      console.log(
-        `${walletType} wallet connected and synced with store:`,
-        walletInfo,
-      );
     },
     [],
   );
@@ -247,7 +242,6 @@ export function useWalletConnection() {
 
         if (requiredWallet.chainId !== numericChainId) {
           store.updateWalletChainId(WalletType.REOWN_EVM, numericChainId);
-          console.log(`EVM chain updated to ${numericChainId}`);
         }
       }
     }
@@ -317,24 +311,19 @@ export function useWalletConnection() {
 
         // If no specific wallet type is provided, disconnect all wallets
         if (walletType === undefined) {
-          console.log("Disconnecting ALL wallets");
-
           // Disconnect EVM wallet if connected
           if (evmAccount.isConnected) {
             await disconnect({ namespace: "eip155" });
-            console.log("EVM wallet disconnected");
           }
 
           // Disconnect Solana wallet if connected
           if (solanaAccount.isConnected) {
             await disconnect({ namespace: "solana" });
-            console.log("Solana wallet disconnected");
           }
 
           // Disconnect Sui wallet if connected
           if (suiConnected) {
             await disconnectSui();
-            console.log("Sui wallet disconnected");
           }
 
           // Clear all wallets from store
@@ -343,27 +332,23 @@ export function useWalletConnection() {
         }
 
         // Disconnect a specific wallet type
-        console.log(`Disconnecting specific wallet type: ${walletType}`);
 
         if (walletType === WalletType.REOWN_EVM && evmAccount.isConnected) {
           // Pass the namespace "eip155" for EVM wallets
           await disconnect({ namespace: "eip155" });
           store.removeWallet(WalletType.REOWN_EVM);
-          console.log("EVM wallet disconnected");
         }
 
         if (walletType === WalletType.REOWN_SOL && solanaAccount.isConnected) {
           // Pass the namespace "solana" for Solana wallets
           await disconnect({ namespace: "solana" });
           store.removeWallet(WalletType.REOWN_SOL);
-          console.log("Solana wallet disconnected");
         }
 
         // Handle SUI wallet case
         if (walletType === WalletType.SUIET_SUI && suiConnected) {
           await disconnectSui();
           store.removeWallet(WalletType.SUIET_SUI);
-          console.log("SUI wallet disconnected");
         }
 
         return true;
@@ -600,7 +585,6 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
 
   if (compatibleWallet) {
     // Switch to the compatible wallet
-    console.log(`${neededWalletType} wallet found`);
     return true;
   }
 
@@ -736,8 +720,6 @@ export function useTokenTransfer(
     {
       ...options.trackingOptions,
       onComplete: (status) => {
-        console.log("Swap tracking completed:", status); // DEBUG
-
         // Dismiss the progress toast
         if (progressToastId) {
           toast.dismiss(progressToastId);
@@ -762,7 +744,7 @@ export function useTokenTransfer(
         }
       },
       onError: (error) => {
-        console.log("Swap tracking error:", error); // DEBUG
+        console.error("Swap tracking error:", error);
 
         // Dismiss the progress toast
         if (progressToastId) {
@@ -776,8 +758,6 @@ export function useTokenTransfer(
         options.onError?.(error);
       },
       onStatusUpdate: (status) => {
-        console.log("Swap status update:", status.clientStatus); // DEBUG
-
         // Update the progress toast with current status
         if (progressToastId) {
           const statusText = getStatusDescription(status.clientStatus);
@@ -835,8 +815,6 @@ export function useTokenTransfer(
   // Start progress toast when tracking begins
   useEffect(() => {
     if (isTracking && swapId && isTrackingEnabled && !progressToastId) {
-      console.log("Starting progress toast for swap:", swapId); // DEBUG
-
       const toastId = toast.loading("Swap in progress...", {
         description: "Tracking transaction progress...",
         duration: Infinity, // Keep it open until we dismiss it
@@ -849,7 +827,6 @@ export function useTokenTransfer(
   // Clean up progress toast if tracking stops unexpectedly
   useEffect(() => {
     if (!isTracking && progressToastId) {
-      console.log("Cleaning up progress toast"); // DEBUG
       toast.dismiss(progressToastId);
       setProgressToastId(null);
     }
@@ -984,7 +961,6 @@ export function useTokenTransfer(
 
         // Check if this is still the latest request
         if (currentRequestId !== latestRequestIdRef.current) {
-          console.log(`Ignoring stale response for amount: ${amount}`);
           return; // Ignore stale responses
         }
 
@@ -1000,7 +976,6 @@ export function useTokenTransfer(
           // Extract ETA seconds if available
           if (quote.etaSeconds !== undefined) {
             setEstimatedTimeSeconds(quote.etaSeconds);
-            console.log(`Estimated time: ${quote.etaSeconds} seconds`);
           } else {
             setEstimatedTimeSeconds(null);
           }
@@ -1014,10 +989,6 @@ export function useTokenTransfer(
             const protocolFeeUsdValue =
               inputAmount * (quote.protocolBps / 10000);
             setProtocolFeeUsd(parseFloat(protocolFeeUsdValue.toFixed(6)));
-
-            console.log(
-              `Protocol fee: ${quote.protocolBps} BPS (${protocolFeeUsdValue.toFixed(6)} USD)`,
-            );
           } else {
             setProtocolFeeBps(null);
             setProtocolFeeUsd(null);
@@ -1039,7 +1010,6 @@ export function useTokenTransfer(
 
           if (relayerFee !== null) {
             setRelayerFeeUsd(parseFloat(relayerFee.toFixed(6)));
-            console.log(`Relayer fee: ${relayerFee.toFixed(6)} USD`);
           } else {
             setRelayerFeeUsd(null);
           }
@@ -1049,7 +1019,6 @@ export function useTokenTransfer(
 
           if (!isNaN(totalFee)) {
             setTotalFeeUsd(parseFloat(totalFee.toFixed(6)));
-            console.log(`Total fee: ${totalFee.toFixed(6)} USD`);
           } else {
             setTotalFeeUsd(null);
           }
@@ -1062,18 +1031,6 @@ export function useTokenTransfer(
           ).toFixed(Math.min(decimals, 6));
 
           setReceiveAmount(formattedAmount);
-
-          console.log(`${options.type.toUpperCase()} Quote Updated:`, {
-            requestId: currentRequestId,
-            amount: amount,
-            slippageBps: slippageBps,
-            raw: expectedAmountOut,
-            formatted: formattedAmount,
-            etaSeconds: quote.etaSeconds,
-            protocolBps: quote.protocolBps,
-            relayerFee: relayerFee,
-            totalFee: totalFee,
-          });
         } else {
           failQuote();
         }
@@ -1084,7 +1041,7 @@ export function useTokenTransfer(
         }
 
         let errorMessage = "Unknown error occurred";
-        console.log("Raw error:", error);
+        console.error("Raw error:", error);
         if (
           error &&
           typeof error === "object" &&
@@ -1092,17 +1049,16 @@ export function useTokenTransfer(
           typeof error.message === "string"
         ) {
           errorMessage = error.message;
-          console.log("Using error.message:", errorMessage);
 
           if ("code" in error && typeof error.code === "number") {
-            console.log("Error code:", error.code);
+            console.error("Error code:", error.code);
           }
         } else if (error instanceof Error) {
           errorMessage = error.message;
-          console.log("Using Error.message:", errorMessage);
+          console.error("Using Error.message:", errorMessage);
         } else if (typeof error === "string") {
           errorMessage = error;
-          console.log("Using string error:", errorMessage);
+          console.error("Using string error:", errorMessage);
         }
 
         toast.error(`Error: ${errorMessage}`);
@@ -1147,18 +1103,14 @@ export function useTokenTransfer(
     // Only set up interval if everything is valid
     if (!isValidForSwap) return;
 
-    console.log("Setting up quote refresh interval");
-
     const intervalId = setInterval(() => {
       // Skip if already loading or processing
       if (isLoadingQuote || isProcessing) return;
 
-      console.log("Refreshing quote (5-second interval)");
       setRefreshTrigger((prev) => prev + 1);
     }, 5000);
 
     return () => {
-      console.log("Cleaning up quote refresh interval");
       clearInterval(intervalId);
     };
   }, [isValidForSwap, isLoadingQuote, isProcessing]);
@@ -1219,10 +1171,6 @@ export function useTokenTransfer(
 
       // If we're on the wrong chain, switch to the correct one
       if (currentChainId !== targetChainId) {
-        console.log(
-          `Current chain: ${currentChainId}, Target chain: ${targetChainId}. Switching...`,
-        );
-
         // Show a loading toast for chain switching
         const switchToastId = toast.loading(
           `Switching to ${options.sourceChain.name}...`,
@@ -1385,11 +1333,6 @@ export function useTokenTransfer(
         });
       }
 
-      console.log(
-        `${sourceChain.walletType === WalletType.REOWN_SOL ? "Solana" : sourceChain.walletType === WalletType.SUIET_SUI ? "Sui" : "EVM"} swap initiated:`,
-        result,
-      );
-
       setSwapId(result);
       const swapMetricsRequest: SwapMetricsRequest = {
         swapperAddress: requiredWallet!.address,
@@ -1403,7 +1346,6 @@ export function useTokenTransfer(
       // Send swap metrics to the backend
       try {
         await recordSwap(swapMetricsRequest);
-        console.log("Swap metrics recorded successfully");
       } catch (error) {
         console.error("Failed to record swap metrics:", error);
       }

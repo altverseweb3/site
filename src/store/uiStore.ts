@@ -38,7 +38,6 @@ const useUIStore = create<UIStoreState>()(
       toggleTheme: () =>
         set((state) => {
           const newTheme = state.theme === "light" ? "dark" : "light";
-          console.log("Toggling theme to:", newTheme);
           updateDOMTheme(newTheme);
           return { theme: newTheme };
         }),

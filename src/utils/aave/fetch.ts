@@ -40,10 +40,6 @@ export async function fetchAllReservesData(
 
   const market = getAaveMarket(aaveChain.chainId);
 
-  console.log(
-    `Fetching Aave reserves for chain ${aaveChain.chainId} with backoff...`,
-  );
-
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
     POOL_DATA_PROVIDER_ABI,
@@ -51,7 +47,6 @@ export async function fetchAllReservesData(
   );
 
   const reserveTokens = await poolDataProvider.getAllReservesTokens();
-  console.log(`Found ${reserveTokens.length} reserve tokens`);
 
   const allReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 2;
@@ -170,7 +165,7 @@ export async function fetchAllReservesData(
                   tokenName = contractName;
                   tokenSymbol = contractSymbol;
                 } catch {
-                  console.log(
+                  console.error(
                     `Could not fetch contract data for ${token.symbol}, using fallback.`,
                   );
                 }
@@ -251,7 +246,7 @@ export async function fetchAllReservesData(
                   ((liquidationBonusBps - 10000) / 100).toFixed(2) + "%",
               };
             } catch (error) {
-              console.log(
+              console.error(
                 `Skipping ${token.symbol}:`,
                 error instanceof Error ? error.message : String(error),
               );
@@ -270,7 +265,7 @@ export async function fetchAllReservesData(
 
         break; // Success
       } catch (error) {
-        console.log(error);
+        console.error(error);
         retries++;
         if (retries >= MAX_RETRIES) {
           console.error(
@@ -280,7 +275,7 @@ export async function fetchAllReservesData(
           break;
         }
 
-        console.log(
+        console.error(
           `Batch failed, retrying in ${currentDelay}ms... (attempt ${retries}/${MAX_RETRIES})`,
         );
         await delay(currentDelay);
@@ -299,10 +294,6 @@ export async function fetchAllReservesData(
   const borrowAssets = allReserves.filter(
     (reserve) => !reserve.isFrozen && reserve.borrowingEnabled,
   );
-
-  console.log(`Found ${allReserves.length} total reserves`);
-  console.log(`Found ${supplyAssets.length} supply assets`);
-  console.log(`Found ${borrowAssets.length} borrow assets`);
 
   return {
     allReserves,
@@ -328,10 +319,6 @@ export async function fetchUserPositions(
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
   const market = getAaveMarket(chainId);
-
-  console.log(
-    `Fetching user positions for ${userAddress} on chain ${chainId}...`,
-  );
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
@@ -385,7 +372,7 @@ export async function fetchUserPositions(
 
           return null;
         } catch (error) {
-          console.log(
+          console.error(
             `Error fetching user data for ${reserve.asset.ticker}:`,
             error,
           );
@@ -410,7 +397,6 @@ export async function fetchUserPositions(
     }
   }
 
-  console.log(`Found ${userPositions.length} user positions`);
   return userPositions;
 }
 
@@ -431,10 +417,6 @@ export async function fetchUserBorrowPositions(
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
   const market = getAaveMarket(chainId);
-
-  console.log(
-    `Fetching user borrow positions for ${userAddress} on chain ${chainId}...`,
-  );
 
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
@@ -502,7 +484,7 @@ export async function fetchUserBorrowPositions(
 
           return null;
         } catch (error) {
-          console.log(
+          console.error(
             `Error fetching user borrow data for ${reserve.asset.ticker}:`,
             error,
           );
@@ -527,7 +509,6 @@ export async function fetchUserBorrowPositions(
     }
   }
 
-  console.log(`Found ${userBorrowPositions.length} user borrow positions`);
   return userBorrowPositions;
 }
 
@@ -544,8 +525,6 @@ export async function fetchUserWalletBalances(
   if (!provider) {
     throw new Error("Signer must have a provider");
   }
-
-  console.log(`Fetching wallet balances for ${userAddress}...`);
 
   const updatedReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 5;
@@ -585,7 +564,7 @@ export async function fetchUserWalletBalances(
             userBalanceUsd: balanceUSD,
           };
         } catch (error) {
-          console.log(
+          console.error(
             `Error fetching wallet balance for ${reserve.asset.ticker}:`,
             error,
           );
@@ -620,9 +599,6 @@ export async function fetchUserWalletBalances(
     }
   }
 
-  console.log(
-    `Updated ${updatedReserves.length} reserves with wallet balances`,
-  );
   return updatedReserves;
 }
 
@@ -636,16 +612,6 @@ export const getReserveMetrics = (
   const totalSupplyNum = parseFloat(reserveSize);
   const totalBorrowedNum = parseFloat(totalBorrowed);
   const availableLiquidityNum = parseFloat(availableLiquidity);
-
-  console.log(`${currentAsset.asset.ticker} using formatted values:`, {
-    reserveSize,
-    availableLiquidity,
-    totalBorrowed,
-    mathCheck: (
-      totalSupplyNum -
-      (totalBorrowedNum + availableLiquidityNum)
-    ).toFixed(6),
-  });
 
   let borrowedPercentage = 0;
   let availablePercentage = 0;

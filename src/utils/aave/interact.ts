@@ -23,7 +23,6 @@ import {
   BorrowResult,
   RepayParams,
   RepayResult,
-  RateMode,
 } from "@/types/aave";
 import { useCallback } from "react";
 
@@ -33,21 +32,10 @@ import { useCallback } from "react";
 export async function withdrawAsset(
   params: WithdrawParams,
 ): Promise<WithdrawResult> {
-  const {
-    tokenAddress,
-    amount,
-    tokenDecimals,
-    tokenSymbol,
-    userAddress,
-    chainId,
-    signer,
-  } = params;
+  const { tokenAddress, amount, tokenDecimals, userAddress, chainId, signer } =
+    params;
 
   try {
-    console.log(
-      `🏦 Starting withdrawal transaction for ${amount} ${tokenSymbol}`,
-    );
-
     if (!isChainSupported(chainId)) {
       throw new Error(`Chain ${chainId} not supported`);
     }
@@ -56,7 +44,6 @@ export async function withdrawAsset(
 
     // Convert amount to wei
     const amountWei = ethers.parseUnits(amount, tokenDecimals);
-    console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
     // Create pool contract
     const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
@@ -64,16 +51,13 @@ export async function withdrawAsset(
     // Execute withdrawal transaction
     // Note: Aave withdraw function takes (asset, amount, to)
     // If amount is uint256.max, it withdraws the full balance
-    console.log(`📤 Executing withdrawal transaction...`);
     const withdrawTx = await poolContract.withdraw(
       tokenAddress,
       amountWei,
       userAddress, // to address (where to send the withdrawn tokens)
     );
 
-    console.log(`⏳ Withdrawal transaction sent: ${withdrawTx.hash}`);
     await withdrawTx.wait();
-    console.log(`✅ Withdrawal transaction confirmed`);
 
     return {
       success: true,
@@ -112,19 +96,10 @@ export async function withdrawAsset(
  * Supply asset to Aave protocol
  */
 export async function supplyAsset(params: SupplyParams): Promise<SupplyResult> {
-  const {
-    tokenAddress,
-    amount,
-    tokenDecimals,
-    tokenSymbol,
-    userAddress,
-    chainId,
-    signer,
-  } = params;
+  const { tokenAddress, amount, tokenDecimals, userAddress, chainId, signer } =
+    params;
 
   try {
-    console.log(`🏦 Starting supply transaction for ${amount} ${tokenSymbol}`);
-
     if (!isChainSupported(chainId)) {
       throw new Error(`Chain ${chainId} not supported`);
     }
@@ -133,7 +108,6 @@ export async function supplyAsset(params: SupplyParams): Promise<SupplyResult> {
 
     // Convert amount to wei
     const amountWei = ethers.parseUnits(amount, tokenDecimals);
-    console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
     // Create contracts
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
@@ -144,22 +118,15 @@ export async function supplyAsset(params: SupplyParams): Promise<SupplyResult> {
       userAddress,
       poolAddress,
     );
-    console.log(
-      `📋 Current allowance: ${ethers.formatUnits(currentAllowance, tokenDecimals)}`,
-    );
 
     // Approve if needed
     if (currentAllowance < amountWei) {
-      console.log(`🔓 Approving ${tokenSymbol} for supply...`);
       const approveTx = await tokenContract.approve(poolAddress, amountWei);
-      console.log(`⏳ Approval transaction sent: ${approveTx.hash}`);
 
       await approveTx.wait();
-      console.log(`✅ Approval confirmed`);
     }
 
     // Execute supply transaction
-    console.log(`📤 Executing supply transaction...`);
     const supplyTx = await poolContract.supply(
       tokenAddress,
       amountWei,
@@ -167,9 +134,7 @@ export async function supplyAsset(params: SupplyParams): Promise<SupplyResult> {
       0, // referral code
     );
 
-    console.log(`⏳ Supply transaction sent: ${supplyTx.hash}`);
     await supplyTx.wait();
-    console.log(`✅ Supply transaction confirmed`);
 
     return {
       success: true,
@@ -190,14 +155,9 @@ export async function supplyAsset(params: SupplyParams): Promise<SupplyResult> {
 export async function setUserUseReserveAsCollateral(
   params: CollateralParams,
 ): Promise<CollateralResult> {
-  const { tokenAddress, useAsCollateral, tokenSymbol, chainId, signer } =
-    params;
+  const { tokenAddress, useAsCollateral, chainId, signer } = params;
 
   try {
-    console.log(
-      `🛡️ ${useAsCollateral ? "Enabling" : "Disabling"} ${tokenSymbol} as collateral`,
-    );
-
     if (!isChainSupported(chainId)) {
       throw new Error(`Chain ${chainId} not supported`);
     }
@@ -208,16 +168,12 @@ export async function setUserUseReserveAsCollateral(
     const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
     // Execute collateral toggle transaction
-    console.log(`📤 Executing collateral toggle transaction...`);
     const collateralTx = await poolContract.setUserUseReserveAsCollateral(
       tokenAddress,
       useAsCollateral,
     );
 
-    console.log(`⏳ Collateral transaction sent: ${collateralTx.hash}`);
     await collateralTx.wait();
-    console.log(`✅ Collateral transaction confirmed`);
-
     return {
       success: true,
       txHash: collateralTx.hash,
@@ -259,17 +215,12 @@ export async function borrowAsset(params: BorrowParams): Promise<BorrowResult> {
     amount,
     rateMode,
     tokenDecimals,
-    tokenSymbol,
     userAddress,
     chainId,
     signer,
   } = params;
 
   try {
-    console.log(
-      `🏦 Starting borrow transaction for ${amount} ${tokenSymbol} at ${rateMode === RateMode.Stable ? "stable" : "variable"} rate`,
-    );
-
     if (!isChainSupported(chainId)) {
       throw new Error(`Chain ${chainId} not supported`);
     }
@@ -278,14 +229,12 @@ export async function borrowAsset(params: BorrowParams): Promise<BorrowResult> {
 
     // Convert amount to wei
     const amountWei = ethers.parseUnits(amount, tokenDecimals);
-    console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
     // Create pool contract
     const poolContract = new ethers.Contract(poolAddress, POOL_ABI, signer);
 
     // Execute borrow transaction
     // Aave borrow function: borrow(asset, amount, interestRateMode, referralCode, onBehalfOf)
-    console.log(`📤 Executing borrow transaction...`);
     const borrowTx = await poolContract.borrow(
       tokenAddress, // asset to borrow
       amountWei, // amount to borrow
@@ -294,9 +243,7 @@ export async function borrowAsset(params: BorrowParams): Promise<BorrowResult> {
       userAddress, // on behalf of (borrower address)
     );
 
-    console.log(`⏳ Borrow transaction sent: ${borrowTx.hash}`);
     await borrowTx.wait();
-    console.log(`✅ Borrow transaction confirmed`);
 
     return {
       success: true,
@@ -351,10 +298,6 @@ export async function repayAsset(params: RepayParams): Promise<RepayResult> {
   } = params;
 
   try {
-    console.log(
-      `💳 Starting repay transaction for ${amount} ${tokenSymbol} (${rateMode === RateMode.Stable ? "stable" : "variable"} debt)`,
-    );
-
     if (!isChainSupported(chainId)) {
       throw new Error(`Chain ${chainId} not supported`);
     }
@@ -363,7 +306,6 @@ export async function repayAsset(params: RepayParams): Promise<RepayResult> {
 
     // Convert amount to wei
     const amountWei = ethers.parseUnits(amount, tokenDecimals);
-    console.log(`💰 Amount in wei: ${amountWei.toString()}`);
 
     // Check user's token balance
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
@@ -374,18 +316,14 @@ export async function repayAsset(params: RepayParams): Promise<RepayResult> {
     }
 
     // Check and approve if necessary
-    console.log(`🔍 Checking allowance for ${tokenSymbol}...`);
     const currentAllowance = await tokenContract.allowance(
       userAddress,
       poolAddress,
     );
 
     if (currentAllowance < amountWei) {
-      console.log(`📝 Approving ${tokenSymbol} for repayment...`);
       const approveTx = await tokenContract.approve(poolAddress, amountWei);
-      console.log(`⏳ Approval transaction sent: ${approveTx.hash}`);
       await approveTx.wait();
-      console.log(`✅ Approval confirmed`);
     }
 
     // Create pool contract
@@ -393,7 +331,6 @@ export async function repayAsset(params: RepayParams): Promise<RepayResult> {
 
     // Execute repay transaction
     // Aave repay function: repay(asset, amount, rateMode, onBehalfOf)
-    console.log(`📤 Executing repay transaction...`);
     const repayTx = await poolContract.repay(
       tokenAddress, // asset to repay
       amountWei, // amount to repay
@@ -401,9 +338,7 @@ export async function repayAsset(params: RepayParams): Promise<RepayResult> {
       userAddress, // on behalf of (borrower address)
     );
 
-    console.log(`⏳ Repay transaction sent: ${repayTx.hash}`);
     await repayTx.wait();
-    console.log(`✅ Repay transaction confirmed`);
 
     return {
       success: true,

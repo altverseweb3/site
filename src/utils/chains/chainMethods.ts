@@ -22,12 +22,6 @@ export function handleChainChange(
   // Determine which chains we're working with
   const setCurrentChain = isSource ? setSourceChain : setDestinationChain;
 
-  // Log the change
-  console.log(
-    `${isSource ? "Source" : "Destination"} chain changed to:`,
-    chain.name,
-  );
-
   // Update the current chain
   setCurrentChain(chain);
 }

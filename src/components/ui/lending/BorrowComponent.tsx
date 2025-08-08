@@ -65,7 +65,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
     async (reserves: AaveReserveData[]) => {
       try {
         setBorrowPositionsLoading(true);
-        console.log("Fetching user borrow positions...");
 
         const borrowPositions = await fetchUserBorrowPositions(reserves);
         setUserBorrowPositions(borrowPositions);
@@ -82,48 +81,27 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   const loadAaveReserves = useCallback(
     async (force = false) => {
       // Skip if already loading
-      if (loading && !force) {
-        console.log("Already loading, skipping...");
-        return;
-      }
+      if (loading && !force) return;
 
-      if (tokensLoading) {
-        console.log("Tokens still loading, skipping...");
-        return;
-      }
+      if (tokensLoading) return;
 
-      if (tokenCount === 0) {
-        console.log("No tokens loaded yet, skipping...");
-        return;
-      }
+      if (tokenCount === 0) return;
 
-      if (chainTokens.length === 0) {
-        console.log(
-          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
-        );
-        return;
-      }
+      if (chainTokens.length === 0) return;
 
       // Skip if same chain and we have data (unless forced)
       if (
         !force &&
         lastChainId === aaveChain.chainId &&
         borrowableReserves.length > 0
-      ) {
-        console.log("Data already loaded for this chain, skipping...");
+      )
         return;
-      }
-      if (!isWalletConnected) {
-        console.log("Wallet not connected, skipping...");
-        return;
-      }
+
+      if (!isWalletConnected) return;
 
       try {
         setLoading(true);
         setError(null);
-        console.log(
-          `Fetching Aave reserves for borrowing on chain ${aaveChain.chainId}...`,
-        );
         if (!isWalletConnected) return;
 
         // Fetch reserves data using your enhanced function
