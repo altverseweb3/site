@@ -8,9 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/utils";
-import { getHealthFactorColor, getLTVColor } from "@/utils/aave/utils";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 import { formatCurrency } from "@/utils/formatters";
 
 export interface RiskDetailsModalProps {
@@ -75,27 +74,36 @@ const RiskDetailsModal = ({
             </div>
 
             <div className="text-xs text-zinc-500 mb-2">
-              liquidation at &lt; 1.00
+              liquidation at <span className="text-red-500">&lt; 1.00</span>
             </div>
 
             {healthFactor !== Infinity && (
-              <div className="relative mb-4">
-                <ProgressBar
-                  value={Math.min(healthFactor * 50, 100)} // Scale for visual representation
-                  color={
-                    healthFactor >= 1.5
-                      ? "green"
-                      : healthFactor >= 1.1
-                        ? "yellow"
-                        : "red"
-                  }
-                  size="md"
-                  className="w-full"
+              <div className="relative mb-6">
+                {/* Background track */}
+                <div className="w-full h-2 bg-gray-700 rounded-full" />
+                {/* User position bar */}
+                <div
+                  className="absolute top-0 h-2 bg-green-500 rounded-full"
+                  style={{
+                    width: `${Math.min(Math.max((healthFactor / 10) * 100, 0), 100)}%`,
+                  }}
                 />
-                <div className="flex justify-between mt-2 text-xs text-zinc-500">
-                  <span>0</span>
-                  <span>1.0</span>
-                  <span>2.0+</span>
+                {/* Liquidation threshold indicator at 1.0 */}
+                <div
+                  className="absolute top-0 w-0.5 h-2 bg-red-500 rounded-full"
+                  style={{ left: "10%", transform: "translateX(-50%)" }}
+                />
+                <div className="flex justify-between items-center mt-6 text-xs relative">
+                  <span className="absolute left-0 text-red-800">0</span>
+                  <span
+                    className="absolute text-red-500"
+                    style={{ left: "10%", transform: "translateX(-50%)" }}
+                  >
+                    1.0
+                  </span>
+                  <span className="absolute right-0 text-green-500">
+                    {Math.min(healthFactor * 2, 10).toFixed(1)}
+                  </span>
                 </div>
               </div>
             )}
@@ -107,10 +115,23 @@ const RiskDetailsModal = ({
             )}
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1 font-mono">
-                1.00
+              <div
+                className={cn(
+                  "text-lg font-semibold mb-1 font-mono",
+                  getHealthFactorColor(healthFactor),
+                )}
+              >
+                {healthFactor === Infinity ? "∞" : healthFactor.toFixed(2)}
               </div>
-              <div className="text-sm text-zinc-400">liquidation threshold</div>
+              <div className="text-sm text-zinc-400">health factor</div>
+              <div className="text-xs text-zinc-500 mt-1">
+                liquidation at <span className="text-red-500">&lt; 1.00</span>
+              </div>
+            </div>
+
+            <div className="text-xs text-zinc-400 text-center mt-3">
+              if the health factor goes below 1, the liquidation of your
+              collateral might be triggered.
             </div>
           </div>
 
@@ -118,63 +139,103 @@ const RiskDetailsModal = ({
           <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-zinc-400">current ltv</span>
-              <span className="text-lg font-semibold text-white font-mono">
+              <span
+                className={cn(
+                  "text-lg font-semibold font-mono",
+                  ltvPercentage < maxLTVPercentage
+                    ? "text-green-500"
+                    : ltvPercentage < liquidationThresholdPercentage
+                      ? "text-amber-500"
+                      : "text-red-500",
+                )}
+              >
                 {ltvPercentage.toFixed(2)}%
               </span>
             </div>
 
             <div className="text-xs text-zinc-500 mb-2 font-mono">
-              max ltv: {maxLTVPercentage.toFixed(1)}% | liquidation:{" "}
-              {liquidationThresholdPercentage.toFixed(1)}%
+              max ltv:{" "}
+              <span className="text-amber-500">
+                {maxLTVPercentage.toFixed(1)}%
+              </span>{" "}
+              | liquidation:{" "}
+              <span className="text-red-500">
+                {liquidationThresholdPercentage.toFixed(1)}%
+              </span>
             </div>
 
-            <div className="relative mb-4">
-              <ProgressBar
-                value={
-                  liquidationThresholdPercentage > 0
-                    ? (ltvPercentage / liquidationThresholdPercentage) * 100
-                    : 0
-                }
-                color={getLTVColor(
-                  ltvPercentage,
-                  liquidationThresholdPercentage,
-                )}
-                size="md"
-                className="w-full"
+            <div className="relative mb-6">
+              {/* Background track */}
+              <div className="w-full h-2 bg-gray-700 rounded-full" />
+              {/* User position bar */}
+              <div
+                className="absolute top-0 h-2 bg-green-500 rounded-full"
+                style={{ width: `${ltvPercentage}%` }}
               />
-              <div className="flex justify-between mt-2 text-xs text-zinc-500">
-                <span>0%</span>
-                <span className="text-amber-400 font-mono">
-                  {maxLTVPercentage.toFixed(0)}% max
+              {/* Max LTV indicator line */}
+              <div
+                className="absolute top-0 w-0.5 h-2 bg-amber-500 rounded-full"
+                style={{
+                  left: `${maxLTVPercentage}%`,
+                  transform: "translateX(-50%)",
+                }}
+              />
+              {/* Liquidation threshold indicator line */}
+              <div
+                className="absolute top-0 w-0.5 h-2 bg-red-500 rounded-full"
+                style={{
+                  left: `${liquidationThresholdPercentage}%`,
+                  transform: "translateX(-50%)",
+                }}
+              />
+              <div className="flex justify-between items-center mt-6 text-xs relative">
+                <span className="absolute left-0 text-green-500">0%</span>
+                <span
+                  className="text-amber-500 font-mono absolute"
+                  style={{
+                    left: `${maxLTVPercentage}%`,
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  {maxLTVPercentage.toFixed(0)}%
                 </span>
-                <span className="text-red-400 font-mono">
-                  {liquidationThresholdPercentage.toFixed(0)}% liq
+                <span
+                  className="text-red-500 font-mono absolute"
+                  style={{
+                    left: `${liquidationThresholdPercentage}%`,
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  {liquidationThresholdPercentage.toFixed(0)}%
                 </span>
+                <span className="absolute right-0 text-red-800">100%</span>
               </div>
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-white mb-1 font-mono">
-                {liquidationThresholdPercentage > 0
-                  ? (
-                      (ltvPercentage / liquidationThresholdPercentage) *
-                      100
-                    ).toFixed(1)
-                  : "0.0"}
-                %
+              <div
+                className={cn(
+                  "text-lg font-semibold mb-1 font-mono",
+                  ltvPercentage < maxLTVPercentage
+                    ? "text-green-500"
+                    : ltvPercentage < liquidationThresholdPercentage
+                      ? "text-amber-500"
+                      : "text-red-500",
+                )}
+              >
+                {ltvPercentage.toFixed(2)}%
               </div>
-              <div className="text-sm text-zinc-400">
-                to liquidation threshold
+              <div className="text-sm text-zinc-400">current loan to value</div>
+              <div className="text-xs text-zinc-500 mt-1">
+                max: {maxLTVPercentage.toFixed(0)}% | liquidation:{" "}
+                {liquidationThresholdPercentage.toFixed(0)}%
               </div>
             </div>
-          </div>
 
-          {/* Warning Message */}
-          <div className="bg-[#1A1A1A] rounded-lg border border-[#232326] p-4">
-            <p className="text-sm text-zinc-400 text-center">
-              if the health factor goes below 1, the liquidation of your
-              collateral might be triggered.
-            </p>
+            <div className="text-xs text-zinc-400 text-center mt-3">
+              If your loan to value goes above the liquidation threshold your
+              collateral supplied may be liquidated.
+            </div>
           </div>
 
           {/* Position Values */}
@@ -188,7 +249,9 @@ const RiskDetailsModal = ({
 
             <div className="text-center">
               <div className="text-2xl font-bold text-red-500 mb-1 font-mono">
-                {formatCurrency(totalDebtUSD)}
+                {totalDebtUSD > 0 && totalDebtUSD < 0.01
+                  ? "<$0.01"
+                  : formatCurrency(totalDebtUSD)}
               </div>
               <div className="text-sm text-zinc-400">debt</div>
             </div>
