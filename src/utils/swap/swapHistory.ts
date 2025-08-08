@@ -79,10 +79,6 @@ export class MayanSwapService {
     const url = `${MAYAN_API_BASE}/swaps?referrerAddress=${referrerAddress}&trader=${traderAddress}`;
 
     try {
-      console.log(
-        `[Attempt ${attempt}, Call ${callIndex}] Fetching swaps for referrer: ${referrerAddress}, trader: ${traderAddress}`,
-      );
-
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -90,12 +86,6 @@ export class MayanSwapService {
       }
 
       const data: SwapResponse = await response.json();
-
-      if (attempt > 1) {
-        console.log(
-          `✓ Successfully fetched after ${attempt} attempts (Call ${callIndex})`,
-        );
-      }
 
       return {
         referrerAddress,
@@ -110,10 +100,6 @@ export class MayanSwapService {
 
       if (isPotentialRateLimit && attempt < this.retryConfig.maxRetries) {
         const delayMs = this.calculateDelay(attempt, callIndex);
-
-        console.log(
-          `Potential rate limit detected (${errorMessage}). Retrying in ${Math.round(delayMs / 1000)}s with indexed spacing (Call ${callIndex}, attempt ${attempt}/${this.retryConfig.maxRetries})`,
-        );
 
         await this.sleep(delayMs);
         return this.querySwapsWithRetry(
@@ -177,9 +163,6 @@ export class MayanSwapService {
 
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      console.log(
-        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)} (${batch.length} items)`,
-      );
 
       const batchResults: R[] = [];
       for (let j = 0; j < batch.length; j++) {
@@ -195,7 +178,6 @@ export class MayanSwapService {
       results.push(...batchResults);
 
       if (i + batchSize < items.length) {
-        console.log(`Waiting ${delayBetweenBatches}ms before next batch...`);
         await this.sleep(delayBetweenBatches);
       }
     }
@@ -218,20 +200,10 @@ export class MayanSwapService {
       0,
     );
 
-    const totalSwaps = results.reduce(
-      (sum, result) => sum + result.response.data.length,
-      0,
-    );
     const errors = results.filter((result) => result.error);
 
-    console.log(`Completed queries for trader ${traderAddress}:`);
-    console.log(`- Total swaps found: ${totalSwaps}`);
-    console.log(
-      `- Successful queries: ${results.length - errors.length}/${results.length}`,
-    );
-
     if (errors.length > 0) {
-      console.log(
+      console.error(
         `- Errors:`,
         errors.map((e) => `${e.referrerAddress}: ${e.error}`),
       );
@@ -271,11 +243,6 @@ export class MayanSwapService {
       }
     }
 
-    console.log(
-      `Starting ${queryItems.length} queries with indexed retry strategy...`,
-    );
-    const startTime = Date.now();
-
     const results = await this.processBatched(
       queryItems,
       ({ referrerAddress, walletAddress }, callIndex) =>
@@ -284,9 +251,6 @@ export class MayanSwapService {
       3000,
       1500,
     );
-
-    const endTime = Date.now();
-    console.log(`Completed all queries in ${endTime - startTime}ms`);
 
     const totalSwaps = results.reduce(
       (sum, result) => sum + result.response.data.length,
@@ -311,42 +275,13 @@ export class MayanSwapService {
       }
     });
 
-    // Log detailed results
-    console.log("\n=== SWAP HISTORY RESULTS ===");
-    console.log(`Total queries: ${queryItems.length}`);
-    console.log(
-      `Successful queries: ${successfulQueries}/${queryItems.length}`,
-    );
-    console.log(`Total swaps found: ${totalSwaps}`);
-    console.log("Swaps by chain:", swapsByChain);
-
     if (errors.length > 0) {
-      console.log("\nErrors encountered:");
       errors.forEach((error) => {
-        console.log(
+        console.error(
           `  ${error.referrerAddress} -> ${error.traderAddress}: ${error.error}`,
         );
       });
     }
-
-    // Log individual results
-    console.log("\nDetailed results:");
-    results.forEach((result) => {
-      const chainType =
-        Object.entries(this.referrerAddresses).find(
-          ([, address]) => address === result.referrerAddress,
-        )?.[0] || "UNKNOWN";
-
-      console.log(
-        `  ${chainType} referrer -> ${result.traderAddress.slice(0, 8)}...: ${result.response.data.length} swaps`,
-      );
-
-      if (result.response.data.length > 0) {
-        console.log(
-          `    Latest swap: ${result.response.data[0].fromTokenSymbol} -> ${result.response.data[0].toTokenSymbol} (${result.response.data[0].initiatedAt})`,
-        );
-      }
-    });
 
     return {
       results,
@@ -364,7 +299,6 @@ export class MayanSwapService {
    */
   updateRetryConfig(config: Partial<RetryConfig>): void {
     Object.assign(this.retryConfig, config);
-    console.log("Updated retry config:", this.retryConfig);
   }
 
   /**
