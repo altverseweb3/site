@@ -24,8 +24,8 @@ const TokenInitializer: React.FC = () => {
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
-  const destinationToken = useDestinationToken();
-  const sourceToken = useSourceToken();
+  const destinationTokenId = useDestinationToken()?.id;
+  const sourceTokenId = useSourceToken()?.id;
 
   // Track whether the user is active or idle
   const [isIdle, setIsIdle] = useState(false);
@@ -67,8 +67,8 @@ const TokenInitializer: React.FC = () => {
     requiredWallet,
     connectedWallets,
     isIdle,
-    destinationToken,
-    sourceToken,
+    destinationTokenId,
+    sourceTokenId,
   ]);
 
   return null;
