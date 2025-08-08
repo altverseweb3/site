@@ -8,9 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/utils";
-import { getHealthFactorColor, getLTVColor } from "@/utils/aave/utils";
+import { getHealthFactorColor } from "@/utils/aave/utils";
 import { formatCurrency } from "@/utils/formatters";
 
 export interface RiskDetailsModalProps {
