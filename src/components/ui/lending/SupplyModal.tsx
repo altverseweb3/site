@@ -26,12 +26,7 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
-import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
-import {
-  validateSupplyTransaction,
-  type PositionData,
-  type AssetData,
-} from "@/utils/aave/transactionValidation";
+import { validateSupplyTransaction } from "@/utils/aave/transactionValidation";
 
 // Main Supply Modal Component
 interface SupplyModalProps {
@@ -69,12 +64,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
   collateralizationStatus = "enabled",
   isolationModeEnabled = false,
   canBeCollateral = true,
-  healthFactor = "1.24",
   tokenPrice = 1, // Default to $1 if not provided
-  liquidationThreshold = 85, // Default 85% LTV
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
-  currentLTV = 0,
   onSupply = async () => true,
   children,
   isLoading = false,
@@ -129,27 +119,12 @@ const SupplyModal: FC<SupplyModalProps> = ({
   // Calculate USD value and health factor changes
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
   const supplyAmountUSD = supplyAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
-
-  // Prepare validation data
-  const positionData: PositionData = {
-    totalCollateralUSD,
-    totalDebtUSD,
-    healthFactor: currentHealthFactor,
-  };
-
-  const assetData: AssetData = {
-    price: tokenPrice,
-    liquidationThreshold,
-    isCollateral: canBeCollateral && collateralizationStatus === "enabled",
-  };
 
   // Validate transaction
-  const validation = validateSupplyTransaction(
-    positionData,
-    assetData,
-    supplyAmountUSD,
-  );
+  const validation = validateSupplyTransaction();
+  // positionData,
+  // assetData,
+  // supplyAmountUSD,
 
   // Helper function to get collateral status display
   const getCollateralStatusDisplay = () => {
@@ -372,20 +347,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
               </div>
             )}
           </div>
-
-          {/* Enhanced Health Factor Display */}
-          {totalDebtUSD > 0 && (
-            <SimpleHealthIndicator
-              currentHealthFactor={currentHealthFactor}
-              currentTotalCollateralUSD={totalCollateralUSD}
-              currentTotalDebtUSD={totalDebtUSD}
-              currentLTV={currentLTV}
-              liquidationThreshold={liquidationThreshold}
-              transactionAmountUSD={supplyAmountUSD}
-              transactionType="supply"
-              isCollateralAsset={assetData.isCollateral}
-            />
-          )}
 
           {/* Asset Details */}
           <div className="space-y-3 text-sm">

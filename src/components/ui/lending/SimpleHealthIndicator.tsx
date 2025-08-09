@@ -51,14 +51,6 @@ const calculateNewHealthFactor = (
           : liquidationThreshold;
       const weightedCollateral =
         currentCollateralUSD * liquidationThresholdDecimal;
-      console.log("Borrow from Infinity case:", {
-        currentCollateralUSD,
-        liquidationThreshold,
-        liquidationThresholdDecimal,
-        weightedCollateral,
-        newDebtUSD,
-        newHealthFactor: weightedCollateral / newDebtUSD,
-      });
       return weightedCollateral / newDebtUSD;
     }
     return Infinity;
@@ -87,20 +79,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
   const currentTotalDebtUSD = userMetrics.totalDebtUSD;
   const currentLTV = userMetrics.currentLTV;
   const liquidationThreshold = userMetrics.liquidationThreshold;
-
-  // Debug logging
-  console.log(
-    "SimpleHealthIndicator calculated values (same as metrics header):",
-    {
-      currentHealthFactor,
-      currentTotalCollateralUSD,
-      currentTotalDebtUSD,
-      currentLTV,
-      liquidationThreshold,
-      transactionAmountUSD,
-      transactionType,
-    },
-  );
 
   // Calculate new values if there's a transaction
   const hasTransaction = transactionAmountUSD > 0 && transactionType;
@@ -218,25 +196,13 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
       </div>
 
       {/* Summary Box Underneath */}
-      <div className="p-3 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-[#A1A1AA]">Current Health Factor</span>
-          <span
-            className={cn(
-              "font-mono",
-              getHealthFactorColor(currentHealthFactor),
-            )}
-          >
-            {currentHealthFactor === Infinity
-              ? "∞"
-              : currentHealthFactor.toFixed(2)}
-          </span>
-        </div>
-
-        {hasTransaction &&
-          Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
-            <>
-              <div className="h-px bg-[#232326] my-2" />
+      {(hasTransaction &&
+        Math.abs(newHealthFactor - currentHealthFactor) > 0.01) ||
+      isLiquidationRisk ||
+      (isHighRisk && !isLiquidationRisk) ? (
+        <div className="p-3 bg-[#1A1A1A] rounded-lg border border-[#232326]">
+          {hasTransaction &&
+            Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-[#A1A1AA]">After Transaction</span>
                 <span
@@ -250,32 +216,38 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
                     : newHealthFactor.toFixed(2)}
                 </span>
               </div>
+            )}
+
+          {/* Risk Warning in Summary */}
+          {isLiquidationRisk && (
+            <>
+              {hasTransaction &&
+                Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
+                  <div className="h-px bg-[#232326] my-2" />
+                )}
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Liquidation Risk - Transaction Blocked
+                </span>
+              </div>
             </>
           )}
 
-        {/* Risk Warning in Summary */}
-        {isLiquidationRisk && (
-          <>
-            <div className="h-px bg-[#232326] my-2" />
-            <div className="flex items-center gap-2 text-red-500">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                Liquidation Risk - Transaction Blocked
-              </span>
-            </div>
-          </>
-        )}
-
-        {isHighRisk && !isLiquidationRisk && (
-          <>
-            <div className="h-px bg-[#232326] my-2" />
-            <div className="flex items-center gap-2 text-yellow-500">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm font-medium">High Risk Warning</span>
-            </div>
-          </>
-        )}
-      </div>
+          {isHighRisk && !isLiquidationRisk && (
+            <>
+              {hasTransaction &&
+                Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
+                  <div className="h-px bg-[#232326] my-2" />
+                )}
+              <div className="flex items-center gap-2 text-yellow-500">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">High Risk Warning</span>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

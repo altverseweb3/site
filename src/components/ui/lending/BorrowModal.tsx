@@ -82,7 +82,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
   tokenPrice = 1,
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
-  currentLTV = 0,
   liquidationThreshold = 85,
   onBorrow = async () => true,
   children,
@@ -201,24 +200,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
   const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
 
-  // Debug logging for price data
-  console.log(`BorrowModal Debug for ${tokenSymbol}:`, {
-    borrowAmountNum,
-    tokenPrice,
-    borrowAmountUSD,
-    currentHealthFactor,
-    totalCollateralUSD,
-    totalDebtUSD,
-    currentLTV,
-    liquidationThreshold,
-    healthFactorProp: healthFactor,
-    userSupplyPositionsUSD: userSupplyPositionsUSD.length,
-    userBorrowPositionsUSD: userBorrowPositionsUSD.length,
-    maxBorrowUSD,
-    maxBorrowAmount,
-    isStableRateAvailable,
-  });
-
   // Prepare validation data
   const positionData: PositionData = {
     totalCollateralUSD,
@@ -271,20 +252,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     !isSubmitting &&
     (validation.isValid || (isHighRiskTransaction && acceptHighRisk)) &&
     (!isHighRiskTransaction || acceptHighRisk);
-
-  // Debug high risk detection
-  console.log("High Risk Detection:", {
-    borrowAmountUSD,
-    newHealthFactor,
-    isHighRiskTransaction,
-    acceptHighRisk,
-    isFormValid,
-    isAmountValid,
-    borrowingEnabled,
-    validationIsValid: validation.isValid,
-    exceedsMaxSafe,
-    validationRiskLevel: validation.riskLevel,
-  });
 
   const handleBorrow = async () => {
     if (!isFormValid) return;
