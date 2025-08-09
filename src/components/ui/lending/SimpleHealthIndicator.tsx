@@ -125,11 +125,11 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Health Factor and LTV Panels */}
+      {/* health factor and LTV Panels */}
       <div className="flex items-center justify-center gap-4">
-        {/* Current Health Factor Panel */}
+        {/* Current health factor Panel */}
         <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-          <div className="text-xs text-[#A1A1AA] mb-1">Health Factor</div>
+          <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
           <div
             className={cn(
               "text-lg font-semibold font-mono",
@@ -145,10 +145,10 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
         {/* Arrow */}
         {hasTransaction && <div className="text-[#71717A]">→</div>}
 
-        {/* New Health Factor Panel (only if transaction) */}
+        {/* New health factor Panel (only if transaction) */}
         {hasTransaction && (
           <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-            <div className="text-xs text-[#A1A1AA] mb-1">New Health Factor</div>
+            <div className="text-xs text-[#A1A1AA] mb-1">new health factor</div>
             <div
               className={cn(
                 "text-lg font-semibold font-mono",
@@ -165,7 +165,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
       <div className="flex items-center justify-center gap-4">
         {/* Current LTV Panel */}
         <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-          <div className="text-xs text-[#A1A1AA] mb-1">Current LTV</div>
+          <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
           <div
             className={cn(
               "text-lg font-semibold font-mono",
@@ -182,7 +182,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
         {/* New LTV Panel (only if transaction) */}
         {hasTransaction && (
           <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-            <div className="text-xs text-[#A1A1AA] mb-1">New LTV</div>
+            <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
             <div
               className={cn(
                 "text-lg font-semibold font-mono",
@@ -204,7 +204,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
           {hasTransaction &&
             Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">After Transaction</span>
+                <span className="text-[#A1A1AA]">after transaction</span>
                 <span
                   className={cn(
                     "font-mono",
@@ -228,7 +228,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
               <div className="flex items-center gap-2 text-red-500">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  Liquidation Risk - Transaction Blocked
+                  liquidation risk - transaction blocked
                 </span>
               </div>
             </>
@@ -242,7 +242,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
                 )}
               <div className="flex items-center gap-2 text-yellow-500">
                 <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm font-medium">High Risk Warning</span>
+                <span className="text-sm font-medium">high risk warning</span>
               </div>
             </>
           )}
