@@ -274,11 +274,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
 =======
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
-        currentMetrics.totalCollateralUSD,
-        currentMetrics.totalDebtUSD,
-        borrowAmountUSD,
-        currentMetrics.liquidationThreshold,
-      )
+      currentMetrics.totalCollateralUSD,
+      currentMetrics.totalDebtUSD,
+      borrowAmountUSD,
+      currentMetrics.liquidationThreshold,
+    )
     : Infinity;
 >>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
@@ -424,13 +424,8 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
                 {!currentMetrics ||
-<<<<<<< HEAD
                   currentMetrics.healthFactor === null ||
                   currentMetrics.healthFactor === Infinity
-=======
-                currentMetrics.healthFactor === null ||
-                currentMetrics.healthFactor === Infinity
->>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>
