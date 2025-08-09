@@ -7,17 +7,13 @@ import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 
 interface SimpleHealthIndicatorProps {
-  // EXACT same arrays as metrics header uses
   userSupplyPositionsUSD: UserPosition[];
   userBorrowPositionsUSD: UserBorrowPosition[];
-
-  // Transaction simulation
   transactionAmountUSD?: number;
   transactionType?: "supply" | "withdraw" | "borrow" | "repay";
   transactionAssetAddress?: string;
 }
 
-// Simple calculation using current health factor and transaction impact
 const calculateNewHealthFactor = (
   currentHealthFactor: number,
   currentCollateralUSD: number,
@@ -36,15 +32,13 @@ const calculateNewHealthFactor = (
       newDebtUSD = Math.max(0, newDebtUSD - transactionAmountUSD);
       break;
     default:
-      return currentHealthFactor; // For supply/withdraw, keep current
+      return currentHealthFactor;
   }
 
   if (newDebtUSD === 0) return Infinity;
 
-  // Handle the case where current HF is Infinity (no current debt)
   if (currentHealthFactor === Infinity && currentDebtUSD === 0) {
     if (transactionType === "borrow") {
-      // Calculate weighted collateral using liquidation threshold
       const liquidationThresholdDecimal =
         liquidationThreshold > 1
           ? liquidationThreshold / 100
@@ -56,8 +50,6 @@ const calculateNewHealthFactor = (
     return Infinity;
   }
 
-  // HF = weighted_collateral / debt
-  // So weighted_collateral = HF * debt
   const weightedCollateral = currentHealthFactor * currentDebtUSD;
   return weightedCollateral / newDebtUSD;
 };
@@ -68,7 +60,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
   transactionAmountUSD = 0,
   transactionType,
 }) => {
-  // Calculate metrics EXACTLY like metrics header does
   const userMetrics = calculateUserMetrics(
     userSupplyPositionsUSD,
     userBorrowPositionsUSD,
@@ -80,7 +71,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
   const currentLTV = userMetrics.currentLTV;
   const liquidationThreshold = userMetrics.liquidationThreshold;
 
-  // Calculate new values if there's a transaction
   const hasTransaction = transactionAmountUSD > 0 && transactionType;
 
   const newHealthFactor = hasTransaction
@@ -94,7 +84,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
       )
     : currentHealthFactor;
 
-  // Simple LTV calculation for borrow/repay
   let newLTV = currentLTV;
   if (
     hasTransaction &&
@@ -112,11 +101,9 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
         : 0;
   }
 
-  // Risk assessment - block only below 1.12, allow exactly 1.12
   const isLiquidationRisk = newHealthFactor < 1.0;
   const isHighRisk = newHealthFactor < 1.12;
 
-  // LTV color (same pattern as RiskDetailsModal)
   const getLTVColor = (ltv: number) => {
     if (ltv < liquidationThreshold * 0.7) return "text-green-500";
     if (ltv < liquidationThreshold * 0.9) return "text-amber-500";
@@ -125,9 +112,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* health factor and LTV Panels */}
       <div className="flex items-center justify-center gap-4">
-        {/* Current health factor Panel */}
         <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
           <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
           <div
@@ -142,10 +127,8 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
           </div>
         </div>
 
-        {/* Arrow */}
         {hasTransaction && <div className="text-[#71717A]">→</div>}
 
-        {/* New health factor Panel (only if transaction) */}
         {hasTransaction && (
           <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
             <div className="text-xs text-[#A1A1AA] mb-1">new health factor</div>
@@ -161,9 +144,7 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
         )}
       </div>
 
-      {/* LTV Panels */}
       <div className="flex items-center justify-center gap-4">
-        {/* Current LTV Panel */}
         <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
           <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
           <div
@@ -176,10 +157,8 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
           </div>
         </div>
 
-        {/* Arrow */}
         {hasTransaction && <div className="text-[#71717A]">→</div>}
 
-        {/* New LTV Panel (only if transaction) */}
         {hasTransaction && (
           <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
             <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
@@ -195,7 +174,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
         )}
       </div>
 
-      {/* Summary Box Underneath */}
       {(hasTransaction &&
         Math.abs(newHealthFactor - currentHealthFactor) > 0.01) ||
       isLiquidationRisk ||
@@ -218,7 +196,6 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
               </div>
             )}
 
-          {/* Risk Warning in Summary */}
           {isLiquidationRisk && (
             <>
               {hasTransaction &&
