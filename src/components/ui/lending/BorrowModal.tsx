@@ -215,11 +215,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
   // Calculate new health factor to check if this is high risk
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
-        currentMetrics.totalCollateralUSD,
-        currentMetrics.totalDebtUSD,
-        borrowAmountUSD,
-        currentMetrics.liquidationThreshold,
-      )
+      currentMetrics.totalCollateralUSD,
+      currentMetrics.totalDebtUSD,
+      borrowAmountUSD,
+      currentMetrics.liquidationThreshold,
+    )
     : Infinity;
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
@@ -364,8 +364,8 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
                 {!currentMetrics ||
-                currentMetrics.healthFactor === null ||
-                currentMetrics.healthFactor === Infinity
+                  currentMetrics.healthFactor === null ||
+                  currentMetrics.healthFactor === Infinity
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>
@@ -570,7 +570,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   : !borrowingEnabled
                     ? "borrowing disabled"
                     : !validation.isValid &&
-                        validation.riskLevel === "liquidation"
+                      validation.riskLevel === "liquidation"
                       ? "too risky to borrow"
                       : !validation.isValid && validation.riskLevel === "high"
                         ? "high risk - blocked"
