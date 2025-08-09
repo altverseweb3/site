@@ -28,23 +28,14 @@ import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
-
-// Health Factor Calculator for Borrowing
-const calculateNewHealthFactorForBorrow = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  newBorrowAmountUSD: number,
-  liquidationThreshold: number,
-): number => {
-  const newTotalDebt = currentTotalDebtUSD + newBorrowAmountUSD;
-
-  if (newTotalDebt === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
-  return adjustedCollateral / newTotalDebt;
-};
+import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  validateBorrowTransaction,
+  type PositionData,
+  type AssetData,
+} from "@/utils/aave/transactionValidation";
 
 // Main Borrow Modal Component
 interface BorrowModalProps {
@@ -62,6 +53,8 @@ interface BorrowModalProps {
   tokenPrice?: number;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
+  currentLTV?: number; // Current loan-to-value ratio
+  liquidationThreshold?: number; // Liquidation threshold percentage
   onBorrow?: (
     amount: string,
     rateMode: "variable" | "stable",
@@ -70,6 +63,9 @@ interface BorrowModalProps {
   isLoading?: boolean;
   tokenAddress?: string;
   tokenDecimals?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const BorrowModal: FC<BorrowModalProps> = ({
@@ -77,7 +73,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
   tokenName,
   tokenIcon = "usdc.png",
   chainId = 1,
-  availableToBorrow = "0",
   availableToBorrowUSD = "0.00",
   variableBorrowAPY = "5.50%",
   stableBorrowAPY = "7.20%",
@@ -87,17 +82,23 @@ const BorrowModal: FC<BorrowModalProps> = ({
   tokenPrice = 1,
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  currentLTV = 0,
+  liquidationThreshold = 85,
   onBorrow = async () => true,
   children,
   isLoading = false,
   tokenAddress = "",
   tokenDecimals = 18,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [borrowAmount, setBorrowAmount] = useState("");
   const [rateMode, setRateMode] = useState<"variable" | "stable">("variable");
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [acceptHighRisk, setAcceptHighRisk] = useState(false);
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
@@ -130,6 +131,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
     if (isOpen) {
       setBorrowAmount("");
       setRateMode("variable");
+      setAcceptHighRisk(false);
     }
   }, [isOpen, isMounted]);
 
@@ -139,36 +141,150 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Calculate values
   const borrowAmountNum = parseFloat(borrowAmount) || 0;
-  const borrowAmountUSD = borrowAmountNum * tokenPrice;
+  const borrowAmountUSD = borrowAmountNum * (tokenPrice || 1); // Default to 1 if price missing
   const currentHealthFactor = parseFloat(healthFactor) || 0;
-  const availableToBorrowNum = parseFloat(availableToBorrow) || 0;
 
-  // Calculate new health factor
-  const newHealthFactor =
-    totalCollateralUSD > 0
-      ? calculateNewHealthFactorForBorrow(
-          totalCollateralUSD,
-          totalDebtUSD,
-          borrowAmountUSD,
-          0.85, // Average liquidation threshold
-        )
-      : currentHealthFactor;
+  // Calculate USD positions EXACTLY like metrics header does
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
 
-  // Check if borrow would be dangerous
-  const isDangerous = newHealthFactor < 1.2 && borrowAmountNum > 0;
-  const exceedsAvailable = borrowAmountNum > availableToBorrowNum;
+  // Calculate max safe borrow amount (HF = 1.2)
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+  const calculateMaxBorrowUSD = () => {
+    if (!currentMetrics) return 0;
 
-  // Validation
+    const { totalCollateralUSD, totalDebtUSD } = currentMetrics;
+    const liquidationThresholdDecimal =
+      currentMetrics.liquidationThreshold > 1
+        ? currentMetrics.liquidationThreshold / 100
+        : currentMetrics.liquidationThreshold;
+
+    // HF = (collateral * liquidationThreshold) / totalDebt
+    // Allow borrowing down to exactly 1.12 health factor (not below)
+    // 1.12 = (collateral * liquidationThreshold) / (currentDebt + newBorrow)
+    // newBorrow = (collateral * liquidationThreshold) / 1.12 - currentDebt
+    const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
+    const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
+    const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
+
+    return maxNewBorrowUSD;
+  };
+
+  const maxBorrowUSD = calculateMaxBorrowUSD();
+  const maxBorrowAmount =
+    tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
+  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
+
+  // Debug logging for price data
+  console.log(`BorrowModal Debug for ${tokenSymbol}:`, {
+    borrowAmountNum,
+    tokenPrice,
+    borrowAmountUSD,
+    currentHealthFactor,
+    totalCollateralUSD,
+    totalDebtUSD,
+    currentLTV,
+    liquidationThreshold,
+    healthFactorProp: healthFactor,
+    userSupplyPositionsUSD: userSupplyPositionsUSD.length,
+    userBorrowPositionsUSD: userBorrowPositionsUSD.length,
+    maxBorrowUSD,
+    maxBorrowAmount,
+    isStableRateAvailable,
+  });
+
+  // Prepare validation data
+  const positionData: PositionData = {
+    totalCollateralUSD,
+    totalDebtUSD,
+    healthFactor: currentHealthFactor,
+  };
+
+  const assetData: AssetData = {
+    price: tokenPrice,
+    liquidationThreshold: liquidationThreshold / 100, // Use actual liquidation threshold from props
+    isCollateral: false, // Borrowed assets don't affect collateral
+  };
+
+  // Calculate available amounts
+  const availableToBorrowUSDNum = parseFloat(availableToBorrowUSD) || 0;
+
+  // Validate transaction
+  const validation = validateBorrowTransaction(
+    positionData,
+    assetData,
+    borrowAmountUSD,
+    availableToBorrowUSDNum,
+  );
+
+  // Check various validation conditions
+  const exceedsMaxSafe = borrowAmountNum > parseFloat(maxBorrowAmount);
   const isAmountValid =
-    borrowAmountNum > 0 && borrowAmountNum <= availableToBorrowNum;
+    borrowAmountNum > 0 && borrowAmountNum <= parseFloat(maxBorrowAmount);
+
+  // Calculate new health factor to check if this is high risk
+  const newMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+  const weightedCollateral =
+    newMetrics.totalCollateralUSD *
+    (newMetrics.liquidationThreshold > 1
+      ? newMetrics.liquidationThreshold / 100
+      : newMetrics.liquidationThreshold);
+  const newTotalDebt = newMetrics.totalDebtUSD + borrowAmountUSD;
+  const newHealthFactor =
+    newTotalDebt > 0 ? weightedCollateral / newTotalDebt : Infinity;
+  const isHighRiskTransaction = newHealthFactor < 1.2 && newHealthFactor > 1.1;
+
+  // Enhanced form validation - require risk acceptance for high risk transactions
   const isFormValid =
     isAmountValid &&
     borrowingEnabled &&
     !isLoading &&
     !isSubmitting &&
-    !isDangerous;
+    (validation.isValid || (isHighRiskTransaction && acceptHighRisk)) &&
+    (!isHighRiskTransaction || acceptHighRisk);
+
+  // Debug high risk detection
+  console.log("High Risk Detection:", {
+    borrowAmountUSD,
+    newHealthFactor,
+    isHighRiskTransaction,
+    acceptHighRisk,
+    isFormValid,
+    isAmountValid,
+    borrowingEnabled,
+    validationIsValid: validation.isValid,
+    exceedsMaxSafe,
+    validationRiskLevel: validation.riskLevel,
+  });
 
   const handleBorrow = async () => {
     if (!isFormValid) return;
@@ -254,7 +370,8 @@ const BorrowModal: FC<BorrowModalProps> = ({
   };
 
   const handleMaxClick = () => {
-    setBorrowAmount(availableToBorrow);
+    // Use the max safe amount (HF = 1.12)
+    setBorrowAmount(maxBorrowAmount);
   };
 
   const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -286,10 +403,10 @@ const BorrowModal: FC<BorrowModalProps> = ({
               </span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
-                  {availableToBorrow} {tokenSymbol}
+                  {maxBorrowAmount} {tokenSymbol}
                 </div>
                 <div className="text-xs text-[#71717A]">
-                  ${availableToBorrowUSD}
+                  ${maxBorrowUSD.toFixed(2)}
                 </div>
               </div>
             </div>
@@ -298,9 +415,12 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 current health factor
               </span>
               <span
-                className={`text-sm ${getHealthFactorColor(currentHealthFactor)}`}
+                className={`text-sm ${getHealthFactorColor(currentMetrics.healthFactor || Infinity)}`}
               >
-                {currentHealthFactor.toFixed(2)}
+                {currentMetrics.healthFactor === null ||
+                currentMetrics.healthFactor === Infinity
+                  ? "∞"
+                  : currentMetrics.healthFactor.toFixed(2)}
               </span>
             </div>
           </div>
@@ -313,7 +433,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  max: {availableToBorrow} {tokenSymbol}
+                  max: {maxBorrowAmount} {tokenSymbol}
                 </div>
                 <button
                   onClick={handleMaxClick}
@@ -335,7 +455,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={cn(
                   "pr-16 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A] text-lg",
                   !isAmountValid && borrowAmount && "border-red-500",
-                  exceedsAvailable && "border-red-500",
+                  exceedsMaxSafe && "border-red-500",
                 )}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -349,11 +469,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
 
             {/* Validation errors */}
-            {exceedsAvailable && borrowAmount && (
+            {exceedsMaxSafe && borrowAmount && (
               <div className="flex items-center gap-1 mt-2">
                 <AlertCircle size={14} className="text-red-500" />
                 <p className="text-red-500 text-xs">
-                  Amount exceeds available to borrow
+                  Amount exceeds maximum safe borrowing limit
                 </p>
               </div>
             )}
@@ -375,35 +495,97 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 )}
               >
                 <div className="font-medium text-sm">Variable</div>
-                <div className="text-xs">{variableBorrowAPY}</div>
+                <div className="text-xs">{variableBorrowAPY}%</div>
               </button>
               <button
                 onClick={() => setRateMode("stable")}
+                disabled={!isStableRateAvailable}
                 className={cn(
                   "p-3 rounded-lg border text-left transition-colors",
-                  rateMode === "stable"
+                  !isStableRateAvailable && "opacity-50 cursor-not-allowed",
+                  rateMode === "stable" && isStableRateAvailable
                     ? "bg-sky-500/10 border-sky-500/50 text-sky-400"
                     : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-sky-500/30",
                 )}
               >
-                <div className="font-medium text-sm">Stable</div>
-                <div className="text-xs">{stableBorrowAPY}</div>
+                <div className="font-medium text-sm">
+                  Stable {!isStableRateAvailable && "(Unavailable)"}
+                </div>
+                <div className="text-xs">
+                  {isStableRateAvailable ? `${stableBorrowAPY}%` : "0.00%"}
+                </div>
               </button>
             </div>
           </div>
 
-          {/* Health Factor Impact Warning */}
-          {isDangerous && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-red-500" />
+          {/* Enhanced Health Factor Display */}
+          <SimpleHealthIndicator
+            userSupplyPositionsUSD={userSupplyPositionsUSD}
+            userBorrowPositionsUSD={userBorrowPositionsUSD}
+            transactionAmountUSD={borrowAmountUSD}
+            transactionType="borrow"
+            transactionAssetAddress={tokenAddress}
+          />
+
+          {/* Show validation warning if exists */}
+          {(validation.warningMessage || isHighRiskTransaction) && (
+            <div
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-lg",
+                validation.riskLevel === "liquidation"
+                  ? "bg-red-500/10 border border-red-500/20"
+                  : validation.riskLevel === "high"
+                    ? "bg-red-500/10 border border-red-500/20"
+                    : "bg-yellow-500/10 border border-yellow-500/20",
+              )}
+            >
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4",
+                  validation.riskLevel === "liquidation" ||
+                    validation.riskLevel === "high"
+                    ? "text-red-500"
+                    : "text-yellow-500",
+                )}
+              />
               <div className="text-sm">
-                <div className="text-red-500 font-medium">
-                  high risk warning
+                <div
+                  className={cn(
+                    "font-medium",
+                    validation.riskLevel === "liquidation" ||
+                      validation.riskLevel === "high"
+                      ? "text-red-500"
+                      : "text-yellow-500",
+                  )}
+                >
+                  {validation.riskLevel === "liquidation"
+                    ? "Liquidation Risk"
+                    : validation.riskLevel === "high" || isHighRiskTransaction
+                      ? "High Risk Transaction"
+                      : "Moderate Risk"}
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  borrowing this amount would reduce your health factor below
-                  1.2, putting you at high risk of liquidation
+                  {isHighRiskTransaction
+                    ? `This transaction will set your Health Factor to ${newHealthFactor.toFixed(2)}`
+                    : validation.warningMessage}
                 </div>
+                {isHighRiskTransaction && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="acceptHighRisk"
+                      checked={acceptHighRisk}
+                      onChange={(e) => setAcceptHighRisk(e.target.checked)}
+                      className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
+                    />
+                    <label
+                      htmlFor="acceptHighRisk"
+                      className="text-xs text-[#A1A1AA] cursor-pointer"
+                    >
+                      I accept the high risk of this transaction
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -421,39 +603,17 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
           )}
 
-          {/* Health Factor Display */}
-          {borrowAmountNum > 0 && Math.abs(healthFactorChange) > 0.01 && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">new health factor</span>
-                <span className={getHealthFactorColor(newHealthFactor)}>
-                  {newHealthFactor.toFixed(2)}
-                  <span
-                    className={
-                      healthFactorChange < 0 ? "text-red-500" : "text-green-500"
-                    }
-                  >
-                    {" "}
-                    ({healthFactorChange > 0 ? "+" : ""}
-                    {healthFactorChange.toFixed(2)})
-                  </span>
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <div className="flex-1">
               <AmberButton
                 onClick={handleBorrow}
-                disabled={!isFormValid || isDangerous}
+                disabled={!isFormValid}
                 className={cn(
                   "h-8 py-2",
-                  !isFormValid || isDangerous
-                    ? "opacity-50 cursor-not-allowed"
-                    : "",
-                  isDangerous
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                  validation.riskLevel === "liquidation" ||
+                    validation.riskLevel === "high"
                     ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
                     : "",
                 )}
@@ -462,9 +622,18 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   ? "borrowing..."
                   : !borrowingEnabled
                     ? "borrowing disabled"
-                    : isDangerous
+                    : !validation.isValid &&
+                        validation.riskLevel === "liquidation"
                       ? "too risky to borrow"
-                      : "borrow"}
+                      : !validation.isValid && validation.riskLevel === "high"
+                        ? "high risk - blocked"
+                        : isHighRiskTransaction && !acceptHighRisk
+                          ? "accept risk to continue"
+                          : isHighRiskTransaction && acceptHighRisk
+                            ? "high risk borrow"
+                            : exceedsMaxSafe
+                              ? "exceeds max safe"
+                              : "borrow"}
               </AmberButton>
             </div>
 

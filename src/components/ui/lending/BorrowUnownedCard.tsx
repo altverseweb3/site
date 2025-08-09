@@ -12,7 +12,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import { AaveReserveData } from "@/types/aave";
+import {
+  AaveReserveData,
+  UserPosition,
+  UserBorrowPosition,
+} from "@/types/aave";
 import { BorrowModal } from "@/components/ui/lending/BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
@@ -28,6 +32,10 @@ interface BorrowUnownedCardProps {
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
+  currentLTV?: number;
+  liquidationThreshold?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
 }
 
 const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
@@ -39,6 +47,10 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
+  currentLTV = 0,
+  liquidationThreshold = 85,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
 }) => {
   // Get borrow APY (variable rate) from your enhanced data
   const borrowAPY = currentAsset.variableBorrowAPY || "0.00";
@@ -127,8 +139,13 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
           tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
+          currentLTV={currentLTV}
+          liquidationThreshold={liquidationThreshold}
           tokenAddress={currentAsset.asset.address}
           tokenDecimals={currentAsset.asset.decimals}
+          userSupplyPositions={userSupplyPositions}
+          userBorrowPositions={userBorrowPositions}
+          oraclePrices={oraclePrices}
           onBorrow={async () => {
             onBorrow(currentAsset);
             return true;
