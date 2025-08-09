@@ -188,6 +188,39 @@ const BorrowModal: FC<BorrowModalProps> = ({
     };
   });
 
+<<<<<<< HEAD
+=======
+  // Calculate max safe borrow amount (HF = 1.2)
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+  const calculateMaxBorrowUSD = () => {
+    if (!currentMetrics) return 0;
+
+    const { totalCollateralUSD, totalDebtUSD } = currentMetrics;
+    const liquidationThresholdDecimal =
+      currentMetrics.liquidationThreshold > 1
+        ? currentMetrics.liquidationThreshold / 100
+        : currentMetrics.liquidationThreshold;
+
+    // HF = (collateral * liquidationThreshold) / totalDebt
+    // Allow borrowing down to exactly 1.12 health factor (not below)
+    // 1.12 = (collateral * liquidationThreshold) / (currentDebt + newBorrow)
+    // newBorrow = (collateral * liquidationThreshold) / 1.12 - currentDebt
+    const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
+    const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
+    const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
+
+    return maxNewBorrowUSD;
+  };
+
+  const maxBorrowUSD = calculateMaxBorrowUSD();
+  const maxBorrowAmount =
+    tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
+  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
+
+>>>>>>> ec490a9 (chore: fix linting apply modal changes)
   // Prepare validation data
   const positionData: PositionData = {
     totalCollateralUSD,
