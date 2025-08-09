@@ -64,6 +64,10 @@ const SupplyModal: FC<SupplyModalProps> = ({
   isolationModeEnabled = false,
   canBeCollateral = true,
   tokenPrice = 1, // Default to $1 if not provided
+  liquidationThreshold = 85, // Default 85% LTV
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+  currentLTV = 0,
   onSupply = async () => true,
   children,
   isLoading = false,
