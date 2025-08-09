@@ -360,8 +360,12 @@ const BorrowModal: FC<BorrowModalProps> = ({
               <span
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
+<<<<<<< HEAD
                 {!currentMetrics ||
                   currentMetrics.healthFactor === null ||
+=======
+                {currentMetrics.healthFactor === null ||
+>>>>>>> 86ff4c1 (feat: enhance modals with health factor guard rails)
                   currentMetrics.healthFactor === Infinity
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
