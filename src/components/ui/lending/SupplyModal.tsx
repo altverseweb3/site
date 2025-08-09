@@ -26,7 +26,6 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
-import { validateSupplyTransaction } from "@/utils/aave/transactionValidation";
 
 // Main Supply Modal Component
 interface SupplyModalProps {
@@ -120,12 +119,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
   const supplyAmountUSD = supplyAmountNum * tokenPrice;
 
-  // Validate transaction
-  const validation = validateSupplyTransaction();
-  // positionData,
-  // assetData,
-  // supplyAmountUSD,
-
   // Helper function to get collateral status display
   const getCollateralStatusDisplay = () => {
     if (!canBeCollateral)
@@ -141,8 +134,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   // Enhanced validation
   const isAmountValid = supplyAmountNum > 0;
-  const isFormValid =
-    isAmountValid && !isLoading && !isSubmitting && validation.isValid;
+  const isFormValid = isAmountValid && !isLoading && !isSubmitting;
 
   const handleSupply = async () => {
     if (!isFormValid) return;
