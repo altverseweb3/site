@@ -95,18 +95,6 @@ const BorrowLendComponent: React.FC = () => {
           if (result?.oraclePrices) {
             setOraclePrices(result.oraclePrices);
           }
-
-          if (result?.userSupplyPositions) {
-            setUserSupplyPositions(result.userSupplyPositions);
-          }
-
-          if (result?.userBorrowPositions) {
-            setUserBorrowPositions(result.userBorrowPositions);
-          }
-
-          if (result?.allReserves) {
-            setAllReserves(result.allReserves);
-          }
         } catch (error) {
           console.error("Error loading Aave user data for page:", error);
         }
@@ -126,15 +114,15 @@ const BorrowLendComponent: React.FC = () => {
   const userMetrics = isWalletConnected
     ? calculateUserMetrics(userSupplyPositions, userBorrowPositions)
     : {
-        netWorth: 0,
-        netAPY: null,
-        healthFactor: null,
-        totalCollateralUSD: 0,
-        totalDebtUSD: 0,
-        currentLTV: 0,
-        maxLTV: 0,
-        liquidationThreshold: 0,
-      };
+      netWorth: 0,
+      netAPY: null,
+      healthFactor: null,
+      totalCollateralUSD: 0,
+      totalDebtUSD: 0,
+      currentLTV: 0,
+      maxLTV: 0,
+      liquidationThreshold: 0,
+    };
 
   const handleChainChange = async (value: string | string[]) => {
     const newChainId = typeof value === "string" ? value : "";
@@ -172,17 +160,7 @@ const BorrowLendComponent: React.FC = () => {
               userBorrowPositions={userBorrowPositions}
             />
           ) : (
-            <BorrowComponent
-              oraclePrices={oraclePrices}
-              healthFactor={userMetrics.healthFactor || 0}
-              totalCollateralUSD={userMetrics.totalCollateralUSD}
-              totalDebtUSD={userMetrics.totalDebtUSD}
-              currentLTV={userMetrics.currentLTV}
-              liquidationThreshold={userMetrics.liquidationThreshold}
-              userSupplyPositions={userSupplyPositions}
-              userBorrowPositions={userBorrowPositions}
-              allReserves={allReserves}
-            />
+            <BorrowComponent oraclePrices={oraclePrices} />
           )}
           <PoweredByAave />
         </>

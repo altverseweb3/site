@@ -134,7 +134,8 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   // Enhanced validation
   const isAmountValid = supplyAmountNum > 0;
-  const isFormValid = isAmountValid && !isLoading && !isSubmitting;
+  const isFormValid =
+    isAmountValid && !isLoading && !isSubmitting;
 
   const handleSupply = async () => {
     if (!isFormValid) return;
