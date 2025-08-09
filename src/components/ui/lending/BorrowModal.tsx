@@ -485,7 +485,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
             </div>
           </div>
 
-          {/* Enhanced Health Factor Display */}
+          {/* Enhanced health factor display */}
           <SimpleHealthIndicator
             userSupplyPositionsUSD={userSupplyPositionsUSD}
             userBorrowPositionsUSD={userBorrowPositionsUSD}
@@ -526,14 +526,14 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   )}
                 >
                   {validation.riskLevel === "liquidation"
-                    ? "Liquidation Risk"
+                    ? "liquidation risk"
                     : validation.riskLevel === "high" || isHighRiskTransaction
-                      ? "High Risk Transaction"
-                      : "Moderate Risk"}
+                      ? "high risk transaction"
+                      : "moderate risk"}
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
                   {isHighRiskTransaction
-                    ? `This transaction will set your Health Factor to ${newHealthFactor.toFixed(2)}`
+                    ? `This transaction will set your health factor to ${newHealthFactor.toFixed(2)}`
                     : validation.warningMessage}
                 </div>
                 {isHighRiskTransaction && (
