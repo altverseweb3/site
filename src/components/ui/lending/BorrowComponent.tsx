@@ -18,20 +18,35 @@ import {
   AaveReserveData,
   AaveReservesResult,
   UserBorrowPosition,
+  UserPosition,
 } from "@/types/aave";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 
 interface BorrowComponentProps {
   oraclePrices?: Record<string, number>;
+  healthFactor?: number;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
+  currentLTV?: number;
+  liquidationThreshold?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
 }
 
 const BorrowComponent: React.FC<BorrowComponentProps> = ({
   oraclePrices = {},
+  healthFactor = 1.24,
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+  currentLTV = 0,
+  liquidationThreshold = 85,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
 }) => {
   const [borrowableReserves, setBorrowableReserves] = useState<
     AaveReserveData[]
   >([]);
-  const [userBorrowPositions, setUserBorrowPositions] = useState<
+  const [localUserBorrowPositions, setLocalUserBorrowPositions] = useState<
     UserBorrowPosition[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -68,10 +83,10 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
         console.log("Fetching user borrow positions...");
 
         const borrowPositions = await fetchUserBorrowPositions(reserves);
-        setUserBorrowPositions(borrowPositions);
+        setLocalUserBorrowPositions(borrowPositions);
       } catch (err) {
         console.error("Error loading user borrow positions:", err);
-        setUserBorrowPositions([]);
+        setLocalUserBorrowPositions([]);
       } finally {
         setBorrowPositionsLoading(false);
       }
@@ -144,7 +159,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
         );
         // Clear data on error
         setBorrowableReserves([]);
-        setUserBorrowPositions([]);
+        setLocalUserBorrowPositions([]);
       } finally {
         setLoading(false);
       }
@@ -217,7 +232,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   ]);
 
   const hasData = borrowableReserves.length > 0;
-  const hasBorrowPositions = userBorrowPositions.length > 0;
+  const hasBorrowPositions = localUserBorrowPositions.length > 0;
   const showEmptyState = !loading && !error && !hasData;
   const isLoadingBorrowPositions = loading || borrowPositionsLoading;
 
@@ -243,7 +258,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
 
               {!isLoadingBorrowPositions &&
                 hasBorrowPositions &&
-                userBorrowPositions.map((borrowPosition) => (
+                localUserBorrowPositions.map((borrowPosition) => (
                   <BorrowOwnedCard
                     key={`${borrowPosition.asset.asset}-${aaveChain.chainId}`}
                     borrowPosition={borrowPosition}
@@ -339,10 +354,14 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                       availableToBorrowUSD={borrowData.amountUSD}
                       onBorrow={handleBorrow}
                       onDetails={handleDetails}
-                      healthFactor="1.24" // You'll want to get real health factor
-                      totalCollateralUSD={0} // You'll want to get real values
-                      totalDebtUSD={0} // You'll want to get real values
+                      healthFactor={healthFactor.toString()}
+                      totalCollateralUSD={totalCollateralUSD}
+                      totalDebtUSD={totalDebtUSD}
+                      currentLTV={currentLTV}
+                      liquidationThreshold={liquidationThreshold}
                       oraclePrices={oraclePrices}
+                      userSupplyPositions={userSupplyPositions}
+                      userBorrowPositions={userBorrowPositions}
                     />
                   );
                 })}
