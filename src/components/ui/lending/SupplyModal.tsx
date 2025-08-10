@@ -26,9 +26,14 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
-import { getHealthFactorColor } from "@/utils/aave/utils";
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+} from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import { formatHealthFactor } from "@/utils/formatters";
 
 // Main Supply Modal Component
 interface SupplyModalProps {
@@ -131,32 +136,16 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
   const supplyAmountUSD = supplyAmountNum * tokenPrice;
 
-  // Calculate USD positions EXACTLY like other modals
-  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
-    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      suppliedBalanceUSD:
-        oraclePrice !== undefined
-          ? (suppliedBalance * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
-    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      totalDebtUSD:
-        oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
   // Calculate current metrics using real user data
   const currentMetrics = calculateUserMetrics(
@@ -444,10 +433,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                     ),
                   )}
                 >
-                  {currentMetrics.healthFactor === null ||
-                  currentMetrics.healthFactor === Infinity
-                    ? "∞"
-                    : currentMetrics.healthFactor.toFixed(2)}
+                  {formatHealthFactor(currentMetrics.healthFactor)}
                 </div>
               </div>
 
@@ -470,9 +456,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                         getHealthFactorColor(newHealthFactor),
                       )}
                     >
-                      {newHealthFactor === Infinity
-                        ? "∞"
-                        : newHealthFactor.toFixed(2)}
+                      {formatHealthFactor(newHealthFactor)}
                     </div>
                   </div>
                 )}
@@ -554,7 +538,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
                   This supply will set your health factor to{" "}
-                  {newHealthFactor.toFixed(2)}
+                  {formatHealthFactor(newHealthFactor)}
                   {newHealthFactor < 1.0 && " - immediate liquidation risk"}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
