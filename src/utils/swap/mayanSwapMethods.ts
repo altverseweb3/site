@@ -29,8 +29,6 @@ export async function approveTokenSpending(
   tokenDecimals: number = 18,
 ): Promise<boolean> {
   try {
-    console.log(`Checking allowance for token ${tokenAddress}`);
-
     const tokenInterface = new ethers.Interface([
       "function allowance(address owner, address spender) view returns (uint256)",
       "function approve(address spender, uint256 amount) returns (bool)",
@@ -51,17 +49,13 @@ export async function approveTokenSpending(
     const amountWei = ethers.parseUnits(amount, tokenDecimals);
 
     if (allowance < amountWei) {
-      console.log("Insufficient allowance, sending approval transaction...");
-
       // Try approving the max amount first (most efficient for future swaps)
       try {
         const tx = await tokenContract.approve(
           spenderAddress,
           ethers.MaxUint256,
         );
-        console.log("Approval transaction sent:", tx.hash);
         await tx.wait();
-        console.log("Approval successful");
         return true;
       } catch (error) {
         console.error(
@@ -71,14 +65,11 @@ export async function approveTokenSpending(
 
         // Some tokens don't allow unlimited approvals, try the exact amount
         const tx = await tokenContract.approve(spenderAddress, amountWei);
-        console.log("Exact amount approval transaction sent:", tx.hash);
         await tx.wait();
-        console.log("Exact amount approval successful");
         return true;
       }
     }
 
-    console.log("Token already approved");
     return true;
   } catch (error) {
     console.error("Error approving token:", error);
@@ -145,7 +136,6 @@ export async function executeEvmSwap({
     // For non-native tokens, check and approve allowance
     if (!isNativeToken) {
       const forwarderAddress = addresses.MAYAN_FORWARDER_CONTRACT;
-      console.log("Mayan Forwarder address:", forwarderAddress);
 
       // Ensure token is approved for spending
       await approveTokenSpending(
@@ -156,8 +146,6 @@ export async function executeEvmSwap({
         tokenDecimals,
       );
     }
-
-    console.log("Executing EVM swap...");
 
     // Execute the swap with no permit
     const result = await swapFromEvm(
@@ -217,28 +205,10 @@ export async function executeSolanaSwap({
   try {
     if (!quote) throw new Error("Invalid quote");
 
-    console.log("Executing Solana swap with address:", swapperAddress);
-
     // This implements the function with proper overload signatures
     const transactionSigner = function (
       transaction: VersionedTransaction | Transaction,
     ) {
-      console.log(
-        "About to sign transaction:",
-        transaction instanceof Transaction
-          ? `Regular transaction with ${transaction.instructions.length} instructions`
-          : `Versioned transaction with message version ${transaction.version}`,
-      );
-
-      // Log transaction details before signing
-      if (transaction instanceof Transaction) {
-        console.log("Transaction feePayer:", transaction.feePayer?.toBase58());
-        console.log(
-          "Transaction recent blockhash:",
-          transaction.recentBlockhash,
-        );
-      }
-
       // Wrap in try/catch for better error logging
       try {
         return solanaSigner.signTransaction(transaction);
@@ -257,7 +227,7 @@ export async function executeSolanaSwap({
       connection,
     );
 
-    console.log("Swap result:", result);
+    console.info("Swap result:", result);
 
     return typeof result === "string" ? result : result.signature;
   } catch (error) {
@@ -375,11 +345,6 @@ export async function executeSuiSwap({
         "Transaction processed, but no digest was returned. Check effects.",
       );
     }
-
-    console.log(
-      "Sui swap transaction successful. Digest:",
-      executionResponse.digest,
-    );
     return executionResponse.digest;
   } catch (error) {
     console.error("Error executing Sui swap:", error);
@@ -428,20 +393,6 @@ export async function getMayanQuote(
   }
 
   try {
-    const quoteParams = {
-      amount: parseFloat(amount),
-      fromToken: sourceToken.address,
-      toToken: destinationToken.address,
-      fromChain: sourceChain.mayanName,
-      toChain: destinationChain.mayanName,
-      slippageBps,
-      gasDrop,
-      referrer,
-      referrerBps,
-    };
-    console.log("fetching quote with params:");
-    console.log(quoteParams);
-
     const quotes = await fetchQuote({
       amount: parseFloat(amount),
       fromToken: sourceToken.address,
@@ -453,8 +404,6 @@ export async function getMayanQuote(
       referrer,
       referrerBps,
     });
-
-    console.log("Mayan quotes:", quotes);
 
     return quotes;
   } catch (error) {

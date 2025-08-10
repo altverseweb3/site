@@ -205,8 +205,6 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
         Object.entries(processes).forEach(([id, process]) => {
           if (now <= process.expiresAt) {
             validProcesses[id] = process;
-          } else {
-            console.log(`Cleaning up expired process ${id}`);
           }
         });
 
