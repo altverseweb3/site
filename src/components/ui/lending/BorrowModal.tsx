@@ -148,7 +148,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Calculate values
   const borrowAmountNum = parseFloat(borrowAmount) || 0;
+<<<<<<< HEAD
   const borrowAmountUSD = borrowAmountNum * tokenPrice;
+=======
+  const borrowAmountUSD = borrowAmountNum * tokenPrice; // Default to 1 if price missing
+>>>>>>> d05273a (chore: refactor to use appropriate formatter)
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
   const {
