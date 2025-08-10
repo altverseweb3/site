@@ -428,6 +428,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 86ff4c1 (feat: enhance modals with health factor guard rails)
                   currentMetrics.healthFactor === Infinity
 =======
@@ -448,6 +449,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
 =======
                   currentMetrics.healthFactor === Infinity
 >>>>>>> c714772 (feat: enhance modals with health factor guard rails)
+=======
+                currentMetrics.healthFactor === Infinity
+>>>>>>> 23f4b28 (chore:remove-health-factor-indicator)
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>
@@ -652,7 +656,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   : !borrowingEnabled
                     ? "borrowing disabled"
                     : !validation.isValid &&
-                      validation.riskLevel === "liquidation"
+                        validation.riskLevel === "liquidation"
                       ? "too risky to borrow"
                       : !validation.isValid && validation.riskLevel === "high"
                         ? "high risk - blocked"
