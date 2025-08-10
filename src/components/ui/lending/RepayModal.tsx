@@ -233,10 +233,6 @@ const RepayModal: FC<RepayModalProps> = ({
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
-      console.log(
-        `💳 Repaying ${repayAmount} ${tokenSymbol} (${getDebtTypeDisplay()})...`,
-      );
-
       // Call the Aave repay transaction
       const result = await repay({
         tokenAddress,

@@ -53,9 +53,6 @@ const BorrowOwnedCard = ({
   const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
     try {
       const success = await onRepay(borrowPosition, amount, rateMode);
-      if (success) {
-        console.log(`Successfully repaid ${amount} ${asset.asset.ticker}`);
-      }
       return success;
     } catch (error) {
       console.error("Error completing repay:", error);
