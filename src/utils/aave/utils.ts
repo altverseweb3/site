@@ -33,3 +33,44 @@ export function getLTVColor(
   if (usage < 0.95) return "amber";
   return "red";
 }
+
+// Health Factor Calculator for Transaction Impact
+export function calculateNewHealthFactor(
+  currentHealthFactor: number,
+  currentCollateralUSD: number,
+  currentDebtUSD: number,
+  transactionAmountUSD: number,
+  transactionType: string,
+  liquidationThreshold: number,
+): number {
+  let newDebtUSD = currentDebtUSD;
+
+  switch (transactionType) {
+    case "borrow":
+      newDebtUSD += transactionAmountUSD;
+      break;
+    case "repay":
+      newDebtUSD = Math.max(0, newDebtUSD - transactionAmountUSD);
+      break;
+    default:
+      return currentHealthFactor;
+  }
+
+  if (newDebtUSD === 0) return Infinity;
+
+  if (currentHealthFactor === Infinity && currentDebtUSD === 0) {
+    if (transactionType === "borrow") {
+      const liquidationThresholdDecimal =
+        liquidationThreshold > 1
+          ? liquidationThreshold / 100
+          : liquidationThreshold;
+      const weightedCollateral =
+        currentCollateralUSD * liquidationThresholdDecimal;
+      return weightedCollateral / newDebtUSD;
+    }
+    return Infinity;
+  }
+
+  const weightedCollateral = currentHealthFactor * currentDebtUSD;
+  return weightedCollateral / newDebtUSD;
+}
