@@ -36,6 +36,7 @@ import {
   type PositionData,
   type AssetData,
 } from "@/utils/aave/transactionValidation";
+import { formatCurrency } from "@/utils/formatters";
 
 // Main Borrow Modal Component
 interface BorrowModalProps {
@@ -140,7 +141,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Calculate values
   const borrowAmountNum = parseFloat(borrowAmount) || 0;
-  const borrowAmountUSD = borrowAmountNum * (tokenPrice || 1); // Default to 1 if price missing
+  const borrowAmountUSD = borrowAmountNum * tokenPrice; // Default to 1 if price missing
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
   // Calculate USD positions EXACTLY like metrics header does
@@ -373,7 +374,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   {maxBorrowAmount} {tokenSymbol}
                 </div>
                 <div className="text-xs text-[#71717A]">
-                  ${maxBorrowUSD.toFixed(2)}
+                  {formatCurrency(maxBorrowUSD)}
                 </div>
               </div>
             </div>
