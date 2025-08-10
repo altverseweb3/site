@@ -328,6 +328,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
                     dollarAmount={reserve.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     oraclePrices={oraclePrices}
+                    userSupplyPositions={propUserSupplyPositions}
+                    userBorrowPositions={userBorrowPositions}
                   />
                 ))}
             </ScrollBoxSupplyBorrowAssets>
