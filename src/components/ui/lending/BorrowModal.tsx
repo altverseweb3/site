@@ -26,7 +26,10 @@ import { SupportedChainId } from "@/config/aave";
 import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { calculateUserBorrowPositionsUSD, getHealthFactorColor } from "@/utils/aave/utils";
+import {
+  calculateUserBorrowPositionsUSD,
+  getHealthFactorColor,
+} from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
