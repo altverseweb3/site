@@ -23,9 +23,13 @@ import {
   getHealthFactorColor,
   calculateUserSupplyPositionsUSD,
   calculateUserBorrowPositionsUSD,
+  getLTVColorClass,
 } from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
-import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  calculateUserMetrics,
+  calculateCollateralImpact,
+} from "@/utils/aave/metricsCalculations";
 import { formatHealthFactor } from "@/utils/formatters";
 import {
   AmberButton,
@@ -136,26 +140,14 @@ const CollateralModal: FC<CollateralModalProps> = ({
     userBorrowPositionsUSD,
   );
 
-  let newHealthFactor = currentMetrics.healthFactor || Infinity;
-  let newLTV = currentMetrics.currentLTV;
-  let isHighRiskTransaction = false;
-
-  if (currentMetrics.totalDebtUSD > 0) {
-    const newTotalCollateral = isCurrentlyCollateral
-      ? Math.max(0, currentMetrics.totalCollateralUSD - actualUSDValue)
-      : currentMetrics.totalCollateralUSD + actualUSDValue;
-
-    const newWeightedCollateral = newTotalCollateral * liquidationThreshold;
-    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
-    newLTV =
-      newTotalCollateral > 0
-        ? (currentMetrics.totalDebtUSD / newTotalCollateral) * 100
-        : currentMetrics.totalDebtUSD > 0
-          ? 100
-          : 0;
-
-    isHighRiskTransaction = newHealthFactor < 1.2;
-  }
+  // Calculate collateral impact using utility function
+  const { newHealthFactor, newLTV, isHighRiskTransaction } =
+    calculateCollateralImpact(
+      isCurrentlyCollateral,
+      currentMetrics,
+      actualUSDValue,
+      liquidationThreshold,
+    );
 
   const isFormValid =
     !isLoading &&
@@ -401,13 +393,10 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 <div
                   className={cn(
                     "text-lg font-semibold font-mono",
-                    currentMetrics.currentLTV <
-                      currentMetrics.liquidationThreshold * 0.7
-                      ? "text-green-500"
-                      : currentMetrics.currentLTV <
-                          currentMetrics.liquidationThreshold * 0.9
-                        ? "text-amber-500"
-                        : "text-red-500",
+                    getLTVColorClass(
+                      currentMetrics.currentLTV,
+                      currentMetrics.liquidationThreshold,
+                    ),
                   )}
                 >
                   {currentMetrics.currentLTV.toFixed(2)}%
@@ -424,11 +413,10 @@ const CollateralModal: FC<CollateralModalProps> = ({
                   <div
                     className={cn(
                       "text-lg font-semibold font-mono",
-                      newLTV < currentMetrics.liquidationThreshold * 0.7
-                        ? "text-green-500"
-                        : newLTV < currentMetrics.liquidationThreshold * 0.9
-                          ? "text-amber-500"
-                          : "text-red-500",
+                      getLTVColorClass(
+                        newLTV,
+                        currentMetrics.liquidationThreshold,
+                      ),
                     )}
                   >
                     {newLTV.toFixed(2)}%
@@ -541,15 +529,22 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 <span
                   className={cn(isHighRiskTransaction ? "text-red-500" : "")}
                 >
-                  {isSubmitting
-                    ? `${actionText.toLowerCase()}...`
-                    : isHighRiskTransaction && !acceptHighRisk
-                      ? "high risk - blocked"
-                      : isHighRiskTransaction && acceptHighRisk
-                        ? `high risk ${actionText.toLowerCase()}`
-                        : !canBeCollateral
-                          ? "not eligible"
-                          : `${actionText.toLowerCase()} collateral`}
+                  {
+                    // Show progress text during transaction submission
+                    isSubmitting
+                      ? `${actionText.toLowerCase()}...`
+                      : // Block high-risk transactions until user accepts risk
+                        isHighRiskTransaction && !acceptHighRisk
+                        ? "high risk - blocked"
+                        : // Allow high-risk transactions if user has accepted the risk
+                          isHighRiskTransaction && acceptHighRisk
+                          ? `high risk ${actionText.toLowerCase()}`
+                          : // Prevent action if asset cannot be used as collateral
+                            !canBeCollateral
+                            ? "not eligible"
+                            : // Default action text for normal transactions
+                              `${actionText.toLowerCase()} collateral`
+                  }
                 </span>
               </AmberButton>
             </div>
