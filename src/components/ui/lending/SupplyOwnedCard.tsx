@@ -15,7 +15,11 @@ import {
 import SupplyCollateralSwitch from "@/components/ui/lending/SupplyCollateralSwitch";
 import type { Chain } from "@/types/web3";
 import { WithdrawModal } from "@/components/ui/lending/WithdrawModal";
-import { AaveReserveData } from "@/types/aave";
+import {
+  AaveReserveData,
+  UserPosition,
+  UserBorrowPosition,
+} from "@/types/aave";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
@@ -30,6 +34,8 @@ interface SupplyOwnedCardProps {
   totalCollateralUSD?: number; // User's total collateral value
   totalDebtUSD?: number; // User's total debt value
   oraclePrices?: Record<string, number>; // Oracle prices for all assets
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
   onSwitch?: (asset: AaveReserveData) => void;
   onWithdraw?: (asset: AaveReserveData) => void;
   onCollateralChange?: (
@@ -51,6 +57,8 @@ const SupplyOwnedCard = ({
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   oraclePrices,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
   onCollateralChange = async () => true,
   onWithdrawComplete = async () => true,
 }: SupplyOwnedCardProps) => {
@@ -185,7 +193,6 @@ const SupplyOwnedCard = ({
           suppliedBalanceUSD={suppliedBalanceUSD}
           supplyAPY={supplyAPY}
           isCollateral={collateral}
-          healthFactor={healthFactor}
           tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85} // You might want to get this from asset data
           totalCollateralUSD={totalCollateralUSD}
@@ -194,6 +201,9 @@ const SupplyOwnedCard = ({
           tokenAddress={currentAsset.asset.address}
           tokenDecimals={currentAsset.asset.decimals}
           aTokenAddress={currentAsset.aTokenAddress}
+          userSupplyPositions={userSupplyPositions}
+          userBorrowPositions={userBorrowPositions}
+          oraclePrices={oraclePrices}
         >
           <BlueButton>withdraw</BlueButton>
         </WithdrawModal>

@@ -24,50 +24,49 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { getHealthFactorColor } from "@/utils/aave/utils";
-
-// Health Factor Calculator Utility
-const calculateNewHealthFactorForWithdraw = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  withdrawAmountUSD: number,
-  liquidationThreshold: number,
-  isCollateralAsset: boolean,
-): number => {
-  if (currentTotalDebtUSD === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  // If withdrawing collateral, subtract from collateral value
-  const newTotalCollateral = isCollateralAsset
-    ? Math.max(0, currentTotalCollateralUSD - withdrawAmountUSD)
-    : currentTotalCollateralUSD;
-
-  const adjustedCollateral = newTotalCollateral * liquidationThreshold;
-  return adjustedCollateral / currentTotalDebtUSD;
-};
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+  getTransactionButtonStyle,
+  getLTVColorClass,
+  getTransactionWarningText,
+} from "@/utils/aave/utils";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import {
+  validateWithdrawTransaction,
+  type PositionData,
+  type AssetData,
+} from "@/utils/aave/transactionValidation";
+import {
+  calculateUserMetrics,
+  calculateWithdrawImpact,
+} from "@/utils/aave/metricsCalculations";
+import { formatHealthFactor } from "@/utils/formatters";
 
 // Main Withdraw Modal Component
 interface WithdrawModalProps {
   tokenSymbol?: string;
   tokenName?: string;
-  tokenIcon?: string; // Token icon filename (e.g., "usdc.png")
-  chainId?: number; // Chain ID for token image path
-  suppliedBalance?: string; // Amount user has supplied
-  suppliedBalanceUSD?: string; // USD value of supplied balance
+  tokenIcon?: string;
+  chainId?: number;
+  suppliedBalance?: string;
+  suppliedBalanceUSD?: string;
   supplyAPY?: string;
-  isCollateral?: boolean; // Whether this asset is used as collateral
-  healthFactor?: string;
-  tokenPrice?: number; // Current token price in USD
-  liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
-  totalCollateralUSD?: number; // Current total collateral in USD
-  totalDebtUSD?: number; // Current total debt in USD
+  isCollateral?: boolean;
+  tokenPrice?: number;
+  liquidationThreshold?: number;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
   onWithdraw?: (amount: string) => Promise<boolean>;
-  children: ReactNode; // The trigger element
-  isLoading?: boolean; // Loading state from parent
-  tokenAddress?: string; // Token contract address
-  tokenDecimals?: number; // Token decimals
-  aTokenAddress?: string; // aToken contract address
+  children: ReactNode;
+  isLoading?: boolean;
+  tokenAddress?: string;
+  tokenDecimals?: number;
+  aTokenAddress?: string;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const WithdrawModal: FC<WithdrawModalProps> = ({
@@ -78,22 +77,23 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
   suppliedBalanceUSD = "0.00",
   supplyAPY = "3.53%",
   isCollateral = false,
-  healthFactor = "1.24",
-  tokenPrice = 1, // Default to $1 if not provided
-  liquidationThreshold = 0.85, // Default 85% LTV
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
+  tokenPrice = 1,
+  liquidationThreshold = 0.85,
   onWithdraw = async () => true,
   children,
   isLoading = false,
-  tokenAddress = "", // Token contract address
-  tokenDecimals = 18, // Token decimals
+  tokenAddress = "",
+  tokenDecimals = 18,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
+  const [acceptHighRisk, setAcceptHighRisk] = useState(false);
 
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
@@ -122,6 +122,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
 
     if (isOpen) {
       setWithdrawAmount("");
+      setAcceptHighRisk(false);
     } else {
       setWithdrawAmount("");
     }
@@ -132,39 +133,77 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
     return null;
   }
 
-  // Calculate USD value and health factor changes
+  // Calculate USD value and validation
   const withdrawAmountNum = parseFloat(withdrawAmount) || 0;
   const withdrawAmountUSD = withdrawAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
   const suppliedBalanceNum = parseFloat(suppliedBalance) || 0;
 
-  // Calculate new health factor if withdrawing collateral
-  const newHealthFactor =
-    isCollateral && totalDebtUSD > 0
-      ? calculateNewHealthFactorForWithdraw(
-          totalCollateralUSD,
-          totalDebtUSD,
-          withdrawAmountUSD,
-          liquidationThreshold,
-          isCollateral,
-        )
-      : currentHealthFactor;
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
-  // Check if withdrawal would be dangerous
-  const isDangerous =
-    isCollateral &&
-    newHealthFactor < 1.1 &&
-    totalDebtUSD > 0 &&
-    withdrawAmountNum > 0;
+  // Calculate current metrics using real user data
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  // Prepare validation data
+  const positionData: PositionData = {
+    totalCollateralUSD: currentMetrics.totalCollateralUSD,
+    totalDebtUSD: currentMetrics.totalDebtUSD,
+    healthFactor: currentMetrics.healthFactor || Infinity,
+  };
+
+  const assetData: AssetData = {
+    price: tokenPrice,
+    liquidationThreshold: liquidationThreshold,
+    isCollateral: isCollateral,
+  };
+
+  // Validate transaction
+  const validation = validateWithdrawTransaction(
+    positionData,
+    assetData,
+    withdrawAmountUSD,
+  );
+
+  // Calculate withdraw impact using utility function
+  const { newHealthFactor, newLTV, isHighRiskTransaction } =
+    calculateWithdrawImpact(
+      isCollateral,
+      currentMetrics,
+      withdrawAmountUSD,
+      liquidationThreshold,
+    );
+
+  // Check various validation conditions
   const exceedsBalance = withdrawAmountNum > suppliedBalanceNum;
 
-  // Validation
+  // Enhanced form validation
   const isAmountValid =
     withdrawAmountNum > 0 && withdrawAmountNum <= suppliedBalanceNum;
   const isFormValid =
-    isAmountValid && !isLoading && !isSubmitting && !isDangerous;
+    isAmountValid &&
+    !isLoading &&
+    !isSubmitting &&
+    (!isHighRiskTransaction || acceptHighRisk);
+
+  // Get button styling using utility function
+  const buttonStyle = getTransactionButtonStyle(
+    isSubmitting,
+    isHighRiskTransaction,
+    acceptHighRisk,
+    validation.riskLevel,
+    "withdraw",
+  );
 
   const handleWithdraw = async () => {
     if (!isFormValid) return;
@@ -379,20 +418,6 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             )}
           </div>
 
-          {/* Health Factor Impact Warning */}
-          {isDangerous && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-red-500" />
-              <div className="text-sm">
-                <div className="text-red-500 font-medium">risk warning</div>
-                <div className="text-[#A1A1AA] text-xs">
-                  withdrawing this amount would reduce your health factor below
-                  1.1, putting you at risk of liquidation
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* APY Loss Warning */}
           {withdrawAmountNum > 0 && (
             <div className="flex items-center gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
@@ -408,37 +433,143 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             </div>
           )}
 
-          {/* Health Factor Display */}
-          {totalDebtUSD > 0 && (
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">current health factor</span>
-                <span className={getHealthFactorColor(currentHealthFactor)}>
-                  {currentHealthFactor.toFixed(2)}
-                </span>
+          {/* Health Factor Display - Same style as BorrowModal */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    getHealthFactorColor(
+                      currentMetrics.healthFactor || Infinity,
+                    ),
+                  )}
+                >
+                  {formatHealthFactor(currentMetrics.healthFactor)}
+                </div>
               </div>
 
-              {Math.abs(healthFactorChange) > 0.01 &&
+              {withdrawAmountUSD > 0 &&
                 isCollateral &&
-                withdrawAmountNum > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-[#A1A1AA]">new health factor</span>
-                    <span className={getHealthFactorColor(newHealthFactor)}>
-                      {newHealthFactor.toFixed(2)}
-                      <span
-                        className={
-                          healthFactorChange < 0
-                            ? "text-red-500"
-                            : "text-green-500"
-                        }
-                      >
-                        {" "}
-                        ({healthFactorChange > 0 ? "+" : ""}
-                        {healthFactorChange.toFixed(2)})
-                      </span>
-                    </span>
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+              {withdrawAmountUSD > 0 &&
+                isCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">
+                      new health factor
+                    </div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        getHealthFactorColor(newHealthFactor),
+                      )}
+                    >
+                      {formatHealthFactor(newHealthFactor)}
+                    </div>
                   </div>
                 )}
+            </div>
+
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    getLTVColorClass(
+                      currentMetrics.currentLTV,
+                      currentMetrics.liquidationThreshold,
+                    ),
+                  )}
+                >
+                  {currentMetrics.currentLTV.toFixed(2)}%
+                </div>
+              </div>
+
+              {withdrawAmountUSD > 0 &&
+                isCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+              {withdrawAmountUSD > 0 &&
+                isCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        getLTVColorClass(
+                          newLTV,
+                          currentMetrics.liquidationThreshold,
+                        ),
+                      )}
+                    >
+                      {newLTV.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+
+          {/* Show validation warning if exists */}
+          {isHighRiskTransaction && (
+            <div
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-lg",
+                newHealthFactor < 1.1
+                  ? "bg-red-500/10 border border-red-500/20"
+                  : "bg-yellow-500/10 border border-yellow-500/20",
+              )}
+            >
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4",
+                  newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                )}
+              />
+              <div className="text-sm">
+                <div
+                  className={cn(
+                    "font-medium",
+                    newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                  )}
+                >
+                  {newHealthFactor < 1.1
+                    ? "liquidation risk"
+                    : "high risk transaction"}
+                </div>
+                <div className="text-[#A1A1AA] text-xs">
+                  This withdrawal will set your health factor to{" "}
+                  {formatHealthFactor(newHealthFactor)}
+                  {newHealthFactor < 1.0 && " - immediate liquidation risk"}
+                </div>
+                {
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="acceptHighRiskWithdraw"
+                      checked={acceptHighRisk}
+                      onChange={(e) => setAcceptHighRisk(e.target.checked)}
+                      className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
+                    />
+                    <label
+                      htmlFor="acceptHighRiskWithdraw"
+                      className="text-xs text-[#A1A1AA] cursor-pointer"
+                    >
+                      {newHealthFactor < 1.1
+                        ? "I understand the liquidation risk and accept it"
+                        : "I accept the high risk of this withdrawal"}
+                    </label>
+                  </div>
+                }
+              </div>
             </div>
           )}
 
@@ -447,22 +578,16 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
             <div className="flex-1">
               <BlueButton
                 onClick={handleWithdraw}
-                disabled={!isFormValid || isDangerous}
+                disabled={!isFormValid}
                 className={cn(
                   "h-8 py-2",
-                  !isFormValid || isDangerous
-                    ? "opacity-50 cursor-not-allowed"
-                    : "",
-                  isDangerous
-                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
-                    : "",
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                  buttonStyle.buttonClassName,
                 )}
               >
-                {isSubmitting
-                  ? "withdrawing..."
-                  : isDangerous
-                    ? "too risky to withdraw"
-                    : "withdraw"}
+                <span className={buttonStyle.textClassName}>
+                  {buttonStyle.buttonText}
+                </span>
               </BlueButton>
             </div>
 
@@ -474,8 +599,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            by withdrawing, you will reduce your earning potential and may
-            affect your borrowing capacity.
+            {getTransactionWarningText("withdraw")}
           </p>
         </div>
       </DialogContent>
