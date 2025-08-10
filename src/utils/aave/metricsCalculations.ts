@@ -331,10 +331,10 @@ export const calculateBorrowingMetrics = (
 
   const maxBorrowUSD = currentMetrics
     ? calculateMaxBorrowUSD(
-      currentMetrics.totalCollateralUSD,
-      currentMetrics.totalDebtUSD,
-      currentMetrics.liquidationThreshold,
-    )
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        currentMetrics.liquidationThreshold,
+      )
     : 0;
 
   // Use toPrecision for better formatting instead of toFixed
@@ -396,6 +396,57 @@ export const calculateWithdrawImpact = (
           ? 100
           : 0;
     // Allow risk acceptance for any transaction that would result in HF < 1.2 (including liquidation level)
+    isHighRiskTransaction = newHealthFactor < 1.2;
+  }
+
+  return {
+    newHealthFactor,
+    newLTV,
+    isHighRiskTransaction,
+  };
+};
+
+/**
+ * Calculate collateral enable/disable impact on health factor and LTV
+ * @param isCurrentlyCollateral - Whether the asset is currently used as collateral
+ * @param currentMetrics - Current user metrics (health factor, LTV, etc.)
+ * @param actualUSDValue - USD value of the asset being enabled/disabled as collateral
+ * @param liquidationThreshold - Liquidation threshold as decimal (e.g., 0.85)
+ * @returns Object with newHealthFactor, newLTV, and isHighRiskTransaction
+ */
+export const calculateCollateralImpact = (
+  isCurrentlyCollateral: boolean,
+  currentMetrics: UserMetrics,
+  actualUSDValue: number,
+  liquidationThreshold: number = 0.85,
+): {
+  newHealthFactor: number;
+  newLTV: number;
+  isHighRiskTransaction: boolean;
+} => {
+  let newHealthFactor = currentMetrics.healthFactor || Infinity;
+  let newLTV = currentMetrics.currentLTV;
+  let isHighRiskTransaction = false;
+
+  if (currentMetrics.totalDebtUSD > 0) {
+    const newTotalCollateral = isCurrentlyCollateral
+      ? Math.max(0, currentMetrics.totalCollateralUSD - actualUSDValue)
+      : currentMetrics.totalCollateralUSD + actualUSDValue;
+
+    const liquidationThresholdDecimal =
+      liquidationThreshold > 1
+        ? liquidationThreshold / 100
+        : liquidationThreshold;
+    const newWeightedCollateral =
+      newTotalCollateral * liquidationThresholdDecimal;
+    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
+    newLTV =
+      newTotalCollateral > 0
+        ? (currentMetrics.totalDebtUSD / newTotalCollateral) * 100
+        : currentMetrics.totalDebtUSD > 0
+          ? 100
+          : 0;
+
     isHighRiskTransaction = newHealthFactor < 1.2;
   }
 
