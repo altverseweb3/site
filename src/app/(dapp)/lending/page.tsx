@@ -126,15 +126,15 @@ const BorrowLendComponent: React.FC = () => {
   const userMetrics = isWalletConnected
     ? calculateUserMetrics(userSupplyPositions, userBorrowPositions)
     : {
-      netWorth: 0,
-      netAPY: null,
-      healthFactor: null,
-      totalCollateralUSD: 0,
-      totalDebtUSD: 0,
-      currentLTV: 0,
-      maxLTV: 0,
-      liquidationThreshold: 0,
-    };
+        netWorth: 0,
+        netAPY: null,
+        healthFactor: null,
+        totalCollateralUSD: 0,
+        totalDebtUSD: 0,
+        currentLTV: 0,
+        maxLTV: 0,
+        liquidationThreshold: 0,
+      };
 
   const handleChainChange = async (value: string | string[]) => {
     const newChainId = typeof value === "string" ? value : "";

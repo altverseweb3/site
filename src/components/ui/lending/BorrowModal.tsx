@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { AlertCircle, Shield, ShieldOff } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,150 +11,228 @@ import {
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/StyledDialog";
-import { cn } from "@/lib/utils";
-import { useAaveInteract } from "@/utils/aave/interact";
-import { toast } from "sonner";
-import { useState, useEffect, FC, ReactNode } from "react";
-import { getChainName, SupportedChainId } from "@/config/aave";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
-import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import {
-  getHealthFactorColor,
-  calculateUserSupplyPositionsUSD,
-  calculateUserBorrowPositionsUSD,
-  getLTVColorClass,
-} from "@/utils/aave/utils";
-import { UserPosition, UserBorrowPosition } from "@/types/aave";
-import {
-  calculateUserMetrics,
-  calculateCollateralImpact,
-} from "@/utils/aave/metricsCalculations";
-import { formatHealthFactor } from "@/utils/formatters";
 import {
   AmberButton,
   GrayButton,
 } from "@/components/ui/lending/SupplyButtonComponents";
+import { Input } from "@/components/ui/Input";
+import { TokenImage } from "@/components/ui/TokenImage";
+import { cn } from "@/lib/utils";
+import { useAaveInteract } from "@/utils/aave/interact";
+import { RateMode } from "@/types/aave";
+import { toast } from "sonner";
+import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
+import { SupportedChainId } from "@/config/aave";
+import type { Token } from "@/types/web3";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
+import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import {
+  calculateUserBorrowPositionsUSD,
+  getHealthFactorColor,
+} from "@/utils/aave/utils";
+import { getChainByChainId } from "@/config/chains";
+import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import {
+  calculateBorrowingMetrics,
+  calculateNewHealthFactorAfterBorrow,
+  isHighRiskTransaction as isHighRiskTransactionUtil,
+} from "@/utils/aave/metricsCalculations";
+import {
+  validateBorrowTransaction,
+  type PositionData,
+  type AssetData,
+} from "@/utils/aave/transactionValidation";
+import { formatCurrency } from "@/utils/formatters";
 
-interface CollateralModalProps {
+// Main Borrow Modal Component
+interface BorrowModalProps {
   tokenSymbol?: string;
   tokenName?: string;
-  tokenIcon?: string; // Token icon filename (e.g., "usdc.png")
-  chainId?: number; // Chain ID for token image path
-  suppliedBalance?: string; // Amount user has supplied
-  suppliedBalanceUSD?: string; // USD value of supplied balance
-  supplyAPY?: string;
-  isCurrentlyCollateral?: boolean; // Current collateral status
-  isolationModeEnabled?: boolean; // Whether the asset is in isolation mode
-  canBeCollateral?: boolean; // Whether the asset can be used as collateral
-  tokenPrice?: number; // Current token price in USD
-  liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
-  onCollateralChange?: (enabled: boolean) => Promise<boolean>;
-  children: ReactNode; // The trigger element
-  isLoading?: boolean; // Loading state from parent
-  tokenAddress?: string; // Token contract address
-  tokenDecimals?: number; // Token decimals
+  tokenIcon?: string;
+  chainId?: number;
+  availableToBorrow?: string; // Amount user can borrow
+  availableToBorrowUSD?: string; // USD value of borrowable amount
+  variableBorrowAPY?: string;
+  stableBorrowAPY?: string;
+  borrowingEnabled?: boolean;
+  isIsolationMode?: boolean;
+  healthFactor?: string;
+  tokenPrice?: number;
+  totalCollateralUSD?: number;
+  totalDebtUSD?: number;
+  currentLTV?: number; // Current loan-to-value ratio
+  liquidationThreshold?: number; // Liquidation threshold percentage
+  onBorrow?: (
+    amount: string,
+    rateMode: "variable" | "stable",
+  ) => Promise<boolean>;
+  children: ReactNode;
+  isLoading?: boolean;
+  tokenAddress?: string;
+  tokenDecimals?: number;
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
   oraclePrices?: Record<string, number>;
 }
 
-const CollateralModal: FC<CollateralModalProps> = ({
+const BorrowModal: FC<BorrowModalProps> = ({
   tokenSymbol = "USDC",
-  tokenName = "USD Coin",
+  tokenName,
   tokenIcon = "usdc.png",
   chainId = 1,
-  suppliedBalance = "0",
-  suppliedBalanceUSD = "0.00",
-  supplyAPY = "3.53%",
-  isCurrentlyCollateral = false,
-  isolationModeEnabled = false,
-  canBeCollateral = true,
+  availableToBorrowUSD = "0.00",
+  variableBorrowAPY = "5.50%",
+  stableBorrowAPY = "7.20%",
+  borrowingEnabled = true,
+  isIsolationMode = false,
+  healthFactor = "1.24",
   tokenPrice = 1,
-  liquidationThreshold = 0.85, // Default 85% LTV
-  onCollateralChange = async () => true,
+  totalCollateralUSD = 0,
+  totalDebtUSD = 0,
+  liquidationThreshold = 85,
+  onBorrow = async () => true,
   children,
   isLoading = false,
-  tokenAddress = "", // Token contract address
+  tokenAddress = "",
+  tokenDecimals = 18,
   userSupplyPositions = [],
   userBorrowPositions = [],
   oraclePrices = {},
 }) => {
+  const [borrowAmount, setBorrowAmount] = useState("");
+  const [rateMode, setRateMode] = useState<"variable" | "stable">("variable");
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [hasImageError, setHasImageError] = useState(false);
   const [acceptHighRisk, setAcceptHighRisk] = useState(false);
 
+  // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
-  const { setCollateral } = useAaveInteract();
+  const { borrow } = useAaveInteract();
 
-  const chainName = getChainName(chainId);
-  const fallbackIcon = tokenSymbol.charAt(0).toUpperCase();
-
-  const getImagePath = () => {
-    if (!tokenIcon || tokenIcon === "unknown.png" || hasImageError) {
-      return null;
-    }
-    return `/tokens/${chainName}/pngs/${tokenIcon}`;
+  // Create Token and Chain objects for TokenImage component
+  const token: Token = {
+    id: tokenAddress || `${tokenSymbol}-${chainId}`,
+    name: tokenName || tokenSymbol,
+    ticker: tokenSymbol,
+    icon: tokenIcon || "unknown.png",
+    address: tokenAddress || "",
+    decimals: tokenDecimals,
+    chainId: chainId,
+    stringChainId: chainId.toString(),
   };
 
-  const imagePath = getImagePath();
+  const chain = getChainByChainId(chainId);
 
+  // Handle client-side mounting
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Reset form when modal opens/closes
   useEffect(() => {
     if (!isMounted) return;
 
     if (isOpen) {
+      setBorrowAmount("");
+      setRateMode("variable");
       setAcceptHighRisk(false);
     }
   }, [isOpen, isMounted]);
+
   if (!isMounted) {
     return null;
   }
 
-  const suppliedBalanceUSDNum = parseFloat(suppliedBalanceUSD) || 0;
-  const calculatedUSDValue = parseFloat(suppliedBalance) * tokenPrice;
-  const actualUSDValue =
-    suppliedBalanceUSDNum > 0 ? suppliedBalanceUSDNum : calculatedUSDValue;
+  // Calculate values
+  const borrowAmountNum = parseFloat(borrowAmount) || 0;
+  const borrowAmountUSD = borrowAmountNum * tokenPrice;
+  const currentHealthFactor = parseFloat(healthFactor) || 0;
 
-  const isEnabling = !isCurrentlyCollateral;
-  const actionText = isEnabling ? "Enable" : "Disable";
-
-  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+  const {
+    currentMetrics,
+    maxBorrowUSD,
+    maxBorrowAmount,
+    isStableRateAvailable,
+  } = calculateBorrowingMetrics(
     userSupplyPositions,
+    userBorrowPositions,
+    tokenPrice,
+    stableBorrowAPY,
     oraclePrices,
   );
+
+  // Calculate USD positions for SimpleHealthIndicator
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
 
   const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
     userBorrowPositions,
     oraclePrices,
   );
 
-  const currentMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
+  // Prepare validation data
+  const positionData: PositionData = {
+    totalCollateralUSD,
+    totalDebtUSD,
+    healthFactor: currentHealthFactor,
+  };
+
+  const assetData: AssetData = {
+    price: tokenPrice,
+    liquidationThreshold: liquidationThreshold / 100, // Use actual liquidation threshold from props
+    isCollateral: false, // Borrowed assets don't affect collateral
+  };
+
+  // Calculate available amounts
+  const availableToBorrowUSDNum = parseFloat(availableToBorrowUSD) || 0;
+
+  // Validate transaction
+  const validation = validateBorrowTransaction(
+    positionData,
+    assetData,
+    borrowAmountUSD,
+    availableToBorrowUSDNum,
   );
 
-  // Calculate collateral impact using utility function
-  const { newHealthFactor, newLTV, isHighRiskTransaction } =
-    calculateCollateralImpact(
-      isCurrentlyCollateral,
-      currentMetrics,
-      actualUSDValue,
-      liquidationThreshold,
-    );
+  // Check various validation conditions
+  const exceedsMaxSafe = borrowAmountNum > parseFloat(maxBorrowAmount);
+  const isAmountValid =
+    borrowAmountNum > 0 && borrowAmountNum <= parseFloat(maxBorrowAmount);
 
+  // Calculate new health factor to check if this is high risk
+  const newHealthFactor = currentMetrics
+    ? calculateNewHealthFactorAfterBorrow(
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        borrowAmountUSD,
+        currentMetrics.liquidationThreshold,
+      )
+    : Infinity;
+  const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
+
+  // Enhanced form validation - require risk acceptance for high risk transactions
   const isFormValid =
+    isAmountValid &&
+    borrowingEnabled &&
     !isLoading &&
     !isSubmitting &&
-    canBeCollateral &&
+    (validation.isValid || (isHighRiskTransaction && acceptHighRisk)) &&
     (!isHighRiskTransaction || acceptHighRisk);
 
-  const handleCollateralToggle = async () => {
+  const handleBorrow = async () => {
     if (!isFormValid) return;
 
     // Check wallet connection
@@ -178,14 +255,6 @@ const CollateralModal: FC<CollateralModalProps> = ({
       return;
     }
 
-    // Check if asset can be collateral
-    if (!canBeCollateral) {
-      toast.error("Asset cannot be used as collateral", {
-        description: `${tokenSymbol} is not eligible for use as collateral`,
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -193,56 +262,68 @@ const CollateralModal: FC<CollateralModalProps> = ({
         ? typeof evmNetwork.chainId === "string"
           ? parseInt(evmNetwork.chainId, 10)
           : evmNetwork.chainId
-        : 1; // Default to Ethereum mainnet
+        : 1;
 
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
 
       // Show initial toast
       const toastId = toast.loading(
-        `${actionText} collateral for ${tokenSymbol}`,
+        `Borrowing ${borrowAmount} ${tokenSymbol}`,
         {
-          description: `${actionText} ${tokenSymbol} as collateral`,
+          description: `Borrowing at ${rateMode} rate`,
         },
       );
 
-      // Call the real Aave collateral toggle function
-      const result = await setCollateral({
+      // Call the Aave borrow function
+      const result = await borrow({
         tokenAddress,
-        useAsCollateral: isEnabling,
+        amount: borrowAmount,
+        rateMode: rateMode === "variable" ? RateMode.Variable : RateMode.Stable,
+        tokenDecimals,
         tokenSymbol,
         userAddress,
         chainId: currentChainId as SupportedChainId,
       });
 
       if (result.success) {
-        toast.success(
-          `Successfully ${isEnabling ? "enabled" : "disabled"} ${tokenSymbol} as collateral`,
-          {
-            id: toastId,
-            description: `Transaction: ${result.txHash?.slice(0, 10)}...`,
-          },
-        );
+        toast.success(`Successfully borrowed ${borrowAmount} ${tokenSymbol}`, {
+          id: toastId,
+          description: `Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
 
-        // Close modal
+        // Reset form and close modal
         setIsOpen(false);
+        setBorrowAmount("");
 
         // Call the optional callback
-        if (onCollateralChange) {
-          await onCollateralChange(isEnabling);
+        if (onBorrow) {
+          await onBorrow(borrowAmount, rateMode);
         }
       } else {
-        toast.error(`Failed to ${actionText.toLowerCase()} collateral`, {
+        toast.error("Borrow failed", {
           id: toastId,
           description: result.error || "Transaction failed",
         });
       }
     } catch (error: unknown) {
-      toast.error(`Failed to ${actionText.toLowerCase()} collateral`, {
+      toast.error("Borrow failed", {
         description: (error as Error).message || "An unexpected error occurred",
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleMaxClick = () => {
+    // Use the max safe amount (HF = 1.12)
+    setBorrowAmount(maxBorrowAmount);
+  };
+
+  const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setBorrowAmount(value);
     }
   };
 
@@ -252,261 +333,218 @@ const CollateralModal: FC<CollateralModalProps> = ({
       <DialogContent className="sm:max-w-[384px] bg-[#18181B] border-[#27272A]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-[#FAFAFA]">
-            {imagePath ? (
-              <Image
-                src={imagePath}
-                alt={tokenSymbol}
-                width={24}
-                height={24}
-                className="rounded-full"
-                onError={() => setHasImageError(true)}
-              />
-            ) : (
-              <div className="bg-blue-500 rounded-full p-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {fallbackIcon}
-                </span>
-              </div>
-            )}
-            {actionText.toLowerCase()} {tokenSymbol} collateral
+            <div className="rounded-full overflow-hidden">
+              <TokenImage token={token} chain={chain} size="sm" />
+            </div>
+            borrow {tokenSymbol}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Current Position Info */}
+          {/* Available to borrow info */}
           <div className="p-4 bg-[#27272A] rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">supplied amount</span>
+              <span className="text-sm text-[#A1A1AA]">
+                available to borrow
+              </span>
               <div className="text-right">
                 <div className="text-sm text-[#FAFAFA]">
-                  {suppliedBalance} {tokenSymbol}
+                  {maxBorrowAmount} {tokenSymbol}
                 </div>
                 <div className="text-xs text-[#71717A]">
-                  ${suppliedBalanceUSD}
+                  {formatCurrency(maxBorrowUSD)}
                 </div>
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">supply APY</span>
-              <span className="text-sm text-green-500">{supplyAPY}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#A1A1AA]">current status</span>
+              <span className="text-sm text-[#A1A1AA]">
+                current health factor
+              </span>
               <span
-                className={
-                  isCurrentlyCollateral ? "text-green-500" : "text-[#A1A1AA]"
-                }
+                className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
-                {isCurrentlyCollateral
-                  ? "collateral enabled"
-                  : "collateral disabled"}
+                {!currentMetrics ||
+                currentMetrics.healthFactor === null ||
+                currentMetrics.healthFactor === Infinity
+                  ? "∞"
+                  : currentMetrics.healthFactor.toFixed(2)}
               </span>
             </div>
           </div>
 
-          {/* Action Description */}
-          <div className="space-y-3">
-            {isEnabling ? (
-              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <Shield className="h-4 w-4 text-green-500" />
-                <div className="text-sm">
-                  <div className="text-[#FAFAFA] font-medium">
-                    enable as collateral
-                  </div>
-                  <div className="text-[#A1A1AA] text-xs">
-                    this asset will be used to back your borrowing power
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                <ShieldOff className="h-4 w-4 text-orange-500" />
-                <div className="text-sm">
-                  <div className="text-[#FAFAFA] font-medium">
-                    disable as collateral
-                  </div>
-                  <div className="text-[#A1A1AA] text-xs">
-                    this asset will no longer back your borrowing power
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Isolation Mode Warning */}
-            {isolationModeEnabled && (
-              <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <div className="text-sm">
-                  <div className="text-[#FAFAFA] font-medium">
-                    isolation mode active
-                  </div>
-                  <div className="text-[#A1A1AA] text-xs">
-                    you can only borrow stablecoins with this asset as
-                    collateral
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Health Factor Display - Same style as BorrowModal */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-4">
-              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-                <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
-                <div
-                  className={cn(
-                    "text-lg font-semibold font-mono",
-                    getHealthFactorColor(
-                      currentMetrics.healthFactor || Infinity,
-                    ),
-                  )}
-                >
-                  {formatHealthFactor(currentMetrics.healthFactor)}
-                </div>
-              </div>
-
-              {currentMetrics.totalDebtUSD > 0 && (
-                <div className="text-[#71717A]">→</div>
-              )}
-
-              {currentMetrics.totalDebtUSD > 0 && (
-                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-                  <div className="text-xs text-[#A1A1AA] mb-1">
-                    new health factor
-                  </div>
-                  <div
-                    className={cn(
-                      "text-lg font-semibold font-mono",
-                      getHealthFactorColor(newHealthFactor),
-                    )}
-                  >
-                    {formatHealthFactor(newHealthFactor)}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-4">
-              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-                <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
-                <div
-                  className={cn(
-                    "text-lg font-semibold font-mono",
-                    getLTVColorClass(
-                      currentMetrics.currentLTV,
-                      currentMetrics.liquidationThreshold,
-                    ),
-                  )}
-                >
-                  {currentMetrics.currentLTV.toFixed(2)}%
-                </div>
-              </div>
-
-              {currentMetrics.totalDebtUSD > 0 && (
-                <div className="text-[#71717A]">→</div>
-              )}
-
-              {currentMetrics.totalDebtUSD > 0 && (
-                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
-                  <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
-                  <div
-                    className={cn(
-                      "text-lg font-semibold font-mono",
-                      getLTVColorClass(
-                        newLTV,
-                        currentMetrics.liquidationThreshold,
-                      ),
-                    )}
-                  >
-                    {newLTV.toFixed(2)}%
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Asset Details */}
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">asset</span>
+          {/* Amount Input */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-[#A1A1AA]">
+                borrow amount
+              </label>
               <div className="flex items-center gap-2">
-                {imagePath ? (
-                  <Image
-                    src={imagePath}
-                    alt={tokenSymbol}
-                    width={16}
-                    height={16}
-                    className="rounded-full"
-                    onError={() => setHasImageError(true)}
-                  />
-                ) : (
-                  <div className="bg-blue-500 rounded-full flex-shrink-0 w-4 h-4 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {fallbackIcon}
-                    </span>
-                  </div>
-                )}
-                <span className="text-[#FAFAFA]">{tokenName}</span>
+                <div className="text-xs text-[#A1A1AA]">
+                  max: {maxBorrowAmount} {tokenSymbol}
+                </div>
+                <button
+                  onClick={handleMaxClick}
+                  disabled={isLoading || isSubmitting}
+                  className="text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:text-sky-400 hover:bg-sky-500/30 transition-colors disabled:opacity-50"
+                >
+                  max
+                </button>
               </div>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">liquidation threshold</span>
-              <span className="text-[#FAFAFA]">
-                {(liquidationThreshold * 100).toFixed(0)}%
-              </span>
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="0.0"
+                value={borrowAmount}
+                onChange={handleAmountChange}
+                disabled={isLoading || isSubmitting}
+                className={cn(
+                  "pr-16 bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#71717A] text-lg",
+                  !isAmountValid && borrowAmount && "border-red-500",
+                  exceedsMaxSafe && "border-red-500",
+                )}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <span className="text-sm text-[#A1A1AA]">{tokenSymbol}</span>
+              </div>
+            </div>
+
+            {/* USD Value */}
+            <div className="mt-2 text-xs text-[#71717A]">
+              ${borrowAmountUSD.toFixed(2)} USD
+            </div>
+
+            {/* Validation errors */}
+            {exceedsMaxSafe && borrowAmount && (
+              <div className="flex items-center gap-1 mt-2">
+                <AlertCircle size={14} className="text-red-500" />
+                <p className="text-red-500 text-xs">
+                  Amount exceeds maximum safe borrowing limit
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Rate Mode Selection */}
+          <div>
+            <label className="text-sm font-medium text-[#A1A1AA] mb-3 block">
+              interest rate
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setRateMode("variable")}
+                className={cn(
+                  "p-3 rounded-lg border text-left transition-colors",
+                  rateMode === "variable"
+                    ? "bg-orange-500/10 border-orange-500/50 text-orange-400"
+                    : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-orange-500/30",
+                )}
+              >
+                <div className="font-medium text-sm">Variable</div>
+                <div className="text-xs">{variableBorrowAPY}%</div>
+              </button>
+              <button
+                onClick={() => setRateMode("stable")}
+                disabled={!isStableRateAvailable}
+                className={cn(
+                  "p-3 rounded-lg border text-left transition-colors",
+                  !isStableRateAvailable && "opacity-50 cursor-not-allowed",
+                  rateMode === "stable" && isStableRateAvailable
+                    ? "bg-sky-500/10 border-sky-500/50 text-sky-400"
+                    : "bg-[#27272A] border-[#3F3F46] text-[#A1A1AA] hover:border-sky-500/30",
+                )}
+              >
+                <div className="font-medium text-sm">
+                  Stable {!isStableRateAvailable && "(Unavailable)"}
+                </div>
+                <div className="text-xs">
+                  {isStableRateAvailable ? `${stableBorrowAPY}%` : "0.00%"}
+                </div>
+              </button>
             </div>
           </div>
 
-          {/* High Risk Warning with Acceptance Checkbox */}
-          {isHighRiskTransaction && (
+          {/* Enhanced health factor display */}
+          <SimpleHealthIndicator
+            userSupplyPositionsUSD={userSupplyPositionsUSD}
+            userBorrowPositionsUSD={userBorrowPositionsUSD}
+            transactionAmountUSD={borrowAmountUSD}
+            transactionType="borrow"
+            transactionAssetAddress={tokenAddress}
+          />
+
+          {/* Show validation warning if exists */}
+          {(validation.warningMessage || isHighRiskTransaction) && (
             <div
               className={cn(
                 "flex items-center gap-2 p-3 rounded-lg",
-                newHealthFactor < 1.1
+                validation.riskLevel === "liquidation"
                   ? "bg-red-500/10 border border-red-500/20"
-                  : "bg-yellow-500/10 border border-yellow-500/20",
+                  : validation.riskLevel === "high"
+                    ? "bg-red-500/10 border border-red-500/20"
+                    : "bg-yellow-500/10 border border-yellow-500/20",
               )}
             >
               <AlertCircle
                 className={cn(
                   "h-4 w-4",
-                  newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                  validation.riskLevel === "liquidation" ||
+                    validation.riskLevel === "high"
+                    ? "text-red-500"
+                    : "text-yellow-500",
                 )}
               />
               <div className="text-sm">
                 <div
                   className={cn(
                     "font-medium",
-                    newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                    validation.riskLevel === "liquidation" ||
+                      validation.riskLevel === "high"
+                      ? "text-red-500"
+                      : "text-yellow-500",
                   )}
                 >
-                  {newHealthFactor < 1.1
+                  {validation.riskLevel === "liquidation"
                     ? "liquidation risk"
-                    : "high risk transaction"}
+                    : validation.riskLevel === "high" || isHighRiskTransaction
+                      ? "high risk transaction"
+                      : "moderate risk"}
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
-                  This {isEnabling ? "enabling" : "disabling"} will set your
-                  health factor to {formatHealthFactor(newHealthFactor)}
-                  {newHealthFactor < 1.0 && " - immediate liquidation risk"}
+                  {isHighRiskTransaction
+                    ? `This transaction will set your health factor to ${newHealthFactor.toFixed(2)}`
+                    : validation.warningMessage}
                 </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="acceptHighRiskCollateral"
-                    checked={acceptHighRisk}
-                    onChange={(e) => setAcceptHighRisk(e.target.checked)}
-                    className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
-                  />
-                  <label
-                    htmlFor="acceptHighRiskCollateral"
-                    className="text-xs text-[#A1A1AA] cursor-pointer"
-                  >
-                    {newHealthFactor < 1.1
-                      ? "I understand the liquidation risk and accept it"
-                      : "I accept the high risk of this transaction"}
-                  </label>
+                {isHighRiskTransaction && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="acceptHighRisk"
+                      checked={acceptHighRisk}
+                      onChange={(e) => setAcceptHighRisk(e.target.checked)}
+                      className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
+                    />
+                    <label
+                      htmlFor="acceptHighRisk"
+                      className="text-xs text-[#A1A1AA] cursor-pointer"
+                    >
+                      I accept the high risk of this transaction
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Isolation Mode Warning */}
+          {isIsolationMode && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
+              <div className="text-sm">
+                <div className="text-[#FAFAFA] font-medium">isolation mode</div>
+                <div className="text-[#A1A1AA] text-xs">
+                  you can only borrow stablecoins in isolation mode
                 </div>
               </div>
             </div>
@@ -516,36 +554,33 @@ const CollateralModal: FC<CollateralModalProps> = ({
           <div className="flex gap-3 pt-2">
             <div className="flex-1">
               <AmberButton
-                onClick={handleCollateralToggle}
+                onClick={handleBorrow}
                 disabled={!isFormValid}
                 className={cn(
                   "h-8 py-2",
                   !isFormValid ? "opacity-50 cursor-not-allowed" : "",
-                  isHighRiskTransaction
-                    ? "border-red-500/25 bg-red-500/10 hover:bg-red-500/20"
+                  validation.riskLevel === "liquidation" ||
+                    validation.riskLevel === "high"
+                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
                     : "",
                 )}
               >
-                <span
-                  className={cn(isHighRiskTransaction ? "text-red-500" : "")}
-                >
-                  {
-                    // Show progress text during transaction submission
-                    isSubmitting
-                      ? `${actionText.toLowerCase()}...`
-                      : // Block high-risk transactions until user accepts risk
-                      isHighRiskTransaction && !acceptHighRisk
+                {isSubmitting
+                  ? "borrowing..."
+                  : !borrowingEnabled
+                    ? "borrowing disabled"
+                    : !validation.isValid &&
+                        validation.riskLevel === "liquidation"
+                      ? "too risky to borrow"
+                      : !validation.isValid && validation.riskLevel === "high"
                         ? "high risk - blocked"
-                        : // Allow high-risk transactions if user has accepted the risk
-                        isHighRiskTransaction && acceptHighRisk
-                          ? `high risk ${actionText.toLowerCase()}`
-                          : // Prevent action if asset cannot be used as collateral
-                          !canBeCollateral
-                            ? "not eligible"
-                            : // Default action text for normal transactions
-                            `${actionText.toLowerCase()} collateral`
-                  }
-                </span>
+                        : isHighRiskTransaction && !acceptHighRisk
+                          ? "accept risk to continue"
+                          : isHighRiskTransaction && acceptHighRisk
+                            ? "high risk borrow"
+                            : exceedsMaxSafe
+                              ? "exceeds max safe"
+                              : "borrow"}
               </AmberButton>
             </div>
 
@@ -557,9 +592,8 @@ const CollateralModal: FC<CollateralModalProps> = ({
           </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            {isEnabling
-              ? "enabling this asset as collateral will increase your borrowing power."
-              : "disabling this asset as collateral will reduce your borrowing power."}
+            by borrowing, you will pay interest at the {rateMode} rate. ensure
+            you can repay to avoid liquidation.
           </p>
         </div>
       </DialogContent>
@@ -568,13 +602,13 @@ const CollateralModal: FC<CollateralModalProps> = ({
 };
 
 export {
-  CollateralModal,
-  Dialog as CollateralDialog,
-  DialogTrigger as CollateralDialogTrigger,
-  DialogPortal as CollateralDialogPortal,
-  DialogOverlay as CollateralDialogOverlay,
-  DialogContent as CollateralDialogContent,
-  DialogHeader as CollateralDialogHeader,
-  DialogTitle as CollateralDialogTitle,
-  DialogClose as CollateralDialogClose,
+  BorrowModal,
+  Dialog as BorrowDialog,
+  DialogTrigger as BorrowDialogTrigger,
+  DialogPortal as BorrowDialogPortal,
+  DialogOverlay as BorrowDialogOverlay,
+  DialogContent as BorrowDialogContent,
+  DialogHeader as BorrowDialogHeader,
+  DialogTitle as BorrowDialogTitle,
+  DialogClose as BorrowDialogClose,
 };
