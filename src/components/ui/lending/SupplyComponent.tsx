@@ -309,8 +309,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
                   <SupplyUnownedCard
                     key={`${reserve.asset.address}-${aaveChain.chainId}`}
                     currentAsset={reserve}
-                    userBalance={reserve.userBalanceFormatted || "0.00"}
-                    dollarAmount={reserve.userBalanceUsd || "0.00"}
+                    userBalance={reserve.asset.userBalance || "0"}
+                    dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     oraclePrices={oraclePrices}
                   />
