@@ -167,75 +167,6 @@ export const calculateLTVData = (
 
   return { currentLTV, maxLTV, liquidationThreshold };
 };
-
-/**
- * Calculate the maximum amount in USD that can be borrowed while maintaining a 1.12 health factor
- * @param totalCollateralUSD - Total collateral value in USD
- * @param totalDebtUSD - Total debt value in USD
- * @param liquidationThreshold - Weighted liquidation threshold (as decimal, e.g., 0.85 for 85%)
- * @returns Maximum borrowable amount in USD
- */
-export const calculateMaxBorrowUSD = (
-  totalCollateralUSD: number,
-  totalDebtUSD: number,
-  liquidationThreshold: number,
-): number => {
-  if (totalCollateralUSD <= 0) return 0;
-
-  const liquidationThresholdDecimal =
-    liquidationThreshold > 1
-      ? liquidationThreshold / 100
-      : liquidationThreshold;
-  const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
-  const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
-  const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
-
-  return maxNewBorrowUSD;
-};
-
-/**
- * Calculate new health factor after a borrow transaction
- * @param totalCollateralUSD - Current total collateral value in USD
- * @param totalDebtUSD - Current total debt value in USD
- * @param borrowAmountUSD - Amount to be borrowed in USD
- * @param liquidationThreshold - Weighted liquidation threshold (as decimal or percentage)
- * @returns New health factor after the borrow transaction
- */
-export const calculateNewHealthFactorAfterBorrow = (
-  totalCollateralUSD: number,
-  totalDebtUSD: number,
-  borrowAmountUSD: number,
-  liquidationThreshold: number,
-): number => {
-  const liquidationThresholdDecimal =
-    liquidationThreshold > 1
-      ? liquidationThreshold / 100
-      : liquidationThreshold;
-
-  const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
-  const newTotalDebt = totalDebtUSD + borrowAmountUSD;
-
-  return newTotalDebt > 0 ? weightedCollateral / newTotalDebt : Infinity;
-};
-
-/**
- * Determine if a transaction is high risk based on the resulting health factor
- * @param healthFactor - The resulting health factor after transaction
- * @returns True if the transaction is high risk (HF between 1.1 and 1.2)
- */
-export const isHighRiskTransaction = (healthFactor: number): boolean => {
-  return healthFactor < 1.2 && healthFactor > 1.1;
-};
-
-/**
- * Determine if a transaction would result in liquidation risk
- * @param healthFactor - The resulting health factor after transaction
- * @returns True if the transaction has liquidation risk (HF < 1.1)
- */
-export const isLiquidationRisk = (healthFactor: number): boolean => {
-  return healthFactor < 1.1;
-};
-
 /**
  * Convert USD amount to token amount with proper formatting
  * @param amountUSD - Amount in USD
@@ -404,6 +335,74 @@ export const calculateWithdrawImpact = (
     newLTV,
     isHighRiskTransaction,
   };
+};
+
+/**
+ * Calculate the maximum amount in USD that can be borrowed while maintaining a 1.12 health factor
+ * @param totalCollateralUSD - Total collateral value in USD
+ * @param totalDebtUSD - Total debt value in USD
+ * @param liquidationThreshold - Weighted liquidation threshold (as decimal, e.g., 0.85 for 85%)
+ * @returns Maximum borrowable amount in USD
+ */
+export const calculateMaxBorrowUSD = (
+  totalCollateralUSD: number,
+  totalDebtUSD: number,
+  liquidationThreshold: number,
+): number => {
+  if (totalCollateralUSD <= 0) return 0;
+
+  const liquidationThresholdDecimal =
+    liquidationThreshold > 1
+      ? liquidationThreshold / 100
+      : liquidationThreshold;
+  const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
+  const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
+  const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
+
+  return maxNewBorrowUSD;
+};
+
+/**
+ * Calculate new health factor after a borrow transaction
+ * @param totalCollateralUSD - Current total collateral value in USD
+ * @param totalDebtUSD - Current total debt value in USD
+ * @param borrowAmountUSD - Amount to be borrowed in USD
+ * @param liquidationThreshold - Weighted liquidation threshold (as decimal or percentage)
+ * @returns New health factor after the borrow transaction
+ */
+export const calculateNewHealthFactorAfterBorrow = (
+  totalCollateralUSD: number,
+  totalDebtUSD: number,
+  borrowAmountUSD: number,
+  liquidationThreshold: number,
+): number => {
+  const liquidationThresholdDecimal =
+    liquidationThreshold > 1
+      ? liquidationThreshold / 100
+      : liquidationThreshold;
+
+  const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
+  const newTotalDebt = totalDebtUSD + borrowAmountUSD;
+
+  return newTotalDebt > 0 ? weightedCollateral / newTotalDebt : Infinity;
+};
+
+/**
+ * Determine if a transaction is high risk based on the resulting health factor
+ * @param healthFactor - The resulting health factor after transaction
+ * @returns True if the transaction is high risk (HF between 1.1 and 1.2)
+ */
+export const isHighRiskTransaction = (healthFactor: number): boolean => {
+  return healthFactor < 1.2 && healthFactor > 1.1;
+};
+
+/**
+ * Determine if a transaction would result in liquidation risk
+ * @param healthFactor - The resulting health factor after transaction
+ * @returns True if the transaction has liquidation risk (HF < 1.1)
+ */
+export const isLiquidationRisk = (healthFactor: number): boolean => {
+  return healthFactor < 1.1;
 };
 
 export const calculateUserMetrics = (
