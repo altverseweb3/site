@@ -95,6 +95,18 @@ const BorrowLendComponent: React.FC = () => {
           if (result?.oraclePrices) {
             setOraclePrices(result.oraclePrices);
           }
+
+          if (result?.userSupplyPositions) {
+            setUserSupplyPositions(result.userSupplyPositions);
+          }
+
+          if (result?.userBorrowPositions) {
+            setUserBorrowPositions(result.userBorrowPositions);
+          }
+
+          if (result?.allReserves) {
+            setAllReserves(result.allReserves);
+          }
         } catch (error) {
           console.error("Error loading Aave user data for page:", error);
         }
@@ -160,7 +172,17 @@ const BorrowLendComponent: React.FC = () => {
               userBorrowPositions={userBorrowPositions}
             />
           ) : (
-            <BorrowComponent oraclePrices={oraclePrices} />
+            <BorrowComponent
+              oraclePrices={oraclePrices}
+              healthFactor={userMetrics.healthFactor || 0}
+              totalCollateralUSD={userMetrics.totalCollateralUSD}
+              totalDebtUSD={userMetrics.totalDebtUSD}
+              currentLTV={userMetrics.currentLTV}
+              liquidationThreshold={userMetrics.liquidationThreshold}
+              userSupplyPositions={userSupplyPositions}
+              userBorrowPositions={userBorrowPositions}
+              allReserves={allReserves}
+            />
           )}
           <PoweredByAave />
         </>
