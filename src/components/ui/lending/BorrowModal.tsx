@@ -32,11 +32,15 @@ import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndic
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import {
 <<<<<<< HEAD
+<<<<<<< HEAD
   calculateBorrowingMetrics,
 =======
   calculateUserMetrics,
   calculateMaxBorrowUSD,
 >>>>>>> 32b8aa7 (feat: move calculations to utils and out of borrow)
+=======
+  calculateBorrowingMetrics,
+>>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   calculateNewHealthFactorAfterBorrow,
   isHighRiskTransaction as isHighRiskTransactionUtil,
 } from "@/utils/aave/metricsCalculations";
@@ -194,6 +198,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
   });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   // Calculate max safe borrow amount (HF = 1.2)
   const currentMetrics = calculateUserMetrics(
@@ -212,6 +217,8 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
 
 >>>>>>> ec490a9 (chore: fix linting apply modal changes)
+=======
+>>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   // Prepare validation data
   const positionData: PositionData = {
     totalCollateralUSD,
@@ -243,6 +250,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Calculate new health factor to check if this is high risk
 <<<<<<< HEAD
+<<<<<<< HEAD
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
       currentMetrics.totalCollateralUSD,
@@ -263,6 +271,16 @@ const BorrowModal: FC<BorrowModalProps> = ({
     newMetrics.liquidationThreshold,
   );
 >>>>>>> 32b8aa7 (feat: move calculations to utils and out of borrow)
+=======
+  const newHealthFactor = currentMetrics
+    ? calculateNewHealthFactorAfterBorrow(
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        borrowAmountUSD,
+        currentMetrics.liquidationThreshold,
+      )
+    : Infinity;
+>>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
   // Enhanced form validation - require risk acceptance for high risk transactions
@@ -406,8 +424,13 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
                 {!currentMetrics ||
+<<<<<<< HEAD
                   currentMetrics.healthFactor === null ||
                   currentMetrics.healthFactor === Infinity
+=======
+                currentMetrics.healthFactor === null ||
+                currentMetrics.healthFactor === Infinity
+>>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>

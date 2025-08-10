@@ -354,9 +354,6 @@ export const calculateBorrowingMetrics = (
   };
 };
 
-
-
-
 export const calculateUserMetrics = (
   userSupplyPositions: UserPosition[],
   userBorrowPositions: UserBorrowPosition[],
