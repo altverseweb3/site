@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -28,23 +28,14 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
-import { getHealthFactorColor } from "@/utils/aave/utils";
-
-const calculateNewHealthFactorForRepay = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  repayAmountUSD: number,
-  liquidationThreshold: number,
-): number => {
-  const newTotalDebt = Math.max(0, currentTotalDebtUSD - repayAmountUSD);
-
-  if (newTotalDebt === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
-  return adjustedCollateral / newTotalDebt;
-};
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+} from "@/utils/aave/utils";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import { formatHealthFactor } from "@/utils/formatters";
 
 // Main Repay Modal Component
 interface RepayModalProps {
@@ -68,6 +59,9 @@ interface RepayModalProps {
   isLoading?: boolean;
   tokenAddress?: string;
   tokenDecimals?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const RepayModal: FC<RepayModalProps> = ({
@@ -81,16 +75,15 @@ const RepayModal: FC<RepayModalProps> = ({
   borrowAPY = "0.00%",
   stableDebt = "0.00",
   variableDebt = "0.00",
-  healthFactor = "1.24",
   tokenPrice = 1,
-  liquidationThreshold = 0.85,
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
   onRepay = async () => true,
   children,
   isLoading = false,
   tokenAddress = "",
   tokenDecimals = 18,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [repayAmount, setRepayAmount] = useState("");
@@ -150,21 +143,45 @@ const RepayModal: FC<RepayModalProps> = ({
 
   // Calculate USD value and health factor changes
   const repayAmountNum = parseFloat(repayAmount) || 0;
-  const repayAmountUSD = repayAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
+  const repayAmountUSD = repayAmountNum * (tokenPrice || 1);
 
-  // Calculate new health factor after repayment
-  const newHealthFactor =
-    totalDebtUSD > 0
-      ? calculateNewHealthFactorForRepay(
-          totalCollateralUSD,
-          totalDebtUSD,
-          repayAmountUSD,
-          liquidationThreshold,
-        )
-      : currentHealthFactor;
+  // Calculate USD positions using utility functions like other modals
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
+
+  // Calculate current metrics using real user data
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  // Calculate new health factor after repayment - subtracting debt improves health factor
+  let newHealthFactor = currentMetrics.healthFactor || Infinity;
+  let newLTV = currentMetrics.currentLTV;
+
+  if (currentMetrics.totalDebtUSD > 0 && repayAmountUSD > 0) {
+    const newTotalDebt = Math.max(
+      0,
+      currentMetrics.totalDebtUSD - repayAmountUSD,
+    );
+
+    if (newTotalDebt === 0) {
+      newHealthFactor = Infinity; // No debt means infinite health factor
+      newLTV = 0;
+    } else if (currentMetrics.totalCollateralUSD > 0) {
+      const weightedCollateral =
+        currentMetrics.totalCollateralUSD * currentMetrics.liquidationThreshold;
+      newHealthFactor = weightedCollateral / newTotalDebt;
+      newLTV = (newTotalDebt / currentMetrics.totalCollateralUSD) * 100;
+    }
+  }
 
   // Validation
   const maxDebtAmount = parseFloat(currentDebt) || 0;
@@ -395,48 +412,100 @@ const RepayModal: FC<RepayModalProps> = ({
               )}
             </div>
 
-            {/* Health Factor Impact */}
-            {totalDebtUSD > 0 && repayAmountNum > 0 && (
-              <div className="space-y-3 p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm font-medium">
-                    health factor impact
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">current</span>
-                  <span
+            {/* Health Factor Display - Same style as other modals */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">
+                    health factor
+                  </div>
+                  <div
                     className={cn(
-                      "text-sm font-medium",
-                      getHealthFactorColor(currentHealthFactor),
+                      "text-lg font-semibold font-mono",
+                      getHealthFactorColor(
+                        currentMetrics.healthFactor || Infinity,
+                      ),
                     )}
                   >
-                    {currentHealthFactor.toFixed(2)}
-                  </span>
+                    {formatHealthFactor(currentMetrics.healthFactor)}
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-center text-gray-400">
-                  <ArrowRight className="h-4 w-4" />
-                </div>
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">after repayment</span>
-                  <div className="text-right">
-                    <span
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">
+                      new health factor
+                    </div>
+                    <div
                       className={cn(
-                        "text-sm font-medium",
+                        "text-lg font-semibold font-mono",
                         getHealthFactorColor(newHealthFactor),
                       )}
                     >
-                      {newHealthFactor.toFixed(2)}
-                    </span>
-                    {healthFactorChange !== 0 && (
-                      <div className="text-xs text-green-400">
-                        +{healthFactorChange.toFixed(2)}
-                      </div>
+                      {formatHealthFactor(newHealthFactor)}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
+                  <div
+                    className={cn(
+                      "text-lg font-semibold font-mono",
+                      currentMetrics.currentLTV <
+                        currentMetrics.liquidationThreshold * 0.7
+                        ? "text-green-500"
+                        : currentMetrics.currentLTV <
+                            currentMetrics.liquidationThreshold * 0.9
+                          ? "text-amber-500"
+                          : "text-red-500",
                     )}
+                  >
+                    {currentMetrics.currentLTV.toFixed(2)}%
+                  </div>
+                </div>
+
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        newLTV < currentMetrics.liquidationThreshold * 0.7
+                          ? "text-green-500"
+                          : newLTV < currentMetrics.liquidationThreshold * 0.9
+                            ? "text-amber-500"
+                            : "text-red-500",
+                      )}
+                    >
+                      {newLTV.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Repayment Benefit Info */}
+            {repayAmountUSD > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <Info className="h-4 w-4 text-green-500" />
+                <div className="text-sm">
+                  <div className="text-[#FAFAFA] font-medium">
+                    debt reduction benefit
+                  </div>
+                  <div className="text-[#A1A1AA] text-xs">
+                    repaying will improve your health factor and reduce interest
+                    payments
                   </div>
                 </div>
               </div>

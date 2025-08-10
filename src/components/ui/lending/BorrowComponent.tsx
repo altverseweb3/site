@@ -246,13 +246,8 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                       );
                       return matchingReserve?.userBalanceFormatted || "0.00";
                     })()}
-                    onRepay={async () => {
-                      // TODO: Implement repay functionality
-                      return true;
-                    }}
-                    onDetailsClick={() => {
-                      // TODO: Implement details modal
-                    }}
+                    userSupplyPositions={userSupplyPositions}
+                    userBorrowPositions={userBorrowPositions}
                     oraclePrices={oraclePrices}
                   />
                 ))}

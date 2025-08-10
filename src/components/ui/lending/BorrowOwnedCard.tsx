@@ -13,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import type { Chain } from "@/types/web3";
-import { UserBorrowPosition, RateMode } from "@/types/aave";
+import { UserBorrowPosition, UserPosition, RateMode } from "@/types/aave";
 import { formatBalance } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
@@ -26,6 +26,8 @@ interface BorrowOwnedCardProps {
   totalDebtUSD?: number;
   walletBalance?: string;
   oraclePrices?: Record<string, number>; // Oracle prices for all assets
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
   onRepay?: (
     position: UserBorrowPosition,
     amount: string,
@@ -41,6 +43,8 @@ const BorrowOwnedCard = ({
   totalDebtUSD = 0,
   walletBalance = "0.00",
   oraclePrices,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
   onRepay = async () => true,
 }: BorrowOwnedCardProps) => {
   const { asset } = borrowPosition;
@@ -132,6 +136,9 @@ const BorrowOwnedCard = ({
           liquidationThreshold={0.85}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
+          userSupplyPositions={userSupplyPositions}
+          userBorrowPositions={userBorrowPositions}
+          oraclePrices={oraclePrices}
           onRepay={handleRepayComplete}
           tokenAddress={asset.asset.address}
           tokenDecimals={asset.asset.decimals}

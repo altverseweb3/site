@@ -374,7 +374,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 className={`text-sm ${getHealthFactorColor(currentMetrics.healthFactor || Infinity)}`}
               >
                 {currentMetrics.healthFactor === null ||
-                  currentMetrics.healthFactor === Infinity
+                currentMetrics.healthFactor === Infinity
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>
@@ -579,7 +579,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
                   : !borrowingEnabled
                     ? "borrowing disabled"
                     : !validation.isValid &&
-                      validation.riskLevel === "liquidation"
+                        validation.riskLevel === "liquidation"
                       ? "too risky to borrow"
                       : !validation.isValid && validation.riskLevel === "high"
                         ? "high risk - blocked"
