@@ -30,9 +30,6 @@ interface SupplyOwnedCardProps {
   suppliedBalance?: string; // User's supplied balance for this asset
   suppliedBalanceUSD?: string; // USD value of supplied balance
   isCollateral?: boolean;
-  healthFactor?: string; // User's current health factor
-  totalCollateralUSD?: number; // User's total collateral value
-  totalDebtUSD?: number; // User's total debt value
   oraclePrices?: Record<string, number>; // Oracle prices for all assets
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
@@ -53,9 +50,6 @@ const SupplyOwnedCard = ({
   suppliedBalance = "0",
   suppliedBalanceUSD = "0.00",
   isCollateral = true,
-  healthFactor = "1.24",
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
   oraclePrices,
   userSupplyPositions = [],
   userBorrowPositions = [],
@@ -158,16 +152,16 @@ const SupplyOwnedCard = ({
               isCurrentlyCollateral={collateral}
               isolationModeEnabled={isIsolationMode}
               canBeCollateral={canBeCollateral}
-              healthFactor={healthFactor}
               tokenPrice={
                 oraclePrices?.[currentAsset.asset.address.toLowerCase()]
               }
               liquidationThreshold={0.85} // You might want to get this from asset data
-              totalCollateralUSD={totalCollateralUSD}
-              totalDebtUSD={totalDebtUSD}
               onCollateralChange={handleCollateralChange}
               tokenAddress={currentAsset.asset.address}
               tokenDecimals={currentAsset.asset.decimals}
+              userSupplyPositions={userSupplyPositions}
+              userBorrowPositions={userBorrowPositions}
+              oraclePrices={oraclePrices}
             >
               <button className="focus:outline-none">
                 <SupplyCollateralSwitch
@@ -195,8 +189,6 @@ const SupplyOwnedCard = ({
           isCollateral={collateral}
           tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85} // You might want to get this from asset data
-          totalCollateralUSD={totalCollateralUSD}
-          totalDebtUSD={totalDebtUSD}
           onWithdraw={handleWithdrawComplete}
           tokenAddress={currentAsset.asset.address}
           tokenDecimals={currentAsset.asset.decimals}

@@ -20,35 +20,13 @@ import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { getHealthFactorColor } from "@/utils/aave/utils";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 import {
   AmberButton,
   GrayButton,
 } from "@/components/ui/lending/SupplyButtonComponents";
 
-// Health Factor Calculator Utility
-const calculateNewHealthFactorForCollateral = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  assetCollateralUSD: number,
-  liquidationThreshold: number,
-  isEnabling: boolean,
-): number => {
-  if (currentTotalDebtUSD === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  // If enabling: add to collateral, if disabling: subtract from collateral
-  const newTotalCollateral = isEnabling
-    ? currentTotalCollateralUSD + assetCollateralUSD
-    : currentTotalCollateralUSD - assetCollateralUSD;
-
-  const adjustedCollateral =
-    Math.max(0, newTotalCollateral) * liquidationThreshold;
-
-  return adjustedCollateral / currentTotalDebtUSD;
-};
-
-// Main Collateral Modal Component
 interface CollateralModalProps {
   tokenSymbol?: string;
   tokenName?: string;
@@ -60,16 +38,16 @@ interface CollateralModalProps {
   isCurrentlyCollateral?: boolean; // Current collateral status
   isolationModeEnabled?: boolean; // Whether the asset is in isolation mode
   canBeCollateral?: boolean; // Whether the asset can be used as collateral
-  healthFactor?: string;
   tokenPrice?: number; // Current token price in USD
   liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
-  totalCollateralUSD?: number; // Current total collateral in USD
-  totalDebtUSD?: number; // Current total debt in USD
   onCollateralChange?: (enabled: boolean) => Promise<boolean>;
   children: ReactNode; // The trigger element
   isLoading?: boolean; // Loading state from parent
   tokenAddress?: string; // Token contract address
   tokenDecimals?: number; // Token decimals
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const CollateralModal: FC<CollateralModalProps> = ({
@@ -83,19 +61,21 @@ const CollateralModal: FC<CollateralModalProps> = ({
   isCurrentlyCollateral = false,
   isolationModeEnabled = false,
   canBeCollateral = true,
-  healthFactor = "1.24",
+  tokenPrice = 1,
   liquidationThreshold = 0.85, // Default 85% LTV
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
   onCollateralChange = async () => true,
   children,
   isLoading = false,
   tokenAddress = "", // Token contract address
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
+  const [acceptHighRisk, setAcceptHighRisk] = useState(false);
 
   const { evmNetwork, isEvmConnected } = useWalletConnection();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
@@ -113,41 +93,86 @@ const CollateralModal: FC<CollateralModalProps> = ({
 
   const imagePath = getImagePath();
 
-  // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Don't render on server to prevent hydration mismatch
+  useEffect(() => {
+    if (!isMounted) return;
+
+    if (isOpen) {
+      setAcceptHighRisk(false);
+    }
+  }, [isOpen, isMounted]);
   if (!isMounted) {
     return null;
   }
 
-  // Calculate values
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
   const suppliedBalanceUSDNum = parseFloat(suppliedBalanceUSD) || 0;
+  const calculatedUSDValue = parseFloat(suppliedBalance) * tokenPrice;
+  const actualUSDValue =
+    suppliedBalanceUSDNum > 0 ? suppliedBalanceUSDNum : calculatedUSDValue;
 
-  // Determine action (enabling or disabling collateral)
   const isEnabling = !isCurrentlyCollateral;
   const actionText = isEnabling ? "Enable" : "Disable";
 
-  // Calculate new health factor
-  const newHealthFactor =
-    totalDebtUSD > 0
-      ? calculateNewHealthFactorForCollateral(
-          totalCollateralUSD,
-          totalDebtUSD,
-          suppliedBalanceUSDNum,
-          liquidationThreshold,
-          isEnabling,
-        )
-      : currentHealthFactor;
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
 
-  // Check if action would be dangerous (health factor below 1.1)
-  const isDangerous = !isEnabling && newHealthFactor < 1.1 && totalDebtUSD > 0;
-  const isFormValid = !isLoading && !isSubmitting && !isDangerous;
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  let newHealthFactor = currentMetrics.healthFactor || Infinity;
+  let newLTV = currentMetrics.currentLTV;
+  let isHighRiskTransaction = false;
+
+  if (currentMetrics.totalDebtUSD > 0) {
+    const newTotalCollateral = isCurrentlyCollateral
+      ? Math.max(0, currentMetrics.totalCollateralUSD - actualUSDValue)
+      : currentMetrics.totalCollateralUSD + actualUSDValue;
+
+    const newWeightedCollateral = newTotalCollateral * liquidationThreshold;
+    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
+    newLTV =
+      newTotalCollateral > 0
+        ? (currentMetrics.totalDebtUSD / newTotalCollateral) * 100
+        : currentMetrics.totalDebtUSD > 0
+          ? 100
+          : 0;
+
+    isHighRiskTransaction = newHealthFactor < 1.2;
+  }
+
+  const isFormValid =
+    !isLoading &&
+    !isSubmitting &&
+    canBeCollateral &&
+    (!isHighRiskTransaction || acceptHighRisk);
 
   const handleCollateralToggle = async () => {
     if (!isFormValid) return;
@@ -341,53 +366,93 @@ const CollateralModal: FC<CollateralModalProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Danger Warning */}
-            {isDangerous && (
-              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <div className="text-sm">
-                  <div className="text-red-500 font-medium">risk warning</div>
-                  <div className="text-[#A1A1AA] text-xs">
-                    disabling this collateral would reduce your health factor
-                    below 1.1, putting you at risk of liquidation
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Health Factor Impact */}
-          {totalDebtUSD > 0 && (
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[#A1A1AA]">current health factor</span>
-                <span className={getHealthFactorColor(currentHealthFactor)}>
-                  {currentHealthFactor.toFixed(2)}
-                </span>
+          {/* Health Factor Display - Same style as BorrowModal */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    getHealthFactorColor(
+                      currentMetrics.healthFactor || Infinity,
+                    ),
+                  )}
+                >
+                  {currentMetrics.healthFactor === null ||
+                  currentMetrics.healthFactor === Infinity
+                    ? "∞"
+                    : currentMetrics.healthFactor.toFixed(2)}
+                </div>
               </div>
 
-              {Math.abs(healthFactorChange) > 0.01 && (
-                <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">new health factor</span>
-                  <span className={getHealthFactorColor(newHealthFactor)}>
-                    {newHealthFactor.toFixed(2)}
-                    <span
-                      className={
-                        healthFactorChange > 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }
-                    >
-                      {" "}
-                      ({healthFactorChange > 0 ? "+" : ""}
-                      {healthFactorChange.toFixed(2)})
-                    </span>
-                  </span>
+              {currentMetrics.totalDebtUSD > 0 && (
+                <div className="text-[#71717A]">→</div>
+              )}
+
+              {currentMetrics.totalDebtUSD > 0 && (
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">
+                    new health factor
+                  </div>
+                  <div
+                    className={cn(
+                      "text-lg font-semibold font-mono",
+                      getHealthFactorColor(newHealthFactor),
+                    )}
+                  >
+                    {newHealthFactor === Infinity
+                      ? "∞"
+                      : newHealthFactor.toFixed(2)}
+                  </div>
                 </div>
               )}
             </div>
-          )}
+
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    currentMetrics.currentLTV <
+                      currentMetrics.liquidationThreshold * 0.7
+                      ? "text-green-500"
+                      : currentMetrics.currentLTV <
+                          currentMetrics.liquidationThreshold * 0.9
+                        ? "text-amber-500"
+                        : "text-red-500",
+                  )}
+                >
+                  {currentMetrics.currentLTV.toFixed(2)}%
+                </div>
+              </div>
+
+              {currentMetrics.totalDebtUSD > 0 && (
+                <div className="text-[#71717A]">→</div>
+              )}
+
+              {currentMetrics.totalDebtUSD > 0 && (
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
+                  <div
+                    className={cn(
+                      "text-lg font-semibold font-mono",
+                      newLTV < currentMetrics.liquidationThreshold * 0.7
+                        ? "text-green-500"
+                        : newLTV < currentMetrics.liquidationThreshold * 0.9
+                          ? "text-amber-500"
+                          : "text-red-500",
+                    )}
+                  >
+                    {newLTV.toFixed(2)}%
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Asset Details */}
           <div className="space-y-3 text-sm">
@@ -422,27 +487,86 @@ const CollateralModal: FC<CollateralModalProps> = ({
             </div>
           </div>
 
+          {/* High Risk Warning with Acceptance Checkbox */}
+          {isHighRiskTransaction && (
+            <div
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-lg",
+                newHealthFactor < 1.1
+                  ? "bg-red-500/10 border border-red-500/20"
+                  : "bg-yellow-500/10 border border-yellow-500/20",
+              )}
+            >
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4",
+                  newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                )}
+              />
+              <div className="text-sm">
+                <div
+                  className={cn(
+                    "font-medium",
+                    newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                  )}
+                >
+                  {newHealthFactor < 1.1
+                    ? "liquidation risk"
+                    : "high risk transaction"}
+                </div>
+                <div className="text-[#A1A1AA] text-xs">
+                  This {isEnabling ? "enabling" : "disabling"} will set your
+                  health factor to {newHealthFactor.toFixed(2)}
+                  {newHealthFactor < 1.0 && " - immediate liquidation risk"}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="acceptHighRiskCollateral"
+                    checked={acceptHighRisk}
+                    onChange={(e) => setAcceptHighRisk(e.target.checked)}
+                    className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
+                  />
+                  <label
+                    htmlFor="acceptHighRiskCollateral"
+                    className="text-xs text-[#A1A1AA] cursor-pointer"
+                  >
+                    {newHealthFactor < 1.1
+                      ? "I understand the liquidation risk and accept it"
+                      : "I accept the high risk of this transaction"}
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <div className="flex-1">
               <AmberButton
                 onClick={handleCollateralToggle}
-                disabled={!isFormValid || isDangerous}
+                disabled={!isFormValid}
                 className={cn(
                   "h-8 py-2",
-                  !isFormValid || isDangerous
-                    ? "opacity-50 cursor-not-allowed"
-                    : "",
-                  isDangerous
-                    ? "border-red-500/25 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                  isHighRiskTransaction
+                    ? "border-red-500/25 bg-red-500/10 hover:bg-red-500/20"
                     : "",
                 )}
               >
-                {isSubmitting
-                  ? `${actionText.toLowerCase()}...`
-                  : isDangerous
-                    ? "too risky"
-                    : `${actionText.toLowerCase()} collateral`}
+                <span
+                  className={cn(isHighRiskTransaction ? "text-red-500" : "")}
+                >
+                  {isSubmitting
+                    ? `${actionText.toLowerCase()}...`
+                    : isHighRiskTransaction && !acceptHighRisk
+                      ? "high risk - blocked"
+                      : isHighRiskTransaction && acceptHighRisk
+                        ? `high risk ${actionText.toLowerCase()}`
+                        : !canBeCollateral
+                          ? "not eligible"
+                          : `${actionText.toLowerCase()} collateral`}
+                </span>
               </AmberButton>
             </div>
 
