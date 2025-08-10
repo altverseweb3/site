@@ -26,24 +26,6 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
-import { getHealthFactorColor } from "@/utils/aave/utils";
-
-// Health Factor Calculator Utility
-const calculateNewHealthFactor = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  newSupplyAmountUSD: number,
-  liquidationThreshold: number,
-): number => {
-  if (currentTotalDebtUSD === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  const newTotalCollateral = currentTotalCollateralUSD + newSupplyAmountUSD;
-  const adjustedCollateral = newTotalCollateral * liquidationThreshold;
-
-  return adjustedCollateral / currentTotalDebtUSD;
-};
 
 // Main Supply Modal Component
 interface SupplyModalProps {
@@ -61,6 +43,7 @@ interface SupplyModalProps {
   liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
   totalCollateralUSD?: number; // Current total collateral in USD
   totalDebtUSD?: number; // Current total debt in USD
+  currentLTV?: number; // Current loan-to-value ratio
   onSupply?: (amount: string) => Promise<boolean>;
   children: ReactNode; // The trigger element
   isLoading?: boolean; // Loading state from parent
@@ -80,11 +63,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
   collateralizationStatus = "enabled",
   isolationModeEnabled = false,
   canBeCollateral = true,
-  healthFactor = "1.24",
   tokenPrice = 1, // Default to $1 if not provided
-  liquidationThreshold = 0.85, // Default 85% LTV
-  totalCollateralUSD = 0,
-  totalDebtUSD = 0,
   onSupply = async () => true,
   children,
   isLoading = false,
@@ -139,18 +118,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
   // Calculate USD value and health factor changes
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
   const supplyAmountUSD = supplyAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
-
-  // Calculate new health factor only if asset can be collateral and there's debt
-  const newHealthFactor =
-    canBeCollateral && totalDebtUSD > 0
-      ? calculateNewHealthFactor(
-          totalCollateralUSD,
-          totalDebtUSD,
-          supplyAmountUSD,
-          liquidationThreshold,
-        )
-      : currentHealthFactor;
 
   // Helper function to get collateral status display
   const getCollateralStatusDisplay = () => {
@@ -165,9 +132,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   const collateralDisplay = getCollateralStatusDisplay();
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
-
-  // Simplified validation - just check if amount is positive
+  // Enhanced validation
   const isAmountValid = supplyAmountNum > 0;
   const isFormValid = isAmountValid && !isLoading && !isSubmitting;
 
@@ -392,28 +357,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 {collateralDisplay.text}
               </span>
             </div>
-
-            <div className="flex justify-between">
-              <span className="text-[#A1A1AA]">current health factor</span>
-              <span className={getHealthFactorColor(currentHealthFactor)}>
-                {currentHealthFactor.toFixed(2)}
-              </span>
-            </div>
-
-            {/* New Health Factor (only show if there's a meaningful change) */}
-            {supplyAmountNum > 0 &&
-              Math.abs(healthFactorChange) > 0.01 &&
-              canBeCollateral && (
-                <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">new health factor</span>
-                  <span className={getHealthFactorColor(newHealthFactor)}>
-                    {newHealthFactor.toFixed(2)}
-                    <span className="text-green-500 ml-1">
-                      (+{healthFactorChange.toFixed(2)})
-                    </span>
-                  </span>
-                </div>
-              )}
           </div>
 
           {/* Action Buttons */}

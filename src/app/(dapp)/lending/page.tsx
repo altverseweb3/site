@@ -18,10 +18,23 @@ import { chainList, getChainById } from "@/config/chains";
 import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { useAaveDataLoader } from "@/utils/aave/dataLoader";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  UserPosition,
+  UserBorrowPosition,
+  AaveReserveData,
+} from "@/types/aave";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
   const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
+  const [userSupplyPositions, setUserSupplyPositions] = useState<
+    UserPosition[]
+  >([]);
+  const [userBorrowPositions, setUserBorrowPositions] = useState<
+    UserBorrowPosition[]
+  >([]);
+  const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
@@ -68,9 +81,9 @@ const BorrowLendComponent: React.FC = () => {
     alignWalletWithPersistedChain();
   }, [isWalletConnected, aaveChain, switchToChain]);
 
-  // Load oracle prices for all components to use
+  // Load oracle prices and user positions for all components to use
   useEffect(() => {
-    const loadOraclePrices = async () => {
+    const loadAaveUserData = async () => {
       if (chainTokens.length > 0) {
         try {
           const result = await loadAaveData({
@@ -85,13 +98,25 @@ const BorrowLendComponent: React.FC = () => {
           if (result?.oraclePrices) {
             setOraclePrices(result.oraclePrices);
           }
+
+          if (result?.userSupplyPositions) {
+            setUserSupplyPositions(result.userSupplyPositions);
+          }
+
+          if (result?.userBorrowPositions) {
+            setUserBorrowPositions(result.userBorrowPositions);
+          }
+
+          if (result?.allReserves) {
+            setAllReserves(result.allReserves);
+          }
         } catch (error) {
-          console.error("Error loading oracle prices for page:", error);
+          console.error("Error loading Aave user data for page:", error);
         }
       }
     };
 
-    loadOraclePrices();
+    loadAaveUserData();
   }, [
     chainTokens.length,
     isWalletConnected,
@@ -99,6 +124,20 @@ const BorrowLendComponent: React.FC = () => {
     aaveChain,
     chainTokens,
   ]);
+
+  // Calculate user metrics from positions
+  const userMetrics = isWalletConnected
+    ? calculateUserMetrics(userSupplyPositions, userBorrowPositions)
+    : {
+        netWorth: 0,
+        netAPY: null,
+        healthFactor: null,
+        totalCollateralUSD: 0,
+        totalDebtUSD: 0,
+        currentLTV: 0,
+        maxLTV: 0,
+        liquidationThreshold: 0,
+      };
 
   const handleChainChange = async (value: string | string[]) => {
     const newChainId = typeof value === "string" ? value : "";
@@ -132,7 +171,17 @@ const BorrowLendComponent: React.FC = () => {
           {activeTab === "supply" ? (
             <SupplyComponent oraclePrices={oraclePrices} />
           ) : (
-            <BorrowComponent oraclePrices={oraclePrices} />
+            <BorrowComponent
+              oraclePrices={oraclePrices}
+              healthFactor={userMetrics.healthFactor || 0}
+              totalCollateralUSD={userMetrics.totalCollateralUSD}
+              totalDebtUSD={userMetrics.totalDebtUSD}
+              currentLTV={userMetrics.currentLTV}
+              liquidationThreshold={userMetrics.liquidationThreshold}
+              userSupplyPositions={userSupplyPositions}
+              userBorrowPositions={userBorrowPositions}
+              allReserves={allReserves}
+            />
           )}
           <PoweredByAave />
         </>
