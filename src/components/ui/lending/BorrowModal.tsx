@@ -31,8 +31,7 @@ import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import {
-  calculateUserMetrics,
-  calculateMaxBorrowUSD,
+  calculateBorrowingMetrics,
   calculateNewHealthFactorAfterBorrow,
   isHighRiskTransaction as isHighRiskTransactionUtil,
 } from "@/utils/aave/metricsCalculations";
@@ -149,7 +148,20 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const borrowAmountUSD = borrowAmountNum * tokenPrice;
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
-  // Calculate USD positions EXACTLY like metrics header does
+  const {
+    currentMetrics,
+    maxBorrowUSD,
+    maxBorrowAmount,
+    isStableRateAvailable,
+  } = calculateBorrowingMetrics(
+    userSupplyPositions,
+    userBorrowPositions,
+    tokenPrice,
+    stableBorrowAPY,
+    oraclePrices,
+  );
+
+  // Calculate USD positions for SimpleHealthIndicator
   const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
     const suppliedBalance = parseFloat(position.suppliedBalance || "0");
     const oraclePrice =
@@ -175,22 +187,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
           : "0.00",
     };
   });
-
-  // Calculate max safe borrow amount (HF = 1.2)
-  const currentMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
-  );
-  const maxBorrowUSD = currentMetrics
-    ? calculateMaxBorrowUSD(
-        currentMetrics.totalCollateralUSD,
-        currentMetrics.totalDebtUSD,
-        currentMetrics.liquidationThreshold,
-      )
-    : 0;
-  const maxBorrowAmount =
-    tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
-  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
 
   // Prepare validation data
   const positionData: PositionData = {
@@ -222,16 +218,14 @@ const BorrowModal: FC<BorrowModalProps> = ({
     borrowAmountNum > 0 && borrowAmountNum <= parseFloat(maxBorrowAmount);
 
   // Calculate new health factor to check if this is high risk
-  const newMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
-  );
-  const newHealthFactor = calculateNewHealthFactorAfterBorrow(
-    newMetrics.totalCollateralUSD,
-    newMetrics.totalDebtUSD,
-    borrowAmountUSD,
-    newMetrics.liquidationThreshold,
-  );
+  const newHealthFactor = currentMetrics
+    ? calculateNewHealthFactorAfterBorrow(
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        borrowAmountUSD,
+        currentMetrics.liquidationThreshold,
+      )
+    : Infinity;
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
   // Enhanced form validation - require risk acceptance for high risk transactions
@@ -372,9 +366,10 @@ const BorrowModal: FC<BorrowModalProps> = ({
                 current health factor
               </span>
               <span
-                className={`text-sm ${getHealthFactorColor(currentMetrics.healthFactor || Infinity)}`}
+                className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
-                {currentMetrics.healthFactor === null ||
+                {!currentMetrics ||
+                currentMetrics.healthFactor === null ||
                 currentMetrics.healthFactor === Infinity
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}

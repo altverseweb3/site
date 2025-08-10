@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -6,17 +6,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/Accordion";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import useWeb3Store, {
-  useAaveChain,
-  useIsWalletTypeConnected,
-} from "@/store/web3Store";
-import { useAaveFetch } from "@/utils/aave/fetch";
 import BorrowUnownedCard from "@/components/ui/lending/BorrowUnownedCard";
 import BorrowOwnedCard from "@/components/ui/lending/BorrowOwnedCard";
-import { WalletType } from "@/types/web3";
 import {
   AaveReserveData,
-  AaveReservesResult,
   UserBorrowPosition,
   UserPosition,
 } from "@/types/aave";
@@ -31,6 +24,7 @@ interface BorrowComponentProps {
   liquidationThreshold?: number;
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
+  allReserves?: AaveReserveData[];
 }
 
 const BorrowComponent: React.FC<BorrowComponentProps> = ({
@@ -42,141 +36,20 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   liquidationThreshold = 85,
   userSupplyPositions = [],
   userBorrowPositions = [],
+  allReserves = [],
 }) => {
-  const [borrowableReserves, setBorrowableReserves] = useState<
-    AaveReserveData[]
-  >([]);
-  const [localUserBorrowPositions, setLocalUserBorrowPositions] = useState<
-    UserBorrowPosition[]
-  >([]);
-  const [loading, setLoading] = useState(false);
-  const [tokensPreloaded, setTokensPreloaded] = useState(false); // Add this
-  const [borrowPositionsLoading, setBorrowPositionsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChainId, setLastChainId] = useState<number | null>(null);
+  // Filter allReserves to get borrow assets with wallet balances
+  const borrowableReserves = useMemo(() => {
+    return allReserves.filter(
+      (reserve) =>
+        reserve.borrowingEnabled &&
+        parseFloat(reserve.formattedAvailableLiquidity || "0") > 0,
+    );
+  }, [allReserves]);
 
-  const aaveChain = useAaveChain();
-  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
-  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
-  const tokenCount = useWeb3Store((state) => state.allTokensList.length);
-  const loadTokens = useWeb3Store((state) => state.loadTokens); // Add this line!
+  // Use userBorrowPositions from props (centralized from parent)
+  const localUserBorrowPositions = userBorrowPositions;
 
-  const chainTokens = useMemo(() => {
-    return getTokensForChain(aaveChain.chainId);
-  }, [getTokensForChain, aaveChain.chainId]);
-  const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
-
-  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-
-  useEffect(() => {
-    if (tokenCount === 0 && !tokensLoading && !tokensPreloaded) {
-      setTokensPreloaded(true);
-      loadTokens();
-    }
-  }, [loadTokens, tokensLoading, tokenCount, tokensPreloaded]);
-
-  // Load user borrow positions using real Aave data
-  const loadUserBorrowPositions = useCallback(
-    async (reserves: AaveReserveData[]) => {
-      try {
-        setBorrowPositionsLoading(true);
-        console.log("Fetching user borrow positions...");
-
-        const borrowPositions = await fetchUserBorrowPositions(reserves);
-        setLocalUserBorrowPositions(borrowPositions);
-      } catch (err) {
-        console.error("Error loading user borrow positions:", err);
-        setLocalUserBorrowPositions([]);
-      } finally {
-        setBorrowPositionsLoading(false);
-      }
-    },
-    [fetchUserBorrowPositions],
-  );
-
-  const loadAaveReserves = useCallback(
-    async (force = false) => {
-      // Skip if already loading
-      if (loading && !force) {
-        console.log("Already loading, skipping...");
-        return;
-      }
-
-      if (tokensLoading) {
-        console.log("Tokens still loading, skipping...");
-        return;
-      }
-
-      if (tokenCount === 0) {
-        console.log("No tokens loaded yet, skipping...");
-        return;
-      }
-
-      if (chainTokens.length === 0) {
-        console.log(
-          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
-        );
-        return;
-      }
-
-      // Skip if same chain and we have data (unless forced)
-      if (
-        !force &&
-        lastChainId === aaveChain.chainId &&
-        borrowableReserves.length > 0
-      ) {
-        console.log("Data already loaded for this chain, skipping...");
-        return;
-      }
-      if (!isWalletConnected) {
-        console.log("Wallet not connected, skipping...");
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        console.log(
-          `Fetching Aave reserves for borrowing on chain ${aaveChain.chainId}...`,
-        );
-        if (!isWalletConnected) return;
-
-        // Fetch reserves data using your enhanced function
-        const reservesResult: AaveReservesResult = await fetchAllReservesData(
-          aaveChain,
-          chainTokens,
-        );
-
-        setBorrowableReserves(reservesResult.borrowAssets);
-        setLastChainId(aaveChain.chainId);
-
-        // Now fetch user borrow positions
-        await loadUserBorrowPositions(reservesResult.borrowAssets);
-      } catch (err) {
-        console.error("Error loading Aave reserves:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load Aave reserves",
-        );
-        // Clear data on error
-        setBorrowableReserves([]);
-        setLocalUserBorrowPositions([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
-      loading,
-      tokensLoading,
-      tokenCount,
-      isWalletConnected,
-      lastChainId,
-      aaveChain,
-      chainTokens,
-      borrowableReserves.length,
-      fetchAllReservesData,
-      loadUserBorrowPositions,
-    ],
-  );
   // Calculate available to borrow for each reserve based on user's collateral
   const calculateAvailableToBorrow = (
     reserve: AaveReserveData,
@@ -213,28 +86,9 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
     // TODO: Implement details modal
   };
 
-  useEffect(() => {
-    if (
-      isWalletConnected &&
-      !tokensLoading &&
-      tokenCount > 0 &&
-      chainTokens.length > 0
-    ) {
-      loadAaveReserves();
-    }
-  }, [
-    isWalletConnected,
-    tokensLoading,
-    tokenCount,
-    chainTokens.length,
-    loadAaveReserves,
-    aaveChain.chainId,
-  ]);
-
   const hasData = borrowableReserves.length > 0;
   const hasBorrowPositions = localUserBorrowPositions.length > 0;
-  const showEmptyState = !loading && !error && !hasData;
-  const isLoadingBorrowPositions = loading || borrowPositionsLoading;
+  const showEmptyState = !hasData;
 
   return (
     <div className="w-full space-y-4">
@@ -249,41 +103,45 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {isLoadingBorrowPositions && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading your borrow positions...</div>
-                </div>
-              )}
+              {hasBorrowPositions &&
+                localUserBorrowPositions.map((borrowPosition) => {
+                  // Find wallet balance from allReserves
+                  const matchingReserve = allReserves.find(
+                    (reserve) =>
+                      reserve.asset.address.toLowerCase() ===
+                      borrowPosition.asset.asset.address.toLowerCase(),
+                  );
+                  const walletBalance =
+                    matchingReserve?.asset.userBalance || "0.00";
 
-              {!isLoadingBorrowPositions &&
-                hasBorrowPositions &&
-                localUserBorrowPositions.map((borrowPosition) => (
-                  <BorrowOwnedCard
-                    key={`${borrowPosition.asset.asset}-${aaveChain.chainId}`}
-                    borrowPosition={borrowPosition}
-                    healthFactor="1.24" // You'll want to get real health factor
-                    totalCollateralUSD={0} // You'll want to get real values
-                    totalDebtUSD={0} // You'll want to get real values
-                    onRepay={async (position, amount) => {
-                      console.log(
-                        "Repay",
-                        amount,
-                        "of",
-                        position.asset.asset.ticker,
-                      );
-                      // TODO: Implement repay functionality
-                      return true;
-                    }}
-                    onDetailsClick={(position) => {
-                      console.log("Details for", position.asset.asset.ticker);
-                      // TODO: Implement details modal
-                    }}
-                    oraclePrices={oraclePrices}
-                  />
-                ))}
+                  return (
+                    <BorrowOwnedCard
+                      key={`${borrowPosition.asset.asset}-${borrowPosition.asset.asset.chainId}`}
+                      borrowPosition={borrowPosition}
+                      healthFactor={healthFactor.toString()}
+                      totalCollateralUSD={totalCollateralUSD}
+                      totalDebtUSD={totalDebtUSD}
+                      walletBalance={walletBalance}
+                      onRepay={async (position, amount) => {
+                        console.log(
+                          "Repay",
+                          amount,
+                          "of",
+                          position.asset.asset.ticker,
+                        );
+                        // TODO: Implement repay functionality
+                        return true;
+                      }}
+                      onDetailsClick={(position) => {
+                        console.log("Details for", position.asset.asset.ticker);
+                        // TODO: Implement details modal
+                      }}
+                      oraclePrices={oraclePrices}
+                    />
+                  );
+                })}
 
-              {!isLoadingBorrowPositions && !hasBorrowPositions && (
+              {!hasBorrowPositions && (
                 <div className="text-center py-8">
                   <div className="text-gray-400 mb-4">
                     No borrow positions found
@@ -308,38 +166,11 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {loading && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading borrowable assets...</div>
-                </div>
-              )}
-
-              {error && (
-                <div className="text-center py-8">
-                  <div className="text-red-400 mb-4">
-                    Failed to load reserves: {error}
-                  </div>
-                  <div className="text-sm text-gray-400 mb-4">
-                    Chain: {aaveChain.name}
-                  </div>
-                  <button
-                    disabled={loading}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? "Loading..." : "Retry"}
-                  </button>
-                </div>
-              )}
-
               {showEmptyState && (
                 <div className="text-center py-8">
                   <div className="text-gray-400 mb-4">
                     No borrowable assets found
                   </div>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                    Refresh
-                  </button>
                 </div>
               )}
 
@@ -348,7 +179,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                   const borrowData = calculateAvailableToBorrow(reserve);
                   return (
                     <BorrowUnownedCard
-                      key={`${reserve.asset.address}-${aaveChain.chainId}`}
+                      key={`${reserve.asset.address}-${reserve.asset.chainId}`}
                       currentAsset={reserve}
                       availableToBorrow={borrowData.amount}
                       availableToBorrowUSD={borrowData.amountUSD}

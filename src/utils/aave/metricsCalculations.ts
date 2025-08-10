@@ -236,6 +236,124 @@ export const isLiquidationRisk = (healthFactor: number): boolean => {
   return healthFactor < 1.1;
 };
 
+/**
+ * Convert USD amount to token amount with proper formatting
+ * @param amountUSD - Amount in USD
+ * @param tokenPrice - Price of the token in USD
+ * @param decimals - Number of decimal places for formatting (default: 4)
+ * @returns Formatted token amount as string
+ */
+export const convertUSDToTokenAmount = (
+  amountUSD: number,
+  tokenPrice: number,
+  decimals: number = 4,
+): string => {
+  if (tokenPrice <= 0) return "0";
+  return (amountUSD / tokenPrice).toFixed(decimals);
+};
+
+/**
+ * Format number to first 3 significant figures that show up
+ * @param num - Number to format
+ * @returns Formatted string with appropriate decimal places
+ */
+export const formatToSignificantFigures = (num: number): string => {
+  if (num === 0) return "0";
+
+  // Get the number of digits before decimal point
+  const magnitude = Math.floor(Math.log10(Math.abs(num)));
+
+  if (magnitude >= 2) {
+    // For numbers >= 100, show no decimals
+    return num.toFixed(0);
+  } else if (magnitude >= 0) {
+    // For numbers >= 1, show 2 decimal places
+    return num.toFixed(2);
+  } else {
+    // For numbers < 1, show enough decimals to get 3 significant figures
+    const decimals = Math.abs(magnitude) + 2;
+    return num.toFixed(Math.min(decimals, 8)); // Cap at 8 decimals
+  }
+};
+
+/**
+ * Calculate borrowing metrics including max borrow amount with precise formatting
+ * @param userSupplyPositions - User's supply positions with USD values
+ * @param userBorrowPositions - User's borrow positions with USD values
+ * @param tokenPrice - Price of the token to borrow in USD
+ * @param stableBorrowAPY - Stable borrow APY as string percentage
+ * @param oraclePrices - Oracle prices for all assets
+ * @returns Object containing currentMetrics, maxBorrowUSD, maxBorrowAmount, and isStableRateAvailable
+ */
+export const calculateBorrowingMetrics = (
+  userSupplyPositions: UserPosition[],
+  userBorrowPositions: UserBorrowPosition[],
+  tokenPrice: number,
+  stableBorrowAPY: string,
+  oraclePrices: Record<string, number> = {},
+): {
+  currentMetrics: UserMetrics | null;
+  maxBorrowUSD: number;
+  maxBorrowAmount: string;
+  isStableRateAvailable: boolean;
+} => {
+  // Calculate USD positions using oracle prices
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  const maxBorrowUSD = currentMetrics
+    ? calculateMaxBorrowUSD(
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        currentMetrics.liquidationThreshold,
+      )
+    : 0;
+
+  // Use toPrecision for better formatting instead of toFixed
+  const maxBorrowTokenAmount = tokenPrice > 0 ? maxBorrowUSD / tokenPrice : 0;
+  const maxBorrowAmount =
+    maxBorrowTokenAmount > 0
+      ? parseFloat(maxBorrowTokenAmount.toPrecision(6)).toString()
+      : "0";
+
+  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
+
+  return {
+    currentMetrics,
+    maxBorrowUSD,
+    maxBorrowAmount,
+    isStableRateAvailable,
+  };
+};
+
 export const calculateUserMetrics = (
   userSupplyPositions: UserPosition[],
   userBorrowPositions: UserBorrowPosition[],
