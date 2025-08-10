@@ -15,16 +15,24 @@ import useWeb3Store, {
   useIsWalletTypeConnected,
 } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import { AaveReserveData, UserPosition } from "@/types/aave";
+import {
+  AaveReserveData,
+  UserPosition,
+  UserBorrowPosition,
+} from "@/types/aave";
 import { useAaveFetch } from "@/utils/aave/fetch";
 import { formatBalance } from "@/utils/formatters";
 
 interface SupplyComponentProps {
   oraclePrices?: Record<string, number>;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
 }
 
 const SupplyComponent: React.FC<SupplyComponentProps> = ({
   oraclePrices = {},
+  userSupplyPositions: propUserSupplyPositions = [],
+  userBorrowPositions = [],
 }) => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
   const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
@@ -229,6 +237,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
                     isCollateral={position.isCollateral}
                     onWithdraw={handleWithdraw}
                     oraclePrices={oraclePrices}
+                    userSupplyPositions={propUserSupplyPositions}
+                    userBorrowPositions={userBorrowPositions}
                   />
                 ))}
             </ScrollBoxSupplyBorrowAssets>

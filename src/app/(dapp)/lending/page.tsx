@@ -169,7 +169,11 @@ const BorrowLendComponent: React.FC = () => {
             }
           />
           {activeTab === "supply" ? (
-            <SupplyComponent oraclePrices={oraclePrices} />
+            <SupplyComponent
+              oraclePrices={oraclePrices}
+              userSupplyPositions={userSupplyPositions}
+              userBorrowPositions={userBorrowPositions}
+            />
           ) : (
             <BorrowComponent
               oraclePrices={oraclePrices}
