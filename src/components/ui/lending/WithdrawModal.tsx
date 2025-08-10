@@ -28,6 +28,9 @@ import {
   getHealthFactorColor,
   calculateUserSupplyPositionsUSD,
   calculateUserBorrowPositionsUSD,
+  getTransactionButtonStyle,
+  getLTVColorClass,
+  getTransactionWarningText,
 } from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import {
@@ -35,7 +38,10 @@ import {
   type PositionData,
   type AssetData,
 } from "@/utils/aave/transactionValidation";
-import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  calculateUserMetrics,
+  calculateWithdrawImpact,
+} from "@/utils/aave/metricsCalculations";
 import { formatHealthFactor } from "@/utils/formatters";
 
 // Main Withdraw Modal Component
@@ -169,28 +175,14 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
     withdrawAmountUSD,
   );
 
-  // Calculate new health factor and LTV - only if withdrawing collateral
-  let newHealthFactor = currentMetrics.healthFactor || Infinity;
-  let newLTV = currentMetrics.currentLTV;
-  let isHighRiskTransaction = false;
-
-  if (isCollateral && currentMetrics.totalDebtUSD > 0) {
-    // Only calculate impact if this is a collateral asset and user has debt
-    const newTotalCollateral = Math.max(
-      0,
-      currentMetrics.totalCollateralUSD - withdrawAmountUSD,
+  // Calculate withdraw impact using utility function
+  const { newHealthFactor, newLTV, isHighRiskTransaction } =
+    calculateWithdrawImpact(
+      isCollateral,
+      currentMetrics,
+      withdrawAmountUSD,
+      liquidationThreshold,
     );
-    const newWeightedCollateral = newTotalCollateral * liquidationThreshold;
-    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
-    newLTV =
-      newTotalCollateral > 0
-        ? (currentMetrics.totalDebtUSD / newTotalCollateral) * 100
-        : currentMetrics.totalDebtUSD > 0
-          ? 100
-          : 0;
-    // Allow risk acceptance for any transaction that would result in HF < 1.2 (including liquidation level)
-    isHighRiskTransaction = newHealthFactor < 1.2;
-  }
 
   // Check various validation conditions
   const exceedsBalance = withdrawAmountNum > suppliedBalanceNum;
@@ -203,6 +195,15 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
     !isLoading &&
     !isSubmitting &&
     (!isHighRiskTransaction || acceptHighRisk);
+
+  // Get button styling using utility function
+  const buttonStyle = getTransactionButtonStyle(
+    isSubmitting,
+    isHighRiskTransaction,
+    acceptHighRisk,
+    validation.riskLevel,
+    "withdraw",
+  );
 
   const handleWithdraw = async () => {
     if (!isFormValid) return;
@@ -480,13 +481,10 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 <div
                   className={cn(
                     "text-lg font-semibold font-mono",
-                    currentMetrics.currentLTV <
-                      currentMetrics.liquidationThreshold * 0.7
-                      ? "text-green-500"
-                      : currentMetrics.currentLTV <
-                          currentMetrics.liquidationThreshold * 0.9
-                        ? "text-amber-500"
-                        : "text-red-500",
+                    getLTVColorClass(
+                      currentMetrics.currentLTV,
+                      currentMetrics.liquidationThreshold,
+                    ),
                   )}
                 >
                   {currentMetrics.currentLTV.toFixed(2)}%
@@ -507,11 +505,10 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                     <div
                       className={cn(
                         "text-lg font-semibold font-mono",
-                        newLTV < currentMetrics.liquidationThreshold * 0.7
-                          ? "text-green-500"
-                          : newLTV < currentMetrics.liquidationThreshold * 0.9
-                            ? "text-amber-500"
-                            : "text-red-500",
+                        getLTVColorClass(
+                          newLTV,
+                          currentMetrics.liquidationThreshold,
+                        ),
                       )}
                     >
                       {newLTV.toFixed(2)}%
@@ -585,27 +582,11 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 className={cn(
                   "h-8 py-2",
                   !isFormValid ? "opacity-50 cursor-not-allowed" : "",
-                  validation.riskLevel === "liquidation" ||
-                    validation.riskLevel === "high"
-                    ? "border-red-500/25 bg-red-500/10 hover:bg-red-500/20"
-                    : "",
+                  buttonStyle.buttonClassName,
                 )}
               >
-                <span
-                  className={cn(
-                    validation.riskLevel === "liquidation" ||
-                      validation.riskLevel === "high"
-                      ? "text-red-500"
-                      : "",
-                  )}
-                >
-                  {isSubmitting
-                    ? "withdrawing..."
-                    : isHighRiskTransaction && !acceptHighRisk
-                      ? "high risk - blocked"
-                      : isHighRiskTransaction && acceptHighRisk
-                        ? "high risk withdraw"
-                        : "withdraw"}
+                <span className={buttonStyle.textClassName}>
+                  {buttonStyle.buttonText}
                 </span>
               </BlueButton>
             </div>
@@ -618,8 +599,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
           </div>
 
           <p className="text-xs text-[#71717A] text-center">
-            by withdrawing, you will reduce your earning potential and may
-            affect your borrowing capacity.
+            {getTransactionWarningText("withdraw")}
           </p>
         </div>
       </DialogContent>

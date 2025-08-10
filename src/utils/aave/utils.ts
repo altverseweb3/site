@@ -60,7 +60,7 @@ export function getHealthFactorColor(healthFactor: number | null): string {
   return "text-red-500";
 }
 
-// LTV Color Helper
+// LTV Color Helper (returns color names)
 export function getLTVColor(
   ltv: number,
   liquidationThresh: number,
@@ -71,6 +71,16 @@ export function getLTVColor(
   if (usage < 0.8) return "yellow";
   if (usage < 0.95) return "amber";
   return "red";
+}
+
+// LTV Color Helper (returns CSS classes)
+export function getLTVColorClass(
+  currentLTV: number,
+  liquidationThreshold: number,
+): string {
+  if (currentLTV < liquidationThreshold * 0.7) return "text-green-500";
+  if (currentLTV < liquidationThreshold * 0.9) return "text-amber-500";
+  return "text-red-500";
 }
 
 // Health Factor Calculator for Transaction Impact
@@ -112,4 +122,73 @@ export function calculateNewHealthFactor(
 
   const weightedCollateral = currentHealthFactor * currentDebtUSD;
   return weightedCollateral / newDebtUSD;
+}
+
+/**
+ * Get transaction button styling and text based on validation state
+ * @param isSubmitting - Whether the transaction is being submitted
+ * @param isHighRiskTransaction - Whether this is a high-risk transaction
+ * @param acceptHighRisk - Whether user has accepted the high-risk warning
+ * @param validationRiskLevel - Risk level from transaction validation
+ * @param actionText - Default action text (e.g., "withdraw", "borrow")
+ * @returns Object with buttonClassName, textClassName, and buttonText
+ */
+export function getTransactionButtonStyle(
+  isSubmitting: boolean,
+  isHighRiskTransaction: boolean,
+  acceptHighRisk: boolean,
+  validationRiskLevel?: "liquidation" | "high" | "moderate" | "safe",
+  actionText: string = "submit",
+): {
+  buttonClassName: string;
+  textClassName: string;
+  buttonText: string;
+} {
+  const isHighRiskLevel =
+    validationRiskLevel === "liquidation" || validationRiskLevel === "high";
+
+  const buttonClassName = isHighRiskLevel
+    ? "border-red-500/25 bg-red-500/10 hover:bg-red-500/20"
+    : "";
+
+  const textClassName = isHighRiskLevel ? "text-red-500" : "";
+
+  let buttonText: string;
+  if (isSubmitting) {
+    buttonText = `${actionText}ing...`;
+  } else if (isHighRiskTransaction && !acceptHighRisk) {
+    buttonText = "high risk - blocked";
+  } else if (isHighRiskTransaction && acceptHighRisk) {
+    buttonText = `high risk ${actionText}`;
+  } else {
+    buttonText = actionText;
+  }
+
+  return {
+    buttonClassName,
+    textClassName,
+    buttonText,
+  };
+}
+
+/**
+ * Get transaction warning message for different actions
+ * @param actionType - Type of action (withdraw, borrow, supply, repay)
+ * @returns Warning message string
+ */
+export function getTransactionWarningText(
+  actionType: "withdraw" | "borrow" | "supply" | "repay",
+): string {
+  switch (actionType) {
+    case "withdraw":
+      return "by withdrawing, you will reduce your earning potential and may affect your borrowing capacity.";
+    case "borrow":
+      return "by borrowing, you will pay interest at the variable rate. ensure you can repay to avoid liquidation.";
+    case "supply":
+      return "by supplying, you agree to Aave's terms and conditions. your supply will start earning yield immediately.";
+    case "repay":
+      return "by repaying, you will reduce your debt and improve your health factor.";
+    default:
+      return "please review the transaction details carefully before proceeding.";
+  }
 }
