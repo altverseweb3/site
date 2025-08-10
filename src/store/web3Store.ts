@@ -89,7 +89,6 @@ const useWeb3Store = create<Web3StoreState>()(
       },
 
       setActiveSwapSection: (sectionKey: SectionKey) => {
-        console.log(`Setting active swap section to: ${sectionKey}`);
         set({ activeSwapSection: sectionKey });
       },
 
@@ -162,10 +161,6 @@ const useWeb3Store = create<Web3StoreState>()(
 
       setSourceToken: (token: Token | null) => {
         const key = get().activeSwapSection;
-        console.log(
-          `Setting source token for ${key}:`,
-          token ? token.name : "null",
-        );
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -201,10 +196,6 @@ const useWeb3Store = create<Web3StoreState>()(
 
       setDestinationToken: (token: Token | null) => {
         const key = get().activeSwapSection;
-        console.log(
-          `Setting destination token for ${key}:`,
-          token ? token.name : "null",
-        );
         set((state) => {
           const integration = state.swapIntegrations[key];
           if (!integration) return state;
@@ -431,11 +422,8 @@ const useWeb3Store = create<Web3StoreState>()(
 
           // Check if token already exists in the store
           if (state.tokensByCompositeKey[compositeKey]) {
-            console.log("Token already exists in store:", compositeKey);
             return state; // No changes needed
           }
-
-          console.log("Adding custom token to store:", token);
 
           // Add token to allTokensList
           const newTokensList = [...state.allTokensList, token];
@@ -814,15 +802,8 @@ const useWeb3Store = create<Web3StoreState>()(
         return localStorage;
       }),
       migrate: (persistedState: unknown, version: number) => {
-        console.log(
-          `Checking store version. Persisted: ${version}, Current: ${STORE_VERSION}`,
-        );
-
         // If no version exists (existing users) or version mismatch, start fresh
         if (version !== STORE_VERSION) {
-          console.log(
-            `Store version mismatch or missing. Persisted: ${version}, Current: ${STORE_VERSION}. Starting with fresh state.`,
-          );
           // Return undefined to trigger using the initial state
           return undefined;
         }
