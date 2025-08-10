@@ -418,29 +418,19 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
       // Check if we've already looked up this address for this chain
       const lookupKey = `${chainToShow.chainId}-${normalizedAddress}`;
-      if (lookedUpAddresses.current.has(lookupKey)) {
-        console.log(
-          `Already looked up ${normalizedAddress} on chain ${chainToShow.chainId}, skipping`,
-        );
-        return;
-      }
+      if (lookedUpAddresses.current.has(lookupKey)) return;
 
       // Mark this address as looked up before making the API call
       lookedUpAddresses.current.add(lookupKey);
 
       setIsSearchingMetadata(true);
       try {
-        console.log(
-          `Looking up metadata for ${normalizedAddress} on chain ${chainToShow.chainId}`,
-        );
         const metadata = await getTokenMetadata(
           chainToShow.chainId,
           normalizedAddress,
         );
         // Only add tokens that have valid metadata with at least a name
         if (metadata && metadata.name) {
-          console.log("Found valid token metadata:", metadata);
-
           // Create a new token object from the metadata
           const newToken: Token = {
             id: `custom-${chainToShow.chainId}-${normalizedAddress}`,
@@ -457,10 +447,8 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
           // Add to global token list
           addCustomToken(newToken);
-
-          console.log("Custom token added to store:", newToken);
         } else {
-          console.log(
+          console.error(
             "Invalid or missing metadata for address:",
             normalizedAddress,
           );
