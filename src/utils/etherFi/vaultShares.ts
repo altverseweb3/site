@@ -87,17 +87,6 @@ export async function queryVaultConversionRate(
       vault.addresses.accountant,
     );
 
-    console.log("🔍 Debug vault conversion:", {
-      vaultName: vault.name,
-      asset: depositAsset,
-      parsedAmount: parsedAmount.toString(),
-      vaultTokensReceived: vaultTokensReceived.toString(),
-      assetDecimals: asset.decimals,
-      assetContractAddress: asset.contractAddress,
-      vaultAddress: vault.addresses.vault,
-      accountantAddress: vault.addresses.accountant,
-    });
-
     // Query the vault token decimals to format correctly
     const vaultContract = new ethers.Contract(
       vault.addresses.vault,
@@ -113,7 +102,6 @@ export async function queryVaultConversionRate(
     );
 
     const vaultTokenDecimals = await vaultContract.decimals();
-    console.log("🔍 Vault token decimals:", vaultTokenDecimals.toString());
 
     // Format the received vault tokens with correct decimals
     const formattedVaultTokens = ethers.formatUnits(
