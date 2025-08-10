@@ -48,6 +48,16 @@ const BorrowOwnedCard = ({
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
 
+  // Calculate USD value using current oracle price
+  const currentPrice = oraclePrices?.[asset.asset.address.toLowerCase()];
+  const calculatedDebtUSD = currentPrice
+    ? parseFloat(
+        (
+          parseFloat(borrowPosition.formattedTotalDebt || "0") * currentPrice
+        ).toPrecision(4),
+      ).toString()
+    : borrowPosition.totalDebtUSD; // Fallback to passed value
+
   const chain: Chain = getChainByChainId(asset.asset.chainId);
 
   const handleRepayComplete = async (amount: string, rateMode: RateMode) => {
@@ -95,9 +105,7 @@ const BorrowOwnedCard = ({
           <div className="text-gray-400 text-sm mt-0">debt balance</div>
           <div className="text-right flex flex-col items-end">
             <div className="text-sm">{formattedDebt}</div>
-            <div className="text-gray-400 text-xs">
-              ${borrowPosition.totalDebtUSD}
-            </div>
+            <div className="text-gray-400 text-xs">${calculatedDebtUSD}</div>
           </div>
         </div>
 

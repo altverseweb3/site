@@ -67,6 +67,14 @@ const SupplyOwnedCard = ({
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
 
+  // Calculate USD value using current oracle price
+  const currentPrice = oraclePrices?.[currentAsset.asset.address.toLowerCase()];
+  const calculatedUSD = currentPrice
+    ? parseFloat(
+        (parseFloat(suppliedBalance || "0") * currentPrice).toPrecision(4),
+      ).toString()
+    : suppliedBalanceUSD; // Fallback to passed value
+
   const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
   // Handle collateral change from modal
@@ -121,7 +129,7 @@ const SupplyOwnedCard = ({
           <div className="text-gray-400 text-sm mt-0">supply balance</div>
           <div className="text-right flex flex-col items-end">
             <div className="text-sm">{formattedBalance}</div>
-            <div className="text-gray-400 text-xs">${suppliedBalanceUSD}</div>
+            <div className="text-gray-400 text-xs">${calculatedUSD}</div>
           </div>
         </div>
 

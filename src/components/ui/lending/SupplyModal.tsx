@@ -298,7 +298,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
             {/* USD Value */}
             <div className="mt-2 text-xs text-[#71717A]">
-              ${supplyAmountUSD.toFixed(2)} USD
+              ${parseFloat(supplyAmountUSD.toPrecision(6)).toString()} USD
             </div>
 
             {/* Validation error */}

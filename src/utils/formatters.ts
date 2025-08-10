@@ -1,8 +1,5 @@
 // Format number in balances to look compact with string/hex handling and error handling
-export const formatBalance = (
-  balance: string | number,
-  decimals = 2,
-): string => {
+export const formatBalance = (balance: string | number): string => {
   try {
     let numericBalance: string;
 
@@ -22,27 +19,28 @@ export const formatBalance = (
       return "0.000000";
     }
 
-    // Handle abbreviations for large numbers
+    // Handle abbreviations for large numbers - use toPrecision for better formatting
     if (num >= 1e12) {
-      return (num / 1e12).toFixed(decimals) + "T";
+      const abbreviated = num / 1e12;
+      return parseFloat(abbreviated.toPrecision(4)).toString() + "T";
     } else if (num >= 1e9) {
-      return (num / 1e9).toFixed(decimals) + "B";
+      const abbreviated = num / 1e9;
+      return parseFloat(abbreviated.toPrecision(4)).toString() + "B";
     } else if (num >= 1e6) {
-      return (num / 1e6).toFixed(decimals) + "M";
+      const abbreviated = num / 1e6;
+      return parseFloat(abbreviated.toPrecision(4)).toString() + "M";
     } else if (num >= 1) {
-      // Between 1 and 999,999 - show 3 decimal places
-      return num.toFixed(3);
+      // Between 1 and 999,999 - use toPrecision for cleaner display
+      return parseFloat(num.toPrecision(6)).toString();
     } else if (num === 0) {
       // Exactly zero
-      return "0.000";
+      return "0";
     } else {
-      // Small fractions - use more decimal places but cap at 6
+      // Small fractions - use toPrecision for significant figures
       if (num < 1e-4) {
-        return num.toFixed(6);
-      } else if (num < 1e-2) {
-        return num.toFixed(5);
+        return parseFloat(num.toPrecision(3)).toString();
       } else {
-        return num.toFixed(4);
+        return parseFloat(num.toPrecision(4)).toString();
       }
     }
   } catch (e) {
