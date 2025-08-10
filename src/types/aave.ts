@@ -64,6 +64,11 @@ export interface AaveReserveData {
   ltv?: string;
   liquidationThreshold?: string;
   liquidationPenalty?: string;
+
+  // User wallet balance (from fetchUserWalletBalances)
+  userBalance?: string;
+  userBalanceFormatted?: string;
+  userBalanceUsd?: string;
 }
 
 export interface AaveReservesResult {

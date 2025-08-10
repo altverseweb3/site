@@ -21,7 +21,7 @@ import {
   UserBorrowPosition,
 } from "@/types/aave";
 import { useAaveFetch } from "@/utils/aave/fetch";
-import { formatBalance } from "@/utils/formatters";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 
 interface SupplyComponentProps {
   oraclePrices?: Record<string, number>;
@@ -49,12 +49,14 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
   const loadTokens = useWeb3Store((state) => state.loadTokens);
 
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+  const { isEvmConnected } = useWalletConnection();
 
   const chainTokens = useMemo(() => {
     return getTokensForChain(aaveChain.chainId);
   }, [getTokensForChain, aaveChain.chainId]);
 
-  const { fetchUserPositions, fetchAllReservesData } = useAaveFetch();
+  const { fetchUserPositions, fetchAllReservesData, fetchUserWalletBalances } =
+    useAaveFetch();
 
   useEffect(() => {
     if (tokenCount === 0 && !tokensLoading && !tokensPreloaded) {
@@ -130,11 +132,30 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
         console.log(
           `Successfully loaded ${reservesData.supplyAssets.length} Aave reserves`,
         );
-        setAaveReserves(reservesData.supplyAssets);
+
+        // Fetch wallet balances if wallet is connected
+        let reservesWithBalances = reservesData.supplyAssets;
+        if (isEvmConnected) {
+          try {
+            console.log("Fetching wallet balances...");
+
+            // Add wallet balances to reserves data
+            reservesWithBalances = await fetchUserWalletBalances(
+              reservesData.supplyAssets,
+              oraclePrices,
+            );
+            console.log("Wallet balances fetched successfully");
+          } catch (error) {
+            console.error("Error fetching wallet balances:", error);
+            // Continue with original reserves if wallet balance fetch fails
+          }
+        }
+
+        setAaveReserves(reservesWithBalances);
         setLastChainId(aaveChain.chainId);
 
         // Now fetch user positions (supplied assets)
-        await loadUserPositions(reservesData.supplyAssets);
+        await loadUserPositions(reservesWithBalances);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);
         setError(
@@ -157,6 +178,9 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
       aaveReserves.length,
       fetchAllReservesData,
       loadUserPositions,
+      isEvmConnected,
+      fetchUserWalletBalances,
+      oraclePrices,
     ],
   );
 
@@ -300,10 +324,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
                   <SupplyUnownedCard
                     key={`${reserve.asset.address}-${aaveChain.chainId}`}
                     currentAsset={reserve}
-                    userBalance={formatBalance(
-                      reserve.asset.userBalance || "0.00",
-                    )}
-                    dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
+                    userBalance={reserve.userBalanceFormatted || "0.00"}
+                    dollarAmount={reserve.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     oraclePrices={oraclePrices}
                   />
