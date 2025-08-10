@@ -83,8 +83,6 @@ export function getLTVColorClass(
   return "text-red-500";
 }
 
-
-
 /**
  * Get transaction button styling and text based on validation state
  * @param isSubmitting - Whether the transaction is being submitted

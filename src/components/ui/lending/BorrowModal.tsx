@@ -148,7 +148,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const borrowAmountUSD = borrowAmountNum * tokenPrice;
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
-<<<<<<< HEAD
   const {
     currentMetrics,
     maxBorrowUSD,
@@ -160,23 +159,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     tokenPrice,
     stableBorrowAPY,
     oraclePrices,
-=======
-  // Calculate USD positions using utility functions
-  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
-    userSupplyPositions,
-    oraclePrices,
-  );
-
-  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
-    userBorrowPositions,
-    oraclePrices,
-  );
-
-  // Calculate max safe borrow amount (HF = 1.2)
-  const currentMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
->>>>>>> 155f95f (chore:refactor functions to be common)
   );
 
   // Calculate USD positions for SimpleHealthIndicator
@@ -230,11 +212,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
   // Calculate new health factor to check if this is high risk
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
-      currentMetrics.totalCollateralUSD,
-      currentMetrics.totalDebtUSD,
-      borrowAmountUSD,
-      currentMetrics.liquidationThreshold,
-    )
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        borrowAmountUSD,
+        currentMetrics.liquidationThreshold,
+      )
     : Infinity;
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
@@ -378,25 +360,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
               <span
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
-<<<<<<< HEAD
                 {!currentMetrics ||
-                  currentMetrics.healthFactor === null ||
-=======
-                {currentMetrics.healthFactor === null ||
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 86ff4c1 (feat: enhance modals with health factor guard rails)
-                  currentMetrics.healthFactor === Infinity
-=======
+                currentMetrics.healthFactor === null ||
                 currentMetrics.healthFactor === Infinity
->>>>>>> f25469d (chore: remove unused component)
-=======
-                  currentMetrics.healthFactor === Infinity
->>>>>>> df46489 (feat: enhance modals with health factor guard rails)
-=======
-                currentMetrics.healthFactor === Infinity
->>>>>>> 81094cb (chore:remove unused component)
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>
