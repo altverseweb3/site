@@ -1,5 +1,8 @@
 // Format number in balances to look compact with string/hex handling and error handling
-export const formatBalance = (balance: string | number): string => {
+export const formatBalance = (
+  balance: string | number,
+  precision: number = 4,
+): string => {
   try {
     let numericBalance: string;
 
@@ -22,25 +25,27 @@ export const formatBalance = (balance: string | number): string => {
     // Handle abbreviations for large numbers - use toPrecision for better formatting
     if (num >= 1e12) {
       const abbreviated = num / 1e12;
-      return parseFloat(abbreviated.toPrecision(4)).toString() + "T";
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "T";
     } else if (num >= 1e9) {
       const abbreviated = num / 1e9;
-      return parseFloat(abbreviated.toPrecision(4)).toString() + "B";
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "B";
     } else if (num >= 1e6) {
       const abbreviated = num / 1e6;
-      return parseFloat(abbreviated.toPrecision(4)).toString() + "M";
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "M";
     } else if (num >= 1) {
       // Between 1 and 999,999 - use toPrecision for cleaner display
-      return parseFloat(num.toPrecision(6)).toString();
+      return parseFloat(num.toPrecision(precision + 2)).toString();
     } else if (num === 0) {
       // Exactly zero
       return "0";
     } else {
       // Small fractions - use toPrecision for significant figures
       if (num < 1e-4) {
-        return parseFloat(num.toPrecision(3)).toString();
+        return parseFloat(
+          num.toPrecision(Math.max(3, precision - 1)),
+        ).toString();
       } else {
-        return parseFloat(num.toPrecision(4)).toString();
+        return parseFloat(num.toPrecision(precision)).toString();
       }
     }
   } catch (e) {
