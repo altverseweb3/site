@@ -30,7 +30,12 @@ import { getHealthFactorColor } from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
-import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  calculateUserMetrics,
+  calculateMaxBorrowUSD,
+  calculateNewHealthFactorAfterBorrow,
+  isHighRiskTransaction as isHighRiskTransactionUtil,
+} from "@/utils/aave/metricsCalculations";
 import {
   validateBorrowTransaction,
   type PositionData,
@@ -176,27 +181,13 @@ const BorrowModal: FC<BorrowModalProps> = ({
     userSupplyPositionsUSD,
     userBorrowPositionsUSD,
   );
-  const calculateMaxBorrowUSD = () => {
-    if (!currentMetrics) return 0;
-
-    const { totalCollateralUSD, totalDebtUSD } = currentMetrics;
-    const liquidationThresholdDecimal =
-      currentMetrics.liquidationThreshold > 1
-        ? currentMetrics.liquidationThreshold / 100
-        : currentMetrics.liquidationThreshold;
-
-    // HF = (collateral * liquidationThreshold) / totalDebt
-    // Allow borrowing down to exactly 1.12 health factor (not below)
-    // 1.12 = (collateral * liquidationThreshold) / (currentDebt + newBorrow)
-    // newBorrow = (collateral * liquidationThreshold) / 1.12 - currentDebt
-    const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
-    const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
-    const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
-
-    return maxNewBorrowUSD;
-  };
-
-  const maxBorrowUSD = calculateMaxBorrowUSD();
+  const maxBorrowUSD = currentMetrics
+    ? calculateMaxBorrowUSD(
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        currentMetrics.liquidationThreshold,
+      )
+    : 0;
   const maxBorrowAmount =
     tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
   const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
@@ -235,15 +226,13 @@ const BorrowModal: FC<BorrowModalProps> = ({
     userSupplyPositionsUSD,
     userBorrowPositionsUSD,
   );
-  const weightedCollateral =
-    newMetrics.totalCollateralUSD *
-    (newMetrics.liquidationThreshold > 1
-      ? newMetrics.liquidationThreshold / 100
-      : newMetrics.liquidationThreshold);
-  const newTotalDebt = newMetrics.totalDebtUSD + borrowAmountUSD;
-  const newHealthFactor =
-    newTotalDebt > 0 ? weightedCollateral / newTotalDebt : Infinity;
-  const isHighRiskTransaction = newHealthFactor < 1.2 && newHealthFactor > 1.1;
+  const newHealthFactor = calculateNewHealthFactorAfterBorrow(
+    newMetrics.totalCollateralUSD,
+    newMetrics.totalDebtUSD,
+    borrowAmountUSD,
+    newMetrics.liquidationThreshold,
+  );
+  const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
   // Enhanced form validation - require risk acceptance for high risk transactions
   const isFormValid =
