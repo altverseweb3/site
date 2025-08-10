@@ -21,6 +21,7 @@ import {
   UserPosition,
 } from "@/types/aave";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 
 interface BorrowComponentProps {
   oraclePrices?: Record<string, number>;
@@ -46,12 +47,8 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   const [borrowableReserves, setBorrowableReserves] = useState<
     AaveReserveData[]
   >([]);
-  const [localUserBorrowPositions, setLocalUserBorrowPositions] = useState<
-    UserBorrowPosition[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [tokensPreloaded, setTokensPreloaded] = useState(false); // Add this
-  const [borrowPositionsLoading, setBorrowPositionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastChainId, setLastChainId] = useState<number | null>(null);
 
@@ -59,12 +56,13 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
   const tokensLoading = useWeb3Store((state) => state.tokensLoading);
   const tokenCount = useWeb3Store((state) => state.allTokensList.length);
-  const loadTokens = useWeb3Store((state) => state.loadTokens); // Add this line!
+  const loadTokens = useWeb3Store((state) => state.loadTokens);
 
   const chainTokens = useMemo(() => {
     return getTokensForChain(aaveChain.chainId);
   }, [getTokensForChain, aaveChain.chainId]);
-  const { fetchAllReservesData, fetchUserBorrowPositions } = useAaveFetch();
+  const { fetchAllReservesData, fetchUserWalletBalances } = useAaveFetch();
+  const { isEvmConnected } = useWalletConnection();
 
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
@@ -75,83 +73,59 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
     }
   }, [loadTokens, tokensLoading, tokenCount, tokensPreloaded]);
 
-  // Load user borrow positions using real Aave data
-  const loadUserBorrowPositions = useCallback(
-    async (reserves: AaveReserveData[]) => {
-      try {
-        setBorrowPositionsLoading(true);
-        console.log("Fetching user borrow positions...");
-
-        const borrowPositions = await fetchUserBorrowPositions(reserves);
-        setLocalUserBorrowPositions(borrowPositions);
-      } catch (err) {
-        console.error("Error loading user borrow positions:", err);
-        setLocalUserBorrowPositions([]);
-      } finally {
-        setBorrowPositionsLoading(false);
-      }
-    },
-    [fetchUserBorrowPositions],
-  );
-
   const loadAaveReserves = useCallback(
     async (force = false) => {
-      // Skip if already loading
       if (loading && !force) {
-        console.log("Already loading, skipping...");
         return;
       }
 
       if (tokensLoading) {
-        console.log("Tokens still loading, skipping...");
         return;
       }
 
       if (tokenCount === 0) {
-        console.log("No tokens loaded yet, skipping...");
         return;
       }
 
       if (chainTokens.length === 0) {
-        console.log(
-          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
-        );
         return;
       }
 
-      // Skip if same chain and we have data (unless forced)
       if (
         !force &&
         lastChainId === aaveChain.chainId &&
         borrowableReserves.length > 0
       ) {
-        console.log("Data already loaded for this chain, skipping...");
         return;
       }
       if (!isWalletConnected) {
-        console.log("Wallet not connected, skipping...");
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-        console.log(
-          `Fetching Aave reserves for borrowing on chain ${aaveChain.chainId}...`,
-        );
         if (!isWalletConnected) return;
-
-        // Fetch reserves data using your enhanced function
         const reservesResult: AaveReservesResult = await fetchAllReservesData(
           aaveChain,
           chainTokens,
         );
 
-        setBorrowableReserves(reservesResult.borrowAssets);
-        setLastChainId(aaveChain.chainId);
+        // Fetch wallet balances if wallet is connected
+        let borrowAssetsWithBalances = reservesResult.borrowAssets;
+        if (isEvmConnected) {
+          try {
+            borrowAssetsWithBalances = await fetchUserWalletBalances(
+              reservesResult.borrowAssets,
+              oraclePrices,
+            );
+          } catch (error) {
+            console.error("Error fetching wallet balances:", error);
+          }
+        }
 
-        // Now fetch user borrow positions
-        await loadUserBorrowPositions(reservesResult.borrowAssets);
+        setBorrowableReserves(borrowAssetsWithBalances);
+        setLastChainId(aaveChain.chainId);
       } catch (err) {
         console.error("Error loading Aave reserves:", err);
         setError(
@@ -159,7 +133,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
         );
         // Clear data on error
         setBorrowableReserves([]);
-        setLocalUserBorrowPositions([]);
       } finally {
         setLoading(false);
       }
@@ -174,7 +147,9 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
       chainTokens,
       borrowableReserves.length,
       fetchAllReservesData,
-      loadUserBorrowPositions,
+      isEvmConnected,
+      fetchUserWalletBalances,
+      oraclePrices,
     ],
   );
   // Calculate available to borrow for each reserve based on user's collateral
@@ -203,13 +178,11 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
     };
   };
 
-  const handleBorrow = (asset: AaveReserveData) => {
-    console.log("Borrow asset:", asset);
+  const handleBorrow = () => {
     // TODO: Implement borrow functionality
   };
 
-  const handleDetails = (asset: AaveReserveData) => {
-    console.log("View asset details:", asset);
+  const handleDetails = () => {
     // TODO: Implement details modal
   };
 
@@ -232,9 +205,9 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   ]);
 
   const hasData = borrowableReserves.length > 0;
-  const hasBorrowPositions = localUserBorrowPositions.length > 0;
+  const hasBorrowPositions = userBorrowPositions.length > 0;
   const showEmptyState = !loading && !error && !hasData;
-  const isLoadingBorrowPositions = loading || borrowPositionsLoading;
+  const isLoadingBorrowPositions = loading;
 
   return (
     <div className="w-full space-y-4">
@@ -258,25 +231,26 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
 
               {!isLoadingBorrowPositions &&
                 hasBorrowPositions &&
-                localUserBorrowPositions.map((borrowPosition) => (
+                userBorrowPositions.map((borrowPosition) => (
                   <BorrowOwnedCard
                     key={`${borrowPosition.asset.asset}-${aaveChain.chainId}`}
                     borrowPosition={borrowPosition}
-                    healthFactor="1.24" // You'll want to get real health factor
-                    totalCollateralUSD={0} // You'll want to get real values
-                    totalDebtUSD={0} // You'll want to get real values
-                    onRepay={async (position, amount) => {
-                      console.log(
-                        "Repay",
-                        amount,
-                        "of",
-                        position.asset.asset.ticker,
+                    healthFactor={healthFactor?.toString() || "1.24"}
+                    totalCollateralUSD={totalCollateralUSD}
+                    totalDebtUSD={totalDebtUSD}
+                    walletBalance={(() => {
+                      const matchingReserve = borrowableReserves.find(
+                        (reserve) =>
+                          reserve.asset.address.toLowerCase() ===
+                          borrowPosition.asset.asset.address.toLowerCase(),
                       );
+                      return matchingReserve?.userBalanceFormatted || "0.00";
+                    })()}
+                    onRepay={async () => {
                       // TODO: Implement repay functionality
                       return true;
                     }}
-                    onDetailsClick={(position) => {
-                      console.log("Details for", position.asset.asset.ticker);
+                    onDetailsClick={() => {
                       // TODO: Implement details modal
                     }}
                     oraclePrices={oraclePrices}
