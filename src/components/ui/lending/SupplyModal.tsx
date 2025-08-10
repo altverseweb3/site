@@ -26,6 +26,9 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import { getChainByChainId } from "@/config/chains";
 import type { Token, Chain } from "@/types/web3";
+import { getHealthFactorColor } from "@/utils/aave/utils";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 
 // Main Supply Modal Component
 interface SupplyModalProps {
@@ -51,6 +54,9 @@ interface SupplyModalProps {
   tokenDecimals?: number; // Token decimals
   maxLTV?: number; // Maximum LTV for this asset
   liquidationBonus?: number; // Liquidation bonus for this asset
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const SupplyModal: FC<SupplyModalProps> = ({
@@ -64,16 +70,21 @@ const SupplyModal: FC<SupplyModalProps> = ({
   isolationModeEnabled = false,
   canBeCollateral = true,
   tokenPrice = 1, // Default to $1 if not provided
+  liquidationThreshold = 0.85, // Default 85% LTV
   onSupply = async () => true,
   children,
   isLoading = false,
   tokenAddress = "", // Token contract address
   tokenDecimals = 18, // Token decimals
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [supplyAmount, setSupplyAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [acceptHighRisk, setAcceptHighRisk] = useState(false);
 
   // Get wallet connection info
   const { evmNetwork, isEvmConnected } = useWalletConnection();
@@ -105,6 +116,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
     if (isOpen) {
       setSupplyAmount("");
+      setAcceptHighRisk(false);
     } else {
       setSupplyAmount("");
     }
@@ -118,6 +130,62 @@ const SupplyModal: FC<SupplyModalProps> = ({
   // Calculate USD value and health factor changes
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
   const supplyAmountUSD = supplyAmountNum * tokenPrice;
+
+  // Calculate USD positions EXACTLY like other modals
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  // Calculate current metrics using real user data
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  // Calculate new health factor and LTV when supplying (if will be collateral)
+  let newHealthFactor = currentMetrics.healthFactor || Infinity;
+  let newLTV = currentMetrics.currentLTV;
+  let isHighRiskTransaction = false;
+
+  if (
+    canBeCollateral &&
+    supplyAmountUSD > 0 &&
+    currentMetrics.totalDebtUSD > 0
+  ) {
+    // Only calculate impact if this asset can be collateral and user has debt
+    const newTotalCollateral =
+      currentMetrics.totalCollateralUSD + supplyAmountUSD;
+    const liquidationThresholdValue = liquidationThreshold || 0.85;
+    const newWeightedCollateral =
+      newTotalCollateral * liquidationThresholdValue;
+    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
+    newLTV = (currentMetrics.totalDebtUSD / newTotalCollateral) * 100;
+
+    // Supply generally improves health factor, but still show warning if still risky
+    isHighRiskTransaction = newHealthFactor < 1.2;
+  }
 
   // Helper function to get collateral status display
   const getCollateralStatusDisplay = () => {
@@ -134,7 +202,11 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   // Enhanced validation
   const isAmountValid = supplyAmountNum > 0;
-  const isFormValid = isAmountValid && !isLoading && !isSubmitting;
+  const isFormValid =
+    isAmountValid &&
+    !isLoading &&
+    !isSubmitting &&
+    (!isHighRiskTransaction || acceptHighRisk);
 
   const handleSupply = async () => {
     if (!isFormValid) return;
@@ -359,6 +431,153 @@ const SupplyModal: FC<SupplyModalProps> = ({
             </div>
           </div>
 
+          {/* Health Factor Display - Same style as other modals */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    getHealthFactorColor(
+                      currentMetrics.healthFactor || Infinity,
+                    ),
+                  )}
+                >
+                  {currentMetrics.healthFactor === null ||
+                  currentMetrics.healthFactor === Infinity
+                    ? "∞"
+                    : currentMetrics.healthFactor.toFixed(2)}
+                </div>
+              </div>
+
+              {supplyAmountUSD > 0 &&
+                canBeCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+              {supplyAmountUSD > 0 &&
+                canBeCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">
+                      new health factor
+                    </div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        getHealthFactorColor(newHealthFactor),
+                      )}
+                    >
+                      {newHealthFactor === Infinity
+                        ? "∞"
+                        : newHealthFactor.toFixed(2)}
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
+                <div
+                  className={cn(
+                    "text-lg font-semibold font-mono",
+                    currentMetrics.currentLTV <
+                      currentMetrics.liquidationThreshold * 0.7
+                      ? "text-green-500"
+                      : currentMetrics.currentLTV <
+                          currentMetrics.liquidationThreshold * 0.9
+                        ? "text-amber-500"
+                        : "text-red-500",
+                  )}
+                >
+                  {currentMetrics.currentLTV.toFixed(2)}%
+                </div>
+              </div>
+
+              {supplyAmountUSD > 0 &&
+                canBeCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+              {supplyAmountUSD > 0 &&
+                canBeCollateral &&
+                currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        newLTV < currentMetrics.liquidationThreshold * 0.7
+                          ? "text-green-500"
+                          : newLTV < currentMetrics.liquidationThreshold * 0.9
+                            ? "text-amber-500"
+                            : "text-red-500",
+                      )}
+                    >
+                      {newLTV.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+
+          {/* High Risk Warning with Acceptance Checkbox */}
+          {isHighRiskTransaction && (
+            <div
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-lg",
+                newHealthFactor < 1.1
+                  ? "bg-red-500/10 border border-red-500/20"
+                  : "bg-yellow-500/10 border border-yellow-500/20",
+              )}
+            >
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4",
+                  newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                )}
+              />
+              <div className="text-sm">
+                <div
+                  className={cn(
+                    "font-medium",
+                    newHealthFactor < 1.1 ? "text-red-500" : "text-yellow-500",
+                  )}
+                >
+                  {newHealthFactor < 1.1
+                    ? "liquidation risk"
+                    : "high risk transaction"}
+                </div>
+                <div className="text-[#A1A1AA] text-xs">
+                  This supply will set your health factor to{" "}
+                  {newHealthFactor.toFixed(2)}
+                  {newHealthFactor < 1.0 && " - immediate liquidation risk"}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="acceptHighRiskSupply"
+                    checked={acceptHighRisk}
+                    onChange={(e) => setAcceptHighRisk(e.target.checked)}
+                    className="w-3 h-3 text-red-500 bg-[#27272A] border border-red-500/50 rounded-sm focus:ring-red-500/30 focus:ring-1 accent-red-500"
+                  />
+                  <label
+                    htmlFor="acceptHighRiskSupply"
+                    className="text-xs text-[#A1A1AA] cursor-pointer"
+                  >
+                    {newHealthFactor < 1.1
+                      ? "I understand the liquidation risk and accept it"
+                      : "I accept the high risk of this transaction"}
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <div className="flex-1">
@@ -368,9 +587,22 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 className={cn(
                   "h-8 py-2",
                   !isFormValid ? "opacity-50 cursor-not-allowed" : "",
+                  isHighRiskTransaction
+                    ? "border-red-500/25 bg-red-500/10 hover:bg-red-500/20"
+                    : "",
                 )}
               >
-                {isSubmitting ? "supplying..." : "supply"}
+                <span
+                  className={cn(isHighRiskTransaction ? "text-red-500" : "")}
+                >
+                  {isSubmitting
+                    ? "supplying..."
+                    : isHighRiskTransaction && !acceptHighRisk
+                      ? "high risk - blocked"
+                      : isHighRiskTransaction && acceptHighRisk
+                        ? "high risk supply"
+                        : "supply"}
+                </span>
               </AmberButton>
             </div>
 
