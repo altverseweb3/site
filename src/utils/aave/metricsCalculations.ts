@@ -331,10 +331,10 @@ export const calculateBorrowingMetrics = (
 
   const maxBorrowUSD = currentMetrics
     ? calculateMaxBorrowUSD(
-        currentMetrics.totalCollateralUSD,
-        currentMetrics.totalDebtUSD,
-        currentMetrics.liquidationThreshold,
-      )
+      currentMetrics.totalCollateralUSD,
+      currentMetrics.totalDebtUSD,
+      currentMetrics.liquidationThreshold,
+    )
     : 0;
 
   // Use toPrecision for better formatting instead of toFixed
@@ -353,6 +353,9 @@ export const calculateBorrowingMetrics = (
     isStableRateAvailable,
   };
 };
+
+
+
 
 export const calculateUserMetrics = (
   userSupplyPositions: UserPosition[],
