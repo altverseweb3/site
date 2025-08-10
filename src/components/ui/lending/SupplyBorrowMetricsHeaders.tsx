@@ -13,7 +13,11 @@ import {
   formatNetWorth,
   formatHealthFactor,
 } from "@/utils/formatters";
-import { getHealthFactorColor } from "@/utils/aave/utils";
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+} from "@/utils/aave/utils";
 import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import {
   AaveReserveData,
@@ -111,31 +115,15 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     }
   }, [aaveChain.chainId, lastChainId]);
 
-  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
-    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      suppliedBalanceUSD:
-        oraclePrice !== undefined
-          ? (suppliedBalance * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
-    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      totalDebtUSD:
-        oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
   const userMetrics =
     hasConnectedWallet && !loading

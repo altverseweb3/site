@@ -24,7 +24,11 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { getChainName, SupportedChainId } from "@/config/aave";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { getHealthFactorColor } from "@/utils/aave/utils";
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+} from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import {
   validateWithdrawTransaction,
@@ -32,6 +36,7 @@ import {
   type AssetData,
 } from "@/utils/aave/transactionValidation";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import { formatHealthFactor } from "@/utils/formatters";
 
 // Main Withdraw Modal Component
 interface WithdrawModalProps {
@@ -127,32 +132,16 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
   const withdrawAmountUSD = withdrawAmountNum * tokenPrice;
   const suppliedBalanceNum = parseFloat(suppliedBalance) || 0;
 
-  // Calculate USD positions EXACTLY like metrics header does
-  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
-    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      suppliedBalanceUSD:
-        oraclePrice !== undefined
-          ? (suppliedBalance * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
-    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      totalDebtUSD:
-        oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
   // Calculate current metrics using real user data
   const currentMetrics = calculateUserMetrics(
@@ -456,10 +445,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                     ),
                   )}
                 >
-                  {currentMetrics.healthFactor === null ||
-                  currentMetrics.healthFactor === Infinity
-                    ? "∞"
-                    : currentMetrics.healthFactor.toFixed(2)}
+                  {formatHealthFactor(currentMetrics.healthFactor)}
                 </div>
               </div>
 
@@ -482,9 +468,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                         getHealthFactorColor(newHealthFactor),
                       )}
                     >
-                      {newHealthFactor === Infinity
-                        ? "∞"
-                        : newHealthFactor.toFixed(2)}
+                      {formatHealthFactor(newHealthFactor)}
                     </div>
                   </div>
                 )}
@@ -566,7 +550,7 @@ const WithdrawModal: FC<WithdrawModalProps> = ({
                 </div>
                 <div className="text-[#A1A1AA] text-xs">
                   This withdrawal will set your health factor to{" "}
-                  {newHealthFactor.toFixed(2)}
+                  {formatHealthFactor(newHealthFactor)}
                   {newHealthFactor < 1.0 && " - immediate liquidation risk"}
                 </div>
                 {

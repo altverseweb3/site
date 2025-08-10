@@ -31,16 +31,7 @@ import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import {
-<<<<<<< HEAD
-<<<<<<< HEAD
   calculateBorrowingMetrics,
-=======
-  calculateUserMetrics,
-  calculateMaxBorrowUSD,
->>>>>>> 32b8aa7 (feat: move calculations to utils and out of borrow)
-=======
-  calculateBorrowingMetrics,
->>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   calculateNewHealthFactorAfterBorrow,
   isHighRiskTransaction as isHighRiskTransactionUtil,
 } from "@/utils/aave/metricsCalculations";
@@ -197,28 +188,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     };
   });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-  // Calculate max safe borrow amount (HF = 1.2)
-  const currentMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
-  );
-  const maxBorrowUSD = currentMetrics
-    ? calculateMaxBorrowUSD(
-        currentMetrics.totalCollateralUSD,
-        currentMetrics.totalDebtUSD,
-        currentMetrics.liquidationThreshold,
-      )
-    : 0;
-  const maxBorrowAmount =
-    tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
-  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
-
->>>>>>> ec490a9 (chore: fix linting apply modal changes)
-=======
->>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   // Prepare validation data
   const positionData: PositionData = {
     totalCollateralUSD,
@@ -249,8 +218,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
     borrowAmountNum > 0 && borrowAmountNum <= parseFloat(maxBorrowAmount);
 
   // Calculate new health factor to check if this is high risk
-<<<<<<< HEAD
-<<<<<<< HEAD
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
       currentMetrics.totalCollateralUSD,
@@ -259,28 +226,6 @@ const BorrowModal: FC<BorrowModalProps> = ({
       currentMetrics.liquidationThreshold,
     )
     : Infinity;
-=======
-  const newMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
-  );
-  const newHealthFactor = calculateNewHealthFactorAfterBorrow(
-    newMetrics.totalCollateralUSD,
-    newMetrics.totalDebtUSD,
-    borrowAmountUSD,
-    newMetrics.liquidationThreshold,
-  );
->>>>>>> 32b8aa7 (feat: move calculations to utils and out of borrow)
-=======
-  const newHealthFactor = currentMetrics
-    ? calculateNewHealthFactorAfterBorrow(
-      currentMetrics.totalCollateralUSD,
-      currentMetrics.totalDebtUSD,
-      borrowAmountUSD,
-      currentMetrics.liquidationThreshold,
-    )
-    : Infinity;
->>>>>>> 36dd1f1 (feat: fix sig figs and move calculations to utils)
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
   // Enhanced form validation - require risk acceptance for high risk transactions
