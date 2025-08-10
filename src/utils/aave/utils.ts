@@ -1,3 +1,42 @@
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+
+// Position USD Calculation Utilities
+export function calculateUserSupplyPositionsUSD(
+  userSupplyPositions: UserPosition[],
+  oraclePrices: Record<string, number>,
+): (UserPosition & { suppliedBalanceUSD: string })[] {
+  return userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+}
+
+export function calculateUserBorrowPositionsUSD(
+  userBorrowPositions: UserBorrowPosition[],
+  oraclePrices: Record<string, number>,
+): (UserBorrowPosition & { totalDebtUSD: string })[] {
+  return userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+}
+
 // Aave uses RAY decimal precision (1e27) for all interest rate calculations.
 // This means: 1% APY = 0.01e27 = 10000000000000000000000000
 export function rayToPercentage(rayValue: string): string {

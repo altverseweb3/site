@@ -26,7 +26,11 @@ import { SupportedChainId } from "@/config/aave";
 import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { getHealthFactorColor } from "@/utils/aave/utils";
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+} from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
@@ -144,32 +148,16 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const borrowAmountUSD = borrowAmountNum * tokenPrice; // Default to 1 if price missing
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
-  // Calculate USD positions EXACTLY like metrics header does
-  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
-    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      suppliedBalanceUSD:
-        oraclePrice !== undefined
-          ? (suppliedBalance * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
-    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      totalDebtUSD:
-        oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
   // Calculate max safe borrow amount (HF = 1.2)
   const currentMetrics = calculateUserMetrics(
