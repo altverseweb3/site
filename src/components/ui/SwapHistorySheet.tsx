@@ -23,6 +23,7 @@ import { WalletType, SwapData } from "@/types/web3";
 import { getChainByMayanChainId, getChainByMayanName } from "@/config/chains";
 import { getExplorerUrl } from "@/utils/common";
 import type { WalletFilterType } from "@/types/web3";
+import { truncateAddress } from "@/utils/formatters";
 
 interface SwapHistorySheetProps {
   isOpen: boolean;
@@ -107,7 +108,7 @@ const mapSwapToTransaction = (swap: SwapData): TransactionDisplay => {
     fromChain: getChainName(swap.sourceChain),
     toChain: getChainName(swap.destChain),
     fromAmount: `${parseFloat(swap.fromAmount).toFixed(4)} ${swap.fromTokenSymbol}`,
-    toAmount: `${parseFloat(swap.toAmount).toFixed(6)} ${swap.toTokenSymbol}`,
+    toAmount: `${swap.toAmount ? parseFloat(swap.toAmount).toFixed(6) : "--"} ${swap.toTokenSymbol}`,
     status: swap.clientStatus.toLowerCase(),
     timestamp: formatTimeAgo(swap.initiatedAt),
     txHash: swap.sourceTxHash,
@@ -419,7 +420,7 @@ export function SwapHistorySheet({
 
       <div className="flex items-center justify-between pt-3 border-t border-amber-500/20 group-hover:border-amber-500/30 transition-colors">
         <span className="text-xs text-muted-foreground font-mono bg-white/5 px-3 py-2 rounded-lg group-hover:bg-white/10 transition-all">
-          {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
+          {truncateAddress(tx.txHash)}
         </span>
         <div className="flex gap-2">
           <Button
