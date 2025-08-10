@@ -26,7 +26,7 @@ import { SupportedChainId } from "@/config/aave";
 import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
-import { getHealthFactorColor } from "@/utils/aave/utils";
+import { calculateUserBorrowPositionsUSD, getHealthFactorColor } from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
@@ -175,18 +175,10 @@ const BorrowModal: FC<BorrowModalProps> = ({
     };
   });
 
-  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
-    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
-    return {
-      ...position,
-      totalDebtUSD:
-        oraclePrice !== undefined
-          ? (formattedTotalDebt * oraclePrice).toString()
-          : "0.00",
-    };
-  });
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
 
   // Prepare validation data
   const positionData: PositionData = {
