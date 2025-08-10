@@ -51,7 +51,6 @@ export const calculateHealthFactorAfterTransaction = (
   return adjustedCollateral / newDebtUSD;
 };
 
-
 export const validateWithdrawTransaction = (
   position: PositionData,
   asset: AssetData,
