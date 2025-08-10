@@ -38,13 +38,13 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
 
   const newHealthFactor = hasTransaction
     ? calculateNewHealthFactor(
-      currentHealthFactor,
-      currentTotalCollateralUSD,
-      currentTotalDebtUSD,
-      transactionAmountUSD,
-      transactionType!,
-      liquidationThreshold,
-    )
+        currentHealthFactor,
+        currentTotalCollateralUSD,
+        currentTotalDebtUSD,
+        transactionAmountUSD,
+        transactionType!,
+        liquidationThreshold,
+      )
     : currentHealthFactor;
 
   let newLTV = currentLTV;
@@ -139,8 +139,8 @@ export const SimpleHealthIndicator: React.FC<SimpleHealthIndicatorProps> = ({
 
       {(hasTransaction &&
         Math.abs(newHealthFactor - currentHealthFactor) > 0.01) ||
-        isLiquidationRisk ||
-        (isHighRisk && !isLiquidationRisk) ? (
+      isLiquidationRisk ||
+      (isHighRisk && !isLiquidationRisk) ? (
         <div className="p-3 bg-[#1A1A1A] rounded-lg border border-[#232326]">
           {hasTransaction &&
             Math.abs(newHealthFactor - currentHealthFactor) > 0.01 && (
