@@ -86,9 +86,6 @@ export function SwapInterface({
       }
       // For Solana and Sui wallets, we only support the mainnet chain
 
-      console.log("Current chain ID:", currentChainId);
-      console.log("Source chain ID:", sourceChain.chainId);
-
       // Update the store if the chain ID has changed
       if (
         requiredWallet.chainId !== currentChainId &&

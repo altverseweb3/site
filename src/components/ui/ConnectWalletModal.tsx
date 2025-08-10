@@ -221,7 +221,6 @@ export const ConnectWalletModal = ({
       // If already connected, disconnect it
       try {
         setConnecting(wallet.id);
-        console.log(`Disconnecting from ${wallet.name}...`);
 
         await disconnectWallet(wallet.id);
         toast.success(`Disconnected from ${wallet.name}`);
@@ -242,7 +241,6 @@ export const ConnectWalletModal = ({
       // If not connected, connect to it
       try {
         setConnecting(wallet.id);
-        console.log(`Connecting to ${wallet.name}...`);
 
         // Set flag to indicate we're initiating a new connection
         isNewConnectionRef.current = true;

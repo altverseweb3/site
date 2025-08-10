@@ -90,7 +90,6 @@ const SuiWalletSync = () => {
         address: address,
         chainId: 1, // Default to Sui mainnet
       });
-      console.log("Sui wallet connection synced to store:", address);
     }
   }, [connected, address, name]);
 
@@ -105,7 +104,6 @@ const SuiWalletSync = () => {
       // If Sui wallet is connected in provider but not in our store, disconnect it
       if (connected && !suiWalletInStore) {
         disconnect();
-        console.log("Sui wallet disconnected due to store state mismatch");
       }
     };
 

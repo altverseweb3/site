@@ -43,14 +43,8 @@ const SwapComponent: React.FC = () => {
     destinationToken: destinationToken,
     transactionDetails: transactionDetails,
     enableTracking: true,
-    onSuccess: (amount, sourceToken, destinationToken) => {
-      console.log(
-        `Swap completed: ${amount} ${sourceToken.ticker} → ${destinationToken?.ticker}`,
-      );
-    },
-    onSwapInitiated: (swapId: string) => {
-      console.log("Swap initiated with ID:", swapId);
-    },
+    onSuccess: () => {},
+    onSwapInitiated: () => {},
   });
 
   useEffect(() => {
