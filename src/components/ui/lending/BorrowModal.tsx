@@ -148,6 +148,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
   const borrowAmountUSD = borrowAmountNum * tokenPrice;
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
+<<<<<<< HEAD
   const {
     currentMetrics,
     maxBorrowUSD,
@@ -159,6 +160,23 @@ const BorrowModal: FC<BorrowModalProps> = ({
     tokenPrice,
     stableBorrowAPY,
     oraclePrices,
+=======
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
+
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
+
+  // Calculate max safe borrow amount (HF = 1.2)
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+>>>>>>> 155f95f (chore:refactor functions to be common)
   );
 
   // Calculate USD positions for SimpleHealthIndicator
