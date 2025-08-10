@@ -27,8 +27,14 @@ import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import {
+<<<<<<< HEAD
   calculateUserBorrowPositionsUSD,
   getHealthFactorColor,
+=======
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+>>>>>>> 155f95f (chore:refactor functions to be common)
 } from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
@@ -155,6 +161,7 @@ const BorrowModal: FC<BorrowModalProps> = ({
 >>>>>>> d05273a (chore: refactor to use appropriate formatter)
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
+<<<<<<< HEAD
   const {
     currentMetrics,
     maxBorrowUSD,
@@ -181,10 +188,26 @@ const BorrowModal: FC<BorrowModalProps> = ({
           : "0.00",
     };
   });
+=======
+  // Calculate USD positions using utility functions
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
+>>>>>>> 155f95f (chore:refactor functions to be common)
 
   const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
     userBorrowPositions,
     oraclePrices,
+<<<<<<< HEAD
+=======
+  );
+
+  // Calculate max safe borrow amount (HF = 1.2)
+  const currentMetrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+>>>>>>> 155f95f (chore:refactor functions to be common)
   );
 <<<<<<< HEAD
 =======
