@@ -20,7 +20,11 @@ import {
   UserPosition,
   UserBorrowPosition,
 } from "@/types/aave";
-import { formatBalance, formatAPY } from "@/utils/formatters";
+import {
+  formatBalance,
+  formatAPY,
+  calculateUSDValue,
+} from "@/utils/formatters";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
@@ -69,11 +73,11 @@ const SupplyOwnedCard = ({
 
   // Calculate USD value using current oracle price
   const currentPrice = oraclePrices?.[currentAsset.asset.address.toLowerCase()];
-  const calculatedUSD = currentPrice
-    ? parseFloat(
-        (parseFloat(suppliedBalance || "0") * currentPrice).toPrecision(4),
-      ).toString()
-    : suppliedBalanceUSD; // Fallback to passed value
+  const calculatedUSD = calculateUSDValue(
+    suppliedBalance || "0",
+    currentPrice,
+    suppliedBalanceUSD,
+  );
 
   const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 

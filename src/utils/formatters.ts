@@ -113,3 +113,18 @@ export const formatHealthFactor = (healthFactor: number | null): string => {
   if (healthFactor === Infinity) return "∞";
   return healthFactor.toFixed(2);
 };
+
+export const calculateUSDValue = (
+  balance: string | number,
+  price?: number,
+  fallbackUSD?: string | number,
+): string => {
+  if (!price) {
+    return fallbackUSD ? fallbackUSD.toString() : "0.00";
+  }
+
+  const numericBalance = parseFloat(balance.toString() || "0");
+  const calculatedValue = numericBalance * price;
+
+  return parseFloat(calculatedValue.toPrecision(4)).toString();
+};
