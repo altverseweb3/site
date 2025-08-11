@@ -10,7 +10,7 @@ import EarnCards from "@/components/ui/earning/EarnCards";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
-import { chainList } from "@/config/chains";
+import { chainList, getChainById } from "@/config/chains";
 import { WalletType } from "@/types/web3";
 import {
   useIsWalletTypeConnected,
@@ -28,6 +28,8 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
+import { useChainSwitch } from "@/utils/swap/walletMethods";
+import useWeb3Store, { useSourceChain } from "@/store/web3Store";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -55,6 +57,8 @@ const availableProtocols: ProtocolOption[] = [
   },
 ];
 
+const ethereumChain = getChainById("ethereum");
+
 export default function EarnPage() {
   const [activeTab, setActiveTab] = useState<EarnTableType>("earn");
   const [filters, setFilters] = useState<EarnFilters>({
@@ -72,6 +76,10 @@ export default function EarnPage() {
     EarnTableRow | DashboardTableRow | null
   >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chainSwitchAttempted, setChainSwitchAttempted] = useState(false);
+
+  const sourceChain = useSourceChain();
+  const { switchToChain } = useChainSwitch(sourceChain);
 
   const setActiveSwapSection = useSetActiveSwapSection();
 
@@ -80,6 +88,50 @@ export default function EarnPage() {
   useEffect(() => {
     setActiveSwapSection("earn");
   }, [setActiveSwapSection]);
+
+  // ✅ Enhanced chain switching with attempt tracking
+  useEffect(() => {
+    const attemptChainSwitch = async () => {
+      // Only attempt if we haven't tried yet for this wallet connection
+      if (chainSwitchAttempted) return;
+
+      const walletForEthereum = useWeb3Store
+        .getState()
+        .getWalletByChain(ethereumChain);
+
+      if (isEvmWalletConnected && switchToChain && walletForEthereum) {
+        console.log("Switching to Ethereum chain...", {
+          isEvmWalletConnected,
+          walletForEthereum,
+          ethereumChain: ethereumChain.name,
+        });
+
+        setChainSwitchAttempted(true);
+
+        try {
+          await switchToChain(ethereumChain);
+          console.log("Successfully switched to Ethereum chain");
+        } catch (error) {
+          console.error("Failed to switch to Ethereum chain:", error);
+        }
+      } else {
+        console.log("Not switching to Ethereum chain:", {
+          isEvmWalletConnected,
+          hasWalletForEthereum: !!walletForEthereum,
+          hasSwitchFunction: !!switchToChain,
+        });
+      }
+    };
+
+    attemptChainSwitch();
+  }, [isEvmWalletConnected, switchToChain, chainSwitchAttempted]); // ✅ Include all dependencies safely
+
+  // ✅ Reset attempt flag when wallet disconnects
+  useEffect(() => {
+    if (!isEvmWalletConnected) {
+      setChainSwitchAttempted(false);
+    }
+  }, [isEvmWalletConnected]);
 
   // Use the etherFi hook for data fetching - always fetch earn data, only require wallet for dashboard
   const {
