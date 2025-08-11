@@ -566,7 +566,6 @@ export function useChainSwitch(sourceChain: Chain) {
     error,
     switchToSourceChain,
     switchToChain,
-    // ✅ Return wallet info for debugging
     requiredWallet,
     hasRequiredWallet: !!requiredWallet,
   };

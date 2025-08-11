@@ -89,10 +89,8 @@ export default function EarnPage() {
     setActiveSwapSection("earn");
   }, [setActiveSwapSection]);
 
-  // ✅ Enhanced chain switching with attempt tracking
   useEffect(() => {
     const attemptChainSwitch = async () => {
-      // Only attempt if we haven't tried yet for this wallet connection
       if (chainSwitchAttempted) return;
 
       const walletForEthereum = useWeb3Store
@@ -100,33 +98,19 @@ export default function EarnPage() {
         .getWalletByChain(ethereumChain);
 
       if (isEvmWalletConnected && switchToChain && walletForEthereum) {
-        console.log("Switching to Ethereum chain...", {
-          isEvmWalletConnected,
-          walletForEthereum,
-          ethereumChain: ethereumChain.name,
-        });
-
         setChainSwitchAttempted(true);
 
         try {
           await switchToChain(ethereumChain);
-          console.log("Successfully switched to Ethereum chain");
         } catch (error) {
           console.error("Failed to switch to Ethereum chain:", error);
         }
-      } else {
-        console.log("Not switching to Ethereum chain:", {
-          isEvmWalletConnected,
-          hasWalletForEthereum: !!walletForEthereum,
-          hasSwitchFunction: !!switchToChain,
-        });
       }
     };
 
     attemptChainSwitch();
-  }, [isEvmWalletConnected, switchToChain, chainSwitchAttempted]); // ✅ Include all dependencies safely
+  }, [isEvmWalletConnected, switchToChain, chainSwitchAttempted]);
 
-  // ✅ Reset attempt flag when wallet disconnects
   useEffect(() => {
     if (!isEvmWalletConnected) {
       setChainSwitchAttempted(false);
