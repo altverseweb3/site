@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Card";
 import type { Chain } from "@/types/web3";
 import { UserBorrowPosition, RateMode } from "@/types/aave";
-import { formatBalance } from "@/utils/formatters";
+import { formatBalance, calculateUSDValue } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
@@ -47,6 +47,14 @@ const BorrowOwnedCard = ({
 
   const formattedDebt = formatBalance(borrowPosition.formattedTotalDebt);
   const borrowAPY = borrowPosition.currentBorrowAPY || "0.00";
+
+  // Calculate USD value using current oracle price
+  const currentPrice = oraclePrices?.[asset.asset.address.toLowerCase()];
+  const calculatedDebtUSD = calculateUSDValue(
+    borrowPosition.formattedTotalDebt || "0",
+    currentPrice,
+    borrowPosition.totalDebtUSD,
+  );
 
   const chain: Chain = getChainByChainId(asset.asset.chainId);
 
@@ -95,9 +103,7 @@ const BorrowOwnedCard = ({
           <div className="text-gray-400 text-sm mt-0">debt balance</div>
           <div className="text-right flex flex-col items-end">
             <div className="text-sm">{formattedDebt}</div>
-            <div className="text-gray-400 text-xs">
-              ${borrowPosition.totalDebtUSD}
-            </div>
+            <div className="text-gray-400 text-xs">${calculatedDebtUSD}</div>
           </div>
         </div>
 

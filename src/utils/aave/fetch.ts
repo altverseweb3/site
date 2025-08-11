@@ -234,7 +234,6 @@ export async function fetchAllReservesData(
                 isIsolationModeAsset: isIsolationModeAsset,
                 debtCeiling: Number(debtCeiling),
                 userBalance: "0",
-                userBalanceFormatted: "0.00",
                 userBalanceUsd: "0.00",
                 tokenIcon: "unknown.png",
                 chainId: aaveChain.chainId,
@@ -554,14 +553,18 @@ export async function fetchUserWalletBalances(
           const oraclePrice =
             oraclePrices?.[reserve.asset.address.toLowerCase()];
           const balanceUSD = oraclePrice
-            ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
+            ? parseFloat(
+                (parseFloat(formattedBalance) * oraclePrice).toPrecision(4),
+              ).toString()
             : "0.00";
 
           return {
             ...reserve,
-            userBalance: walletBalance.toString(),
-            userBalanceFormatted: formattedBalance,
-            userBalanceUsd: balanceUSD,
+            asset: {
+              ...reserve.asset,
+              userBalance: formattedBalance,
+              userBalanceUsd: balanceUSD,
+            },
           };
         } catch (error) {
           console.error(
@@ -571,9 +574,11 @@ export async function fetchUserWalletBalances(
           // Return reserve with zero balance on error
           return {
             ...reserve,
-            userBalance: "0",
-            userBalanceFormatted: "0.00",
-            userBalanceUsd: "0.00",
+            asset: {
+              ...reserve.asset,
+              userBalance: "0",
+              userBalanceUsd: "0.00",
+            },
           };
         }
       });
@@ -591,9 +596,11 @@ export async function fetchUserWalletBalances(
       updatedReserves.push(
         ...batch.map((reserve) => ({
           ...reserve,
-          userBalance: "0",
-          userBalanceFormatted: "0.00",
-          userBalanceUsd: "0.00",
+          asset: {
+            ...reserve.asset,
+            userBalance: "0",
+            userBalanceUsd: "0.00",
+          },
         })),
       );
     }

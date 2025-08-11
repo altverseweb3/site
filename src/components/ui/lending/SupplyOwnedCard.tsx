@@ -20,7 +20,11 @@ import {
   UserPosition,
   UserBorrowPosition,
 } from "@/types/aave";
-import { formatBalance, formatAPY } from "@/utils/formatters";
+import {
+  formatBalance,
+  formatAPY,
+  calculateUSDValue,
+} from "@/utils/formatters";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";
@@ -66,6 +70,14 @@ const SupplyOwnedCard = ({
   const supplyAPY = currentAsset.supplyAPY
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
+
+  // Calculate USD value using current oracle price
+  const currentPrice = oraclePrices?.[currentAsset.asset.address.toLowerCase()];
+  const calculatedUSD = calculateUSDValue(
+    suppliedBalance || "0",
+    currentPrice,
+    suppliedBalanceUSD,
+  );
 
   const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
@@ -121,7 +133,7 @@ const SupplyOwnedCard = ({
           <div className="text-gray-400 text-sm mt-0">supply balance</div>
           <div className="text-right flex flex-col items-end">
             <div className="text-sm">{formattedBalance}</div>
-            <div className="text-gray-400 text-xs">${suppliedBalanceUSD}</div>
+            <div className="text-gray-400 text-xs">${calculatedUSD}</div>
           </div>
         </div>
 
