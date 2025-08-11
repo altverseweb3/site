@@ -87,12 +87,6 @@ const SupplyOwnedCard = ({
   const handleWithdrawComplete = async (amount: string) => {
     try {
       const success = await onWithdrawComplete(currentAsset, amount);
-      if (success) {
-        // Optionally trigger a refresh of the component data
-        console.log(
-          `Successfully withdrew ${amount} ${currentAsset.asset.ticker}`,
-        );
-      }
       return success;
     } catch (error) {
       console.error("Error completing withdrawal:", error);
