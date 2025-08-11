@@ -1,6 +1,6 @@
 // src/utils/tokenMethods.ts
 import chains from "@/config/chains";
-import { Token } from "@/types/web3";
+import { Token, WalletType } from "@/types/web3";
 import { getChainById } from "@/config/chains";
 import { FormattedNumberParts } from "@/types/ui";
 import { DEPOSIT_ASSETS } from "@/config/etherFi";
@@ -65,6 +65,7 @@ export const loadTokensForChain = async (
 
     const numericChainId = chainConfig.chainId;
     const isSuiChain = fetchChainId === "sui";
+    const isEvmChain = chainConfig.walletType === WalletType.REOWN_EVM;
     const chainId = chainConfig.id;
 
     // Load standard tokens - filter out native tokens since they're handled separately
@@ -74,7 +75,9 @@ export const loadTokensForChain = async (
         // All remaining tokens have real contract addresses
         const contractAddress = isSuiChain
           ? normalizeSuiAddressToShort(item.contract_address)
-          : item.contract_address;
+          : isEvmChain
+            ? item.contract_address.toLowerCase()
+            : item.contract_address;
 
         return {
           id: item.id,
