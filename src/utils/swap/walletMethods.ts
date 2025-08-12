@@ -464,11 +464,20 @@ export function useChainSwitch(sourceChain: Chain) {
       try {
         setIsLoading(true);
 
+        const walletForChain = useWeb3Store.getState().getWalletByChain(chain);
+        if (!walletForChain) {
+          const errorMsg = `No ${chain.walletType} wallet connected for chain ${chain.name}`;
+          setError(errorMsg);
+          console.warn(errorMsg);
+          return false;
+        }
+
         // For Sui wallets, just update the store with the chain ID
         if (chain.walletType === WalletType.SUIET_SUI) {
           useWeb3Store
             .getState()
-            .updateWalletChainId(requiredWallet!.type, chain.chainId);
+            .updateWalletChainId(walletForChain.type, chain.chainId);
+          return true;
         }
 
         // For EVM and Solana wallets, proceed with regular network switching
@@ -517,8 +526,7 @@ export function useChainSwitch(sourceChain: Chain) {
 
         useWeb3Store
           .getState()
-          .updateWalletChainId(requiredWallet!.type, chain.chainId);
-
+          .updateWalletChainId(walletForChain.type, chain.chainId);
         return true;
       } catch (error) {
         const message =
@@ -530,7 +538,7 @@ export function useChainSwitch(sourceChain: Chain) {
         setIsLoading(false);
       }
     },
-    [setError, setIsLoading, requiredWallet, solanaNetwork, evmNetwork],
+    [setError, setIsLoading, solanaNetwork, evmNetwork],
   );
 
   /**
@@ -552,11 +560,14 @@ export function useChainSwitch(sourceChain: Chain) {
       setIsLoading(false);
     }
   };
+
   return {
     isLoading,
     error,
     switchToSourceChain,
     switchToChain,
+    requiredWallet,
+    hasRequiredWallet: !!requiredWallet,
   };
 }
 /**
