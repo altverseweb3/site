@@ -30,6 +30,9 @@ import {
   getHealthFactorColor,
   calculateUserSupplyPositionsUSD,
   calculateUserBorrowPositionsUSD,
+  calculateSupplyTransactionImpact,
+  getLTVColorClass,
+  getSupplyButtonText,
 } from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
@@ -154,27 +157,16 @@ const SupplyModal: FC<SupplyModalProps> = ({
   );
 
   // Calculate new health factor and LTV when supplying (if will be collateral)
-  let newHealthFactor = currentMetrics.healthFactor || Infinity;
-  let newLTV = currentMetrics.currentLTV;
-  let isHighRiskTransaction = false;
-
-  if (
-    canBeCollateral &&
-    supplyAmountUSD > 0 &&
-    currentMetrics.totalDebtUSD > 0
-  ) {
-    // Only calculate impact if this asset can be collateral and user has debt
-    const newTotalCollateral =
-      currentMetrics.totalCollateralUSD + supplyAmountUSD;
-    const liquidationThresholdValue = liquidationThreshold || 0.85;
-    const newWeightedCollateral =
-      newTotalCollateral * liquidationThresholdValue;
-    newHealthFactor = newWeightedCollateral / currentMetrics.totalDebtUSD;
-    newLTV = (currentMetrics.totalDebtUSD / newTotalCollateral) * 100;
-
-    // Supply generally improves health factor, but still show warning if still risky
-    isHighRiskTransaction = newHealthFactor < 1.2;
-  }
+  const { newHealthFactor, newLTV, isHighRiskTransaction } =
+    calculateSupplyTransactionImpact(
+      canBeCollateral,
+      supplyAmountUSD,
+      currentMetrics.totalCollateralUSD,
+      currentMetrics.totalDebtUSD,
+      currentMetrics.currentLTV,
+      currentMetrics.healthFactor,
+      liquidationThreshold || 0.85,
+    );
 
   // Helper function to get collateral status display
   const getCollateralStatusDisplay = () => {
@@ -468,13 +460,10 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <div
                   className={cn(
                     "text-lg font-semibold font-mono",
-                    currentMetrics.currentLTV <
-                      currentMetrics.liquidationThreshold * 0.7
-                      ? "text-green-500"
-                      : currentMetrics.currentLTV <
-                          currentMetrics.liquidationThreshold * 0.9
-                        ? "text-amber-500"
-                        : "text-red-500",
+                    getLTVColorClass(
+                      currentMetrics.currentLTV,
+                      currentMetrics.liquidationThreshold,
+                    ),
                   )}
                 >
                   {currentMetrics.currentLTV.toFixed(2)}%
@@ -495,11 +484,10 @@ const SupplyModal: FC<SupplyModalProps> = ({
                     <div
                       className={cn(
                         "text-lg font-semibold font-mono",
-                        newLTV < currentMetrics.liquidationThreshold * 0.7
-                          ? "text-green-500"
-                          : newLTV < currentMetrics.liquidationThreshold * 0.9
-                            ? "text-amber-500"
-                            : "text-red-500",
+                        getLTVColorClass(
+                          newLTV,
+                          currentMetrics.liquidationThreshold,
+                        ),
                       )}
                     >
                       {newLTV.toFixed(2)}%
@@ -579,13 +567,11 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <span
                   className={cn(isHighRiskTransaction ? "text-red-500" : "")}
                 >
-                  {isSubmitting
-                    ? "supplying..."
-                    : isHighRiskTransaction && !acceptHighRisk
-                      ? "high risk - blocked"
-                      : isHighRiskTransaction && acceptHighRisk
-                        ? "high risk supply"
-                        : "supply"}
+                  {getSupplyButtonText(
+                    isSubmitting,
+                    isHighRiskTransaction,
+                    acceptHighRisk,
+                  )}
                 </span>
               </AmberButton>
             </div>
