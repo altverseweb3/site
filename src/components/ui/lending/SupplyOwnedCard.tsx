@@ -20,15 +20,11 @@ import {
   UserPosition,
   UserBorrowPosition,
 } from "@/types/aave";
-<<<<<<< HEAD
 import {
   formatBalance,
   formatAPY,
   calculateUSDValue,
 } from "@/utils/formatters";
-=======
-import { formatBalance, formatAPY } from "@/utils/formatters";
->>>>>>> 0f716d8 (feat: enhance withdrawal modal)
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import { getChainByChainId } from "@/config/chains";
 import { CollateralModal } from "@/components/ui/lending/SupplyCollateralModal";

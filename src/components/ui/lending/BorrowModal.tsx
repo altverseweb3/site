@@ -27,14 +27,8 @@ import type { Token } from "@/types/web3";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import {
-<<<<<<< HEAD
   calculateUserBorrowPositionsUSD,
   getHealthFactorColor,
-=======
-  getHealthFactorColor,
-  calculateUserSupplyPositionsUSD,
-  calculateUserBorrowPositionsUSD,
->>>>>>> 155f95f (chore:refactor functions to be common)
 } from "@/utils/aave/utils";
 import { getChainByChainId } from "@/config/chains";
 import { SimpleHealthIndicator } from "@/components/ui/lending/SimpleHealthIndicator";
@@ -154,14 +148,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
 
   // Calculate values
   const borrowAmountNum = parseFloat(borrowAmount) || 0;
-<<<<<<< HEAD
   const borrowAmountUSD = borrowAmountNum * tokenPrice;
-=======
-  const borrowAmountUSD = borrowAmountNum * tokenPrice; // Default to 1 if price missing
->>>>>>> d05273a (chore: refactor to use appropriate formatter)
   const currentHealthFactor = parseFloat(healthFactor) || 0;
 
-<<<<<<< HEAD
   const {
     currentMetrics,
     maxBorrowUSD,
@@ -188,54 +177,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
           : "0.00",
     };
   });
-=======
-  // Calculate USD positions using utility functions
-  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
-    userSupplyPositions,
-    oraclePrices,
-  );
->>>>>>> 155f95f (chore:refactor functions to be common)
 
   const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
     userBorrowPositions,
     oraclePrices,
-<<<<<<< HEAD
-=======
   );
-
-  // Calculate max safe borrow amount (HF = 1.2)
-  const currentMetrics = calculateUserMetrics(
-    userSupplyPositionsUSD,
-    userBorrowPositionsUSD,
->>>>>>> 155f95f (chore:refactor functions to be common)
-  );
-<<<<<<< HEAD
-=======
-  const calculateMaxBorrowUSD = () => {
-    if (!currentMetrics) return 0;
-
-    const { totalCollateralUSD, totalDebtUSD } = currentMetrics;
-    const liquidationThresholdDecimal =
-      currentMetrics.liquidationThreshold > 1
-        ? currentMetrics.liquidationThreshold / 100
-        : currentMetrics.liquidationThreshold;
-
-    // HF = (collateral * liquidationThreshold) / totalDebt
-    // Allow borrowing down to exactly 1.12 health factor (not below)
-    // 1.12 = (collateral * liquidationThreshold) / (currentDebt + newBorrow)
-    // newBorrow = (collateral * liquidationThreshold) / 1.12 - currentDebt
-    const weightedCollateral = totalCollateralUSD * liquidationThresholdDecimal;
-    const maxTotalDebt = weightedCollateral / 1.12; // Allow exactly 1.12 HF
-    const maxNewBorrowUSD = Math.max(0, maxTotalDebt - totalDebtUSD);
-
-    return maxNewBorrowUSD;
-  };
-
-  const maxBorrowUSD = calculateMaxBorrowUSD();
-  const maxBorrowAmount =
-    tokenPrice > 0 ? (maxBorrowUSD / tokenPrice).toFixed(4) : "0";
-  const isStableRateAvailable = parseFloat(stableBorrowAPY) > 0;
->>>>>>> 0b1fc4e (chore: fix linting apply modal changes)
 
   // Prepare validation data
   const positionData: PositionData = {
@@ -269,11 +215,11 @@ const BorrowModal: FC<BorrowModalProps> = ({
   // Calculate new health factor to check if this is high risk
   const newHealthFactor = currentMetrics
     ? calculateNewHealthFactorAfterBorrow(
-      currentMetrics.totalCollateralUSD,
-      currentMetrics.totalDebtUSD,
-      borrowAmountUSD,
-      currentMetrics.liquidationThreshold,
-    )
+        currentMetrics.totalCollateralUSD,
+        currentMetrics.totalDebtUSD,
+        borrowAmountUSD,
+        currentMetrics.liquidationThreshold,
+      )
     : Infinity;
   const isHighRiskTransaction = isHighRiskTransactionUtil(newHealthFactor);
 
@@ -417,41 +363,9 @@ const BorrowModal: FC<BorrowModalProps> = ({
               <span
                 className={`text-sm ${getHealthFactorColor(currentMetrics?.healthFactor || Infinity)}`}
               >
-<<<<<<< HEAD
                 {!currentMetrics ||
-                  currentMetrics.healthFactor === null ||
-=======
-                {currentMetrics.healthFactor === null ||
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 86ff4c1 (feat: enhance modals with health factor guard rails)
-                  currentMetrics.healthFactor === Infinity
-=======
+                currentMetrics.healthFactor === null ||
                 currentMetrics.healthFactor === Infinity
->>>>>>> f25469d (chore: remove unused component)
-=======
-                  currentMetrics.healthFactor === Infinity
->>>>>>> df46489 (feat: enhance modals with health factor guard rails)
-=======
-                currentMetrics.healthFactor === Infinity
->>>>>>> 81094cb (chore:remove unused component)
-=======
-                  currentMetrics.healthFactor === Infinity
->>>>>>> 9cdc85a (feat: enhance modals with health factor guard rails)
-=======
-                currentMetrics.healthFactor === Infinity
->>>>>>> cbf97e3 (chore: refactor supply)
-=======
-                  currentMetrics.healthFactor === Infinity
->>>>>>> c714772 (feat: enhance modals with health factor guard rails)
-=======
-                currentMetrics.healthFactor === Infinity
->>>>>>> 23f4b28 (chore:remove-health-factor-indicator)
                   ? "∞"
                   : currentMetrics.healthFactor.toFixed(2)}
               </span>

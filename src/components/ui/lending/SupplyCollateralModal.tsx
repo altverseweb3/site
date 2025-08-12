@@ -534,16 +534,16 @@ const CollateralModal: FC<CollateralModalProps> = ({
                     isSubmitting
                       ? `${actionText.toLowerCase()}...`
                       : // Block high-risk transactions until user accepts risk
-                      isHighRiskTransaction && !acceptHighRisk
+                        isHighRiskTransaction && !acceptHighRisk
                         ? "high risk - blocked"
                         : // Allow high-risk transactions if user has accepted the risk
-                        isHighRiskTransaction && acceptHighRisk
+                          isHighRiskTransaction && acceptHighRisk
                           ? `high risk ${actionText.toLowerCase()}`
                           : // Prevent action if asset cannot be used as collateral
-                          !canBeCollateral
+                            !canBeCollateral
                             ? "not eligible"
                             : // Default action text for normal transactions
-                            `${actionText.toLowerCase()} collateral`
+                              `${actionText.toLowerCase()} collateral`
                   }
                 </span>
               </AmberButton>
