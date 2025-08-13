@@ -151,10 +151,16 @@ export const getEffectiveTokenPrice = (
  */
 export const calculateRepayUSDValue = (
   amount: string | number,
-  token: { priceUsd?: string | number },
+  token: { priceUsd?: string | number; address: string },
+  oraclePrices?: Record<string, number>,
 ): number => {
   const amountNum = parseFloat(amount.toString()) || 0;
-  const price = token.priceUsd ? Number(token.priceUsd) : 0;
+
+  // Try token.priceUsd first, then oracle prices, then fallback to 0
+  const price = token.priceUsd
+    ? Number(token.priceUsd)
+    : oraclePrices?.[token.address.toLowerCase()] || 0;
+
   return amountNum * price;
 };
 

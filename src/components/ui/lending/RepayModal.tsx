@@ -137,10 +137,18 @@ const RepayModal: FC<RepayModalProps> = ({
     return null;
   }
 
-  // Calculate USD values using utility functions
-  const currentDebtUSD = calculateRepayUSDValue(currentDebt, token);
+  // Calculate USD values using utility functions with oracle prices
+  const currentDebtUSD = calculateRepayUSDValue(
+    currentDebt,
+    token,
+    oraclePrices,
+  );
   const repayAmountNum = parseFloat(repayAmount) || 0;
-  const repayAmountUSD = calculateRepayUSDValue(repayAmount, token);
+  const repayAmountUSD = calculateRepayUSDValue(
+    repayAmount,
+    token,
+    oraclePrices,
+  );
 
   // Calculate USD positions using utility functions like other modals
   const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
@@ -244,10 +252,6 @@ const RepayModal: FC<RepayModalProps> = ({
 
       const signer = await getEvmSigner();
       const userAddress = await signer.getAddress();
-
-      console.log(
-        `💳 Repaying ${repayAmount} ${token.ticker} (${debtTypeDisplay})...`,
-      );
 
       // Call the Aave repay transaction
       const result = await repay({
