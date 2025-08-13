@@ -53,7 +53,6 @@ interface RepayModalProps {
   stableDebt?: string;
   variableDebt?: string;
   healthFactor?: string;
-  tokenPrice?: number;
   liquidationThreshold?: number;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
@@ -72,7 +71,6 @@ const RepayModal: FC<RepayModalProps> = ({
   stableDebt = "0.00",
   variableDebt = "0.00",
   healthFactor,
-  tokenPrice = 1,
   liquidationThreshold = 85,
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
@@ -140,9 +138,9 @@ const RepayModal: FC<RepayModalProps> = ({
   }
 
   // Calculate USD values using utility functions
-  const currentDebtUSD = calculateRepayUSDValue(currentDebt, token, tokenPrice);
+  const currentDebtUSD = calculateRepayUSDValue(currentDebt, token);
   const repayAmountNum = parseFloat(repayAmount) || 0;
-  const repayAmountUSD = calculateRepayUSDValue(repayAmount, token, tokenPrice);
+  const repayAmountUSD = calculateRepayUSDValue(repayAmount, token);
 
   // Calculate USD positions using utility functions like other modals
   const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(

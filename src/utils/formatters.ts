@@ -152,11 +152,10 @@ export const getEffectiveTokenPrice = (
 export const calculateRepayUSDValue = (
   amount: string | number,
   token: { priceUsd?: string | number },
-  tokenPrice?: number,
 ): number => {
   const amountNum = parseFloat(amount.toString()) || 0;
-  const effectivePrice = getEffectiveTokenPrice(token, tokenPrice);
-  return amountNum * effectivePrice;
+  const price = token.priceUsd ? Number(token.priceUsd) : 0;
+  return amountNum * price;
 };
 
 /**

@@ -12,8 +12,9 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import type { Chain } from "@/types/web3";
 import { UserBorrowPosition, UserPosition, RateMode } from "@/types/aave";
+import type { Chain } from "@/types/web3";
+import type { Token } from "@/types/web3";
 import { formatBalance, calculateUSDValue } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
@@ -126,12 +127,10 @@ const BorrowOwnedCard = ({
         <RepayModal
           token={tokenWithBalance || asset.asset}
           currentDebt={borrowPosition.formattedTotalDebt}
-          debtUSD={borrowPosition.totalDebtUSD}
           borrowAPY={borrowPosition.currentBorrowAPY}
           stableDebt={borrowPosition.stableDebt}
           variableDebt={borrowPosition.variableDebt}
           healthFactor={healthFactor}
-          tokenPrice={oraclePrices?.[asset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
