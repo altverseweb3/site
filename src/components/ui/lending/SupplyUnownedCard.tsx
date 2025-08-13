@@ -107,22 +107,15 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <SupplyModal
-          tokenSymbol={currentAsset.asset.ticker}
-          tokenName={currentAsset.asset.name}
-          tokenIcon={currentAsset.asset.icon}
-          chainId={currentAsset.asset.chainId}
-          balance={userBalance}
+          token={currentAsset.asset}
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
           canBeCollateral={canBeCollateral}
           isolationModeEnabled={isIsolationMode}
           healthFactor="0"
-          tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85}
           totalCollateralUSD={0}
           totalDebtUSD={0}
-          tokenAddress={currentAsset.asset.address}
-          tokenDecimals={currentAsset.asset.decimals}
           userSupplyPositions={userSupplyPositions}
           userBorrowPositions={userBorrowPositions}
           oraclePrices={oraclePrices}
