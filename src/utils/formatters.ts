@@ -139,7 +139,7 @@ export const getEffectiveTokenPrice = (
   token: { priceUsd?: string | number },
   tokenPrice?: number,
 ): number => {
-  return token.priceUsd ? Number(token.priceUsd) : tokenPrice || 1;
+  return token.priceUsd ? Number(token.priceUsd) : tokenPrice || 0;
 };
 
 /**
