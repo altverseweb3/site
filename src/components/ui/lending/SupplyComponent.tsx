@@ -70,10 +70,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
     async (reserves: AaveReserveData[]) => {
       try {
         setPositionsLoading(true);
-        console.log("Fetching user positions...");
 
         const positions = await fetchUserPositions(reserves);
-        console.log(`Found ${positions.length} user positions`);
 
         setUserPositions(positions);
       } catch (err) {
@@ -90,23 +88,14 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
   const loadAaveReserves = useCallback(
     async (force = false) => {
       // Skip if already loading
-      if (loading && !force) {
-        console.log("Already loading, skipping...");
-        return;
-      }
+      if (loading && !force) return;
 
-      if (tokensLoading) {
-        console.log("Tokens still loading, skipping...");
-        return;
-      }
+      if (tokensLoading) return;
 
-      if (tokenCount === 0) {
-        console.log("No tokens loaded yet, skipping...");
-        return;
-      }
+      if (tokenCount === 0) return;
 
       if (chainTokens.length === 0) {
-        console.log(
+        console.error(
           `No tokens available for chain ${aaveChain.chainId}, skipping...`,
         );
         return;
@@ -117,15 +106,12 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
         !force &&
         lastChainId === aaveChain.chainId &&
         aaveReserves.length > 0
-      ) {
-        console.log("Data already loaded for this chain, skipping...");
+      )
         return;
-      }
 
       try {
         setLoading(true);
         setError(null);
-        console.log(`Fetching Aave reserves for chain ${aaveChain.chainId}...`);
 
         const reservesData = await fetchAllReservesData(aaveChain, chainTokens);
 
@@ -211,7 +197,6 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
   };
 
   const handleRefresh = () => {
-    console.log("Manual refresh triggered");
     loadAaveReserves(true); // Force refresh
   };
 
@@ -324,8 +309,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
                   <SupplyUnownedCard
                     key={`${reserve.asset.address}-${aaveChain.chainId}`}
                     currentAsset={reserve}
-                    userBalance={reserve.userBalanceFormatted || "0.00"}
-                    dollarAmount={reserve.userBalanceUsd || "0.00"}
+                    userBalance={reserve.asset.userBalance || "0"}
+                    dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     oraclePrices={oraclePrices}
                     userSupplyPositions={propUserSupplyPositions}

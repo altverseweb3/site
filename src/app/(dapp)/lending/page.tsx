@@ -19,7 +19,11 @@ import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
-import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import {
+  UserPosition,
+  UserBorrowPosition,
+  AaveReserveData,
+} from "@/types/aave";
 
 const BorrowLendComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("borrow");
@@ -30,6 +34,7 @@ const BorrowLendComponent: React.FC = () => {
   const [userBorrowPositions, setUserBorrowPositions] = useState<
     UserBorrowPosition[]
   >([]);
+  const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
@@ -65,9 +70,6 @@ const BorrowLendComponent: React.FC = () => {
           .getWalletByType(WalletType.REOWN_EVM);
 
         if (currentWallet && currentWallet.chainId !== aaveChain.chainId) {
-          console.log(
-            `Wallet on chain ${currentWallet.chainId}, switching to persisted aaveChain ${aaveChain.chainId}`,
-          );
           await switchToChain(aaveChain);
         }
       }
@@ -100,6 +102,10 @@ const BorrowLendComponent: React.FC = () => {
 
           if (result?.userBorrowPositions) {
             setUserBorrowPositions(result.userBorrowPositions);
+          }
+
+          if (result?.allReserves) {
+            setAllReserves(result.allReserves);
           }
         } catch (error) {
           console.error("Error loading Aave user data for page:", error);
@@ -175,6 +181,7 @@ const BorrowLendComponent: React.FC = () => {
               liquidationThreshold={userMetrics.liquidationThreshold}
               userSupplyPositions={userSupplyPositions}
               userBorrowPositions={userBorrowPositions}
+              allReserves={allReserves}
             />
           )}
           <PoweredByAave />

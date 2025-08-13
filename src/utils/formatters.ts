@@ -1,7 +1,7 @@
 // Format number in balances to look compact with string/hex handling and error handling
 export const formatBalance = (
   balance: string | number,
-  decimals = 2,
+  precision: number = 4,
 ): string => {
   try {
     let numericBalance: string;
@@ -22,27 +22,30 @@ export const formatBalance = (
       return "0.000000";
     }
 
-    // Handle abbreviations for large numbers
+    // Handle abbreviations for large numbers - use toPrecision for better formatting
     if (num >= 1e12) {
-      return (num / 1e12).toFixed(decimals) + "T";
+      const abbreviated = num / 1e12;
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "T";
     } else if (num >= 1e9) {
-      return (num / 1e9).toFixed(decimals) + "B";
+      const abbreviated = num / 1e9;
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "B";
     } else if (num >= 1e6) {
-      return (num / 1e6).toFixed(decimals) + "M";
+      const abbreviated = num / 1e6;
+      return parseFloat(abbreviated.toPrecision(precision)).toString() + "M";
     } else if (num >= 1) {
-      // Between 1 and 999,999 - show 3 decimal places
-      return num.toFixed(3);
+      // Between 1 and 999,999 - use toPrecision for cleaner display
+      return parseFloat(num.toPrecision(precision + 2)).toString();
     } else if (num === 0) {
       // Exactly zero
-      return "0.000";
+      return "0";
     } else {
-      // Small fractions - use more decimal places but cap at 6
+      // Small fractions - use toPrecision for significant figures
       if (num < 1e-4) {
-        return num.toFixed(6);
-      } else if (num < 1e-2) {
-        return num.toFixed(5);
+        return parseFloat(
+          num.toPrecision(Math.max(3, precision - 1)),
+        ).toString();
       } else {
-        return num.toFixed(4);
+        return parseFloat(num.toPrecision(precision)).toString();
       }
     }
   } catch (e) {
@@ -109,4 +112,19 @@ export const formatHealthFactor = (healthFactor: number | null): string => {
   if (healthFactor === null) return "--";
   if (healthFactor === Infinity) return "∞";
   return healthFactor.toFixed(2);
+};
+
+export const calculateUSDValue = (
+  balance: string | number,
+  price?: number,
+  fallbackUSD?: string | number,
+): string => {
+  if (!price) {
+    return fallbackUSD ? fallbackUSD.toString() : "0.00";
+  }
+
+  const numericBalance = parseFloat(balance.toString() || "0");
+  const calculatedValue = numericBalance * price;
+
+  return parseFloat(calculatedValue.toPrecision(4)).toString();
 };
