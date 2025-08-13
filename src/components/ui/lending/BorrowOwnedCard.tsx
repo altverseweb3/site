@@ -13,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import type { Chain } from "@/types/web3";
-import { UserBorrowPosition, RateMode } from "@/types/aave";
+import { UserBorrowPosition, UserPosition, RateMode } from "@/types/aave";
 import { formatBalance, calculateUSDValue } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import RepayModal from "@/components/ui/lending/RepayModal";
@@ -24,7 +24,9 @@ interface BorrowOwnedCardProps {
   healthFactor?: string;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
-  walletBalance?: string;
+  tokenWithBalance?: Token; // Token object with userBalance populated
+  userSupplyPositions?: UserPosition[]; // User supply positions for health factor calculations
+  userBorrowPositions?: UserBorrowPosition[]; // User borrow positions for health factor calculations
   oraclePrices?: Record<string, number>; // Oracle prices for all assets
   onRepay?: (
     position: UserBorrowPosition,
@@ -39,7 +41,9 @@ const BorrowOwnedCard = ({
   healthFactor = "1.24",
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
-  walletBalance = "0.00",
+  tokenWithBalance,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
   oraclePrices,
   onRepay = async () => true,
 }: BorrowOwnedCardProps) => {
@@ -120,11 +124,7 @@ const BorrowOwnedCard = ({
 
       <CardFooter className="flex justify-between p-3 pt-0 gap-2">
         <RepayModal
-          tokenSymbol={asset.asset.ticker}
-          tokenName={asset.asset.name}
-          tokenIcon={asset.asset.icon}
-          chainId={asset.asset.chainId}
-          walletBalance={walletBalance}
+          token={tokenWithBalance || asset.asset}
           currentDebt={borrowPosition.formattedTotalDebt}
           debtUSD={borrowPosition.totalDebtUSD}
           borrowAPY={borrowPosition.currentBorrowAPY}
@@ -135,9 +135,10 @@ const BorrowOwnedCard = ({
           liquidationThreshold={0.85}
           totalCollateralUSD={totalCollateralUSD}
           totalDebtUSD={totalDebtUSD}
+          userSupplyPositions={userSupplyPositions}
+          userBorrowPositions={userBorrowPositions}
+          oraclePrices={oraclePrices}
           onRepay={handleRepayComplete}
-          tokenAddress={asset.asset.address}
-          tokenDecimals={asset.asset.decimals}
         >
           <BlueButton>repay</BlueButton>
         </RepayModal>

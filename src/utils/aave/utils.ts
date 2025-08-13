@@ -235,6 +235,48 @@ export function calculateSupplyTransactionImpact(
   };
 }
 
+export function calculateRepayTransactionImpact(
+  repayAmountUSD: number,
+  totalCollateralUSD: number,
+  totalDebtUSD: number,
+  currentLTV: number,
+  currentHealthFactor: number | null,
+  liquidationThreshold: number = 0.85,
+): {
+  newHealthFactor: number;
+  newLTV: number;
+  isHighRiskTransaction: boolean;
+} {
+  // Default values
+  let newHealthFactor = currentHealthFactor || Infinity;
+  let newLTV = currentLTV;
+  let isHighRiskTransaction = false;
+
+  if (repayAmountUSD > 0 && totalDebtUSD > 0) {
+    const newTotalDebt = Math.max(0, totalDebtUSD - repayAmountUSD);
+
+    if (newTotalDebt === 0) {
+      // No debt remaining - infinite health factor, zero LTV
+      newHealthFactor = Infinity;
+      newLTV = 0;
+    } else if (totalCollateralUSD > 0) {
+      // Calculate new metrics with reduced debt
+      const weightedCollateral = totalCollateralUSD * liquidationThreshold;
+      newHealthFactor = weightedCollateral / newTotalDebt;
+      newLTV = (newTotalDebt / totalCollateralUSD) * 100;
+    }
+
+    // Repay always improves health factor (never high risk)
+    isHighRiskTransaction = false;
+  }
+
+  return {
+    newHealthFactor,
+    newLTV,
+    isHighRiskTransaction,
+  };
+}
+
 /**
  * Get supply button display text and styling based on transaction state
  * Determines appropriate button text for supply transactions with risk warnings
