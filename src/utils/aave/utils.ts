@@ -192,3 +192,69 @@ export function calculateNewHealthFactor(
   const weightedCollateral = currentHealthFactor * currentDebtUSD;
   return weightedCollateral / newDebtUSD;
 }
+
+/**
+ * Calculate supply transaction impact on health factor and LTV
+ * This calculates how supplying additional collateral affects user's position
+ */
+export function calculateSupplyTransactionImpact(
+  canBeCollateral: boolean,
+  supplyAmountUSD: number,
+  totalCollateralUSD: number,
+  totalDebtUSD: number,
+  currentLTV: number,
+  currentHealthFactor: number | null,
+  liquidationThreshold: number = 0.85,
+): {
+  newHealthFactor: number;
+  newLTV: number;
+  isHighRiskTransaction: boolean;
+} {
+  // Default values if no debt or can't be collateral
+  let newHealthFactor = currentHealthFactor || Infinity;
+  let newLTV = currentLTV;
+  let isHighRiskTransaction = false;
+
+  if (canBeCollateral && supplyAmountUSD > 0 && totalDebtUSD > 0) {
+    // Only calculate impact if this asset can be collateral and user has debt
+    const newTotalCollateral = totalCollateralUSD + supplyAmountUSD;
+    const liquidationThresholdValue = liquidationThreshold;
+    const newWeightedCollateral =
+      newTotalCollateral * liquidationThresholdValue;
+    newHealthFactor = newWeightedCollateral / totalDebtUSD;
+    newLTV = (totalDebtUSD / newTotalCollateral) * 100;
+
+    // Supply generally improves health factor, but still show warning if still risky
+    isHighRiskTransaction = newHealthFactor < 1.2;
+  }
+
+  return {
+    newHealthFactor,
+    newLTV,
+    isHighRiskTransaction,
+  };
+}
+
+/**
+ * Get supply button display text and styling based on transaction state
+ * Determines appropriate button text for supply transactions with risk warnings
+ */
+export function getSupplyButtonText(
+  isSubmitting: boolean,
+  isHighRiskTransaction: boolean,
+  acceptHighRisk: boolean,
+): string {
+  if (isSubmitting) {
+    return "supplying...";
+  }
+
+  if (isHighRiskTransaction && !acceptHighRisk) {
+    return "high risk - blocked";
+  }
+
+  if (isHighRiskTransaction && acceptHighRisk) {
+    return "high risk supply";
+  }
+
+  return "supply";
+}

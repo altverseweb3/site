@@ -12,7 +12,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
-import { AaveReserveData } from "@/types/aave";
+import {
+  AaveReserveData,
+  UserPosition,
+  UserBorrowPosition,
+} from "@/types/aave";
 import { SupplyModal } from "@/components/ui/lending/SupplyModal";
 import { formatBalance, formatAPY } from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
@@ -24,6 +28,8 @@ interface SupplyUnownedCardProps {
   userBalance?: string; // Optional user balance for this asset
   dollarAmount?: string; // Optional USD value of user balance
   oraclePrices?: Record<string, number>; // Oracle prices for all assets
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
   onSupply?: (asset: AaveReserveData) => void;
 }
 
@@ -32,6 +38,8 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   userBalance = "0",
   dollarAmount = "0.00",
   oraclePrices,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
   onSupply = () => {},
 }) => {
   // Determine collateral status and isolation mode
@@ -106,6 +114,8 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           balance={userBalance}
           supplyAPY={supplyAPY}
           collateralizationStatus={canBeCollateral ? "enabled" : "disabled"}
+          canBeCollateral={canBeCollateral}
+          isolationModeEnabled={isIsolationMode}
           healthFactor="0"
           tokenPrice={oraclePrices?.[currentAsset.asset.address.toLowerCase()]}
           liquidationThreshold={0.85}
@@ -113,6 +123,9 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           totalDebtUSD={0}
           tokenAddress={currentAsset.asset.address}
           tokenDecimals={currentAsset.asset.decimals}
+          userSupplyPositions={userSupplyPositions}
+          userBorrowPositions={userBorrowPositions}
+          oraclePrices={oraclePrices}
           onSupply={async () => {
             onSupply(currentAsset);
             return true;
