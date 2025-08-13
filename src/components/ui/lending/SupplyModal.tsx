@@ -36,21 +36,16 @@ import {
 } from "@/utils/aave/utils";
 import { UserPosition, UserBorrowPosition } from "@/types/aave";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
-import { formatHealthFactor } from "@/utils/formatters";
+import { formatHealthFactor, formatBalance } from "@/utils/formatters";
 
 // Main Supply Modal Component
 interface SupplyModalProps {
-  tokenSymbol?: string;
-  tokenName?: string;
-  tokenIcon?: string; // Token icon filename (e.g., "usdc.png")
-  chainId?: number; // Chain ID for token image path
-  balance?: string;
+  token: Token;
   supplyAPY?: string;
   collateralizationStatus?: "enabled" | "disabled" | "isolation" | "none";
   isolationModeEnabled?: boolean; // Whether the asset is in isolation mode
   canBeCollateral?: boolean; // Whether the asset can be used as collateral
   healthFactor?: string;
-  tokenPrice?: number; // Current token price in USD
   liquidationThreshold?: number; // LTV for this asset (e.g., 0.85 = 85%)
   totalCollateralUSD?: number; // Current total collateral in USD
   totalDebtUSD?: number; // Current total debt in USD
@@ -58,8 +53,6 @@ interface SupplyModalProps {
   onSupply?: (amount: string) => Promise<boolean>;
   children: ReactNode; // The trigger element
   isLoading?: boolean; // Loading state from parent
-  tokenAddress?: string; // Token contract address
-  tokenDecimals?: number; // Token decimals
   maxLTV?: number; // Maximum LTV for this asset
   liquidationBonus?: number; // Liquidation bonus for this asset
   userSupplyPositions?: UserPosition[];
@@ -68,22 +61,15 @@ interface SupplyModalProps {
 }
 
 const SupplyModal: FC<SupplyModalProps> = ({
-  tokenSymbol = "USDC",
-  tokenName = "USD Coin",
-  tokenIcon = "usdc.png",
-  chainId = 1,
-  balance = "1,234.56",
+  token,
   supplyAPY = "3.53%",
   collateralizationStatus = "enabled",
   isolationModeEnabled = false,
   canBeCollateral = true,
-  tokenPrice = 1, // Default to $1 if not provided
-  liquidationThreshold = 0.85, // Default 85% LTV
+  liquidationThreshold = 0.85,
   onSupply = async () => true,
   children,
   isLoading = false,
-  tokenAddress = "", // Token contract address
-  tokenDecimals = 18, // Token decimals
   userSupplyPositions = [],
   userBorrowPositions = [],
   oraclePrices = {},
@@ -99,19 +85,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
   const { getEvmSigner } = useReownWalletProviderAndSigner();
   const { supply } = useAaveInteract();
 
-  // Create Token and Chain objects for TokenImage component
-  const token: Token = {
-    id: tokenAddress || `${tokenSymbol}-${chainId}`,
-    name: tokenName,
-    ticker: tokenSymbol,
-    icon: tokenIcon || "unknown.png",
-    address: tokenAddress,
-    decimals: tokenDecimals,
-    chainId: chainId,
-    stringChainId: chainId.toString(),
-  };
-
-  const chain: Chain = getChainByChainId(chainId);
+  const chain: Chain = getChainByChainId(token.chainId);
 
   // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
@@ -137,8 +111,9 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   // Calculate USD value and health factor changes
   const supplyAmountNum = parseFloat(supplyAmount) || 0;
-  const supplyAmountUSD = supplyAmountNum * tokenPrice;
-
+  const supplyAmountUSD = token.priceUsd
+    ? supplyAmountNum * Number(token.priceUsd)
+    : 0;
   // Calculate USD positions using utility functions
   const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
     userSupplyPositions,
@@ -200,26 +175,6 @@ const SupplyModal: FC<SupplyModalProps> = ({
       return;
     }
 
-    // Check if we have required token info
-    if (
-      !tokenAddress ||
-      tokenAddress === "" ||
-      tokenAddress === "0x0000000000000000000000000000000000000000"
-    ) {
-      toast.error("Token information missing", {
-        description: `Unable to find token contract address for ${tokenSymbol}. Address: ${tokenAddress || "undefined"}`,
-      });
-      return;
-    }
-
-    // Check if we have valid decimals
-    if (!tokenDecimals || tokenDecimals <= 0) {
-      toast.error("Token decimals missing", {
-        description: `Invalid token decimals for ${tokenSymbol}: ${tokenDecimals}`,
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -234,7 +189,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
       // Show initial toast
       const toastId = toast.loading(
-        `Supplying ${supplyAmount} ${tokenSymbol}`,
+        `Supplying ${supplyAmount} ${token.ticker}`,
         {
           description: "Approve token transfer and supply to Aave",
         },
@@ -242,16 +197,16 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
       // Call the real Aave supply function
       const result = await supply({
-        tokenAddress,
+        tokenAddress: token.address,
         amount: supplyAmount,
-        tokenDecimals,
-        tokenSymbol,
+        tokenDecimals: token.decimals,
+        tokenSymbol: token.ticker,
         userAddress,
         chainId: currentChainId as SupportedChainId,
       });
 
       if (result.success) {
-        toast.success(`Successfully supplied ${supplyAmount} ${tokenSymbol}`, {
+        toast.success(`Successfully supplied ${supplyAmount} ${token.ticker}`, {
           id: toastId,
           description: `Transaction: ${result.txHash?.slice(0, 10)}...`,
         });
@@ -281,12 +236,13 @@ const SupplyModal: FC<SupplyModalProps> = ({
 
   const handleMaxClick = () => {
     // Parse the balance string to get numeric value
-    const maxBalance = parseFloat(balance.replace(/,/g, "")) || 0;
+    const maxBalance = token.userBalance
+      ? parseFloat(token.userBalance.replace(/,/g, ""))
+      : 0;
     // Leave small amount for gas fees if it's ETH/native token
-    const isNativeToken = ["ETH", "MATIC", "AVAX", "BNB"].includes(
-      tokenSymbol.toUpperCase(),
-    );
-    const adjustedMax = isNativeToken ? Math.max(0, maxBalance) : maxBalance;
+    const adjustedMax = token.isNativeGas
+      ? Math.max(0, maxBalance)
+      : maxBalance;
     setSupplyAmount(adjustedMax.toString());
   };
 
@@ -307,7 +263,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
             <div className="rounded-full overflow-hidden">
               <TokenImage token={token} chain={chain} size="sm" />
             </div>
-            supply {tokenSymbol}
+            supply {token.ticker}
           </DialogTitle>
         </DialogHeader>
 
@@ -320,7 +276,8 @@ const SupplyModal: FC<SupplyModalProps> = ({
               </label>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-[#A1A1AA]">
-                  balance: {balance} {tokenSymbol}
+                  balance: {formatBalance(token.userBalance || "0")}{" "}
+                  {token.ticker}
                 </div>
                 <button
                   onClick={handleMaxClick}
@@ -345,7 +302,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 )}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <span className="text-sm text-[#A1A1AA]">{tokenSymbol}</span>
+                <span className="text-sm text-[#A1A1AA]">{token.ticker}</span>
               </div>
             </div>
 
@@ -401,7 +358,7 @@ const SupplyModal: FC<SupplyModalProps> = ({
                 <div className="w-4 h-4 rounded-full overflow-hidden">
                   <TokenImage token={token} chain={chain} size="sm" />
                 </div>
-                <span className="text-[#FAFAFA]">{tokenName}</span>
+                <span className="text-[#FAFAFA]">{token.name}</span>
               </div>
             </div>
             <div className="flex justify-between">
