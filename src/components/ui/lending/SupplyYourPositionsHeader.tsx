@@ -1,18 +1,90 @@
 import React from "react";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import { getHealthFactorColor } from "@/utils/aave/utils";
+import { formatCurrency } from "@/utils/formatters";
+import { TokenImage } from "@/components/ui/TokenImage";
+import { getChainByChainId } from "@/config/chains";
 
-const SupplyYourPositionsHeader = ({
-  balance = "$0.41",
-  apy = "3.29%",
-  collateral = "$0.41",
-  assets = [
-    { id: 1, letter: "C", color: "bg-cyan-500" },
-    { id: 2, letter: "T", color: "bg-indigo-500" },
-    { id: 3, letter: "C", color: "bg-blue-500" },
-    { id: 4, letter: "E", color: "bg-purple-500" },
-    { id: 5, letter: "A", color: "bg-green-500" },
-  ],
+interface SupplyYourPositionsHeaderProps {
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
+}
+
+const SupplyYourPositionsHeader: React.FC<SupplyYourPositionsHeaderProps> = ({
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
   ...props
 }) => {
+  // Calculate USD positions using oracle prices
+  const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
+    const suppliedBalance = parseFloat(position.suppliedBalance || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      suppliedBalanceUSD:
+        oraclePrice !== undefined
+          ? (suppliedBalance * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
+    const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
+    const oraclePrice =
+      oraclePrices[position.asset.asset.address.toLowerCase()];
+    return {
+      ...position,
+      totalDebtUSD:
+        oraclePrice !== undefined
+          ? (formattedTotalDebt * oraclePrice).toString()
+          : "0.00",
+    };
+  });
+
+  // Calculate metrics
+  const metrics = calculateUserMetrics(
+    userSupplyPositionsUSD,
+    userBorrowPositionsUSD,
+  );
+
+  // Calculate total invested (total supplied balance)
+  const totalInvested = userSupplyPositionsUSD.reduce((sum, position) => {
+    return sum + parseFloat(position.suppliedBalanceUSD || "0");
+  }, 0);
+
+  // Calculate collateral value (only positions used as collateral)
+  const collateralValue = userSupplyPositionsUSD.reduce((sum, position) => {
+    if (position.isCollateral) {
+      return sum + parseFloat(position.suppliedBalanceUSD || "0");
+    }
+    return sum;
+  }, 0);
+
+  // Calculate weighted APY for supply positions
+  const weightedAPY = (() => {
+    if (totalInvested === 0) return 0;
+
+    let totalEarnings = 0;
+    userSupplyPositionsUSD.forEach((position) => {
+      const positionValue = parseFloat(position.suppliedBalanceUSD || "0");
+      const supplyAPY = parseFloat(position.asset.supplyAPY || "0");
+      totalEarnings += positionValue * (supplyAPY / 100);
+    });
+
+    return totalInvested > 0 ? (totalEarnings / totalInvested) * 100 : 0;
+  })();
+
+  // Create asset data from user positions for TokenImage components
+  const assets = userSupplyPositions.map((position, index) => ({
+    id: index + 1,
+    token: position.asset.asset,
+    chain: getChainByChainId(position.asset.asset.chainId),
+  }));
+
   // Define how many tokens to show before using "+X more"
   const visibleTokens = 3;
   const remainingTokens =
@@ -38,18 +110,35 @@ const SupplyYourPositionsHeader = ({
         {/* Second row: Info badges */}
         <div className="flex items-center justify-center gap-2 px-6">
           <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
-            <span>collateral</span>
-            <span className="text-white">{collateral}</span>
+            <span>invested</span>
+            <span className="text-white">{formatCurrency(totalInvested)}</span>
           </div>
 
           <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
             <span>balance</span>
-            <span className="text-white">{balance}</span>
+            <span className="text-white">{formatCurrency(totalInvested)}</span>
           </div>
 
           <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
             <span>APY</span>
-            <span className="text-white">{apy}</span>
+            <span className="text-white">{weightedAPY.toFixed(2)}%</span>
+          </div>
+
+          <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
+            <span>collateral</span>
+            <span className="text-white">
+              {formatCurrency(collateralValue)}
+            </span>
+          </div>
+
+          <div className="rounded px-2 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
+            <span>health factor</span>
+            <span className={getHealthFactorColor(metrics.healthFactor)}>
+              {metrics.healthFactor === null ||
+              metrics.healthFactor === Infinity
+                ? "∞"
+                : metrics.healthFactor.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
@@ -65,30 +154,51 @@ const SupplyYourPositionsHeader = ({
         <div className="flex-grow flex justify-center items-center">
           <div className="flex items-center gap-2">
             <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
+              <span>invested</span>
+              <span className="text-white">
+                {formatCurrency(totalInvested)}
+              </span>
+            </div>
+
+            <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
               <span>balance</span>
-              <span className="text-white">{balance}</span>
+              <span className="text-white">
+                {formatCurrency(totalInvested)}
+              </span>
             </div>
 
             <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
               <span>APY</span>
-              <span className="text-white">{apy}</span>
+              <span className="text-white">{weightedAPY.toFixed(2)}%</span>
             </div>
 
             <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
               <span>collateral</span>
-              <span className="text-white">{collateral}</span>
+              <span className="text-white">
+                {formatCurrency(collateralValue)}
+              </span>
+            </div>
+
+            <div className="rounded px-3 py-1 flex items-center gap-1 text-xs border h-6 border-zinc-800 text-white/50">
+              <span>health factor</span>
+              <span className={getHealthFactorColor(metrics.healthFactor)}>
+                {metrics.healthFactor === null ||
+                metrics.healthFactor === Infinity
+                  ? "∞"
+                  : metrics.healthFactor.toFixed(2)}
+              </span>
             </div>
 
             {/* Asset tokens */}
             <div className="rounded px-3 py-1 flex items-center text-xs border h-6 border-zinc-800 w-[112px] overflow-hidden">
               <div className="flex -space-x-2 items-center">
                 {assets.slice(0, visibleTokens).map((asset) => (
-                  <div
+                  <TokenImage
                     key={asset.id}
-                    className={`w-4 h-4 rounded-full ${asset.color} flex items-center justify-center text-[10px] font-bold ring-1 ring-black`}
-                  >
-                    {asset.letter}
-                  </div>
+                    token={asset.token}
+                    chain={asset.chain}
+                    size="sm"
+                  />
                 ))}
               </div>
               {remainingTokens > 0 && (

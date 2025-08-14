@@ -213,7 +213,11 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
           className="border-[1px] border-[#232326] rounded-md  overflow-hidden"
         >
           <AccordionTrigger className="p-0 hover:no-underline data-[state=open]:bg-transparent hover:bg-[#131313] rounded-t-md">
-            <SupplyYourPositionsHeader />
+            <SupplyYourPositionsHeader
+              userSupplyPositions={propUserSupplyPositions}
+              userBorrowPositions={userBorrowPositions}
+              oraclePrices={oraclePrices}
+            />
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
