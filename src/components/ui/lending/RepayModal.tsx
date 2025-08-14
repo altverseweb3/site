@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Info, ArrowRight } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { TokenImage } from "@/components/ui/TokenImage";
 import {
   Dialog,
@@ -28,69 +28,58 @@ import { useState, useEffect, FC, ReactNode, ChangeEvent } from "react";
 import { SupportedChainId } from "@/config/aave";
 import type { Token, Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
-import { getHealthFactorColor } from "@/utils/aave/utils";
-
-const calculateNewHealthFactorForRepay = (
-  currentTotalCollateralUSD: number,
-  currentTotalDebtUSD: number,
-  repayAmountUSD: number,
-  liquidationThreshold: number,
-): number => {
-  const newTotalDebt = Math.max(0, currentTotalDebtUSD - repayAmountUSD);
-
-  if (newTotalDebt === 0) {
-    return 999; // No debt means very high health factor
-  }
-
-  const adjustedCollateral = currentTotalCollateralUSD * liquidationThreshold;
-  return adjustedCollateral / newTotalDebt;
-};
+import {
+  getHealthFactorColor,
+  calculateUserSupplyPositionsUSD,
+  calculateUserBorrowPositionsUSD,
+  calculateRepayTransactionImpact,
+  getLTVColorClass,
+} from "@/utils/aave/utils";
+import { UserPosition, UserBorrowPosition } from "@/types/aave";
+import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
+import {
+  formatHealthFactor,
+  formatBalance,
+  calculateRepayUSDValue,
+  formatUSDAmount,
+  getDebtTypeDisplay,
+} from "@/utils/formatters";
 
 // Main Repay Modal Component
 interface RepayModalProps {
-  tokenSymbol?: string;
-  tokenName?: string;
-  tokenIcon?: string;
-  chainId?: number;
-  walletBalance?: string;
+  token: Token;
   currentDebt?: string;
-  debtUSD?: string;
   borrowAPY?: string;
   stableDebt?: string;
   variableDebt?: string;
   healthFactor?: string;
-  tokenPrice?: number;
   liquidationThreshold?: number;
   totalCollateralUSD?: number;
   totalDebtUSD?: number;
   onRepay?: (amount: string, rateMode: RateMode) => Promise<boolean>;
   children: ReactNode;
   isLoading?: boolean;
-  tokenAddress?: string;
-  tokenDecimals?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  oraclePrices?: Record<string, number>;
 }
 
 const RepayModal: FC<RepayModalProps> = ({
-  tokenSymbol = "USDC",
-  tokenName = "USD Coin",
-  tokenIcon = "usdc.png",
-  chainId = 1,
-  walletBalance = "0.00",
+  token,
   currentDebt = "0.00",
-  debtUSD = "0.00",
   borrowAPY = "0.00%",
   stableDebt = "0.00",
   variableDebt = "0.00",
-  healthFactor = "1.24",
-  tokenPrice = 1,
-  liquidationThreshold = 0.85,
+  healthFactor,
+  liquidationThreshold = 85,
   totalCollateralUSD = 0,
   totalDebtUSD = 0,
   onRepay = async () => true,
   children,
   isLoading = false,
-  tokenAddress = "",
-  tokenDecimals = 18,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  oraclePrices = {},
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [repayAmount, setRepayAmount] = useState("");
@@ -148,46 +137,77 @@ const RepayModal: FC<RepayModalProps> = ({
     return null;
   }
 
-  // Calculate USD value and health factor changes
+  // Calculate USD values using utility functions with oracle prices
+  const currentDebtUSD = calculateRepayUSDValue(
+    currentDebt,
+    token,
+    oraclePrices,
+  );
   const repayAmountNum = parseFloat(repayAmount) || 0;
-  const repayAmountUSD = repayAmountNum * tokenPrice;
-  const currentHealthFactor = parseFloat(healthFactor) || 0;
+  const repayAmountUSD = calculateRepayUSDValue(
+    repayAmount,
+    token,
+    oraclePrices,
+  );
 
-  // Calculate new health factor after repayment
-  const newHealthFactor =
-    totalDebtUSD > 0
-      ? calculateNewHealthFactorForRepay(
-          totalCollateralUSD,
-          totalDebtUSD,
-          repayAmountUSD,
-          liquidationThreshold,
-        )
-      : currentHealthFactor;
+  // Calculate USD positions using utility functions like other modals
+  const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
+    userSupplyPositions,
+    oraclePrices,
+  );
 
-  const healthFactorChange = newHealthFactor - currentHealthFactor;
+  const userBorrowPositionsUSD = calculateUserBorrowPositionsUSD(
+    userBorrowPositions,
+    oraclePrices,
+  );
+
+  // Use passed props for metrics if userPositions are empty (from BorrowOwnedCard)
+  // Otherwise calculate from user positions (if called with full position data)
+  const hasPositionData =
+    userSupplyPositions.length > 0 || userBorrowPositions.length > 0;
+
+  const currentMetrics = hasPositionData
+    ? calculateUserMetrics(userSupplyPositionsUSD, userBorrowPositionsUSD)
+    : {
+        netWorth: (totalCollateralUSD || 0) - (totalDebtUSD || 0),
+        netAPY: null,
+        healthFactor: healthFactor ? parseFloat(healthFactor) : Infinity,
+        totalCollateralUSD: totalCollateralUSD || 0,
+        totalDebtUSD: totalDebtUSD || 0,
+        currentLTV:
+          totalCollateralUSD > 0
+            ? ((totalDebtUSD || 0) / totalCollateralUSD) * 100
+            : 0,
+        maxLTV: 80, // Default fallback
+        liquidationThreshold: liquidationThreshold || 85,
+      };
+
+  // Calculate new health factor and LTV after repaying debt (similar to SupplyModal)
+  const { newHealthFactor, newLTV } = calculateRepayTransactionImpact(
+    repayAmountUSD,
+    currentMetrics.totalCollateralUSD,
+    currentMetrics.totalDebtUSD,
+    currentMetrics.currentLTV,
+    currentMetrics.healthFactor,
+    currentMetrics.liquidationThreshold / 100, // Convert percentage to decimal
+  );
 
   // Validation
   const maxDebtAmount = parseFloat(currentDebt) || 0;
-  const walletBalanceNum = parseFloat(walletBalance) || 0;
+  const walletBalanceNum = parseFloat(
+    token.userBalance?.replace(/,/g, "") || "0",
+  );
 
   const isAmountValid = repayAmountNum > 0 && repayAmountNum <= maxDebtAmount;
   const hasInsufficientBalance = repayAmountNum > walletBalanceNum;
   const isFormValid = isAmountValid && !isLoading && !isSubmitting;
 
-  // Get debt type display
-  const getDebtTypeDisplay = () => {
-    const variableDebtNum = parseFloat(variableDebt) || 0;
-    const stableDebtNum = parseFloat(stableDebt) || 0;
-
-    if (variableDebtNum > 0 && stableDebtNum > 0) {
-      return `Mixed (${repayMode === RateMode.Variable ? "repaying variable" : "repaying stable"})`;
-    } else if (variableDebtNum > 0) {
-      return "Variable";
-    } else if (stableDebtNum > 0) {
-      return "Stable";
-    }
-    return "Variable";
-  };
+  // Get debt type display using utility function
+  const debtTypeDisplay = getDebtTypeDisplay(
+    variableDebt,
+    stableDebt,
+    repayMode,
+  );
 
   const handleRepay = async () => {
     if (!isFormValid) return;
@@ -202,20 +222,20 @@ const RepayModal: FC<RepayModalProps> = ({
 
     // Check if we have required token info
     if (
-      !tokenAddress ||
-      tokenAddress === "" ||
-      tokenAddress === "0x0000000000000000000000000000000000000000"
+      !token.address ||
+      token.address === "" ||
+      token.address === "0x0000000000000000000000000000000000000000"
     ) {
       toast.error("token information missing", {
-        description: `unable to find token contract address for ${tokenSymbol}`,
+        description: `unable to find token contract address for ${token.ticker}`,
       });
       return;
     }
 
     // Check if we have valid decimals
-    if (!tokenDecimals || tokenDecimals <= 0) {
+    if (!token.decimals || token.decimals <= 0) {
       toast.error("token decimals missing", {
-        description: `invalid token decimals for ${tokenSymbol}: ${tokenDecimals}`,
+        description: `invalid token decimals for ${token.ticker}: ${token.decimals}`,
       });
       return;
     }
@@ -235,18 +255,18 @@ const RepayModal: FC<RepayModalProps> = ({
 
       // Call the Aave repay transaction
       const result = await repay({
-        tokenAddress,
+        tokenAddress: token.address,
         amount: repayAmount,
         rateMode: repayMode,
-        tokenDecimals,
-        tokenSymbol,
+        tokenDecimals: token.decimals,
+        tokenSymbol: token.ticker,
         userAddress,
         chainId: currentChainId as SupportedChainId,
       });
 
       if (result.success) {
         toast.success("repayment successful!", {
-          description: `successfully repaid ${repayAmount} ${tokenSymbol}`,
+          description: `successfully repaid ${repayAmount} ${token.ticker}`,
           action: result.txHash
             ? {
                 label: "view transaction",
@@ -281,18 +301,7 @@ const RepayModal: FC<RepayModalProps> = ({
     }
   };
 
-  const token: Token = {
-    id: tokenAddress,
-    name: tokenName,
-    ticker: tokenSymbol,
-    icon: tokenIcon,
-    address: tokenAddress,
-    decimals: tokenDecimals,
-    chainId: chainId,
-    stringChainId: chainId.toString(),
-  };
-
-  const chain: Chain = getChainByChainId(chainId);
+  const chain: Chain = getChainByChainId(token.chainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -304,7 +313,7 @@ const RepayModal: FC<RepayModalProps> = ({
             <div className="flex items-center gap-3">
               <TokenImage token={token} chain={chain} size="sm" />
               <DialogTitle className="text-lg font-semibold">
-                repay {tokenSymbol}
+                repay {token.ticker}
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -316,16 +325,16 @@ const RepayModal: FC<RepayModalProps> = ({
                 <span className="text-sm text-gray-400">current debt</span>
                 <div className="text-right">
                   <div className="text-sm font-medium">
-                    {currentDebt} {tokenSymbol}
+                    {currentDebt} {token.ticker}
                   </div>
-                  <div className="text-xs text-gray-400">${debtUSD}</div>
+                  <div className="text-xs text-gray-400">
+                    ${formatUSDAmount(currentDebtUSD)}
+                  </div>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-400">debt type</span>
-                <span className="text-sm text-red-400">
-                  {getDebtTypeDisplay()}
-                </span>
+                <span className="text-sm text-red-400">{debtTypeDisplay}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-400">borrow apy</span>
@@ -340,9 +349,10 @@ const RepayModal: FC<RepayModalProps> = ({
                   repay amount
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">
-                    wallet: {walletBalance} {tokenSymbol.toLowerCase()}
-                  </span>
+                  <div className="text-xs text-[#A1A1AA]">
+                    balance: {formatBalance(token.userBalance || "0")}{" "}
+                    {token.ticker}
+                  </div>
                   <button
                     type="button"
                     onClick={handleMaxClick}
@@ -365,7 +375,7 @@ const RepayModal: FC<RepayModalProps> = ({
 
               {repayAmountNum > 0 && (
                 <div className="text-xs text-gray-400">
-                  ≈ ${repayAmountUSD.toFixed(2)}
+                  ≈ ${formatUSDAmount(repayAmountUSD)} USD
                 </div>
               )}
 
@@ -374,7 +384,7 @@ const RepayModal: FC<RepayModalProps> = ({
                 <div className="flex items-center gap-2 text-red-400 text-xs">
                   <AlertCircle className="h-3 w-3" />
                   {repayAmountNum > maxDebtAmount
-                    ? `amount exceeds debt (${maxDebtAmount.toFixed(6)} ${tokenSymbol})`
+                    ? `amount exceeds debt (${formatBalance(maxDebtAmount.toString())} ${token.ticker})`
                     : "please enter a valid amount"}
                 </div>
               )}
@@ -385,54 +395,103 @@ const RepayModal: FC<RepayModalProps> = ({
                   <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
                   <div className="break-words">
                     insufficient wallet balance (have:{" "}
-                    {walletBalanceNum.toFixed(6)} {tokenSymbol.toLowerCase()})
+                    {formatBalance(walletBalanceNum.toString())}{" "}
+                    {token.ticker.toLowerCase()})
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Health Factor Impact */}
-            {totalDebtUSD > 0 && repayAmountNum > 0 && (
-              <div className="space-y-3 p-4 bg-[#1A1A1A] rounded-lg border border-[#232326]">
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm font-medium">
-                    health factor impact
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">current</span>
-                  <span
+            {/* Health Factor Display - Using correct repay calculations */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">
+                    health factor
+                  </div>
+                  <div
                     className={cn(
-                      "text-sm font-medium",
-                      getHealthFactorColor(currentHealthFactor),
+                      "text-lg font-semibold font-mono",
+                      getHealthFactorColor(
+                        currentMetrics.healthFactor || Infinity,
+                      ),
                     )}
                   >
-                    {currentHealthFactor.toFixed(2)}
-                  </span>
+                    {formatHealthFactor(currentMetrics.healthFactor)}
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-center text-gray-400">
-                  <ArrowRight className="h-4 w-4" />
-                </div>
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">after repayment</span>
-                  <div className="text-right">
-                    <span
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">
+                      new health factor
+                    </div>
+                    <div
                       className={cn(
-                        "text-sm font-medium",
+                        "text-lg font-semibold font-mono",
                         getHealthFactorColor(newHealthFactor),
                       )}
                     >
-                      {newHealthFactor.toFixed(2)}
-                    </span>
-                    {healthFactorChange !== 0 && (
-                      <div className="text-xs text-green-400">
-                        +{healthFactorChange.toFixed(2)}
-                      </div>
+                      {formatHealthFactor(newHealthFactor)}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">current LTV</div>
+                  <div
+                    className={cn(
+                      "text-lg font-semibold font-mono",
+                      getLTVColorClass(
+                        currentMetrics.currentLTV,
+                        currentMetrics.liquidationThreshold,
+                      ),
                     )}
+                  >
+                    {currentMetrics.currentLTV.toFixed(2)}%
+                  </div>
+                </div>
+
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="text-[#71717A]">→</div>
+                )}
+
+                {repayAmountUSD > 0 && currentMetrics.totalDebtUSD > 0 && (
+                  <div className="flex-1 p-3 bg-[#1A1A1A] rounded-lg border border-[#232326] text-center">
+                    <div className="text-xs text-[#A1A1AA] mb-1">new LTV</div>
+                    <div
+                      className={cn(
+                        "text-lg font-semibold font-mono",
+                        getLTVColorClass(
+                          newLTV,
+                          currentMetrics.liquidationThreshold,
+                        ),
+                      )}
+                    >
+                      {newLTV.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Repayment Benefit Info */}
+            {repayAmountUSD > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <Info className="h-4 w-4 text-green-500" />
+                <div className="text-sm">
+                  <div className="text-[#FAFAFA] font-medium">
+                    debt reduction benefit
+                  </div>
+                  <div className="text-[#A1A1AA] text-xs">
+                    repaying will improve your health factor and reduce interest
+                    payments
                   </div>
                 </div>
               </div>

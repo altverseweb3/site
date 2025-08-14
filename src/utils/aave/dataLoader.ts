@@ -12,8 +12,12 @@ import { IAaveOracle_ABI } from "@bgd-labs/aave-address-book/abis";
 import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 
 export const useAaveDataLoader = () => {
-  const { fetchAllReservesData, fetchUserPositions, fetchUserBorrowPositions } =
-    useAaveFetch();
+  const {
+    fetchAllReservesData,
+    fetchAllReservesWithUserData,
+    fetchUserPositions,
+    fetchUserBorrowPositions,
+  } = useAaveFetch();
   const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const fetchOraclePrices = useCallback(
@@ -177,10 +181,9 @@ export const useAaveDataLoader = () => {
       }
 
       try {
-        const reservesResult = await fetchAllReservesData(
-          aaveChain,
-          chainTokens,
-        );
+        const reservesResult = hasConnectedWallet
+          ? await fetchAllReservesWithUserData(aaveChain, chainTokens)
+          : await fetchAllReservesData(aaveChain, chainTokens);
 
         const allReservesData = [
           ...reservesResult.supplyAssets,
@@ -221,7 +224,12 @@ export const useAaveDataLoader = () => {
         };
       }
     },
-    [fetchAllReservesData, loadUserPositions, fetchOraclePrices],
+    [
+      fetchAllReservesData,
+      fetchAllReservesWithUserData,
+      loadUserPositions,
+      fetchOraclePrices,
+    ],
   );
 
   return {

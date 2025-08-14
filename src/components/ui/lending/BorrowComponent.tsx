@@ -111,8 +111,15 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                       reserve.asset.address.toLowerCase() ===
                       borrowPosition.asset.asset.address.toLowerCase(),
                   );
-                  const walletBalance =
-                    matchingReserve?.asset.userBalance || "0.00";
+
+                  // Create token object with userBalance populated from reserves data
+                  const tokenWithBalance = matchingReserve
+                    ? {
+                        ...borrowPosition.asset.asset,
+                        userBalance:
+                          matchingReserve.asset.userBalance || "0.00",
+                      }
+                    : borrowPosition.asset.asset;
 
                   return (
                     <BorrowOwnedCard
@@ -121,7 +128,9 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                       healthFactor={healthFactor.toString()}
                       totalCollateralUSD={totalCollateralUSD}
                       totalDebtUSD={totalDebtUSD}
-                      walletBalance={walletBalance}
+                      tokenWithBalance={tokenWithBalance}
+                      userSupplyPositions={userSupplyPositions}
+                      userBorrowPositions={userBorrowPositions}
                       onRepay={async (position, amount) => {
                         console.log(
                           "Repay",

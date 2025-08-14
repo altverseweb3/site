@@ -1,3 +1,5 @@
+import { RateMode } from "@/types/aave";
+
 // Format number in balances to look compact with string/hex handling and error handling
 export const formatBalance = (
   balance: string | number,
@@ -127,4 +129,76 @@ export const calculateUSDValue = (
   const calculatedValue = numericBalance * price;
 
   return parseFloat(calculatedValue.toPrecision(4)).toString();
+};
+
+/**
+ * Get the effective token price from token.priceUsd or fallback tokenPrice.
+ * @param token - Token object with potential priceUsd property
+ * @param tokenPrice - Fallback token price
+ * @returns Effective token price to use for calculations
+ */
+export const getEffectiveTokenPrice = (
+  token: { priceUsd?: string | number },
+  tokenPrice?: number,
+): number => {
+  return token.priceUsd ? Number(token.priceUsd) : tokenPrice || 0;
+};
+
+/**
+ * Calculate USD value for repay modal amounts using consistent pricing
+ * @param amount - Token amount as string or number
+ * @param token - Token object with potential priceUsd property
+ * @param tokenPrice - Fallback token price
+ * @returns USD value rounded to 2 decimal places
+ */
+export const calculateRepayUSDValue = (
+  amount: string | number,
+  token: { priceUsd?: string | number; address: string },
+  oraclePrices?: Record<string, number>,
+): number => {
+  const amountNum = parseFloat(amount.toString()) || 0;
+
+  // Try token.priceUsd first, then oracle prices, then fallback to 0
+  const price = token.priceUsd
+    ? Number(token.priceUsd)
+    : oraclePrices?.[token.address.toLowerCase()] || 0;
+
+  return amountNum * price;
+};
+
+/**
+ * Format USD amount with proper decimal places for display
+ * @param amount - USD amount to format
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Formatted USD string
+ */
+export const formatUSDAmount = (
+  amount: number,
+  decimals: number = 4,
+): string => {
+  return amount.toPrecision(decimals);
+};
+
+/**
+ * Get debt type display string for repay modal
+ * @param variableDebt - Variable debt amount as string
+ * @param stableDebt - Stable debt amount as string
+ * @param repayMode - Current repay mode (Variable or Stable)
+ * @returns Formatted debt type display string
+ */
+export const getDebtTypeDisplay = (
+  variableDebt: string,
+  stableDebt: string,
+  repayMode: RateMode,
+): string => {
+  const variableDebtNum = parseFloat(variableDebt) || 0;
+  const stableDebtNum = parseFloat(stableDebt) || 0;
+  if (variableDebtNum > 0 && stableDebtNum > 0) {
+    return `Mixed (${repayMode === RateMode.Variable ? "repaying variable" : "repaying stable"})`;
+  } else if (variableDebtNum > 0) {
+    return "Variable";
+  } else if (stableDebtNum > 0) {
+    return "Stable";
+  }
+  return "Variable";
 };
