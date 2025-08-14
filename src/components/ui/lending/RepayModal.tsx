@@ -206,7 +206,7 @@ const RepayModal: FC<RepayModalProps> = ({
   const debtTypeDisplay = getDebtTypeDisplay(
     variableDebt,
     stableDebt,
-    repayMode === RateMode.Variable ? "Variable" : "Stable",
+    repayMode,
   );
 
   const handleRepay = async () => {
