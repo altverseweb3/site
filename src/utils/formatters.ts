@@ -1,3 +1,5 @@
+import { RateMode } from "@/types/aave";
+
 // Format number in balances to look compact with string/hex handling and error handling
 export const formatBalance = (
   balance: string | number,
@@ -130,7 +132,7 @@ export const calculateUSDValue = (
 };
 
 /**
- * Get the effective token price from token.priceUsd or fallback tokenPrice
+ * Get the effective token price from token.priceUsd or fallback tokenPrice.
  * @param token - Token object with potential priceUsd property
  * @param tokenPrice - Fallback token price
  * @returns Effective token price to use for calculations
@@ -187,13 +189,12 @@ export const formatUSDAmount = (
 export const getDebtTypeDisplay = (
   variableDebt: string,
   stableDebt: string,
-  repayMode: "Variable" | "Stable",
+  repayMode: RateMode,
 ): string => {
   const variableDebtNum = parseFloat(variableDebt) || 0;
   const stableDebtNum = parseFloat(stableDebt) || 0;
-
   if (variableDebtNum > 0 && stableDebtNum > 0) {
-    return `Mixed (${repayMode === "Variable" ? "repaying variable" : "repaying stable"})`;
+    return `Mixed (${repayMode === RateMode.Variable ? "repaying variable" : "repaying stable"})`;
   } else if (variableDebtNum > 0) {
     return "Variable";
   } else if (stableDebtNum > 0) {
