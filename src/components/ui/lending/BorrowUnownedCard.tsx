@@ -21,6 +21,8 @@ import { BorrowModal } from "@/components/ui/lending/BorrowModal";
 import { getChainByChainId } from "@/config/chains";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import type { Chain } from "@/types/web3";
+import { calculateBorrowingMetrics } from "@/utils/aave/metricsCalculations";
+import { formatCurrency } from "@/utils/formatters";
 
 interface BorrowUnownedCardProps {
   currentAsset: AaveReserveData;
@@ -63,6 +65,17 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
 
   const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
+  // Calculate max borrow amounts using the same logic as BorrowModal
+  const tokenPrice =
+    oraclePrices?.[currentAsset.asset.address.toLowerCase()] || 0;
+  const { maxBorrowUSD, maxBorrowAmount } = calculateBorrowingMetrics(
+    userSupplyPositions,
+    userBorrowPositions,
+    tokenPrice,
+    stableBorrowAPY,
+    oraclePrices || {},
+  );
+
   // Get borrowing status display
   const getBorrowingStatusDisplay = () => {
     if (!borrowingEnabled || isFrozen) {
@@ -99,12 +112,14 @@ const BorrowUnownedCard: FC<BorrowUnownedCardProps> = ({
       </CardHeader>
 
       <CardContent className="p-3 pt-2 space-y-2">
-        {/* Available to borrow row */}
+        {/* Max borrow amount row */}
         <div className="flex justify-between items-start">
-          <div className="text-gray-400 text-sm mt-0">available to borrow</div>
+          <div className="text-gray-400 text-sm mt-0">max borrow amount</div>
           <div className="text-right flex flex-col items-end">
-            <div className="text-sm">{availableToBorrow}</div>
-            <div className="text-gray-400 text-xs">${availableToBorrowUSD}</div>
+            <div className="text-sm">{maxBorrowAmount}</div>
+            <div className="text-gray-400 text-xs">
+              {formatCurrency(maxBorrowUSD)}
+            </div>
           </div>
         </div>
 
