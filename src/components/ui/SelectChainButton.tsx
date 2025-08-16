@@ -14,7 +14,10 @@ import useWeb3Store, {
   useDestinationChain,
 } from "@/store/web3Store";
 
+type SelectChainButtonVariant = "default" | "compact";
+
 interface SelectChainButtonProps {
+  style?: SelectChainButtonVariant;
   selectedChain?: Chain;
   onChainSelect?: (chain: Chain) => void;
   displayName?: boolean;
@@ -22,7 +25,47 @@ interface SelectChainButtonProps {
   storeType?: "source" | "destination";
 }
 
+const styleVariants = {
+  default: {
+    button: {
+      width: "48px",
+      height: "28px",
+      padding: "0px 6px",
+      borderRadius: "rounded-lg",
+    },
+    icon: {
+      width: "18px",
+      height: "18px",
+    },
+    chevron: {
+      width: "12px",
+      height: "12px",
+      position: "relative" as const,
+    },
+  },
+  compact: {
+    button: {
+      width: "32px",
+      height: "32px",
+      padding: "0",
+      borderRadius: "rounded-md",
+    },
+    icon: {
+      width: "20px",
+      height: "20px",
+    },
+    chevron: {
+      width: "8px",
+      height: "8px",
+      position: "absolute" as const,
+      bottom: "0",
+      right: "0",
+    },
+  },
+};
+
 export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
+  style = "default",
   selectedChain: propSelectedChain,
   onChainSelect: propOnChainSelect,
   displayName = false,
@@ -37,7 +80,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     (state) => state.setDestinationChain,
   );
 
-  // Determine the chain to display (from store)
+  // Determine the chain to display (from store or props)
   const selectedChain = storeType
     ? storeType === "source"
       ? sourceChain
@@ -67,6 +110,8 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
   const [fontColor, setFontColor] = useState(
     selectedChain.fontColor || "#FFFFFF",
   );
+
+  const styles = styleVariants[style];
 
   // Clear all timers
   const clearAllTimers = () => {
@@ -169,16 +214,38 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     backgroundGradient: bgGradient,
   } as Chain);
 
+  const chevronStyle: React.CSSProperties = {
+    width: styles.chevron.width,
+    height: styles.chevron.height,
+    color: fontColor,
+    ...(styles.chevron.position === "absolute" && {
+      opacity: 0.8,
+    }),
+  };
+
+  const chevronClassName = `z-10 flex-shrink-0 ${
+    styles.chevron.position === "absolute" ? "absolute" : ""
+  }`;
+
+  const chevronPositionStyles =
+    styles.chevron.position === "absolute"
+      ? { bottom: styles.chevron.bottom, right: styles.chevron.right }
+      : {};
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center justify-between rounded-lg relative overflow-hidden"
+          className={`flex items-center ${
+            style === "compact" ? "justify-center" : "justify-between"
+          } ${styles.button.borderRadius} relative overflow-hidden ${
+            style === "compact" ? "hover:opacity-80 transition-opacity" : ""
+          }`}
           style={{
-            width: "48px",
-            height: "28px",
-            padding: "0px 6px",
+            width: styles.button.width,
+            height: styles.button.height,
+            padding: styles.button.padding,
             ...currentBgStyle,
             transition: bgGradient
               ? "opacity 600ms ease" // For gradients, we use opacity transition
@@ -188,7 +255,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
           {/* Ripple effect when chain changes */}
           {showRipple && (
             <span
-              className="absolute inset-0 z-0 animate-ripple rounded-lg origin-center"
+              className={`absolute inset-0 z-0 animate-ripple ${styles.button.borderRadius} origin-center`}
               style={getBackgroundStyle(selectedChain)}
             />
           )}
@@ -197,8 +264,8 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
           <div
             className="relative z-10 flex-shrink-0 transition-all duration-300"
             style={{
-              width: "18px",
-              height: "18px",
+              width: styles.icon.width,
+              height: styles.icon.height,
               opacity,
               transition: "opacity 300ms ease, transform 300ms ease", // Original timing
               transform: isChanging ? "scale(0.9)" : "scale(1)",
@@ -227,13 +294,11 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
             </span>
           )}
 
-          {/* Chevron with fixed dimensions and font color from chain */}
           <ChevronDown
-            className="z-10 flex-shrink-0"
+            className={chevronClassName}
             style={{
-              width: "12px",
-              height: "12px",
-              color: fontColor,
+              ...chevronStyle,
+              ...chevronPositionStyles,
             }}
           />
         </button>
