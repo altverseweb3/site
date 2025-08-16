@@ -185,6 +185,8 @@ TokenListSection.displayName = "TokenListSection";
 const VirtualizedTokenList: React.FC<{
   walletTokens: Token[];
   allTokens: Token[];
+  featuredTokens?: Token[];
+  featuredTokensDescription?: string;
   onSelectToken: (token: Token) => void;
   copiedAddresses: Record<string, boolean>;
   onCopy: (text: string, tokenId: string) => void;
@@ -195,6 +197,8 @@ const VirtualizedTokenList: React.FC<{
   ({
     walletTokens,
     allTokens,
+    featuredTokens = [],
+    featuredTokensDescription = "featured",
     onSelectToken,
     copiedAddresses,
     onCopy,
@@ -290,7 +294,21 @@ const VirtualizedTokenList: React.FC<{
       return { processedWalletTokens, processedAllTokens };
     }, [walletTokens, allTokens]);
 
-    // Apply search filtering on the processed token lists
+    const filteredFeaturedTokens = useMemo(() => {
+      const chainFilteredTokens = featuredTokens.filter(
+        (token) => token.chainId === chain.chainId,
+      );
+
+      const query = searchQuery.toLowerCase();
+      if (!query) return chainFilteredTokens;
+      return chainFilteredTokens.filter(
+        (token) =>
+          token.name.toLowerCase().includes(query) ||
+          token.ticker.toLowerCase().includes(query) ||
+          token.address.toLowerCase().includes(query),
+      );
+    }, [featuredTokens, searchQuery, chain.chainId]);
+
     const filteredWalletTokens = useMemo(() => {
       const query = searchQuery.toLowerCase();
       if (!query) return processedWalletTokens;
@@ -313,7 +331,11 @@ const VirtualizedTokenList: React.FC<{
       );
     }, [processedAllTokens, searchQuery]);
 
-    if (filteredWalletTokens.length === 0 && filteredAllTokens.length === 0) {
+    if (
+      filteredFeaturedTokens.length === 0 &&
+      filteredWalletTokens.length === 0 &&
+      filteredAllTokens.length === 0
+    ) {
       return (
         <div className="p-4 text-center text-[#FAFAFA55]">
           {searchQuery
@@ -325,10 +347,20 @@ const VirtualizedTokenList: React.FC<{
 
     return (
       <>
+        {/* Featured tokens section */}
+        <TokenListSection
+          title={featuredTokensDescription}
+          className="pt-0"
+          tokens={filteredFeaturedTokens}
+          onSelectToken={onSelectToken}
+          copiedAddresses={copiedAddresses}
+          onCopy={onCopy}
+          chain={chain}
+        />
         {/* Wallet tokens section */}
         <TokenListSection
           title="your wallet"
-          className="pt-0"
+          className={filteredFeaturedTokens.length > 0 ? "pt-3" : "pt-0"}
           tokens={filteredWalletTokens}
           onSelectToken={onSelectToken}
           copiedAddresses={copiedAddresses}
@@ -338,7 +370,11 @@ const VirtualizedTokenList: React.FC<{
         {/* All tokens section */}
         <TokenListSection
           title="all tokens"
-          className={filteredWalletTokens.length > 0 ? "pt-3" : "pt-0"}
+          className={
+            filteredFeaturedTokens.length > 0 || filteredWalletTokens.length > 0
+              ? "pt-3"
+              : "pt-0"
+          }
           tokens={filteredAllTokens}
           onSelectToken={onSelectToken}
           copiedAddresses={copiedAddresses}
@@ -356,10 +392,14 @@ interface SelectTokenButtonProps {
   variant: "source" | "destination";
   onTokenSelect?: (token: Token) => void;
   selectedToken?: Token;
+  featuredTokens?: Token[];
+  featuredTokensDescription?: string;
 }
 
 export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   variant,
+  featuredTokens,
+  featuredTokensDescription,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 150);
@@ -690,6 +730,8 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
             <VirtualizedTokenList
               walletTokens={walletTokens}
               allTokens={allTokens}
+              featuredTokens={featuredTokens}
+              featuredTokensDescription={featuredTokensDescription}
               onSelectToken={handleSelectToken}
               copiedAddresses={copiedAddresses}
               onCopy={copyToClipboard}
