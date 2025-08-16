@@ -7,7 +7,6 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import Image from "next/image";
 import { Search, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -31,6 +30,7 @@ import { getTokenMetadata } from "@/utils/tokens/tokenApiMethods";
 import useUIStore from "@/store/uiStore";
 import { parseDecimalNumber } from "@/utils/tokens/tokenMethods";
 import { truncateAddress, formatBalance } from "@/utils/formatters";
+import SelectChainButton from "@/components/ui/SelectChainButton";
 
 interface TokenListItemProps {
   token: Token;
@@ -410,17 +410,13 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const lookupTokenByAddress = useCallback(
     async (address: string) => {
-      // Normalize the address for consistent comparison
       const normalizedAddress = address.toLowerCase();
 
-      // Only proceed if it's a valid address
       if (!isValidEthereumAddress(normalizedAddress)) return;
 
-      // Check if we've already looked up this address for this chain
       const lookupKey = `${chainToShow.chainId}-${normalizedAddress}`;
       if (lookedUpAddresses.current.has(lookupKey)) return;
 
-      // Mark this address as looked up before making the API call
       lookedUpAddresses.current.add(lookupKey);
 
       setIsSearchingMetadata(true);
@@ -429,9 +425,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           chainToShow.chainId,
           normalizedAddress,
         );
-        // Only add tokens that have valid metadata with at least a name
         if (metadata && metadata.name) {
-          // Create a new token object from the metadata
           const newToken: Token = {
             id: `custom-${chainToShow.chainId}-${normalizedAddress}`,
             chainId: chainToShow.chainId,
@@ -445,7 +439,6 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
             customToken: true,
           };
 
-          // Add to global token list
           addCustomToken(newToken);
         } else {
           console.error(
@@ -524,7 +517,6 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
     });
   }, []);
 
-  // Effect to lookup token when search is an address with no results
   useEffect(() => {
     if (
       debouncedSearchQuery &&
@@ -570,16 +562,10 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
-      // debugger;
       setIsOpen(open);
       if (open) {
-        // Clear search query
         setSearchQuery("");
-
-        // Refresh tokens from store
         setChainTokens(getTokensForChain(chainToShow.chainId));
-
-        // Clear the lookup cache when opening the dialog
         lookedUpAddresses.current.clear();
       }
     },
@@ -637,9 +623,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           className={`${buttonClass} ${selectedToken ? "py-[3px]" : "py-2"}`}
           onMouseEnter={handleMouseEnter}
           onClick={(e: React.MouseEvent) => {
-            e.stopPropagation(); // Prevent event from bubbling up to AssetBox
-            // Your existing click logic here
-            // debugger;
+            e.stopPropagation();
             setIsOpen(true);
           }}
         >
@@ -687,21 +671,11 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
               placeholder="search token or paste address"
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full h-[38px] bg-[#27272A] text-[#FAFAFA] placeholder-[#FAFAFA20] pl-10 pr-10 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-lg text-base"
+              className="w-full h-[38px] bg-[#27272A] text-[#FAFAFA] placeholder-[#FAFAFA20] pl-10 pr-12 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-lg text-base"
               style={{ fontSize: "16px" }}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center">
-              <div
-                className="sm:w-6 sm:h-6 w-5 h-5 rounded-md flex items-center justify-center"
-                style={{ backgroundColor: chainToShow.backgroundColor }}
-              >
-                <Image
-                  src={`${chainToShow.icon}`}
-                  alt={chainToShow.nativeGasToken.symbol}
-                  width={20}
-                  height={20}
-                />
-              </div>
+            <div className="absolute inset-y-0 right-1 flex items-center">
+              <SelectChainButton storeType={variant} style="compact" />
             </div>
           </div>
         </div>
