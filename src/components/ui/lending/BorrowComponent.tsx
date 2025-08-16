@@ -14,6 +14,8 @@ import {
   UserPosition,
 } from "@/types/aave";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
+import PositionsEmptyStateComponent from "@/components/ui/lending/PositionsEmptyStateComponent";
+import PositionsLoadingComponent from "@/components/ui/lending/PositionsLoadingComponent";
 
 interface BorrowComponentProps {
   oraclePrices?: Record<string, number>;
@@ -25,6 +27,7 @@ interface BorrowComponentProps {
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
   allReserves?: AaveReserveData[];
+  isLoadingPositions?: boolean;
 }
 
 const BorrowComponent: React.FC<BorrowComponentProps> = ({
@@ -37,6 +40,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   userSupplyPositions = [],
   userBorrowPositions = [],
   allReserves = [],
+  isLoadingPositions = false,
 }) => {
   // Filter allReserves to get borrow assets with wallet balances
   const borrowableReserves = useMemo(() => {
@@ -103,7 +107,12 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {hasBorrowPositions &&
+              {isLoadingPositions && (
+                <PositionsLoadingComponent message="loading your borrow positions..." />
+              )}
+
+              {!isLoadingPositions &&
+                hasBorrowPositions &&
                 localUserBorrowPositions.map((borrowPosition) => {
                   // Find wallet balance from allReserves
                   const matchingReserve = allReserves.find(
@@ -150,15 +159,11 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                   );
                 })}
 
-              {!hasBorrowPositions && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrow positions found
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Borrow assets to see your positions here
-                  </div>
-                </div>
+              {!isLoadingPositions && !hasBorrowPositions && (
+                <PositionsEmptyStateComponent
+                  title="no borrow positions found"
+                  subtitle="borrow assets to see your positions here"
+                />
               )}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
@@ -176,11 +181,7 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
               {showEmptyState && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrowable assets found
-                  </div>
-                </div>
+                <PositionsEmptyStateComponent title="no borrowable assets found" />
               )}
 
               {hasData &&

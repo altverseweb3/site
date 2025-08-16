@@ -10,6 +10,8 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
+import PositionsLoadingComponent from "@/components/ui/lending/PositionsLoadingComponent";
+import PositionsEmptyStateComponent from "@/components/ui/lending/PositionsEmptyStateComponent";
 import useWeb3Store, {
   useAaveChain,
   useIsWalletTypeConnected,
@@ -27,15 +29,18 @@ interface SupplyComponentProps {
   oraclePrices?: Record<string, number>;
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
+  isLoadingPositions?: boolean;
+  onRefresh?: () => void;
 }
 
 const SupplyComponent: React.FC<SupplyComponentProps> = ({
   oraclePrices = {},
   userSupplyPositions: propUserSupplyPositions = [],
   userBorrowPositions = [],
+  isLoadingPositions: externalLoadingPositions = false,
+  onRefresh,
 }) => {
   const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
-  const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
   const [loading, setLoading] = useState(false);
   const [tokensPreloaded, setTokensPreloaded] = useState(false);
   const [positionsLoading, setPositionsLoading] = useState(false);
@@ -71,13 +76,12 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
       try {
         setPositionsLoading(true);
 
-        const positions = await fetchUserPositions(reserves);
+        await fetchUserPositions(reserves);
 
-        setUserPositions(positions);
+        // Positions are now managed at page level, so we don't store them locally
       } catch (err) {
         console.error("Error loading user positions:", err);
         // Don't set error state for positions - just log and continue
-        setUserPositions([]);
       } finally {
         setPositionsLoading(false);
       }
@@ -149,7 +153,6 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
         );
         // Clear data on error
         setAaveReserves([]);
-        setUserPositions([]);
       } finally {
         setLoading(false);
       }
@@ -197,13 +200,18 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
   };
 
   const handleRefresh = () => {
-    loadAaveReserves(true); // Force refresh
+    if (onRefresh) {
+      onRefresh(); // Use page-level refresh
+    } else {
+      loadAaveReserves(true); // Fallback to internal refresh
+    }
   };
 
   const hasData = aaveReserves.length > 0;
-  const hasUserPositions = userPositions.length > 0;
+  const hasUserPositions = propUserSupplyPositions.length > 0;
   const showEmptyState = !loading && !error && !hasData;
-  const isLoadingPositions = loading || positionsLoading;
+  const isLoadingPositions =
+    loading || positionsLoading || externalLoadingPositions;
 
   return (
     <div className="w-full space-y-4">
@@ -218,26 +226,19 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
               {isLoadingPositions && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading your positions...</div>
-                </div>
+                <PositionsLoadingComponent message="loading your positions..." />
               )}
 
               {!isLoadingPositions && !hasUserPositions && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No supply positions found
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Supply assets to see your positions here
-                  </div>
-                </div>
+                <PositionsEmptyStateComponent
+                  title="no supply positions found"
+                  subtitle="supply assets to see your positions here"
+                />
               )}
 
               {!isLoadingPositions &&
                 hasUserPositions &&
-                userPositions.map((position, index) => (
+                propUserSupplyPositions.map((position, index) => (
                   <SupplyOwnedCard
                     key={`${position.asset.asset.address}-${aaveChain.chainId}-${index}`}
                     currentAsset={position.asset}
@@ -266,42 +267,28 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
               {loading && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading Aave reserves...</div>
-                </div>
+                <PositionsLoadingComponent message="loading aave reserves..." />
               )}
 
               {error && (
-                <div className="text-center py-8">
-                  <div className="text-red-400 mb-4">
-                    Failed to load reserves: {error}
-                  </div>
-                  <div className="text-sm text-gray-400 mb-4">
-                    Chain: {aaveChain.name}
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? "Loading..." : "Retry"}
-                  </button>
-                </div>
+                <PositionsEmptyStateComponent
+                  title={`failed to load reserves: ${error}`}
+                  subtitle={`chain: ${aaveChain.name}`}
+                  showRefreshButton={true}
+                  onRefresh={handleRefresh}
+                  refreshDisabled={loading}
+                  refreshText="retry"
+                  isError={true}
+                />
               )}
 
               {showEmptyState && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No active reserves found
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Refresh
-                  </button>
-                </div>
+                <PositionsEmptyStateComponent
+                  title="no active reserves found"
+                  showRefreshButton={true}
+                  onRefresh={handleRefresh}
+                  refreshDisabled={loading}
+                />
               )}
 
               {hasData &&
