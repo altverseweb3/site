@@ -80,7 +80,7 @@ export const SelectChainButton: React.FC<SelectChainButtonProps> = ({
     (state) => state.setDestinationChain,
   );
 
-  // Determine the chain to display (from store or props)
+  // Determine the chain to display (from store)
   const selectedChain = storeType
     ? storeType === "source"
       ? sourceChain
