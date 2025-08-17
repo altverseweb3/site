@@ -16,6 +16,7 @@ import {
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import PositionsLoadingComponent from "@/components/ui/lending/PositionsLoadingComponent";
 import PositionsEmptyStateComponent from "@/components/ui/lending/PositionsEmptyStateComponent";
+import { calculateBorrowingMetrics } from "@/utils/aave/metricsCalculations";
 
 interface BorrowComponentProps {
   oraclePrices?: Record<string, number>;
@@ -44,19 +45,12 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   isLoadingPositions = false,
   onRefresh,
 }) => {
-  // Filter allReserves to get borrow assets with wallet balances
   const borrowableReserves = useMemo(() => {
-    console.log("BorrowComponent - Total reserves:", allReserves.length);
-    console.log("BorrowComponent - Sample reserve:", allReserves[0]);
-
-    const filtered = allReserves.filter(
+    return allReserves.filter(
       (reserve) =>
         reserve.borrowingEnabled &&
         parseFloat(reserve.formattedAvailableLiquidity || "0") > 0,
     );
-
-    console.log("BorrowComponent - Borrowable reserves:", filtered.length);
-    return filtered;
   }, [allReserves]);
 
   const handleBorrow = (asset: AaveReserveData) => {
@@ -97,14 +91,11 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
               {!isLoadingPositions &&
                 hasBorrowPositions &&
                 userBorrowPositions.map((borrowPosition) => {
-                  // Find wallet balance from allReserves
                   const matchingReserve = allReserves.find(
                     (reserve) =>
                       reserve.asset.address.toLowerCase() ===
                       borrowPosition.asset.asset.address.toLowerCase(),
                   );
-
-                  // Create token object with userBalance populated from reserves data
                   const tokenWithBalance = matchingReserve
                     ? {
                         ...borrowPosition.asset.asset,
@@ -123,20 +114,10 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                       tokenWithBalance={tokenWithBalance}
                       userSupplyPositions={userSupplyPositions}
                       userBorrowPositions={userBorrowPositions}
-                      onRepay={async (position, amount) => {
-                        console.log(
-                          "Repay",
-                          amount,
-                          "of",
-                          position.asset.asset.ticker,
-                        );
-                        // TODO: Implement repay functionality
+                      onRepay={async () => {
                         return true;
                       }}
-                      onDetailsClick={(position) => {
-                        console.log("Details for", position.asset.asset.ticker);
-                        // TODO: Implement details modal
-                      }}
+                      onDetailsClick={() => {}}
                       oraclePrices={oraclePrices}
                     />
                   );
@@ -171,22 +152,38 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
 
               {!isLoadingPositions &&
                 hasData &&
-                borrowableReserves.map((reserve) => (
-                  <BorrowUnownedCard
-                    key={`${reserve.asset.address}-${reserve.asset.chainId}`}
-                    currentAsset={reserve}
-                    onBorrow={handleBorrow}
-                    onDetails={handleDetails}
-                    healthFactor={healthFactor.toString()}
-                    totalCollateralUSD={totalCollateralUSD}
-                    totalDebtUSD={totalDebtUSD}
-                    currentLTV={currentLTV}
-                    liquidationThreshold={liquidationThreshold}
-                    oraclePrices={oraclePrices}
-                    userSupplyPositions={userSupplyPositions}
-                    userBorrowPositions={userBorrowPositions}
-                  />
-                ))}
+                borrowableReserves.map((reserve) => {
+                  const tokenPrice =
+                    oraclePrices?.[reserve.asset.address.toLowerCase()] || 0;
+                  const borrowMetrics = calculateBorrowingMetrics(
+                    userSupplyPositions,
+                    userBorrowPositions,
+                    tokenPrice,
+                    reserve.stableBorrowAPY || "0",
+                    oraclePrices,
+                  );
+
+                  return (
+                    <BorrowUnownedCard
+                      key={`${reserve.asset.address}-${reserve.asset.chainId}`}
+                      currentAsset={reserve}
+                      availableToBorrow={borrowMetrics.maxBorrowAmount}
+                      availableToBorrowUSD={borrowMetrics.maxBorrowUSD.toFixed(
+                        2,
+                      )}
+                      onBorrow={handleBorrow}
+                      onDetails={handleDetails}
+                      healthFactor={healthFactor.toString()}
+                      totalCollateralUSD={totalCollateralUSD}
+                      totalDebtUSD={totalDebtUSD}
+                      currentLTV={currentLTV}
+                      liquidationThreshold={liquidationThreshold}
+                      oraclePrices={oraclePrices}
+                      userSupplyPositions={userSupplyPositions}
+                      userBorrowPositions={userBorrowPositions}
+                    />
+                  );
+                })}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>

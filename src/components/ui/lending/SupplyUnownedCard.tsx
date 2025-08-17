@@ -18,7 +18,11 @@ import {
   UserBorrowPosition,
 } from "@/types/aave";
 import { SupplyModal } from "@/components/ui/lending/SupplyModal";
-import { formatBalance, formatAPY } from "@/utils/formatters";
+import {
+  formatBalance,
+  formatAPY,
+  calculateUSDValue,
+} from "@/utils/formatters";
 import { getChainByChainId } from "@/config/chains";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import type { Chain } from "@/types/web3";
@@ -50,6 +54,13 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
   const supplyAPY = currentAsset.supplyAPY
     ? currentAsset.supplyAPY
     : formatAPY(currentAsset.currentLiquidityRate);
+
+  const currentPrice = oraclePrices?.[currentAsset.asset.address.toLowerCase()];
+  const calculatedUSD = calculateUSDValue(
+    userBalance,
+    currentPrice,
+    dollarAmount,
+  );
 
   const chain: Chain = getChainByChainId(currentAsset.asset.chainId);
 
@@ -88,7 +99,7 @@ const SupplyUnownedCard: FC<SupplyUnownedCardProps> = ({
           <div className="text-gray-400 text-sm mt-0">wallet balance</div>
           <div className="text-right flex flex-col items-end">
             <div className="text-sm">{formattedBalance}</div>
-            <div className="text-gray-400 text-xs">${dollarAmount}</div>
+            <div className="text-gray-400 text-xs">${calculatedUSD}</div>
           </div>
         </div>
 

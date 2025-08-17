@@ -112,7 +112,7 @@ const SupplyOwnedCard = ({
   };
 
   return (
-    <Card className="text-white border border-[#232326] h-[198px] p-0 rounded-[3px] shadow-none">
+    <Card className="text-white border border-[#232326] h-[240px] p-0 rounded-[3px] shadow-none">
       <CardHeader className="flex flex-row items-start p-3 pt-3 pb-1 space-y-0">
         <div className="mr-3 rounded-full overflow-hidden">
           <TokenImage token={currentAsset.asset} chain={chain} size="md" />

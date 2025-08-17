@@ -104,10 +104,10 @@ const BorrowLendComponent: React.FC = () => {
 
       if (result) {
         setLastChainId(aaveChain.chainId);
-        setAllReserves(result.allReserves);
         setOraclePrices(result.oraclePrices);
         setUserSupplyPositions(result.userSupplyPositions);
         setUserBorrowPositions(result.userBorrowPositions);
+        setAllReserves(result.allReserves);
       }
     } catch (err) {
       console.error("Error loading Aave data:", err);
