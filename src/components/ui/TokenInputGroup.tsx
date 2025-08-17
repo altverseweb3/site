@@ -3,6 +3,7 @@ import { SelectTokenButton } from "@/components/ui/SelectTokenButton";
 import { TokenAmountInput } from "@/components/ui/TokenAmountInput";
 import useUIStore from "@/store/uiStore";
 import { useSourceToken, useDestinationToken } from "@/store/web3Store";
+import { Token } from "@/types/web3";
 
 interface TokenInputGroupProps {
   variant: "source" | "destination";
@@ -13,6 +14,8 @@ interface TokenInputGroupProps {
   readOnly?: boolean;
   isLoadingQuote?: boolean;
   isEnabled?: boolean; // New prop to control if input is enabled
+  featuredTokens?: Token[];
+  featuredTokensDescription?: string;
 }
 
 export function TokenInputGroup({
@@ -24,6 +27,8 @@ export function TokenInputGroup({
   readOnly = false,
   isLoadingQuote = false,
   isEnabled = true, // Default to true
+  featuredTokens = [],
+  featuredTokensDescription = "",
 }: TokenInputGroupProps) {
   const setSourceTokenSelectOpen = useUIStore(
     (state) => state.setSourceTokenSelectOpen,
@@ -42,7 +47,13 @@ export function TokenInputGroup({
 
   return (
     <div className="flex justify-between items-start gap-2 sm:gap-4 w-full">
-      {showSelectToken && <SelectTokenButton variant={variant} />}
+      {showSelectToken && (
+        <SelectTokenButton
+          variant={variant}
+          featuredTokens={featuredTokens}
+          featuredTokensDescription={featuredTokensDescription}
+        />
+      )}
       <TokenAmountInput
         amount={amount}
         onChange={onChange}
