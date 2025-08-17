@@ -237,7 +237,7 @@ export const loadTokensForChain = async (
           name: key.toLowerCase(),
           ticker: key.toUpperCase(),
           icon: asset.imagePath,
-          address: asset.contractAddress,
+          address: asset.contractAddress.toLowerCase(),
           decimals: asset.decimals,
           chainId: numericChainId,
           stringChainId: chainId,
