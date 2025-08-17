@@ -17,7 +17,6 @@ import { WalletType } from "@/types/web3";
 import { chainList, getChainById } from "@/config/chains";
 import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 import {
   UserPosition,
@@ -36,15 +35,12 @@ const BorrowLendComponent: React.FC = () => {
   >([]);
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const [isLoadingPositions, setIsLoadingPositions] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   const aaveChain = useAaveChain();
   const setAaveChain = useSetAaveChain();
-  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
-  const chainTokens = getTokensForChain(aaveChain.chainId);
-
-  const { loadAaveData } = useAaveDataLoader();
 
   const aaveLendingSupportedChains = chainList.filter((chain) =>
     isChainSupported(chain.chainId),
@@ -79,46 +75,28 @@ const BorrowLendComponent: React.FC = () => {
     alignWalletWithPersistedChain();
   }, [isWalletConnected, aaveChain, switchToChain]);
 
-  // Load oracle prices and user positions for all components to use
+  // Handle data updates from metrics header
+  const handleDataUpdate = useCallback(
+    (data: {
+      userSupplyPositions: UserPosition[];
+      userBorrowPositions: UserBorrowPosition[];
+      allReserves: AaveReserveData[];
+      oraclePrices: Record<string, number>;
+    }) => {
+      setUserSupplyPositions(data.userSupplyPositions);
+      setUserBorrowPositions(data.userBorrowPositions);
+      setAllReserves(data.allReserves);
+      setOraclePrices(data.oraclePrices);
+      setIsLoadingPositions(false);
+    },
+    [],
+  );
+
+  // Manual refresh function for refresh buttons
   const loadAaveUserData = useCallback(async () => {
-    if (chainTokens.length > 0) {
-      setIsLoadingPositions(true);
-      try {
-        const result = await loadAaveData({
-          aaveChain,
-          chainTokens,
-          hasConnectedWallet: isWalletConnected,
-          loading: false,
-          lastChainId: null,
-          allReservesLength: 0,
-        });
-
-        if (result?.oraclePrices) {
-          setOraclePrices(result.oraclePrices);
-        }
-
-        if (result?.userSupplyPositions) {
-          setUserSupplyPositions(result.userSupplyPositions);
-        }
-
-        if (result?.userBorrowPositions) {
-          setUserBorrowPositions(result.userBorrowPositions);
-        }
-
-        if (result?.allReserves) {
-          setAllReserves(result.allReserves);
-        }
-      } catch (error) {
-        console.error("Error loading Aave user data for page:", error);
-      } finally {
-        setIsLoadingPositions(false);
-      }
-    }
-  }, [aaveChain, chainTokens, isWalletConnected, loadAaveData]);
-
-  useEffect(() => {
-    loadAaveUserData();
-  }, [loadAaveUserData]);
+    setIsLoadingPositions(true);
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   // Calculate user metrics from positions
   const userMetrics = isWalletConnected
@@ -162,6 +140,8 @@ const BorrowLendComponent: React.FC = () => {
                 size="md"
               />
             }
+            onDataUpdate={handleDataUpdate}
+            refreshTrigger={refreshTrigger}
           />
           {activeTab === "supply" ? (
             <SupplyComponent

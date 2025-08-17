@@ -30,12 +30,21 @@ interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   chainPicker?: React.ReactNode;
+  onDataUpdate?: (data: {
+    userSupplyPositions: UserPosition[];
+    userBorrowPositions: UserBorrowPosition[];
+    allReserves: AaveReserveData[];
+    oraclePrices: Record<string, number>;
+  }) => void;
+  refreshTrigger?: number;
 }
 
 const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   activeTab,
   onTabChange,
   chainPicker,
+  onDataUpdate,
+  refreshTrigger,
 }) => {
   const aaveChain = useAaveChain();
   const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
@@ -82,6 +91,16 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         setOraclePrices(result.oraclePrices);
         setUserSupplyPositions(result.userSupplyPositions);
         setUserBorrowPositions(result.userBorrowPositions);
+
+        // Pass data up to parent
+        if (onDataUpdate) {
+          onDataUpdate({
+            userSupplyPositions: result.userSupplyPositions,
+            userBorrowPositions: result.userBorrowPositions,
+            allReserves: result.allReserves,
+            oraclePrices: result.oraclePrices,
+          });
+        }
       }
     } catch (err) {
       console.error("Error loading Aave data:", err);
@@ -100,11 +119,19 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
     aaveChain,
     chainTokens,
     hasConnectedWallet,
+    onDataUpdate,
   ]);
 
   useEffect(() => {
     loadAaveDataCallback();
   }, [loadAaveDataCallback]);
+
+  // Handle refresh trigger
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      loadAaveDataCallback();
+    }
+  }, [refreshTrigger, loadAaveDataCallback]);
 
   useEffect(() => {
     if (lastChainId !== null && lastChainId !== aaveChain.chainId) {

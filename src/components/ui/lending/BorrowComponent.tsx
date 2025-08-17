@@ -46,11 +46,17 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
 }) => {
   // Filter allReserves to get borrow assets with wallet balances
   const borrowableReserves = useMemo(() => {
-    return allReserves.filter(
+    console.log("BorrowComponent - Total reserves:", allReserves.length);
+    console.log("BorrowComponent - Sample reserve:", allReserves[0]);
+
+    const filtered = allReserves.filter(
       (reserve) =>
         reserve.borrowingEnabled &&
         parseFloat(reserve.formattedAvailableLiquidity || "0") > 0,
     );
+
+    console.log("BorrowComponent - Borrowable reserves:", filtered.length);
+    return filtered;
   }, [allReserves]);
 
   const handleBorrow = (asset: AaveReserveData) => {

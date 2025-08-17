@@ -32,7 +32,10 @@ export const useAaveDataLoader = () => {
                 ? parseFloat(tokenPriceUsd)
                 : tokenPriceUsd;
             if (!isNaN(price) && price > 0) {
-              priceMapFromTokens[reserve.asset.address.toLowerCase()] = price;
+              const normalizedAddress = reserve.asset.address.toLowerCase();
+              priceMapFromTokens[normalizedAddress] = price;
+              // Also store with original casing for compatibility
+              priceMapFromTokens[reserve.asset.address] = price;
             }
           }
         });
@@ -78,24 +81,27 @@ export const useAaveDataLoader = () => {
               batch.forEach((reserve, batchIndex) => {
                 const priceInWei = batchPrices[batchIndex];
                 const price = parseFloat(ethers.formatUnits(priceInWei, 8));
+                const normalizedAddress = reserve.asset.address.toLowerCase();
 
                 if (!isNaN(price) && price > 0) {
-                  priceMap[reserve.asset.address.toLowerCase()] = price;
+                  priceMap[normalizedAddress] = price;
+                  // Also store with original casing for compatibility
+                  priceMap[reserve.asset.address] = price;
                 } else {
-                  const fallbackPrice =
-                    priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                  const fallbackPrice = priceMapFromTokens[normalizedAddress];
                   if (fallbackPrice) {
-                    priceMap[reserve.asset.address.toLowerCase()] =
-                      fallbackPrice;
+                    priceMap[normalizedAddress] = fallbackPrice;
+                    priceMap[reserve.asset.address] = fallbackPrice;
                   }
                 }
               });
             } catch {
               batch.forEach((reserve) => {
-                const fallbackPrice =
-                  priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                const normalizedAddress = reserve.asset.address.toLowerCase();
+                const fallbackPrice = priceMapFromTokens[normalizedAddress];
                 if (fallbackPrice) {
-                  priceMap[reserve.asset.address.toLowerCase()] = fallbackPrice;
+                  priceMap[normalizedAddress] = fallbackPrice;
+                  priceMap[reserve.asset.address] = fallbackPrice;
                 }
               });
             }

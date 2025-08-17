@@ -40,13 +40,28 @@ export async function fetchAllReservesData(
 
   const market = getAaveMarket(aaveChain.chainId);
 
+  console.log(
+    `Loading Aave data for chain ${aaveChain.chainId} (${aaveChain.name})`,
+  );
+  console.log(`Data provider address: ${market.AAVE_PROTOCOL_DATA_PROVIDER}`);
+
   const poolDataProvider = new ethers.Contract(
     market.AAVE_PROTOCOL_DATA_PROVIDER,
     POOL_DATA_PROVIDER_ABI,
     provider,
   );
 
-  const reserveTokens = await poolDataProvider.getAllReservesTokens();
+  let reserveTokens;
+  try {
+    reserveTokens = await poolDataProvider.getAllReservesTokens();
+    console.log(`Found ${reserveTokens.length} reserve tokens`);
+  } catch (error) {
+    console.error(
+      `Failed to get reserve tokens for chain ${aaveChain.chainId}:`,
+      error,
+    );
+    throw error;
+  }
 
   const allReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 2;
@@ -175,8 +190,8 @@ export async function fetchAllReservesData(
 
               if (!tokenData) {
                 tokenData = {
-                  id: token.tokenAddress,
-                  address: token.tokenAddress,
+                  id: token.tokenAddress.toLowerCase(),
+                  address: token.tokenAddress.toLowerCase(),
                   name: tokenName,
                   ticker: tokenSymbol,
                   icon: "unknown.png",
@@ -543,7 +558,13 @@ export async function fetchUserWalletBalances(
             provider,
           );
 
-          const walletBalance = await tokenContract.balanceOf(userAddress);
+          const walletBalance = await Promise.race([
+            tokenContract.balanceOf(userAddress),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Balance call timeout")), 5000),
+            ),
+          ]);
+
           const formattedBalance = ethers.formatUnits(
             walletBalance,
             reserve.asset.decimals,
@@ -583,8 +604,28 @@ export async function fetchUserWalletBalances(
         }
       });
 
-      const batchResults = await Promise.all(batchPromises);
-      updatedReserves.push(...batchResults);
+      const batchResults = await Promise.allSettled(batchPromises);
+
+      batchResults.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          updatedReserves.push(result.value);
+        } else {
+          // Use original reserve with zero balance for failed calls
+          const originalReserve = batch[index];
+          console.error(
+            `Failed to fetch balance for ${originalReserve.asset.ticker}:`,
+            result.reason,
+          );
+          updatedReserves.push({
+            ...originalReserve,
+            asset: {
+              ...originalReserve.asset,
+              userBalance: "0",
+              userBalanceUsd: "0.00",
+            },
+          });
+        }
+      });
 
       // Delay between batches
       if (i + BATCH_SIZE < reservesData.length) {
