@@ -86,6 +86,10 @@ const BorrowLendComponent: React.FC = () => {
       return;
     }
 
+    if (!isWalletConnected) {
+      return;
+    }
+
     if (lastChainId === aaveChain.chainId && allReserves.length > 0) {
       return;
     }

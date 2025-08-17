@@ -21,7 +21,11 @@ export const useAaveDataLoader = () => {
   const { getEvmSigner } = useReownWalletProviderAndSigner();
 
   const fetchOraclePrices = useCallback(
-    async (reserves: AaveReserveData[], chainId: number) => {
+    async (
+      reserves: AaveReserveData[],
+      chainId: number,
+      hasConnectedWallet: boolean = true,
+    ) => {
       try {
         const priceMapFromTokens: Record<string, number> = {};
         reserves.forEach((reserve) => {
@@ -34,11 +38,15 @@ export const useAaveDataLoader = () => {
             if (!isNaN(price) && price > 0) {
               const normalizedAddress = reserve.asset.address.toLowerCase();
               priceMapFromTokens[normalizedAddress] = price;
-              // Also store with original casing for compatibility
               priceMapFromTokens[reserve.asset.address] = price;
             }
           }
         });
+
+        // If no wallet is connected, return the token prices without trying to get oracle prices
+        if (!hasConnectedWallet) {
+          return priceMapFromTokens;
+        }
 
         try {
           const signer = await getEvmSigner();
@@ -85,7 +93,6 @@ export const useAaveDataLoader = () => {
 
                 if (!isNaN(price) && price > 0) {
                   priceMap[normalizedAddress] = price;
-                  // Also store with original casing for compatibility
                   priceMap[reserve.asset.address] = price;
                 } else {
                   const fallbackPrice = priceMapFromTokens[normalizedAddress];
@@ -204,6 +211,7 @@ export const useAaveDataLoader = () => {
         const prices = await fetchOraclePrices(
           uniqueReserves,
           aaveChain.chainId,
+          hasConnectedWallet,
         );
 
         const { userSupplyPositions, userBorrowPositions } =

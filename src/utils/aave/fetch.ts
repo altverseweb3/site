@@ -244,39 +244,26 @@ export async function fetchAllReservesData(
                 liquidationPenalty:
                   ((liquidationBonusBps - 10000) / 100).toFixed(2) + "%",
               };
-            } catch (error) {
-              console.error(
-                `Skipping ${token.symbol}:`,
-                error instanceof Error ? error.message : String(error),
-              );
+            } catch {
               return null;
             }
           },
         );
 
-        const batchResults = await Promise.all(batchPromises);
+        const batchResults = await Promise.allSettled(batchPromises);
 
         for (const result of batchResults) {
-          if (result !== null) {
-            allReserves.push(result);
+          if (result.status === "fulfilled" && result.value !== null) {
+            allReserves.push(result.value);
           }
         }
 
-        break; // Success
-      } catch (error) {
-        console.error(error);
+        break;
+      } catch {
         retries++;
         if (retries >= MAX_RETRIES) {
-          console.error(
-            `Failed to process batch after ${MAX_RETRIES} retries:`,
-            error,
-          );
           break;
         }
-
-        console.error(
-          `Batch failed, retrying in ${currentDelay}ms... (attempt ${retries}/${MAX_RETRIES})`,
-        );
         await delay(currentDelay);
         currentDelay *= 2;
       }
@@ -567,12 +554,7 @@ export async function fetchUserWalletBalances(
               userBalanceUsd: balanceUSD,
             },
           };
-        } catch (error) {
-          console.error(
-            `Error fetching wallet balance for ${reserve.asset.ticker}:`,
-            error,
-          );
-          // Return reserve with zero balance on error
+        } catch {
           return {
             ...reserve,
             asset: {
