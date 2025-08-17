@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import MetricsCard from "@/components/ui/lending/SupplyBorrowMetricsCard";
 import SupplyBorrowToggle from "@/components/ui/lending/SupplyBorrowToggle";
 import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
-import { useAaveChain, useIsWalletTypeConnected } from "@/store/web3Store";
-import useWeb3Store from "@/store/web3Store";
+import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { getReserveMetrics } from "@/utils/aave/fetch";
 
@@ -18,7 +17,6 @@ import {
   calculateUserSupplyPositionsUSD,
   calculateUserBorrowPositionsUSD,
 } from "@/utils/aave/utils";
-import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import {
   AaveReserveData,
   UserBorrowPosition,
@@ -30,117 +28,24 @@ interface SupplyBorrowMetricsHeadersProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   chainPicker?: React.ReactNode;
-  onDataUpdate?: (data: {
-    userSupplyPositions: UserPosition[];
-    userBorrowPositions: UserBorrowPosition[];
-    allReserves: AaveReserveData[];
-    oraclePrices: Record<string, number>;
-  }) => void;
-  refreshTrigger?: number;
+  userSupplyPositions?: UserPosition[];
+  userBorrowPositions?: UserBorrowPosition[];
+  allReserves?: AaveReserveData[];
+  oraclePrices?: Record<string, number>;
+  isLoading?: boolean;
 }
 
 const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   activeTab,
   onTabChange,
   chainPicker,
-  onDataUpdate,
-  refreshTrigger,
+  userSupplyPositions = [],
+  userBorrowPositions = [],
+  allReserves = [],
+  oraclePrices = {},
+  isLoading = false,
 }) => {
-  const aaveChain = useAaveChain();
-  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
-  const chainTokens = getTokensForChain(aaveChain.chainId);
   const hasConnectedWallet = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-
-  const [userSupplyPositions, setUserSupplyPositions] = useState<
-    UserPosition[]
-  >([]);
-  const [userBorrowPositions, setUserBorrowPositions] = useState<
-    UserBorrowPosition[]
-  >([]);
-  const [loading, setLoading] = useState(false);
-  const [lastChainId, setLastChainId] = useState<number | null>(null);
-
-  const { loadAaveData } = useAaveDataLoader();
-
-  const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
-  const [oraclePrices, setOraclePrices] = useState<Record<string, number>>({});
-
-  const loadAaveDataCallback = useCallback(async () => {
-    if (loading) {
-      return;
-    }
-
-    if (lastChainId === aaveChain.chainId && allReserves.length > 0) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const result = await loadAaveData({
-        aaveChain,
-        chainTokens,
-        hasConnectedWallet,
-        loading,
-        lastChainId,
-        allReservesLength: allReserves.length,
-      });
-
-      if (result) {
-        setLastChainId(aaveChain.chainId);
-        setAllReserves(result.allReserves);
-        setOraclePrices(result.oraclePrices);
-        setUserSupplyPositions(result.userSupplyPositions);
-        setUserBorrowPositions(result.userBorrowPositions);
-
-        // Pass data up to parent
-        if (onDataUpdate) {
-          onDataUpdate({
-            userSupplyPositions: result.userSupplyPositions,
-            userBorrowPositions: result.userBorrowPositions,
-            allReserves: result.allReserves,
-            oraclePrices: result.oraclePrices,
-          });
-        }
-      }
-    } catch (err) {
-      console.error("Error loading Aave data:", err);
-      setUserSupplyPositions([]);
-      setUserBorrowPositions([]);
-      setAllReserves([]);
-      setOraclePrices({});
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    loading,
-    lastChainId,
-    allReserves.length,
-    loadAaveData,
-    aaveChain,
-    chainTokens,
-    hasConnectedWallet,
-    onDataUpdate,
-  ]);
-
-  useEffect(() => {
-    loadAaveDataCallback();
-  }, [loadAaveDataCallback]);
-
-  // Handle refresh trigger
-  useEffect(() => {
-    if (refreshTrigger && refreshTrigger > 0) {
-      loadAaveDataCallback();
-    }
-  }, [refreshTrigger, loadAaveDataCallback]);
-
-  useEffect(() => {
-    if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
-      setUserSupplyPositions([]);
-      setUserBorrowPositions([]);
-      setAllReserves([]);
-      setOraclePrices({});
-    }
-  }, [aaveChain.chainId, lastChainId]);
 
   const userSupplyPositionsUSD = calculateUserSupplyPositionsUSD(
     userSupplyPositions,
@@ -153,7 +58,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
   );
 
   const userMetrics =
-    hasConnectedWallet && !loading
+    hasConnectedWallet && !isLoading
       ? calculateUserMetrics(userSupplyPositionsUSD, userBorrowPositionsUSD)
       : {
           netWorth: 0,
@@ -167,7 +72,7 @@ const SupplyBorrowMetricsHeaders: React.FC<SupplyBorrowMetricsHeadersProps> = ({
         };
 
   const getMarketMetrics = () => {
-    if (loading || !hasConnectedWallet || allReserves.length === 0) {
+    if (isLoading || !hasConnectedWallet || allReserves.length === 0) {
       return {
         marketSize: null,
         available: null,

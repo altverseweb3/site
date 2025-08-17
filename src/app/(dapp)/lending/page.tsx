@@ -17,6 +17,7 @@ import { WalletType } from "@/types/web3";
 import { chainList, getChainById } from "@/config/chains";
 import { isChainSupported } from "@/config/aave";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
+import { useAaveDataLoader } from "@/utils/aave/dataLoader";
 import { calculateUserMetrics } from "@/utils/aave/metricsCalculations";
 import {
   UserPosition,
@@ -35,12 +36,17 @@ const BorrowLendComponent: React.FC = () => {
   >([]);
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
   const [isLoadingPositions, setIsLoadingPositions] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
   const aaveChain = useAaveChain();
   const setAaveChain = useSetAaveChain();
+  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
+  const chainTokens = getTokensForChain(aaveChain.chainId);
+
+  const { loadAaveData } = useAaveDataLoader();
+  const [loading, setLoading] = useState(false);
+  const [lastChainId, setLastChainId] = useState<number | null>(null);
 
   const aaveLendingSupportedChains = chainList.filter((chain) =>
     isChainSupported(chain.chainId),
@@ -75,28 +81,72 @@ const BorrowLendComponent: React.FC = () => {
     alignWalletWithPersistedChain();
   }, [isWalletConnected, aaveChain, switchToChain]);
 
-  // Handle data updates from metrics header
-  const handleDataUpdate = useCallback(
-    (data: {
-      userSupplyPositions: UserPosition[];
-      userBorrowPositions: UserBorrowPosition[];
-      allReserves: AaveReserveData[];
-      oraclePrices: Record<string, number>;
-    }) => {
-      setUserSupplyPositions(data.userSupplyPositions);
-      setUserBorrowPositions(data.userBorrowPositions);
-      setAllReserves(data.allReserves);
-      setOraclePrices(data.oraclePrices);
+  const loadAaveDataCallback = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
+    if (lastChainId === aaveChain.chainId && allReserves.length > 0) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setIsLoadingPositions(true);
+      const result = await loadAaveData({
+        aaveChain,
+        chainTokens,
+        hasConnectedWallet: isWalletConnected,
+        loading,
+        lastChainId,
+        allReservesLength: allReserves.length,
+      });
+
+      if (result) {
+        setLastChainId(aaveChain.chainId);
+        setAllReserves(result.allReserves);
+        setOraclePrices(result.oraclePrices);
+        setUserSupplyPositions(result.userSupplyPositions);
+        setUserBorrowPositions(result.userBorrowPositions);
+      }
+    } catch (err) {
+      console.error("Error loading Aave data:", err);
+      setUserSupplyPositions([]);
+      setUserBorrowPositions([]);
+      setAllReserves([]);
+      setOraclePrices({});
+    } finally {
+      setLoading(false);
       setIsLoadingPositions(false);
-    },
-    [],
-  );
+    }
+  }, [
+    loading,
+    lastChainId,
+    allReserves.length,
+    loadAaveData,
+    aaveChain,
+    chainTokens,
+    isWalletConnected,
+  ]);
+
+  useEffect(() => {
+    loadAaveDataCallback();
+  }, [loadAaveDataCallback]);
+
+  useEffect(() => {
+    if (lastChainId !== null && lastChainId !== aaveChain.chainId) {
+      setUserSupplyPositions([]);
+      setUserBorrowPositions([]);
+      setAllReserves([]);
+      setOraclePrices({});
+    }
+  }, [aaveChain.chainId, lastChainId]);
 
   // Manual refresh function for refresh buttons
   const loadAaveUserData = useCallback(async () => {
     setIsLoadingPositions(true);
-    setRefreshTrigger((prev) => prev + 1);
-  }, []);
+    await loadAaveDataCallback();
+  }, [loadAaveDataCallback]);
 
   // Calculate user metrics from positions
   const userMetrics = isWalletConnected
@@ -140,8 +190,11 @@ const BorrowLendComponent: React.FC = () => {
                 size="md"
               />
             }
-            onDataUpdate={handleDataUpdate}
-            refreshTrigger={refreshTrigger}
+            userSupplyPositions={userSupplyPositions}
+            userBorrowPositions={userBorrowPositions}
+            allReserves={allReserves}
+            oraclePrices={oraclePrices}
+            isLoading={isLoadingPositions}
           />
           {activeTab === "supply" ? (
             <SupplyComponent
