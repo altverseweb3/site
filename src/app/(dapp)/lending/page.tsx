@@ -5,7 +5,7 @@ import SupplyBorrowMetricsHeaders from "@/components/ui/lending/SupplyBorrowMetr
 import SupplyComponent from "@/components/ui/lending/SupplyComponent";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import ChainPicker from "@/components/ui/ChainPicker";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   useSetActiveSwapSection,
   useIsWalletTypeConnected,
@@ -35,6 +35,7 @@ const BorrowLendComponent: React.FC = () => {
     UserBorrowPosition[]
   >([]);
   const [allReserves, setAllReserves] = useState<AaveReserveData[]>([]);
+  const [isLoadingPositions, setIsLoadingPositions] = useState(false);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
@@ -79,48 +80,45 @@ const BorrowLendComponent: React.FC = () => {
   }, [isWalletConnected, aaveChain, switchToChain]);
 
   // Load oracle prices and user positions for all components to use
-  useEffect(() => {
-    const loadAaveUserData = async () => {
-      if (chainTokens.length > 0) {
-        try {
-          const result = await loadAaveData({
-            aaveChain,
-            chainTokens,
-            hasConnectedWallet: isWalletConnected,
-            loading: false,
-            lastChainId: null,
-            allReservesLength: 0,
-          });
+  const loadAaveUserData = useCallback(async () => {
+    if (chainTokens.length > 0) {
+      setIsLoadingPositions(true);
+      try {
+        const result = await loadAaveData({
+          aaveChain,
+          chainTokens,
+          hasConnectedWallet: isWalletConnected,
+          loading: false,
+          lastChainId: null,
+          allReservesLength: 0,
+        });
 
-          if (result?.oraclePrices) {
-            setOraclePrices(result.oraclePrices);
-          }
-
-          if (result?.userSupplyPositions) {
-            setUserSupplyPositions(result.userSupplyPositions);
-          }
-
-          if (result?.userBorrowPositions) {
-            setUserBorrowPositions(result.userBorrowPositions);
-          }
-
-          if (result?.allReserves) {
-            setAllReserves(result.allReserves);
-          }
-        } catch (error) {
-          console.error("Error loading Aave user data for page:", error);
+        if (result?.oraclePrices) {
+          setOraclePrices(result.oraclePrices);
         }
-      }
-    };
 
+        if (result?.userSupplyPositions) {
+          setUserSupplyPositions(result.userSupplyPositions);
+        }
+
+        if (result?.userBorrowPositions) {
+          setUserBorrowPositions(result.userBorrowPositions);
+        }
+
+        if (result?.allReserves) {
+          setAllReserves(result.allReserves);
+        }
+      } catch (error) {
+        console.error("Error loading Aave user data for page:", error);
+      } finally {
+        setIsLoadingPositions(false);
+      }
+    }
+  }, [aaveChain, chainTokens, isWalletConnected, loadAaveData]);
+
+  useEffect(() => {
     loadAaveUserData();
-  }, [
-    chainTokens.length,
-    isWalletConnected,
-    loadAaveData,
-    aaveChain,
-    chainTokens,
-  ]);
+  }, [loadAaveUserData]);
 
   // Calculate user metrics from positions
   const userMetrics = isWalletConnected
@@ -170,6 +168,9 @@ const BorrowLendComponent: React.FC = () => {
               oraclePrices={oraclePrices}
               userSupplyPositions={userSupplyPositions}
               userBorrowPositions={userBorrowPositions}
+              allReserves={allReserves}
+              isLoading={isLoadingPositions}
+              onRefresh={loadAaveUserData}
             />
           ) : (
             <BorrowComponent
@@ -182,6 +183,8 @@ const BorrowLendComponent: React.FC = () => {
               userSupplyPositions={userSupplyPositions}
               userBorrowPositions={userBorrowPositions}
               allReserves={allReserves}
+              isLoadingPositions={isLoadingPositions}
+              onRefresh={loadAaveUserData}
             />
           )}
           <PoweredByAave />

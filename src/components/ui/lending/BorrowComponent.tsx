@@ -14,6 +14,8 @@ import {
   UserPosition,
 } from "@/types/aave";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
+import PositionsLoadingComponent from "@/components/ui/lending/PositionsLoadingComponent";
+import PositionsEmptyStateComponent from "@/components/ui/lending/PositionsEmptyStateComponent";
 
 interface BorrowComponentProps {
   oraclePrices?: Record<string, number>;
@@ -25,6 +27,8 @@ interface BorrowComponentProps {
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
   allReserves?: AaveReserveData[];
+  isLoadingPositions?: boolean;
+  onRefresh?: () => void;
 }
 
 const BorrowComponent: React.FC<BorrowComponentProps> = ({
@@ -37,6 +41,8 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
   userSupplyPositions = [],
   userBorrowPositions = [],
   allReserves = [],
+  isLoadingPositions = false,
+  onRefresh,
 }) => {
   // Filter allReserves to get borrow assets with wallet balances
   const borrowableReserves = useMemo(() => {
@@ -47,48 +53,16 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
     );
   }, [allReserves]);
 
-  // Use userBorrowPositions from props (centralized from parent)
-  const localUserBorrowPositions = userBorrowPositions;
-
-  // Calculate available to borrow for each reserve based on user's collateral
-  const calculateAvailableToBorrow = (
-    reserve: AaveReserveData,
-  ): { amount: string; amountUSD: string } => {
-    // This is a simplified calculation
-    // In reality, you'd need to:
-    // 1. Get user's total collateral value and available borrowing power
-    // 2. Check reserve liquidity (availableLiquidity)
-    // 3. Check borrow caps
-    // 4. Apply LTV ratios
-
-    // For now, use the available liquidity as a base
-    const reserveLiquidity = parseFloat(
-      reserve.formattedAvailableLiquidity || "0",
-    );
-
-    // Mock available borrowing based on liquidity (user would need collateral)
-    const mockAvailable = Math.min(reserveLiquidity * 0.1, 1000).toFixed(2); // 10% of liquidity, max 1000
-    const mockAvailableUSD = (parseFloat(mockAvailable) * 1).toFixed(2);
-
-    return {
-      amount: mockAvailable,
-      amountUSD: mockAvailableUSD,
-    };
-  };
-
   const handleBorrow = (asset: AaveReserveData) => {
     console.log("Borrow asset:", asset);
-    // TODO: Implement borrow functionality
   };
 
   const handleDetails = (asset: AaveReserveData) => {
     console.log("View asset details:", asset);
-    // TODO: Implement details modal
   };
 
   const hasData = borrowableReserves.length > 0;
-  const hasBorrowPositions = localUserBorrowPositions.length > 0;
-  const showEmptyState = !hasData;
+  const hasBorrowPositions = userBorrowPositions.length > 0;
 
   return (
     <div className="w-full space-y-4">
@@ -103,8 +77,20 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {hasBorrowPositions &&
-                localUserBorrowPositions.map((borrowPosition) => {
+              {isLoadingPositions && (
+                <PositionsLoadingComponent message="Loading your positions..." />
+              )}
+
+              {!isLoadingPositions && !hasBorrowPositions && (
+                <PositionsEmptyStateComponent
+                  title="No borrow positions found"
+                  subtitle="Borrow assets to see your positions here"
+                />
+              )}
+
+              {!isLoadingPositions &&
+                hasBorrowPositions &&
+                userBorrowPositions.map((borrowPosition) => {
                   // Find wallet balance from allReserves
                   const matchingReserve = allReserves.find(
                     (reserve) =>
@@ -149,17 +135,6 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
                     />
                   );
                 })}
-
-              {!hasBorrowPositions && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrow positions found
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Borrow assets to see your positions here
-                  </div>
-                </div>
-              )}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>
@@ -175,36 +150,37 @@ const BorrowComponent: React.FC<BorrowComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {showEmptyState && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No borrowable assets found
-                  </div>
-                </div>
+              {isLoadingPositions && (
+                <PositionsLoadingComponent message="Loading available assets..." />
               )}
 
-              {hasData &&
-                borrowableReserves.map((reserve) => {
-                  const borrowData = calculateAvailableToBorrow(reserve);
-                  return (
-                    <BorrowUnownedCard
-                      key={`${reserve.asset.address}-${reserve.asset.chainId}`}
-                      currentAsset={reserve}
-                      availableToBorrow={borrowData.amount}
-                      availableToBorrowUSD={borrowData.amountUSD}
-                      onBorrow={handleBorrow}
-                      onDetails={handleDetails}
-                      healthFactor={healthFactor.toString()}
-                      totalCollateralUSD={totalCollateralUSD}
-                      totalDebtUSD={totalDebtUSD}
-                      currentLTV={currentLTV}
-                      liquidationThreshold={liquidationThreshold}
-                      oraclePrices={oraclePrices}
-                      userSupplyPositions={userSupplyPositions}
-                      userBorrowPositions={userBorrowPositions}
-                    />
-                  );
-                })}
+              {!isLoadingPositions && !hasData && (
+                <PositionsEmptyStateComponent
+                  title="No borrowable assets found"
+                  showRefreshButton={true}
+                  onRefresh={onRefresh}
+                  refreshText="Refresh"
+                />
+              )}
+
+              {!isLoadingPositions &&
+                hasData &&
+                borrowableReserves.map((reserve) => (
+                  <BorrowUnownedCard
+                    key={`${reserve.asset.address}-${reserve.asset.chainId}`}
+                    currentAsset={reserve}
+                    onBorrow={handleBorrow}
+                    onDetails={handleDetails}
+                    healthFactor={healthFactor.toString()}
+                    totalCollateralUSD={totalCollateralUSD}
+                    totalDebtUSD={totalDebtUSD}
+                    currentLTV={currentLTV}
+                    liquidationThreshold={liquidationThreshold}
+                    oraclePrices={oraclePrices}
+                    userSupplyPositions={userSupplyPositions}
+                    userBorrowPositions={userBorrowPositions}
+                  />
+                ))}
             </ScrollBoxSupplyBorrowAssets>
           </AccordionContent>
         </AccordionItem>

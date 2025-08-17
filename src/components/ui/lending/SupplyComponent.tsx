@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React from "react";
 import {
   Accordion,
   AccordionContent,
@@ -10,184 +10,31 @@ import SupplyYourPositionsHeader from "@/components/ui/lending/SupplyYourPositio
 import SupplyUnownedCard from "@/components/ui/lending/SupplyUnownedCard";
 import SupplyAvailablePositionsHeader from "@/components/ui/lending/SupplyAvailablePositionsHeader";
 import { ScrollBoxSupplyBorrowAssets } from "@/components/ui/lending/ScrollBoxSupplyBorrowAssets";
-import useWeb3Store, {
-  useAaveChain,
-  useIsWalletTypeConnected,
-} from "@/store/web3Store";
-import { WalletType } from "@/types/web3";
 import {
   AaveReserveData,
   UserPosition,
   UserBorrowPosition,
 } from "@/types/aave";
-import { useAaveFetch } from "@/utils/aave/fetch";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
+import PositionsLoadingComponent from "@/components/ui/lending/PositionsLoadingComponent";
+import PositionsEmptyStateComponent from "@/components/ui/lending/PositionsEmptyStateComponent";
 
 interface SupplyComponentProps {
   oraclePrices?: Record<string, number>;
   userSupplyPositions?: UserPosition[];
   userBorrowPositions?: UserBorrowPosition[];
+  allReserves?: AaveReserveData[];
+  isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
 const SupplyComponent: React.FC<SupplyComponentProps> = ({
   oraclePrices = {},
-  userSupplyPositions: propUserSupplyPositions = [],
+  userSupplyPositions = [],
   userBorrowPositions = [],
+  allReserves = [],
+  isLoading = false,
+  onRefresh,
 }) => {
-  const [aaveReserves, setAaveReserves] = useState<AaveReserveData[]>([]);
-  const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [tokensPreloaded, setTokensPreloaded] = useState(false);
-  const [positionsLoading, setPositionsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChainId, setLastChainId] = useState<number | null>(null);
-
-  const aaveChain = useAaveChain();
-  const getTokensForChain = useWeb3Store((state) => state.getTokensForChain);
-  const tokensLoading = useWeb3Store((state) => state.tokensLoading);
-  const tokenCount = useWeb3Store((state) => state.allTokensList.length);
-  const loadTokens = useWeb3Store((state) => state.loadTokens);
-
-  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-  const { isEvmConnected } = useWalletConnection();
-
-  const chainTokens = useMemo(() => {
-    return getTokensForChain(aaveChain.chainId);
-  }, [getTokensForChain, aaveChain.chainId]);
-
-  const { fetchUserPositions, fetchAllReservesData, fetchUserWalletBalances } =
-    useAaveFetch();
-
-  useEffect(() => {
-    if (tokenCount === 0 && !tokensLoading && !tokensPreloaded) {
-      setTokensPreloaded(true);
-      loadTokens();
-    }
-  }, [loadTokens, tokensLoading, tokenCount, tokensPreloaded]);
-
-  // Move loadUserPositions to useCallback to fix dependency warning
-  const loadUserPositions = useCallback(
-    async (reserves: AaveReserveData[]) => {
-      try {
-        setPositionsLoading(true);
-
-        const positions = await fetchUserPositions(reserves);
-
-        setUserPositions(positions);
-      } catch (err) {
-        console.error("Error loading user positions:", err);
-        // Don't set error state for positions - just log and continue
-        setUserPositions([]);
-      } finally {
-        setPositionsLoading(false);
-      }
-    },
-    [fetchUserPositions],
-  );
-
-  const loadAaveReserves = useCallback(
-    async (force = false) => {
-      // Skip if already loading
-      if (loading && !force) return;
-
-      if (tokensLoading) return;
-
-      if (tokenCount === 0) return;
-
-      if (chainTokens.length === 0) {
-        console.error(
-          `No tokens available for chain ${aaveChain.chainId}, skipping...`,
-        );
-        return;
-      }
-
-      // Skip if same chain and we have data (unless forced)
-      if (
-        !force &&
-        lastChainId === aaveChain.chainId &&
-        aaveReserves.length > 0
-      )
-        return;
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const reservesData = await fetchAllReservesData(aaveChain, chainTokens);
-
-        console.log(
-          `Successfully loaded ${reservesData.supplyAssets.length} Aave reserves`,
-        );
-
-        // Fetch wallet balances if wallet is connected
-        let reservesWithBalances = reservesData.supplyAssets;
-        if (isEvmConnected) {
-          try {
-            console.log("Fetching wallet balances...");
-
-            // Add wallet balances to reserves data
-            reservesWithBalances = await fetchUserWalletBalances(
-              reservesData.supplyAssets,
-              oraclePrices,
-            );
-            console.log("Wallet balances fetched successfully");
-          } catch (error) {
-            console.error("Error fetching wallet balances:", error);
-            // Continue with original reserves if wallet balance fetch fails
-          }
-        }
-
-        setAaveReserves(reservesWithBalances);
-        setLastChainId(aaveChain.chainId);
-
-        // Now fetch user positions (supplied assets)
-        await loadUserPositions(reservesWithBalances);
-      } catch (err) {
-        console.error("Error loading Aave reserves:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load Aave reserves",
-        );
-        // Clear data on error
-        setAaveReserves([]);
-        setUserPositions([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
-      loading,
-      tokensLoading,
-      tokenCount,
-      lastChainId,
-      aaveChain,
-      chainTokens,
-      aaveReserves.length,
-      fetchAllReservesData,
-      loadUserPositions,
-      isEvmConnected,
-      fetchUserWalletBalances,
-      oraclePrices,
-    ],
-  );
-
-  useEffect(() => {
-    if (
-      isWalletConnected &&
-      !tokensLoading &&
-      tokenCount > 0 &&
-      chainTokens.length > 0
-    ) {
-      loadAaveReserves();
-    }
-  }, [
-    isWalletConnected,
-    tokensLoading,
-    tokenCount,
-    chainTokens.length,
-    loadAaveReserves,
-    aaveChain.chainId,
-  ]);
-
   const handleSupply = (asset: AaveReserveData) => {
     console.log("Supply asset:", asset);
   };
@@ -196,14 +43,8 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
     console.log("Withdraw asset:", asset);
   };
 
-  const handleRefresh = () => {
-    loadAaveReserves(true); // Force refresh
-  };
-
-  const hasData = aaveReserves.length > 0;
-  const hasUserPositions = userPositions.length > 0;
-  const showEmptyState = !loading && !error && !hasData;
-  const isLoadingPositions = loading || positionsLoading;
+  const hasData = allReserves.length > 0;
+  const hasUserPositions = userSupplyPositions.length > 0;
 
   return (
     <div className="w-full space-y-4">
@@ -217,36 +58,29 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {isLoadingPositions && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading your positions...</div>
-                </div>
+              {isLoading && (
+                <PositionsLoadingComponent message="Loading your positions..." />
               )}
 
-              {!isLoadingPositions && !hasUserPositions && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No supply positions found
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Supply assets to see your positions here
-                  </div>
-                </div>
+              {!isLoading && !hasUserPositions && (
+                <PositionsEmptyStateComponent
+                  title="No supply positions found"
+                  subtitle="Supply assets to see your positions here"
+                />
               )}
 
-              {!isLoadingPositions &&
+              {!isLoading &&
                 hasUserPositions &&
-                userPositions.map((position, index) => (
+                userSupplyPositions.map((position, index) => (
                   <SupplyOwnedCard
-                    key={`${position.asset.asset.address}-${aaveChain.chainId}-${index}`}
+                    key={`${position.asset.asset.address}-${position.asset.asset.chainId}-${index}`}
                     currentAsset={position.asset}
                     suppliedBalance={position.suppliedBalance}
                     suppliedBalanceUSD={position.suppliedBalanceUSD}
                     isCollateral={position.isCollateral}
                     onWithdraw={handleWithdraw}
                     oraclePrices={oraclePrices}
-                    userSupplyPositions={propUserSupplyPositions}
+                    userSupplyPositions={userSupplyPositions}
                     userBorrowPositions={userBorrowPositions}
                   />
                 ))}
@@ -265,55 +99,30 @@ const SupplyComponent: React.FC<SupplyComponentProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <ScrollBoxSupplyBorrowAssets>
-              {loading && (
-                <div className="text-white text-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div>Loading Aave reserves...</div>
-                </div>
+              {isLoading && (
+                <PositionsLoadingComponent message="Loading available positions..." />
               )}
 
-              {error && (
-                <div className="text-center py-8">
-                  <div className="text-red-400 mb-4">
-                    Failed to load reserves: {error}
-                  </div>
-                  <div className="text-sm text-gray-400 mb-4">
-                    Chain: {aaveChain.name}
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? "Loading..." : "Retry"}
-                  </button>
-                </div>
+              {!isLoading && !hasData && (
+                <PositionsEmptyStateComponent
+                  title="No active reserves found"
+                  showRefreshButton={true}
+                  onRefresh={onRefresh}
+                  refreshText="Refresh"
+                />
               )}
 
-              {showEmptyState && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    No active reserves found
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              )}
-
-              {hasData &&
-                aaveReserves.map((reserve) => (
+              {!isLoading &&
+                hasData &&
+                allReserves.map((reserve) => (
                   <SupplyUnownedCard
-                    key={`${reserve.asset.address}-${aaveChain.chainId}`}
+                    key={`${reserve.asset.address}-${reserve.asset.chainId}`}
                     currentAsset={reserve}
                     userBalance={reserve.asset.userBalance || "0"}
                     dollarAmount={reserve.asset.userBalanceUsd || "0.00"}
                     onSupply={handleSupply}
                     oraclePrices={oraclePrices}
-                    userSupplyPositions={propUserSupplyPositions}
+                    userSupplyPositions={userSupplyPositions}
                     userBorrowPositions={userBorrowPositions}
                   />
                 ))}
