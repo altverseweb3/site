@@ -191,6 +191,12 @@ export async function fetchAllReservesData(
                   chainId: aaveChain.chainId,
                   stringChainId: aaveChain.id,
                 };
+              } else {
+                // Ensure existing token data also has normalized address
+                tokenData = {
+                  ...tokenData,
+                  address: tokenData.address.toLowerCase(),
+                };
               }
 
               return {
@@ -737,8 +743,6 @@ export const fetchExtendedAssetDetails = async (
   }
 
   if (provider) {
-    const network = await provider.getNetwork();
-    const chainId = Number(network.chainId);
     const market = getAaveMarket(chainId);
 
     if (!market?.AAVE_PROTOCOL_DATA_PROVIDER) {

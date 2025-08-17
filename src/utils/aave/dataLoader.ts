@@ -32,7 +32,7 @@ export const useAaveDataLoader = () => {
                 ? parseFloat(tokenPriceUsd)
                 : tokenPriceUsd;
             if (!isNaN(price) && price > 0) {
-              priceMapFromTokens[reserve.asset.address.toLowerCase()] = price;
+              priceMapFromTokens[reserve.asset.address] = price;
             }
           }
         });
@@ -80,22 +80,20 @@ export const useAaveDataLoader = () => {
                 const price = parseFloat(ethers.formatUnits(priceInWei, 8));
 
                 if (!isNaN(price) && price > 0) {
-                  priceMap[reserve.asset.address.toLowerCase()] = price;
+                  priceMap[reserve.asset.address] = price;
                 } else {
                   const fallbackPrice =
-                    priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                    priceMapFromTokens[reserve.asset.address];
                   if (fallbackPrice) {
-                    priceMap[reserve.asset.address.toLowerCase()] =
-                      fallbackPrice;
+                    priceMap[reserve.asset.address] = fallbackPrice;
                   }
                 }
               });
             } catch {
               batch.forEach((reserve) => {
-                const fallbackPrice =
-                  priceMapFromTokens[reserve.asset.address.toLowerCase()];
+                const fallbackPrice = priceMapFromTokens[reserve.asset.address];
                 if (fallbackPrice) {
-                  priceMap[reserve.asset.address.toLowerCase()] = fallbackPrice;
+                  priceMap[reserve.asset.address] = fallbackPrice;
                 }
               });
             }

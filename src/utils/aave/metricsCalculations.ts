@@ -300,8 +300,7 @@ export const calculateBorrowingMetrics = (
   // Calculate USD positions using oracle prices
   const userSupplyPositionsUSD = userSupplyPositions.map((position) => {
     const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
+    const oraclePrice = oraclePrices[position.asset.asset.address];
     return {
       ...position,
       suppliedBalanceUSD:
@@ -313,8 +312,7 @@ export const calculateBorrowingMetrics = (
 
   const userBorrowPositionsUSD = userBorrowPositions.map((position) => {
     const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
+    const oraclePrice = oraclePrices[position.asset.asset.address];
     return {
       ...position,
       totalDebtUSD:

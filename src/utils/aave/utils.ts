@@ -7,8 +7,7 @@ export function calculateUserSupplyPositionsUSD(
 ): (UserPosition & { suppliedBalanceUSD: string })[] {
   return userSupplyPositions.map((position) => {
     const suppliedBalance = parseFloat(position.suppliedBalance || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
+    const oraclePrice = oraclePrices[position.asset.asset.address];
     return {
       ...position,
       suppliedBalanceUSD:
@@ -25,8 +24,7 @@ export function calculateUserBorrowPositionsUSD(
 ): (UserBorrowPosition & { totalDebtUSD: string })[] {
   return userBorrowPositions.map((position) => {
     const formattedTotalDebt = parseFloat(position.formattedTotalDebt || "0");
-    const oraclePrice =
-      oraclePrices[position.asset.asset.address.toLowerCase()];
+    const oraclePrice = oraclePrices[position.asset.asset.address];
     return {
       ...position,
       totalDebtUSD:
