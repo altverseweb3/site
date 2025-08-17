@@ -338,7 +338,7 @@ export async function fetchUserPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset.address,
+            reserve.asset.address.toLowerCase(),
             userAddress,
           );
 
@@ -436,7 +436,7 @@ export async function fetchUserBorrowPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset.address,
+            reserve.asset.address.toLowerCase(),
             userAddress,
           );
 
@@ -538,7 +538,7 @@ export async function fetchUserWalletBalances(
         try {
           // Get user's wallet balance for this token
           const tokenContract = new ethers.Contract(
-            reserve.asset.address,
+            reserve.asset.address.toLowerCase(),
             ERC20_ABI,
             provider,
           );
