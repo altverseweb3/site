@@ -313,8 +313,8 @@ export async function fetchUserPositions(
   );
 
   const userPositions: UserPosition[] = [];
-  const BATCH_SIZE = 3;
-  const DELAY = 200;
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
 
   // Process reserves in batches to check user positions
   for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
@@ -411,8 +411,8 @@ export async function fetchUserBorrowPositions(
   );
 
   const userBorrowPositions: UserBorrowPosition[] = [];
-  const BATCH_SIZE = 3;
-  const DELAY = 200;
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
 
   // Process reserves in batches to check user borrow positions
   for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
@@ -513,8 +513,8 @@ export async function fetchUserWalletBalances(
   }
 
   const updatedReserves: AaveReserveData[] = [];
-  const BATCH_SIZE = 3;
-  const DELAY = 200;
+  const BATCH_SIZE = 5;
+  const DELAY = 100;
 
   // Process reserves in batches to get wallet balances
   for (let i = 0; i < reservesData.length; i += BATCH_SIZE) {
