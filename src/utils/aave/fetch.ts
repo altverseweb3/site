@@ -48,13 +48,21 @@ export async function fetchAllReservesData(
 
   const reserveTokens = await poolDataProvider.getAllReservesTokens();
 
+  // Normalize token addresses to lowercase immediately after fetching from aave smart contract
+  const normalizedReserveTokens = reserveTokens.map(
+    (token: { tokenAddress: string; symbol: string }) => ({
+      ...token,
+      tokenAddress: token.tokenAddress.toLowerCase(),
+    }),
+  );
+
   const allReserves: AaveReserveData[] = [];
   const BATCH_SIZE = 2;
   const INITIAL_DELAY = 0;
   const MAX_RETRIES = 3;
 
-  for (let i = 0; i < reserveTokens.length; i += BATCH_SIZE) {
-    const batch = reserveTokens.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < normalizedReserveTokens.length; i += BATCH_SIZE) {
+    const batch = normalizedReserveTokens.slice(i, i + BATCH_SIZE);
     let retries = 0;
     let currentDelay = INITIAL_DELAY;
 
@@ -143,8 +151,7 @@ export async function fetchAllReservesData(
 
               // lookup token, otherwise create Token object from scratch
               let tokenData = chainTokens.find(
-                (t) =>
-                  t.address.toLowerCase() === token.tokenAddress.toLowerCase(),
+                (t) => t.address.toLowerCase() === token.tokenAddress,
               );
               if (tokenData) {
                 tokenName = tokenData.name;
@@ -338,7 +345,7 @@ export async function fetchUserPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset.address.toLowerCase(),
+            reserve.asset.address,
             userAddress,
           );
 
@@ -354,8 +361,7 @@ export async function fetchUserPositions(
             );
 
             // Use oracle price if available
-            const oraclePrice =
-              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const oraclePrice = oraclePrices?.[reserve.asset.address];
             const balanceUSD = oraclePrice
               ? (parseFloat(formattedBalance) * oraclePrice).toFixed(2)
               : "0.00";
@@ -436,7 +442,7 @@ export async function fetchUserBorrowPositions(
         try {
           // Get user reserve data using the ABI function
           const userReserveData = await poolDataProvider.getUserReserveData(
-            reserve.asset.address.toLowerCase(),
+            reserve.asset.address,
             userAddress,
           );
 
@@ -457,8 +463,7 @@ export async function fetchUserBorrowPositions(
             );
 
             // Use oracle price if available
-            const oraclePrice =
-              oraclePrices?.[reserve.asset.address.toLowerCase()];
+            const oraclePrice = oraclePrices?.[reserve.asset.address];
             const debtUSD = oraclePrice
               ? (parseFloat(formattedTotalDebt) * oraclePrice).toFixed(2)
               : "0.00";
@@ -538,7 +543,7 @@ export async function fetchUserWalletBalances(
         try {
           // Get user's wallet balance for this token
           const tokenContract = new ethers.Contract(
-            reserve.asset.address.toLowerCase(),
+            reserve.asset.address,
             ERC20_ABI,
             provider,
           );
@@ -550,8 +555,7 @@ export async function fetchUserWalletBalances(
           );
 
           // Use oracle price if available
-          const oraclePrice =
-            oraclePrices?.[reserve.asset.address.toLowerCase()];
+          const oraclePrice = oraclePrices?.[reserve.asset.address];
           const balanceUSD = oraclePrice
             ? parseFloat(
                 (parseFloat(formattedBalance) * oraclePrice).toPrecision(4),
@@ -721,7 +725,7 @@ export const fetchExtendedAssetDetails = async (
 
   // Use centralized oracle prices if available
   if (oraclePrices) {
-    const cachedPrice = oraclePrices[currentAsset.asset.address.toLowerCase()];
+    const cachedPrice = oraclePrices[currentAsset.asset.address];
     if (cachedPrice !== undefined) {
       oraclePrice = cachedPrice;
       // Successfully using cached price

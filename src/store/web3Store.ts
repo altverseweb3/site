@@ -28,7 +28,10 @@ import { chains } from "@/config/chains";
 import { TokenPrice } from "@/types/web3";
 import { STORE_VERSION } from "@/store/storeVersion";
 
-const createDefaultSwapStateForSection = (sourceChain?: Chain, destinationChain?: Chain): SwapStateForSection => ({
+const createDefaultSwapStateForSection = (
+  sourceChain?: Chain,
+  destinationChain?: Chain,
+): SwapStateForSection => ({
   sourceChain: sourceChain || defaultSourceChain,
   destinationChain: destinationChain || defaultDestinationChain,
   sourceToken: null,
@@ -49,8 +52,14 @@ const useWeb3Store = create<Web3StoreState>()(
       // Initialize with default integrations
       swapIntegrations: {
         swap: createDefaultSwapStateForSection(),
-        earn: createDefaultSwapStateForSection(getChainById('ethereum'), getChainById('ethereum')),
-        lend: createDefaultSwapStateForSection(getChainById('ethereum'), getChainById('ethereum')),
+        earn: createDefaultSwapStateForSection(
+          getChainById("ethereum"),
+          getChainById("ethereum"),
+        ),
+        lend: createDefaultSwapStateForSection(
+          getChainById("ethereum"),
+          getChainById("ethereum"),
+        ),
       },
 
       activeSwapSection: "swap" as SectionKey,
