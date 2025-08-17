@@ -12,6 +12,7 @@
     "postinstall": "chmod +x .husky/pre-push && chmod +x .husky/pre-commit"
   },
   "dependencies": {
+    "@aave/react": "^0.4.0",
     "@bgd-labs/aave-address-book": "^4.22.3",
     "@mayanfinance/swap-sdk": "10.5.0",
     "@mysten/sui": "1.16.2",
