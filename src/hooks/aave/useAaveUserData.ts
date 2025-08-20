@@ -3,9 +3,11 @@ import {
   useUserSupplies,
   useUserBorrows,
   useUserMarketState,
+  useUserTransactionHistory,
   UseUserSuppliesArgs,
   UseUserBorrowsArgs,
   UseUserStateArgs,
+  UseUserTransactionHistoryArgs,
 } from "@aave/react";
 
 /*
@@ -58,6 +60,24 @@ export const useAaveUserMarketState = (args: UseUserStateArgs) => {
     market: args.market,
     user: args.user,
     suspense: true,
+  });
+
+  return { data };
+};
+
+/**
+ * Hook to fetch data for user transaction history.
+ * This hook will suspend the component until data is loaded.
+ */
+export const useAaveUserTransactionHistory = (
+  args: UseUserTransactionHistoryArgs,
+) => {
+  const { data } = useUserTransactionHistory({
+    market: args.market,
+    user: args.user,
+    chainId: args.chainId,
+    orderBy: args.orderBy,
+    pageSize: args.pageSize,
   });
 
   return { data };
