@@ -10,6 +10,23 @@ import type {
   Currency,
   TokenAmount,
   Chain,
+  EmodeMarketCategory,
+  MarketUserState,
+  EmodeReserveInfo,
+  ReserveSupplyInfo,
+  ReserveBorrowInfo,
+  ReserveIsolationModeConfig,
+  ReserveUserState,
+  ReserveIncentive,
+  MeritSupplyIncentive,
+  MeritBorrowIncentive,
+  MeritBorrowAndSupplyIncentiveCondition,
+  AaveSupplyIncentive,
+  AaveBorrowIncentive,
+  PercentValue,
+  MarketInfo,
+  MarketUserReserveSupplyPosition,
+  MarketUserReserveBorrowPosition,
 } from "@aave/react";
 
 /**
@@ -29,6 +46,23 @@ export type {
   Currency,
   TokenAmount,
   Chain,
+  EmodeMarketCategory,
+  MarketUserState,
+  EmodeReserveInfo,
+  ReserveSupplyInfo,
+  ReserveBorrowInfo,
+  ReserveIsolationModeConfig,
+  ReserveUserState,
+  ReserveIncentive,
+  MeritSupplyIncentive,
+  MeritBorrowIncentive,
+  MeritBorrowAndSupplyIncentiveCondition,
+  AaveSupplyIncentive,
+  AaveBorrowIncentive,
+  PercentValue,
+  MarketInfo,
+  MarketUserReserveSupplyPosition,
+  MarketUserReserveBorrowPosition,
 };
 
 /**
@@ -115,6 +149,20 @@ export interface LoadingState {
  */
 export interface AaveMarketsResponse extends LoadingState {
   markets?: Market[];
+}
+
+/**
+ * Emode market category with enhanced loading state
+ */
+export interface AaveEmodeMarketCategoryResponse extends LoadingState {
+  category?: EmodeMarketCategory;
+}
+
+/**
+ * Market user state response with enhanced loading state
+ */
+export interface AaveMarketUserStateResponse extends LoadingState {
+  userState?: MarketUserState;
 }
 
 /**
