@@ -258,31 +258,6 @@ export async function fetchAllVaultsAPY(): Promise<VaultApyData[]> {
   return Promise.all(promises);
 }
 
-/**
- * React hook for etherFi APY functions
- */
-export function useEtherFiAPY() {
-  return {
-    fetchVaultAPY: (vaultId: number) => fetchVaultAPY(vaultId),
-    fetchAllVaultsAPY: () => fetchAllVaultsAPY(),
-    fetchFromSevenSeasAPI: (vaultId: number) => {
-      const vault = ETHERFI_VAULTS[vaultId];
-      if (!vault) throw new Error(`Vault ${vaultId} not found`);
-      return fetchFromSevenSeasAPI(vaultId, vault, vault.links.yield);
-    },
-    fetchFromEtherFiAPI: (vaultId: number) => {
-      const vault = ETHERFI_VAULTS[vaultId];
-      if (!vault) throw new Error(`Vault ${vaultId} not found`);
-      return fetchFromEtherFiAPI(vaultId, vault, vault.links.yield);
-    },
-    fetchFromVedaAPI: (vaultId: number) => {
-      const vault = ETHERFI_VAULTS[vaultId];
-      if (!vault) throw new Error(`Vault ${vaultId} not found`);
-      return fetchFromVedaAPI(vaultId, vault, vault.links.yield);
-    },
-  };
-}
-
 // Legacy function names for backward compatibility
 export const queryAllVaultsAPY = fetchAllVaultsAPY;
 export const queryVaultAPY = fetchVaultAPY;

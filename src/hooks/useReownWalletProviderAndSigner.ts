@@ -1,4 +1,4 @@
-// utils/reownEthersUtils.ts
+// hooks/useReownWalletProviderAndSigner.ts
 
 import { useCallback } from "react";
 import { ethers } from "ethers";

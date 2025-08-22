@@ -20,12 +20,12 @@ import {
 } from "@/utils/swap/mayanSwapMethods";
 import { Quote } from "@mayanfinance/swap-sdk";
 import { toast } from "sonner";
-import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
+import { useSwapTracking } from "@/hooks/swap/useSwapTracking";
+import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 import { SwapStatus } from "@/types/web3";
 import { SwapTrackingOptions } from "@/types/web3";
-import { useSwapTracking } from "@/hooks/useSwapTracking";
 import { recordSwap } from "@/utils/swap/swapRecorder";
 import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
 import {
