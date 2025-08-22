@@ -32,7 +32,8 @@ import {
 } from "@/components/ui/Select";
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
-import { useEtherFiInteract } from "@/utils/etherFi/interact";
+import { useEtherFiInteract } from "@/hooks/etherFi/useEtherFiInteract";
+import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
 import {
   useChainSwitch,
   useTokenTransfer,
@@ -54,7 +55,6 @@ import useVaultDepositStore, {
   useActiveVaultDepositProcess,
 } from "@/store/vaultDepositStore";
 import { GasDrop } from "@/components/ui/GasDrop";
-import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import TokenImage from "@/components/ui/TokenImage";
 import {
   queryVaultConversionRate,

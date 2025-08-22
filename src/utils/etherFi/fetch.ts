@@ -1,6 +1,4 @@
 import { ethers } from "ethers";
-import { useCallback } from "react"; // Add this import
-import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { TELLER_PAUSED_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
@@ -205,73 +203,5 @@ export async function getUserVaultBalance(
     balance,
     formatted: ethers.formatUnits(balance, decimals),
     decimals,
-  };
-}
-
-/**
- * React hook for etherFi fetch functions with wallet integration
- */
-export function useEtherFiFetch() {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
-
-  const fetchVaultTVLMemoized = useCallback(
-    async (vaultId: number) => {
-      const signer = await getEvmSigner();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("Signer must have a provider");
-      }
-      return fetchVaultTVL(vaultId, provider);
-    },
-    [getEvmSigner],
-  );
-
-  const checkIfTellerPausedMemoized = useCallback(
-    async (vaultId: number) => {
-      const signer = await getEvmSigner();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("Signer must have a provider");
-      }
-      return checkIfTellerPaused(vaultId, provider);
-    },
-    [getEvmSigner],
-  );
-
-  const getTokenAllowanceMemoized = useCallback(
-    async (tokenSymbol: string, vaultId: number) => {
-      const signer = await getEvmSigner();
-      return getTokenAllowance(tokenSymbol, vaultId, signer);
-    },
-    [getEvmSigner],
-  );
-
-  const getTokenBalanceMemoized = useCallback(
-    async (tokenSymbol: string) => {
-      const signer = await getEvmSigner();
-      return getTokenBalance(tokenSymbol, signer);
-    },
-    [getEvmSigner],
-  );
-
-  const getUserVaultBalanceMemoized = useCallback(
-    async (vaultId: number) => {
-      const signer = await getEvmSigner();
-      const userAddress = await signer.getAddress();
-      const provider = signer.provider;
-      if (!provider) {
-        throw new Error("Signer must have a provider");
-      }
-      return getUserVaultBalance(vaultId, userAddress, provider);
-    },
-    [getEvmSigner],
-  );
-
-  return {
-    fetchVaultTVL: fetchVaultTVLMemoized,
-    checkIfTellerPaused: checkIfTellerPausedMemoized,
-    getTokenAllowance: getTokenAllowanceMemoized,
-    getTokenBalance: getTokenBalanceMemoized,
-    getUserVaultBalance: getUserVaultBalanceMemoized,
   };
 }

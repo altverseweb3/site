@@ -16,7 +16,7 @@ import {
   Loader2,
   Search,
 } from "lucide-react";
-import { useSwapHistory } from "@/hooks/useSwapHistory";
+import { useSwapHistory } from "@/hooks/swap/useSwapHistory";
 import { WalletFilter, WalletIcons } from "@/components/ui/WalletFilter";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletType, SwapData } from "@/types/web3";

@@ -20,7 +20,7 @@ import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
 import { formatBalance, formatCurrency } from "@/utils/formatters";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
-import { useEtherFiFetch } from "@/utils/etherFi/fetch";
+import { useEtherFiFetch } from "@/hooks/etherFi/useEtherFiFetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
 
 interface EtherFiModalProps {

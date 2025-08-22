@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import { useReownWalletProviderAndSigner } from "@/utils/wallet/reownEthersUtils";
 import { TELLER_ABI } from "@/types/etherFiABIs";
 import { ETHERFI_VAULTS, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { ERC20_ABI } from "@/types/ERC20ABI";
@@ -143,31 +142,4 @@ export async function depositTokens(
       message: `Deposit failed: ${errorMessage}`,
     };
   }
-}
-
-/**
- * React hook for etherFi interaction functions with wallet integration
- */
-export function useEtherFiInteract() {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
-
-  return {
-    approveToken: async (
-      tokenSymbol: string,
-      vaultId: number,
-      amount: string,
-    ) => {
-      const signer = await getEvmSigner();
-      return approveToken(tokenSymbol, vaultId, amount, signer);
-    },
-
-    depositTokens: async (
-      tokenSymbol: string,
-      vaultId: number,
-      amount: string,
-    ) => {
-      const signer = await getEvmSigner();
-      return depositTokens(tokenSymbol, vaultId, amount, signer);
-    },
-  };
 }
