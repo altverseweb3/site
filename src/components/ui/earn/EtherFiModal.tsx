@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/StyledDialog";
 import { Button } from "@/components/ui/Button";
-import DepositModal from "@/components/ui/earning/DepositModal";
+import DepositModal from "@/components/ui/earn/DepositModal";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
 import { useIsWalletTypeConnected } from "@/store/web3Store";

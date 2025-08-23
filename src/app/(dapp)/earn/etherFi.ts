@@ -11,7 +11,7 @@ import { chains } from "@/config/chains";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
 import { useWalletByType } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import EtherFiModal from "@/components/ui/earning/EtherFiModal";
+import EtherFiModal from "@/components/ui/earn/EtherFiModal";
 
 export interface EtherFiEarnData {
   earnRows: EarnTableRow[];
