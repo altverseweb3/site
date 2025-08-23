@@ -1583,9 +1583,10 @@ export function parseDepositError(error: unknown): string {
         regex: /transfer amount exceeds balance/i,
         message: "Insufficient token balance for this deposit",
       },
-      // Gas errors
+      // More specific gas errors (removed "execution reverted")
       {
-        regex: /gas|fee|ETH balance|execution reverted/i,
+        regex:
+          /insufficient funds|gas required exceeds allowance|out of gas|gas limit|transaction underpriced|max fee per gas|base fee/i,
         message: "Not enough ETH to cover gas fees",
       },
       // Approval errors
@@ -1597,6 +1598,12 @@ export function parseDepositError(error: unknown): string {
       {
         regex: /timeout|timed? out|expired/i,
         message: "Request timed out. Please try again.",
+      },
+      // Generic execution reverted
+      {
+        regex: /execution reverted/i,
+        message:
+          "Smart contract call failed. Please check your transaction details and try again.",
       },
     ];
 
