@@ -69,7 +69,8 @@ export function formatCurrency(value: number): string {
   if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
   if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
+  console.log("value", value);
+  return `$${Number(value).toFixed(2)}`;
 }
 
 export const formatAPY = (apy: number | string): string => {
@@ -88,11 +89,11 @@ export const formatAPY = (apy: number | string): string => {
 
   // If the input was a string (likely a decimal rate), convert to percentage
   if (typeof apy === "string") {
-    return `${(numericAPY * 100).toFixed(1)}%`;
+    return `${(numericAPY * 100).toFixed(2)}%`;
   }
 
   // If the input was a number (likely already a percentage), format directly
-  return `${numericAPY.toFixed(1)}%`;
+  return `${numericAPY.toFixed(2)}%`;
 };
 
 export const formatNetAPY = (netAPY: number | null): string => {

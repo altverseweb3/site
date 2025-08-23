@@ -88,7 +88,7 @@ export type Chain = {
   walletType: WalletType;
 };
 
-export type SectionKey = "swap" | "earn" | "lend";
+export type SectionKey = "swap" | "earn" | "lending";
 
 export interface Web3StoreState {
   version: number;
