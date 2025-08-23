@@ -617,7 +617,7 @@ interface TokenTransferOptions {
     sourceToken: Token,
     destinationToken?: Token,
   ) => void;
-  onError?: (error: Error) => void;
+  onError?: (error: string) => void;
   onSwapInitiated?: (swapId: string) => void; // New callback when swap starts
   onTrackingComplete?: (status: SwapStatus) => void; // New callback when tracking completes
   sourceChain: Chain;
@@ -766,7 +766,7 @@ export function useTokenTransfer(
         toast.error("Swap tracking failed", {
           description: error.message,
         });
-        options.onError?.(error);
+        options.onError?.(parseSwapError(error));
       },
       onStatusUpdate: (status) => {
         // Update the progress toast with current status
@@ -1397,8 +1397,8 @@ export function useTokenTransfer(
       // Still log the full error for debugging
       console.error(`${options.type} failed:`, error);
 
-      if (options.onError && error instanceof Error) {
-        options.onError(error);
+      if (options.onError) {
+        options.onError(friendlyError);
       }
     } finally {
       setIsProcessing(false);

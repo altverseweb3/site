@@ -132,7 +132,7 @@ const useVaultDepositStore = create<VaultDepositStoreState>()(
 
       failSwapStep: (processId, error) => {
         get().updateProcessState(processId, "FAILED", {
-          errorMessage: `Swap failed: ${error}`,
+          errorMessage: `swap failed: ${error}`,
           retryCount: (get().processes[processId]?.retryCount || 0) + 1,
         });
       },
