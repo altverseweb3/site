@@ -1,41 +1,41 @@
 "use client";
 
-import React from "react";
-import { EarnTableRow, DashboardTableRow, EarnTableType } from "@/types/earn";
-import EarnCard from "@/components/ui/earn/EarnCard";
+import { ReactElement } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-interface EarnCardsProps {
-  type: EarnTableType;
-  data: EarnTableRow[] | DashboardTableRow[];
-  onDetails?: (row: EarnTableRow | DashboardTableRow) => void;
+interface CardsListProps<T> {
+  data: T[];
+  renderCard: (item: T) => ReactElement;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   totalItems: number;
+  gridCols?: string;
+  className?: string;
 }
 
-const EarnCards: React.FC<EarnCardsProps> = ({
-  type,
+const CardsList = <T,>({
   data,
-  onDetails,
+  renderCard,
   currentPage,
   totalPages,
   onPageChange,
   itemsPerPage,
   totalItems,
-}) => {
+  gridCols = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  className,
+}: CardsListProps<T>) => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, data.length);
 
   return (
-    <div className="w-full">
+    <div className={cn("w-full", className)}>
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
-        {data.map((row) => (
-          <EarnCard key={row.id} type={type} data={row} onDetails={onDetails} />
+      <div className={cn("grid gap-4 p-4", gridCols)}>
+        {data.map((item, index) => (
+          <div key={index}>{renderCard(item)}</div>
         ))}
       </div>
 
@@ -103,4 +103,4 @@ const EarnCards: React.FC<EarnCardsProps> = ({
   );
 };
 
-export default EarnCards;
+export default CardsList;

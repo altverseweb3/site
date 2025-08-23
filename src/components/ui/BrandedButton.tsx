@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes } from "react";
 import { Button } from "@/components/ui/Button";
 import { Coins, Cable, Wallet, ArrowLeftRight } from "lucide-react";
 import { AvailableIconName } from "@/types/ui";

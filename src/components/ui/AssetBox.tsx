@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { SelectChainButton } from "@/components/ui/SelectChainButton";
 import { Chain } from "@/types/web3";
 import useUIStore from "@/store/uiStore";
