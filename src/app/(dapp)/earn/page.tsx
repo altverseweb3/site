@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
-import ProtocolFilter from "@/components/ui/earning/ProtocolFilter";
-import SortDropdown from "@/components/ui/earning/SortDropdown";
+import ProtocolFilter from "@/components/ui/earn/ProtocolFilter";
+import SortDropdown from "@/components/ui/earn/SortDropdown";
 import { Input } from "@/components/ui/Input";
-import EarnTable from "@/components/ui/earning/EarnTable";
-import EarnCards from "@/components/ui/earning/EarnCards";
+import EarnTable from "@/components/ui/earn/EarnTable";
+import EarnCards from "@/components/ui/earn/EarnCards";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
