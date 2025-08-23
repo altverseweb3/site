@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import ProtocolFilter from "@/components/ui/earn/ProtocolFilter";
 import SortDropdown from "@/components/ui/earn/SortDropdown";
 import { Input } from "@/components/ui/Input";
 import EarnTable from "@/components/ui/earn/EarnTable";
-import EarnCards from "@/components/ui/earn/EarnCards";
+import CardsList from "@/components/ui/CardsList";
+import EarnCard from "@/components/ui/earn/EarnCard";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
@@ -388,10 +389,16 @@ export default function EarnPage() {
             <>
               {/* Mobile Cards View */}
               <div className="block 2xl:hidden">
-                <EarnCards
-                  type={activeTab}
+                <CardsList<EarnTableRow | DashboardTableRow>
                   data={paginatedData}
-                  onDetails={handleDetails}
+                  renderCard={(row) => (
+                    <EarnCard
+                      key={row.id}
+                      type={activeTab}
+                      data={row}
+                      onDetails={handleDetails}
+                    />
+                  )}
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={handlePageChange}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Particles } from "@/components/ui/Particles";
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const LandingBackground = () => {
   const [opacity, setOpacity] = useState<number>(0);

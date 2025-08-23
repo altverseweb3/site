@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes } from "react";
 import { Button } from "@/components/ui/Button";
 import { X } from "lucide-react";
 
