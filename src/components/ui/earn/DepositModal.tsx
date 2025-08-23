@@ -771,34 +771,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
     return "pending";
   };
 
-  const formatErrorMessage = (error: string | Error | unknown): string => {
-    let errorString = "";
-
-    if (error instanceof Error) {
-      errorString = error.message;
-    } else if (typeof error === "string") {
-      errorString = error;
-    } else {
-      errorString = "An unexpected error occurred";
-    }
-
-    // Handle hex data
-    if (errorString.startsWith("0x") && errorString.length > 100) {
-      return "Transaction failed due to invalid data format";
-    }
-
-    if (/^[0-9a-fA-F]+$/.test(errorString) && errorString.length > 100) {
-      return "Transaction failed due to invalid data format";
-    }
-
-    const MAX_LENGTH = 300;
-    if (errorString.length > MAX_LENGTH) {
-      return errorString.substring(0, MAX_LENGTH) + "...";
-    }
-
-    return errorString;
-  };
-
   const StepIndicator = ({
     step,
     title,
@@ -863,8 +835,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
           {activeProcess && activeProcess.state !== "CANCELLED" && (
             <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
               <div className="text-sm font-medium text-[#FAFAFA] mb-3 break-words">
-                {formatErrorMessage(processProgress?.description) ||
-                  "Processing..."}
+                {processProgress?.description || "Processing..."}
               </div>
 
               <div className="space-y-3">
@@ -980,7 +951,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
               {conversionError ? (
                 <div className="mt-1 text-sm text-red-400 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
-                  {conversionError}
+                  {parseDepositError(conversionError)}
                 </div>
               ) : vaultSharesPreview ? (
                 <div className="mt-1">
