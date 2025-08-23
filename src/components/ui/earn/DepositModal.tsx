@@ -352,7 +352,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
       if (currentActiveProcess) {
         updateProcessState(currentActiveProcess.id, "FAILED", {
-          errorMessage: `Swap failed: ${error}`,
+          errorMessage: `swap failed: ${error}`,
         });
       }
     },
