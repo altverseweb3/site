@@ -42,13 +42,20 @@ const MarketsContent = () => {
       assetMap.set(key, {
         ...reserve,
         marketInfo: market,
+        marketName: market.name,
         supplyData: {
           apy: reserve.supplyInfo?.apy?.value || 0,
           totalSupplied: reserve.supplyInfo?.total?.value || "0",
           totalSuppliedUsd: reserve.size?.usd || 0,
         },
-        borrowData: null,
+        borrowData: {
+          apy: 0,
+          totalBorrowed: "0",
+          totalBorrowedUsd: 0,
+        },
         usdExchangeRate: reserve.usdExchangeRate,
+        isFrozen: reserve.isFrozen,
+        isPaused: reserve.isPaused,
       });
     });
 
@@ -71,9 +78,16 @@ const MarketsContent = () => {
         assetMap.set(key, {
           ...reserve,
           marketInfo: market,
-          supplyData: null,
+          marketName: market.name,
+          supplyData: {
+            apy: 0,
+            totalSupplied: "0",
+            totalSuppliedUsd: 0,
+          },
           borrowData,
           usdExchangeRate: reserve.usdExchangeRate,
+          isFrozen: reserve.isFrozen,
+          isPaused: reserve.isPaused,
         });
       }
     });

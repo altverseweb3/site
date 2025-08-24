@@ -16,17 +16,20 @@ import { Reserve, Market } from "@/types/aave";
 
 interface UnifiedMarketData extends Reserve {
   marketInfo: Market;
+  marketName: string;
   supplyData: {
     apy: number;
     totalSupplied: string;
     totalSuppliedUsd: number;
-  } | null;
+  };
   borrowData: {
     apy: number;
     totalBorrowed: string;
     totalBorrowedUsd: number;
-  } | null;
+  };
   usdExchangeRate: number;
+  isFrozen: boolean;
+  isPaused: boolean;
 }
 
 interface MarketCardProps {
@@ -36,12 +39,12 @@ interface MarketCardProps {
 
 const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
   // Extract data from unified structure
-  const supplyAPY = market.supplyData?.apy || 0;
-  const borrowAPY = market.borrowData?.apy || 0;
-  const totalSupplied = market.supplyData?.totalSupplied || "0";
-  const totalBorrowed = market.borrowData?.totalBorrowed || "0";
-  const totalSuppliedUsd = market.supplyData?.totalSuppliedUsd || 0;
-  const totalBorrowedUsd = market.borrowData?.totalBorrowedUsd || 0;
+  const supplyAPY = market.supplyData.apy;
+  const borrowAPY = market.borrowData.apy;
+  const totalSupplied = market.supplyData.totalSupplied;
+  const totalBorrowed = market.borrowData.totalBorrowed;
+  const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
+  const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
@@ -63,70 +66,62 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
             {market.underlyingToken.name}
           </CardTitle>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1">
-            {market.underlyingToken.symbol}
+            {market.underlyingToken.symbol} • {market.marketName}
+            {(market.isFrozen || market.isPaused) && (
+              <span className="ml-1 text-red-400">
+                {market.isFrozen && market.isPaused
+                  ? "(Frozen, Paused)"
+                  : market.isFrozen
+                    ? "(Frozen)"
+                    : "(Paused)"}
+              </span>
+            )}
           </CardDescription>
         </div>
       </CardHeader>
 
       <CardContent className="p-4 pt-2 space-y-3">
-        {/* Total Supplied row */}
-        {market.supplyData && (
-          <>
-            <div className="flex justify-between items-center">
-              <div className="text-[#A1A1AA] text-sm">total supplied</div>
-              <div className="text-right">
-                <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-                  {formatBalance(totalSupplied)} {market.underlyingToken.symbol}
-                </div>
-                <div className="text-[#A1A1AA] text-xs font-mono">
-                  {formatCurrency(totalSuppliedUsd)}
-                </div>
-              </div>
+        {/* Total Supplied row - always show */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">total supplied</div>
+          <div className="text-right">
+            <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
+              {formatBalance(totalSupplied)} {market.underlyingToken.symbol}
             </div>
-
-            {/* Supply APY row */}
-            <div className="flex justify-between items-center">
-              <div className="text-[#A1A1AA] text-sm">supply APY</div>
-              <div className="text-green-500 text-sm font-semibold font-mono">
-                {formatAPY(supplyAPY)}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Total Borrowed row */}
-        {market.borrowData && (
-          <>
-            <div className="flex justify-between items-center">
-              <div className="text-[#A1A1AA] text-sm">total borrowed</div>
-              <div className="text-right">
-                <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-                  {formatBalance(totalBorrowed)} {market.underlyingToken.symbol}
-                </div>
-                <div className="text-[#A1A1AA] text-xs font-mono">
-                  {formatCurrency(totalBorrowedUsd)}
-                </div>
-              </div>
-            </div>
-
-            {/* Borrow APY row */}
-            <div className="flex justify-between items-center">
-              <div className="text-[#A1A1AA] text-sm">borrow APY</div>
-              <div className="text-red-500 text-sm font-semibold font-mono">
-                {formatAPY(borrowAPY)}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Show message if neither supply nor borrow data available */}
-        {!market.supplyData && !market.borrowData && (
-          <div className="text-center py-4">
-            <div className="text-[#A1A1AA] text-sm">
-              No market data available
+            <div className="text-[#A1A1AA] text-xs font-mono">
+              {formatCurrency(totalSuppliedUsd)}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Supply APY row - always show */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">supply APY</div>
+          <div className="text-green-500 text-sm font-semibold font-mono">
+            {formatAPY(supplyAPY)}
+          </div>
+        </div>
+
+        {/* Total Borrowed row - always show */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">total borrowed</div>
+          <div className="text-right">
+            <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
+              {formatBalance(totalBorrowed)} {market.underlyingToken.symbol}
+            </div>
+            <div className="text-[#A1A1AA] text-xs font-mono">
+              {formatCurrency(totalBorrowedUsd)}
+            </div>
+          </div>
+        </div>
+
+        {/* Borrow APY row - always show */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">borrow APY</div>
+          <div className="text-red-500 text-sm font-semibold font-mono">
+            {formatAPY(borrowAPY)}
+          </div>
+        </div>
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
