@@ -1,11 +1,19 @@
 "use client";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
-import { History } from "lucide-react";
 import { Chain } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { useAaveChainsData } from "@/hooks/aave/useAaveChainsData";
+import {
+  History,
+  ArrowUp,
+  ArrowDown,
+  Coins,
+  RefreshCw,
+  Shield,
+  AlertTriangle,
+} from "lucide-react";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { WalletType } from "@/types/web3";
@@ -16,11 +24,350 @@ import {
   useSetSelectedAaveChains,
 } from "@/store/web3Store";
 import { useAaveMarketsData } from "@/hooks/aave/useAaveMarketsData";
+import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
 import MarketCard from "@/components/ui/lending/MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import { ChainId } from "@/types/aave";
+import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
+import Image from "next/image";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
+
+// Types for transaction data
+type TokenAmount = {
+  __typename: "TokenAmount";
+  usdPerToken: string;
+  amount: {
+    __typename: "DecimalValue";
+    raw: string;
+    decimals: number;
+    value: string;
+  };
+  usd: string;
+};
+
+type UserTransactionItem = {
+  __typename:
+    | "UserSupplyTransaction"
+    | "UserWithdrawTransaction"
+    | "UserBorrowTransaction"
+    | "UserRepayTransaction"
+    | "UserUsageAsCollateralTransaction"
+    | "UserLiquidationCallTransaction";
+  amount?: TokenAmount;
+  enabled?: boolean; // For collateral transactions
+  reserve?: {
+    underlyingToken?: {
+      imageUrl?: string;
+      symbol?: string;
+    };
+  };
+  collateral?: {
+    amount?: TokenAmount | null;
+  };
+  debtRepaid?: {
+    amount?: TokenAmount;
+  };
+  blockExplorerUrl: string;
+  txHash: string;
+  timestamp: string;
+};
+
+interface TransactionCardProps {
+  transaction: UserTransactionItem;
+}
+
+// Transaction Card Component
+const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
+  const getTransactionIcon = (txType: string) => {
+    switch (txType) {
+      case "UserSupplyTransaction":
+        return <ArrowUp className="h-4 w-4 text-green-500" />;
+      case "UserWithdrawTransaction":
+        return <ArrowDown className="h-4 w-4 text-red-500" />;
+      case "UserBorrowTransaction":
+        return <Coins className="h-4 w-4 text-sky-500" />;
+      case "UserRepayTransaction":
+        return <RefreshCw className="h-4 w-4 text-amber-500" />;
+      case "UserUsageAsCollateralTransaction":
+        return (
+          <Shield
+            className={`h-4 w-4 ${transaction.enabled ? "text-amber-500" : "text-sky-500"}`}
+          />
+        );
+      case "UserLiquidationCallTransaction":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Coins className="h-4 w-4 text-zinc-500" />;
+    }
+  };
+
+  const getTransactionLabel = (txType: string) => {
+    switch (txType) {
+      case "UserSupplyTransaction":
+        return "supply";
+      case "UserWithdrawTransaction":
+        return "withdraw";
+      case "UserBorrowTransaction":
+        return "borrow";
+      case "UserRepayTransaction":
+        return "repay";
+      case "UserUsageAsCollateralTransaction":
+        return transaction.enabled ? "enable collateral" : "disable collateral";
+      case "UserLiquidationCallTransaction":
+        return "liquidation";
+      default:
+        return "transaction";
+    }
+  };
+
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatAmount = (amount: TokenAmount | undefined | null): string => {
+    if (!amount) return "N/A";
+    return `${parseFloat(amount.amount.value).toFixed(4)} ${transaction.reserve?.underlyingToken?.symbol || ""}`;
+  };
+
+  const formatUsdValue = (amount: TokenAmount | undefined | null): string => {
+    if (!amount?.usd) return "";
+    return `${parseFloat(amount.usd).toFixed(2)}`;
+  };
+
+  return (
+    <div className="bg-[#18181B] border border-[#27272A] rounded-lg p-4 hover:border-[#3A3A3D] transition-colors">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          {getTransactionIcon(transaction.__typename)}
+          <div>
+            <div className="font-medium text-white">
+              {getTransactionLabel(transaction.__typename)}
+            </div>
+            <div className="text-sm text-[#A1A1AA]">
+              {formatDate(transaction.timestamp)}
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          {transaction.amount && (
+            <>
+              <div className="font-medium font-mono text-white">
+                {formatAmount(transaction.amount)}
+              </div>
+              <div className="text-sm font-mono text-[#A1A1AA]">
+                {formatUsdValue(transaction.amount)}
+              </div>
+            </>
+          )}
+          {transaction.__typename === "UserLiquidationCallTransaction" && (
+            <div className="text-sm text-red-500">liquidation event</div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          <Image
+            src={
+              transaction.reserve?.underlyingToken?.imageUrl ||
+              "/placeholder-token.png"
+            }
+            alt={transaction.reserve?.underlyingToken?.symbol || "token"}
+            width={20}
+            height={20}
+            className="rounded-full"
+            onError={(e) => {
+              e.currentTarget.src = "/placeholder-token.png";
+            }}
+          />
+          <span className="text-[#A1A1AA] font-mono uppercase">
+            {transaction.reserve?.underlyingToken?.symbol || "UNKNOWN"}
+          </span>
+        </div>
+        <a
+          href={transaction.blockExplorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          view transaction ↗
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// Transaction Table Component
+const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
+  transactions,
+}) => {
+  const getTransactionIcon = (txType: string, enabled?: boolean) => {
+    switch (txType) {
+      case "UserSupplyTransaction":
+        return <ArrowUp className="h-4 w-4 text-green-500" />;
+      case "UserWithdrawTransaction":
+        return <ArrowDown className="h-4 w-4 text-red-500" />;
+      case "UserBorrowTransaction":
+        return <Coins className="h-4 w-4 text-sky-500" />;
+      case "UserRepayTransaction":
+        return <RefreshCw className="h-4 w-4 text-amber-500" />;
+      case "UserUsageAsCollateralTransaction":
+        return (
+          <Shield
+            className={`h-4 w-4 ${enabled ? "text-amber-500" : "text-sky-500"}`}
+          />
+        );
+      case "UserLiquidationCallTransaction":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Coins className="h-4 w-4 text-zinc-500" />;
+    }
+  };
+
+  const getTransactionLabel = (txType: string, enabled?: boolean) => {
+    switch (txType) {
+      case "UserSupplyTransaction":
+        return "supply";
+      case "UserWithdrawTransaction":
+        return "withdraw";
+      case "UserBorrowTransaction":
+        return "borrow";
+      case "UserRepayTransaction":
+        return "repay";
+      case "UserUsageAsCollateralTransaction":
+        return enabled ? "enable collateral" : "disable collateral";
+      case "UserLiquidationCallTransaction":
+        return "liquidation";
+      default:
+        return "transaction";
+    }
+  };
+
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatAmount = (amount: TokenAmount | undefined | null): string => {
+    if (!amount) return "—";
+    return `${parseFloat(amount.amount.value).toFixed(4)}`;
+  };
+
+  const formatUsdValue = (amount: TokenAmount | undefined | null): string => {
+    if (!amount?.usd) return "";
+    return `${parseFloat(amount.usd).toFixed(2)}`;
+  };
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-[#27272A]">
+            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              type
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              asset
+            </th>
+            <th className="text-right py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              amount
+            </th>
+            <th className="text-right py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              value
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              date
+            </th>
+            <th className="text-center py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              tx
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.map((transaction) => (
+            <tr
+              key={transaction.txHash}
+              className="border-b border-[#27272A]/50 hover:bg-[#27272A]/20 transition-colors"
+            >
+              <td className="py-3 px-4">
+                <div className="flex items-center gap-3">
+                  {getTransactionIcon(
+                    transaction.__typename,
+                    transaction.enabled,
+                  )}
+                  <span className="text-white text-sm">
+                    {getTransactionLabel(
+                      transaction.__typename,
+                      transaction.enabled,
+                    )}
+                  </span>
+                </div>
+              </td>
+              <td className="py-3 px-4">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={
+                      transaction.reserve?.underlyingToken?.imageUrl ||
+                      "/placeholder-token.png"
+                    }
+                    alt={
+                      transaction.reserve?.underlyingToken?.symbol || "token"
+                    }
+                    width={20}
+                    height={20}
+                    className="rounded-full"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder-token.png";
+                    }}
+                  />
+                  <span className="text-white font-mono uppercase text-sm">
+                    {transaction.reserve?.underlyingToken?.symbol || "UNKNOWN"}
+                  </span>
+                </div>
+              </td>
+              <td className="py-3 px-4 text-right">
+                <span className="text-white font-mono text-sm">
+                  {formatAmount(transaction.amount)}
+                </span>
+              </td>
+              <td className="py-3 px-4 text-right">
+                <span className="text-[#A1A1AA] font-mono text-sm">
+                  {formatUsdValue(transaction.amount)}
+                </span>
+              </td>
+              <td className="py-3 px-4">
+                <span className="text-[#A1A1AA] text-sm">
+                  {formatDate(transaction.timestamp)}
+                </span>
+              </td>
+              <td className="py-3 px-4 text-center">
+                <a
+                  href={transaction.blockExplorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                >
+                  ↗
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const MarketsContent = () => {
   const { markets } = useAaveMarketsData({
@@ -123,6 +470,40 @@ const MarketsContent = () => {
       itemsPerPage={unifiedMarkets.length}
       totalItems={unifiedMarkets.length}
     />
+  );
+};
+
+const HistoryContent = () => {
+  const { data } = useAaveUserTransactionHistory({
+    market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Aave V3 Ethereum
+    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"), // Hardcoded user address
+    chainId: chainId(137), // Ethereum mainnet
+    orderBy: { date: OrderDirection.Desc },
+    pageSize: PageSize.Fifty,
+  });
+
+  if (!data || !data.items || data.items.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA]">no transaction history found</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      {/* Desktop View: Table */}
+      <div className="hidden md:block">
+        <TransactionTable transactions={data.items} />
+      </div>
+
+      {/* Mobile View: Cards */}
+      <div className="md:hidden space-y-4">
+        {data.items.map((tx) => (
+          <TransactionCard key={tx.txHash} transaction={tx} />
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -256,11 +637,17 @@ export default function LendingPage() {
                 </div>
               )}
               {activeTab === "history" && (
-                <div className="p-8 text-center">
-                  <div className="text-[#A1A1AA] text-lg">
-                    History content coming soon...
-                  </div>
-                </div>
+                <Suspense
+                  fallback={
+                    <div className="text-center py-16">
+                      <div className="text-[#A1A1AA]">
+                        loading transaction history...
+                      </div>
+                    </div>
+                  }
+                >
+                  <HistoryContent />
+                </Suspense>
               )}
             </>
           )}
