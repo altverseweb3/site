@@ -56,6 +56,7 @@ const MarketsContent = () => {
         usdExchangeRate: reserve.usdExchangeRate,
         isFrozen: reserve.isFrozen,
         isPaused: reserve.isPaused,
+        incentives: reserve.incentives || [],
       });
     });
 
@@ -73,6 +74,11 @@ const MarketsContent = () => {
       if (existing) {
         // Merge with existing supply data
         existing.borrowData = borrowData;
+        // Merge incentives arrays
+        existing.incentives = [
+          ...existing.incentives,
+          ...(reserve.incentives || []),
+        ];
       } else {
         // Create new entry with only borrow data
         assetMap.set(key, {
@@ -88,6 +94,7 @@ const MarketsContent = () => {
           usdExchangeRate: reserve.usdExchangeRate,
           isFrozen: reserve.isFrozen,
           isPaused: reserve.isPaused,
+          incentives: reserve.incentives || [],
         });
       }
     });
