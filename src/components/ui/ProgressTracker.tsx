@@ -169,14 +169,11 @@ export const useStepTracker = (initialSteps: Omit<Step, "state">[]) => {
     );
   }, []);
 
-  const updateStepByIndex = useCallback(
-    (index: number, state: StepState) => {
-      setSteps((prev) =>
-        prev.map((step, i) => (i === index ? { ...step, state } : step)),
-      );
-    },
-    [],
-  );
+  const updateStepByIndex = useCallback((index: number, state: StepState) => {
+    setSteps((prev) =>
+      prev.map((step, i) => (i === index ? { ...step, state } : step)),
+    );
+  }, []);
 
   const resetSteps = useCallback(() => {
     setSteps((prev) =>
