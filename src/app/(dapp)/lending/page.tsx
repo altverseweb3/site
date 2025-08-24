@@ -6,14 +6,19 @@ import { Chain } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { useAaveChainsData } from "@/hooks/aave/useAaveChainsData";
+import {
+  useSelectedAaveChains,
+  useSetSelectedAaveChains,
+} from "@/store/web3Store";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
 export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<LendingTabType>("markets");
-  const [selectedChains, setSelectedChains] = useState<Chain[]>([]);
 
   const { data: aaveChains } = useAaveChainsData({});
+  const selectedChains = useSelectedAaveChains();
+  const setSelectedChains = useSetSelectedAaveChains();
 
   const supportedChains = useMemo(() => {
     if (!aaveChains) return [];

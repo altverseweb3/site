@@ -74,7 +74,7 @@ const useWeb3Store = create<Web3StoreState>()(
       tokenBalancesByWallet: {},
       tokenPricesUsd: {},
 
-      aaveChain: getChainByChainId(1),
+      selectedAaveChains: [],
 
       // New integration management methods
       getSwapStateForSection: () => {
@@ -790,8 +790,8 @@ const useWeb3Store = create<Web3StoreState>()(
         set({ tokensLoading: loading });
       },
 
-      setAaveChain(chain: Chain) {
-        set({ aaveChain: chain });
+      setSelectedAaveChains(chains: Chain[]) {
+        set({ selectedAaveChains: chains });
       },
     }),
     {
@@ -860,7 +860,7 @@ const useWeb3Store = create<Web3StoreState>()(
             chainId: wallet.chainId,
           })),
           swapIntegrations: serializedIntegrations,
-          aaveChain: state.aaveChain,
+          selectedAaveChains: state.selectedAaveChains,
         };
       },
     },
@@ -1024,12 +1024,12 @@ export const useSetActiveSwapSection = () => {
   return useWeb3Store((state) => state.setActiveSwapSection);
 };
 
-export const useAaveChain = (): Chain => {
-  return useWeb3Store((state) => state.aaveChain);
+export const useSelectedAaveChains = (): Chain[] => {
+  return useWeb3Store((state) => state.selectedAaveChains);
 };
 
-export const useSetAaveChain = () => {
-  return useWeb3Store((state) => state.setAaveChain);
+export const useSetSelectedAaveChains = () => {
+  return useWeb3Store((state) => state.setSelectedAaveChains);
 };
 
 export const useExtractUserWallets = (
