@@ -46,6 +46,48 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
   const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
   const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
+  // Process incentives
+  const getIncentiveDisplay = (incentives: Reserve["incentives"]) => {
+    if (!incentives || incentives.length === 0) return null;
+
+    return incentives.map((incentive, index) => {
+      let text = "";
+      let aprValue = 0;
+
+      switch (incentive.__typename) {
+        case "MeritSupplyIncentive":
+          text = "Merit Supply";
+          aprValue = incentive.extraSupplyApr.value;
+          break;
+        case "MeritBorrowIncentive":
+          text = "Merit Borrow";
+          aprValue = incentive.borrowAprDiscount.value;
+          break;
+        case "MeritBorrowAndSupplyIncentiveCondition":
+          text = `Merit ${incentive.supplyToken.symbol}/${incentive.borrowToken.symbol}`;
+          aprValue = incentive.extraApr.value;
+          break;
+        case "AaveSupplyIncentive":
+          text = `${incentive.rewardTokenSymbol} Supply`;
+          aprValue = incentive.extraSupplyApr.value;
+          break;
+        case "AaveBorrowIncentive":
+          text = `${incentive.rewardTokenSymbol} Borrow`;
+          aprValue = incentive.borrowAprDiscount.value;
+          break;
+      }
+
+      return {
+        key: `${incentive.__typename}-${index}`,
+        text,
+        aprValue,
+        type: incentive.__typename.includes("Supply") ? "supply" : "borrow",
+      };
+    });
+  };
+
+  const incentiveDisplays = getIncentiveDisplay(market.incentives);
+
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
       <CardHeader className="flex flex-row items-start p-4 pb-2 space-y-0">
@@ -122,6 +164,32 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
             {formatAPY(borrowAPY)}
           </div>
         </div>
+
+        {/* Incentives section */}
+        {incentiveDisplays && incentiveDisplays.length > 0 && (
+          <div className="border-t border-[#27272A] pt-3 mt-3">
+            <div className="text-[#A1A1AA] text-xs mb-2">incentives</div>
+            <div className="space-y-1">
+              {incentiveDisplays.map((incentive) => (
+                <div
+                  key={incentive.key}
+                  className="flex justify-between items-center"
+                >
+                  <div className="text-[#A1A1AA] text-xs">{incentive.text}</div>
+                  <div
+                    className={`text-xs font-semibold font-mono ${
+                      incentive.type === "supply"
+                        ? "text-green-400"
+                        : "text-orange-400"
+                    }`}
+                  >
+                    +{formatAPY(incentive.aprValue)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
