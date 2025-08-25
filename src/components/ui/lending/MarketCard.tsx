@@ -127,7 +127,7 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
             {market.underlyingToken.name}
           </CardTitle>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1">
-            {market.underlyingToken.symbol} • {market.marketName}
+            {market.marketName}
             {(market.isFrozen || market.isPaused) && (
               <span className="ml-1 text-red-400">
                 {market.isFrozen && market.isPaused
