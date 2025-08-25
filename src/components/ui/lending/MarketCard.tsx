@@ -10,6 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import BrandedButton from "@/components/ui/BrandedButton";
+import TruncatedText from "@/components/ui/TruncatedText";
 import Image from "next/image";
 import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
 import { Reserve, Market } from "@/types/aave";
@@ -147,7 +148,12 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
           <div className="text-[#A1A1AA] text-sm">total supplied</div>
           <div className="text-right">
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalSupplied)} {market.underlyingToken.symbol}
+              {formatBalance(totalSupplied)}{" "}
+              <TruncatedText
+                text={market.underlyingToken.symbol}
+                maxLength={6}
+                className="text-[#FAFAFA] text-sm font-semibold font-mono"
+              />
             </div>
             <div className="text-[#A1A1AA] text-xs font-mono">
               {formatCurrency(totalSuppliedUsd)}
@@ -168,7 +174,12 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
           <div className="text-[#A1A1AA] text-sm">total borrowed</div>
           <div className="text-right">
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalBorrowed)} {market.underlyingToken.symbol}
+              {formatBalance(totalBorrowed)}{" "}
+              <TruncatedText
+                text={market.underlyingToken.symbol}
+                maxLength={6}
+                className="text-[#FAFAFA] text-sm font-semibold font-mono"
+              />
             </div>
             <div className="text-[#A1A1AA] text-xs font-mono">
               {formatCurrency(totalBorrowedUsd)}
