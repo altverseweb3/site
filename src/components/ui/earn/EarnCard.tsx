@@ -208,7 +208,7 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">apy</div>
           <div className="text-green-500 text-sm font-semibold font-mono">
-            {formatAPY(data.apy)}
+            {data.apy != 0 ? formatAPY(data.apy) : "--"}
           </div>
         </div>
       </CardContent>

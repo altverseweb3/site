@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { History } from "lucide-react";
 import { Chain } from "@/types/web3";
@@ -10,6 +10,16 @@ import {
   useSelectedAaveChains,
   useSetSelectedAaveChains,
 } from "@/store/web3Store";
+import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
+import BrandedButton from "@/components/ui/BrandedButton";
+import { WalletType } from "@/types/web3";
+import {
+  useIsWalletTypeConnected,
+  useSetActiveSwapSection,
+} from "@/store/web3Store";
+import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
+import MarketContent from "@/components/ui/lending/MarketContent";
+import { ChainId } from "@/types/aave";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -29,10 +39,26 @@ export default function LendingPage() {
       aaveSupportedChainIds.includes(chain.chainId),
     );
   }, [aaveChains]);
+  const setActiveSwapSection = useSetActiveSwapSection();
+  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+
+  // Fetch markets data with loading state (like earn page)
+  const { markets, loading } = useAaveMarketsWithLoading({
+    chainIds: [1 as ChainId],
+    user: undefined,
+  });
+
+  useEffect(() => {
+    setActiveSwapSection("lending");
+  }, [setActiveSwapSection]);
 
   const handleTabChange = (value: LendingTabType) => {
     setActiveTab(value);
   };
+
+  // Show wallet connection requirement only for dashboard tab (like earn page pattern)
+  const showWalletConnectionRequired =
+    !isEvmWalletConnected && activeTab === "dashboard";
 
   return (
     <div className="container mx-auto px-2 md:py-8">
@@ -95,13 +121,52 @@ export default function LendingPage() {
 
         {/* Tab Content */}
         <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden 2xl:mb-0 mb-12">
-          <div className="p-8 text-center">
-            <div className="text-[#A1A1AA] text-lg">
-              {activeTab === "markets" && "Markets content coming soon..."}
-              {activeTab === "dashboard" && "Dashboard content coming soon..."}
-              {activeTab === "history" && "History content coming soon..."}
+          {showWalletConnectionRequired ? (
+            <div className="text-center py-16 md:py-24 px-4 md:px-8">
+              <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
+                please connect an EVM wallet (metamask, etc.) to view and manage
+                your positions. other environments (sui, solana, etc.) are
+                supported; however, presently your positions will only be held
+                and managed on EVM wallets as they will opened and managed on
+                ethereum or other EVM chains.
+              </p>
+              <ConnectWalletModal
+                trigger={
+                  <BrandedButton
+                    iconName="Wallet"
+                    buttonText="connect EVM wallet"
+                    className="max-w-xs h-8 text-sm md:text-md"
+                  />
+                }
+              />
             </div>
-          </div>
+          ) : activeTab === "markets" && loading ? (
+            <div className="text-center py-16">
+              <div className="text-[#A1A1AA]">loading markets...</div>
+            </div>
+          ) : activeTab === "markets" && (!markets || markets.length === 0) ? (
+            <div className="text-center py-16">
+              <div className="text-[#A1A1AA]">no markets found</div>
+            </div>
+          ) : (
+            <>
+              {activeTab === "markets" && <MarketContent markets={markets} />}
+              {activeTab === "dashboard" && (
+                <div className="p-8 text-center">
+                  <div className="text-[#A1A1AA] text-lg">
+                    Dashboard content coming soon...
+                  </div>
+                </div>
+              )}
+              {activeTab === "history" && (
+                <div className="p-8 text-center">
+                  <div className="text-[#A1A1AA] text-lg">
+                    History content coming soon...
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
