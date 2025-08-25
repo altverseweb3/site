@@ -57,37 +57,123 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
       text: string;
       aprValue: number;
       type: string;
+      rawValue: string;
+      decimals: number;
+      formattedValue: string;
+      claimLink?: unknown;
+      rewardTokenAddress?: string;
+      rewardTokenSymbol?: string;
+      supplyToken?: {
+        address: string;
+        imageUrl: string;
+        name: string;
+        symbol: string;
+        decimals: number;
+        chainId: number;
+      };
+      borrowToken?: {
+        address: string;
+        imageUrl: string;
+        name: string;
+        symbol: string;
+        decimals: number;
+        chainId: number;
+      };
     }[] = [];
 
     incentives.forEach((incentive, index) => {
       let text = "";
       let aprValue = 0;
       let dedupeKey = "";
+      let rawValue = "";
+      let decimals = 0;
+      let formattedValue = "";
+      let claimLink: unknown;
+      let rewardTokenAddress: string | undefined;
+      let rewardTokenSymbol: string | undefined;
+      let supplyToken:
+        | {
+            address: string;
+            imageUrl: string;
+            name: string;
+            symbol: string;
+            decimals: number;
+            chainId: number;
+          }
+        | undefined;
+      let borrowToken:
+        | {
+            address: string;
+            imageUrl: string;
+            name: string;
+            symbol: string;
+            decimals: number;
+            chainId: number;
+          }
+        | undefined;
 
       switch (incentive.__typename) {
         case "MeritSupplyIncentive":
           text = "merit supply";
           aprValue = incentive.extraSupplyApr.value;
+          rawValue = incentive.extraSupplyApr.raw;
+          decimals = incentive.extraSupplyApr.decimals;
+          formattedValue = incentive.extraSupplyApr.formatted.toString();
+          claimLink = incentive.claimLink;
           dedupeKey = "merit-supply";
           break;
         case "MeritBorrowIncentive":
           text = "merit borrow";
           aprValue = incentive.borrowAprDiscount.value;
+          rawValue = incentive.borrowAprDiscount.raw;
+          decimals = incentive.borrowAprDiscount.decimals;
+          formattedValue = incentive.borrowAprDiscount.formatted.toString();
+          claimLink = incentive.claimLink;
           dedupeKey = "merit-borrow";
           break;
         case "MeritBorrowAndSupplyIncentiveCondition":
           text = `merit ${incentive.supplyToken.symbol}/${incentive.borrowToken.symbol}`;
           aprValue = incentive.extraApr.value;
+          rawValue = incentive.extraApr.raw;
+          decimals = incentive.extraApr.decimals;
+          formattedValue = incentive.extraApr.formatted.toString();
+          claimLink = incentive.claimLink;
+          supplyToken = {
+            address: incentive.supplyToken.address,
+            imageUrl: incentive.supplyToken.imageUrl,
+            name: incentive.supplyToken.name,
+            symbol: incentive.supplyToken.symbol,
+            decimals: incentive.supplyToken.decimals,
+            chainId: incentive.supplyToken.chainId,
+          };
+          borrowToken = {
+            address: incentive.borrowToken.address,
+            imageUrl: incentive.borrowToken.imageUrl,
+            name: incentive.borrowToken.name,
+            symbol: incentive.borrowToken.symbol,
+            decimals: incentive.borrowToken.decimals,
+            chainId: incentive.borrowToken.chainId,
+          };
           dedupeKey = `merit-condition-${incentive.supplyToken.symbol}-${incentive.borrowToken.symbol}`;
           break;
         case "AaveSupplyIncentive":
           text = `${incentive.rewardTokenSymbol} supply`;
           aprValue = incentive.extraSupplyApr.value;
+          rawValue = incentive.extraSupplyApr.raw;
+          decimals = incentive.extraSupplyApr.decimals;
+          formattedValue = incentive.extraSupplyApr.formatted.toString();
+          rewardTokenAddress = incentive.rewardTokenAddress;
+          rewardTokenSymbol = incentive.rewardTokenSymbol;
           dedupeKey = `aave-supply-${incentive.rewardTokenSymbol}`;
           break;
         case "AaveBorrowIncentive":
           text = `${incentive.rewardTokenSymbol} borrow`;
           aprValue = incentive.borrowAprDiscount.value;
+          rawValue = incentive.borrowAprDiscount.raw;
+          decimals = incentive.borrowAprDiscount.decimals;
+          formattedValue = incentive.borrowAprDiscount.formatted.toString();
+          rewardTokenAddress = incentive.rewardTokenAddress;
+          rewardTokenSymbol = incentive.rewardTokenSymbol;
           dedupeKey = `aave-borrow-${incentive.rewardTokenSymbol}`;
           break;
       }
@@ -99,6 +185,14 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
           text,
           aprValue,
           type: incentive.__typename.includes("Supply") ? "supply" : "borrow",
+          rawValue,
+          decimals,
+          formattedValue,
+          claimLink,
+          rewardTokenAddress,
+          rewardTokenSymbol,
+          supplyToken,
+          borrowToken,
         });
       }
     });
