@@ -18,7 +18,7 @@ import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
-import { formatBalance, formatCurrency } from "@/utils/formatters";
+import { formatBalance, formatCurrency, formatAPY } from "@/utils/formatters";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import { useEtherFiFetch } from "@/hooks/etherFi/useEtherFiFetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
@@ -261,7 +261,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                   <div className="text-center">
                     <div className="text-sm text-[#A1A1AA] mb-1">APY</div>
                     <div className="text-2xl font-bold text-green-500 font-mono">
-                      {data.apy === 0 ? "TBD" : `${data.apy.toFixed(1)}%`}
+                      {data.apy === 0 ? "--" : formatAPY(data.apy)}
                     </div>
                   </div>
                   {!isDashboardRow(data) && (

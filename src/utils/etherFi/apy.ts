@@ -49,7 +49,7 @@ export async function fetchVaultAPY(vaultId: number): Promise<VaultApyData> {
         vaultId,
         name: vault.name,
         address: vault.addresses.vault,
-        source: "TBD",
+        source: "--",
         overall_apy: null,
         fee: 0,
         net_apy: null,

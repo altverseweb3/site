@@ -69,30 +69,30 @@ export function formatCurrency(value: number): string {
   if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
   if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
+  return `$${Number(value).toFixed(2)}`;
 }
 
 export const formatAPY = (apy: number | string): string => {
   // Handle null, undefined, or zero cases
-  if (apy === null || apy === undefined || apy === 0 || apy === "0") {
-    return "TBD";
+  if (apy === null || apy === undefined) {
+    return "--";
   }
 
   // Convert to number if it's a string
   const numericAPY = typeof apy === "string" ? parseFloat(apy) : apy;
 
   // Handle invalid conversions or zero after parsing
-  if (isNaN(numericAPY) || numericAPY === 0) {
-    return "TBD";
+  if (isNaN(numericAPY)) {
+    return "--";
   }
 
   // If the input was a string (likely a decimal rate), convert to percentage
   if (typeof apy === "string") {
-    return `${(numericAPY * 100).toFixed(1)}%`;
+    return `${(numericAPY * 100).toFixed(2)}%`;
   }
 
   // If the input was a number (likely already a percentage), format directly
-  return `${numericAPY.toFixed(1)}%`;
+  return `${numericAPY.toFixed(2)}%`;
 };
 
 export const formatNetAPY = (netAPY: number | null): string => {
