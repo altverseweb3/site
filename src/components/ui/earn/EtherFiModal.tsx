@@ -261,7 +261,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                   <div className="text-center">
                     <div className="text-sm text-[#A1A1AA] mb-1">APY</div>
                     <div className="text-2xl font-bold text-green-500 font-mono">
-                      {data.apy === 0 ? "TBD" : `${data.apy.toFixed(1)}%`}
+                      {data.apy === 0 ? "--" : `${data.apy.toFixed(1)}%`}
                     </div>
                   </div>
                   {!isDashboardRow(data) && (

@@ -192,7 +192,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
                 )}
                 <td className="px-4 py-3">
                   <span className="text-green-500 font-semibold font-mono">
-                    {formatAPY(row.apy)}
+                    {row.apy != 0 ? formatAPY(row.apy) : "--"}
                   </span>
                 </td>
                 <td className="px-4 py-3 pr-6">
