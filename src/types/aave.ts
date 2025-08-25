@@ -27,6 +27,13 @@ import type {
   AaveBorrowIncentive,
   PercentValue,
   MarketInfo,
+  UserTransactionItem,
+  UserSupplyTransaction,
+  UserBorrowTransaction,
+  UserWithdrawTransaction,
+  UserRepayTransaction,
+  UserUsageAsCollateralTransaction,
+  UserLiquidationCallTransaction,
 } from "@aave/react";
 
 /**
@@ -63,4 +70,11 @@ export type {
   AaveBorrowIncentive,
   PercentValue,
   MarketInfo,
+  UserTransactionItem,
+  UserSupplyTransaction,
+  UserBorrowTransaction,
+  UserWithdrawTransaction,
+  UserRepayTransaction,
+  UserUsageAsCollateralTransaction,
+  UserLiquidationCallTransaction,
 };
