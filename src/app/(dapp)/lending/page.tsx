@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { History } from "lucide-react";
 import { Chain } from "@/types/web3";
@@ -17,20 +17,11 @@ import {
   useIsWalletTypeConnected,
   useSetActiveSwapSection,
 } from "@/store/web3Store";
-import { useAaveMarketsData } from "@/hooks/aave/useAaveMarketsData";
+import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
 import { ChainId } from "@/types/aave";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
-
-const MarketsContent = () => {
-  const { markets } = useAaveMarketsData({
-    chainIds: [1 as ChainId],
-    user: undefined,
-  });
-
-  return <MarketContent markets={markets} />;
-};
 
 export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<LendingTabType>("markets");
@@ -51,6 +42,12 @@ export default function LendingPage() {
   const setActiveSwapSection = useSetActiveSwapSection();
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
 
+  // Fetch markets data with loading state (like earn page)
+  const { markets, loading } = useAaveMarketsWithLoading({
+    chainIds: [1 as ChainId],
+    user: undefined,
+  });
+
   useEffect(() => {
     setActiveSwapSection("lending");
   }, [setActiveSwapSection]);
@@ -59,7 +56,9 @@ export default function LendingPage() {
     setActiveTab(value);
   };
 
-  const showWalletConnectionRequired = !isEvmWalletConnected;
+  // Show wallet connection requirement only for dashboard tab (like earn page pattern)
+  const showWalletConnectionRequired =
+    !isEvmWalletConnected && activeTab === "dashboard";
 
   return (
     <div className="container mx-auto px-2 md:py-8">
@@ -141,19 +140,17 @@ export default function LendingPage() {
                 }
               />
             </div>
+          ) : activeTab === "markets" && loading ? (
+            <div className="text-center py-16">
+              <div className="text-[#A1A1AA]">loading markets...</div>
+            </div>
+          ) : activeTab === "markets" && (!markets || markets.length === 0) ? (
+            <div className="text-center py-16">
+              <div className="text-[#A1A1AA]">no markets found</div>
+            </div>
           ) : (
             <>
-              {activeTab === "markets" && (
-                <Suspense
-                  fallback={
-                    <div className="text-center py-16">
-                      <div className="text-[#A1A1AA]">loading markets...</div>
-                    </div>
-                  }
-                >
-                  <MarketsContent />
-                </Suspense>
-              )}
+              {activeTab === "markets" && <MarketContent markets={markets} />}
               {activeTab === "dashboard" && (
                 <div className="p-8 text-center">
                   <div className="text-[#A1A1AA] text-lg">
