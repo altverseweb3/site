@@ -18,8 +18,7 @@ import {
   useSetActiveSwapSection,
 } from "@/store/web3Store";
 import { useAaveMarketsData } from "@/hooks/aave/useAaveMarketsData";
-import MarketCard from "@/components/ui/lending/MarketCard";
-import CardsList from "@/components/ui/CardsList";
+import MarketContent from "@/components/ui/lending/MarketContent";
 import { ChainId } from "@/types/aave";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
@@ -30,102 +29,7 @@ const MarketsContent = () => {
     user: undefined,
   });
 
-  if (!markets || markets.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <div className="text-[#A1A1AA]">no markets found</div>
-      </div>
-    );
-  }
-
-  // Create unified market data by combining supply and borrow info for each asset
-  const unifiedMarkets = markets.flatMap((market) => {
-    // Create a map of assets by their underlying token address
-    const assetMap = new Map();
-
-    // Add supply reserves
-    market.supplyReserves.forEach((reserve) => {
-      const key = reserve.underlyingToken.address;
-      assetMap.set(key, {
-        ...reserve,
-        marketInfo: market,
-        marketName: market.name,
-        supplyData: {
-          apy: reserve.supplyInfo?.apy?.value || 0,
-          totalSupplied: reserve.supplyInfo?.total?.value || "0",
-          totalSuppliedUsd: reserve.size?.usd || 0,
-        },
-        borrowData: {
-          apy: 0,
-          totalBorrowed: "0",
-          totalBorrowedUsd: 0,
-        },
-        usdExchangeRate: reserve.usdExchangeRate,
-        isFrozen: reserve.isFrozen,
-        isPaused: reserve.isPaused,
-        incentives: reserve.incentives || [],
-      });
-    });
-
-    // Add/merge borrow reserves
-    market.borrowReserves.forEach((reserve) => {
-      const key = reserve.underlyingToken.address;
-      const existing = assetMap.get(key);
-
-      const borrowData = {
-        apy: reserve.borrowInfo?.apy?.value || 0,
-        totalBorrowed: reserve.borrowInfo?.total?.amount?.value || "0",
-        totalBorrowedUsd: reserve.borrowInfo?.total?.usd || 0,
-      };
-
-      if (existing) {
-        // Merge with existing supply data
-        existing.borrowData = borrowData;
-        // Merge incentives arrays
-        existing.incentives = [
-          ...existing.incentives,
-          ...(reserve.incentives || []),
-        ];
-      } else {
-        // Create new entry with only borrow data
-        assetMap.set(key, {
-          ...reserve,
-          marketInfo: market,
-          marketName: market.name,
-          supplyData: {
-            apy: 0,
-            totalSupplied: "0",
-            totalSuppliedUsd: 0,
-          },
-          borrowData,
-          usdExchangeRate: reserve.usdExchangeRate,
-          isFrozen: reserve.isFrozen,
-          isPaused: reserve.isPaused,
-          incentives: reserve.incentives || [],
-        });
-      }
-    });
-
-    return Array.from(assetMap.values());
-  });
-
-  return (
-    <CardsList
-      data={unifiedMarkets}
-      renderCard={(market) => (
-        <MarketCard
-          key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
-          market={market}
-          onDetails={() => {}}
-        />
-      )}
-      currentPage={1}
-      totalPages={1}
-      onPageChange={() => {}}
-      itemsPerPage={unifiedMarkets.length}
-      totalItems={unifiedMarkets.length}
-    />
-  );
+  return <MarketContent markets={markets} />;
 };
 
 export default function LendingPage() {
