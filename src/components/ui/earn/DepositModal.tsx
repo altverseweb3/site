@@ -6,9 +6,7 @@ import { ethers } from "ethers";
 import {
   ArrowRight,
   Info,
-  CheckCircle,
   AlertCircle,
-  Clock,
   ExternalLink,
   Wallet,
 } from "lucide-react";
@@ -50,6 +48,12 @@ import {
 } from "@/utils/etherFi/vaultShares";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ProgressTracker, {
+  Step,
+  createStep,
+  StepState,
+} from "@/components/ui/ProgressTracker";
+import { VaultDepositProcess } from "@/types/earn";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -720,97 +724,68 @@ const DepositModal: React.FC<DepositModalProps> = ({
     ? getProcessProgress(activeProcess.id)
     : null;
 
-  // ===== UI HELPER FUNCTIONS =====
-  const getStepState = (
-    stepNumber: number,
-  ): "pending" | "active" | "completed" | "failed" => {
-    if (!activeProcess || activeProcess.state === "CANCELLED") return "pending";
+  const getStepsFromActiveProcess = (
+    activeProcess: VaultDepositProcess,
+    vault: EtherFiVault,
+  ): Step[] => {
+    if (!activeProcess) return [];
 
-    const { state } = activeProcess;
-    const isDirect = activeProcess.type === "DIRECT";
+    const { state, type } = activeProcess;
+    const steps = [];
 
-    if (isDirect) {
-      // Direct deposit only has step 2 (vault deposit)
-      if (stepNumber === 1) return "pending";
-      if (stepNumber === 2) {
-        if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
-          return "active";
-        if (state === "COMPLETED") return "completed";
-        if (state === "FAILED") return "failed";
-        return "pending";
-      }
-    } else {
-      // Cross-chain has both steps
-      if (stepNumber === 1) {
-        // Swap step
-        if (state === "IDLE") return "pending";
-        if (state === "SWAP_PENDING") return "active";
-        if (
-          [
-            "SWAP_COMPLETE",
-            "APPROVAL_PENDING",
-            "DEPOSIT_PENDING",
-            "COMPLETED",
-          ].includes(state)
-        )
-          return "completed";
-        if (state === "FAILED") return "failed";
-        return "pending";
-      }
-      if (stepNumber === 2) {
-        // Deposit step
-        if (["IDLE", "SWAP_PENDING", "SWAP_COMPLETE"].includes(state))
-          return "pending";
-        if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
-          return "active";
-        if (state === "COMPLETED") return "completed";
-        if (state === "FAILED") return "failed";
-        return "pending";
-      }
+    if (type === "CROSS_CHAIN") {
+      // Step 1: Cross-chain swap
+      let swapState: StepState = "pending";
+      if (state === "SWAP_PENDING") swapState = "active";
+      else if (
+        [
+          "SWAP_COMPLETE",
+          "APPROVAL_PENDING",
+          "DEPOSIT_PENDING",
+          "COMPLETED",
+        ].includes(state)
+      ) {
+        swapState = "completed";
+      } else if (state === "FAILED") swapState = "failed";
+
+      steps.push(
+        createStep(
+          "swap",
+          "cross-chain swap",
+          `${activeProcess.sourceToken?.ticker} → ${activeProcess.targetAsset}`,
+          swapState,
+        ),
+      );
     }
-    return "pending";
-  };
 
-  const StepIndicator = ({
-    step,
-    title,
-    description,
-  }: {
-    step: number;
-    title: string;
-    description: string;
-  }) => {
-    const state = getStepState(step);
-    const icons = {
-      pending: (
-        <div className="w-6 h-6 rounded-full border-2 border-gray-600 bg-gray-800" />
+    // Step 2: Vault deposit (always present)
+    let depositState: StepState = "pending";
+    if (type === "DIRECT") {
+      // Direct deposit only has the vault deposit step
+      if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
+        depositState = "active";
+      else if (state === "COMPLETED") depositState = "completed";
+      else if (state === "FAILED") depositState = "failed";
+    } else {
+      // Cross-chain deposit step
+      if (["IDLE", "SWAP_PENDING", "SWAP_COMPLETE"].includes(state))
+        depositState = "pending";
+      else if (state === "APPROVAL_PENDING" || state === "DEPOSIT_PENDING")
+        depositState = "active";
+      else if (state === "COMPLETED") depositState = "completed";
+      else if (state === "FAILED") depositState = "failed";
+    }
+
+    steps.push(
+      createStep(
+        "deposit",
+        "vault deposit",
+        `${activeProcess.targetAsset} → ${vault.name}`,
+        depositState,
       ),
-      active: <Clock className="w-6 h-6 text-amber-500" />,
-      completed: <CheckCircle className="w-6 h-6 text-green-500" />,
-      failed: <AlertCircle className="w-6 h-6 text-red-500" />,
-    };
-
-    return (
-      <div className="flex items-center gap-3">
-        {icons[state]}
-        <div>
-          <div
-            className={`text-sm font-medium ${
-              state === "completed"
-                ? "text-green-500"
-                : state === "failed"
-                  ? "text-red-500"
-                  : state === "active"
-                    ? "text-amber-500"
-                    : "text-gray-400"
-            }`}
-          >
-            {title}
-          </div>
-          <div className="text-xs text-gray-500">{description}</div>
-        </div>
-      </div>
     );
+
+    return steps;
   };
 
   // ===== RENDER =====
@@ -833,39 +808,20 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <div className="space-y-6">
           {/* Process Progress */}
           {activeProcess && activeProcess.state !== "CANCELLED" && (
-            <div className="p-4 bg-[#27272A] rounded-lg border border-[#3F3F46]">
-              <div className="text-sm font-medium text-[#FAFAFA] mb-3 break-words">
-                {processProgress?.description || "Processing..."}
-              </div>
-
-              <div className="space-y-3">
-                {activeProcess.type === "CROSS_CHAIN" && (
-                  <StepIndicator
-                    step={1}
-                    title="cross-chain swap"
-                    description={`${activeProcess.sourceToken?.ticker} → ${activeProcess.targetAsset}`}
-                  />
-                )}
-                <StepIndicator
-                  step={2}
-                  title="vault deposit"
-                  description={`${activeProcess.targetAsset} → ${vault.name}`}
-                />
-              </div>
-
-              {activeProcess.state === "SWAP_COMPLETE" && (
-                <div className="mt-3 pt-3 border-t border-[#3F3F46]">
-                  <Button
-                    onClick={() => cancelProcess(activeProcess.id)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-amber-500 border-amber-500 hover:bg-amber-500/10"
-                  >
-                    cancel & keep swapped tokens
-                  </Button>
-                </div>
-              )}
-            </div>
+            <ProgressTracker
+              steps={getStepsFromActiveProcess(activeProcess, vault)}
+              title={processProgress?.description || "Processing..."}
+              actionButton={
+                activeProcess.state === "SWAP_COMPLETE"
+                  ? {
+                      label: "cancel & keep swapped tokens",
+                      onClick: () => cancelProcess(activeProcess.id),
+                      variant: "outline" as const,
+                    }
+                  : undefined
+              }
+              show={true}
+            />
           )}
 
           {/* Form - only show when no active process or process completed/failed/cancelled */}
