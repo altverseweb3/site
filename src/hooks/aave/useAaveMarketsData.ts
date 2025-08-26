@@ -39,6 +39,21 @@ export const useAaveMarketsData = (args: UseAaveMarketsArgs) => {
 };
 
 /**
+ * Hook to fetch data for multiple Aave markets with loading states.
+ * This hook returns loading states instead of suspending.
+ */
+export const useAaveMarketsWithLoading = (args: UseAaveMarketsArgs) => {
+  const { data, loading } = useAaveMarkets({
+    chainIds: args.chainIds,
+    user: args.user,
+    borrowsOrderBy: args.borrowsOrderBy,
+    suppliesOrderBy: args.suppliesOrderBy,
+  });
+
+  return { markets: data, loading };
+};
+
+/**
  * Hook to fetch data for a single Aave market using Suspense pattern.
  * This hook will suspend the component until data is loaded.
  */
