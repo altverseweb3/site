@@ -19,8 +19,10 @@ import {
 } from "@/store/web3Store";
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
+import TransactionContent from "@/components/ui/lending/TransactionContent";
 import { ChainId } from "@/types/aave";
-
+import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
+import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
 export default function LendingPage() {
@@ -46,6 +48,15 @@ export default function LendingPage() {
   const { markets, loading } = useAaveMarketsWithLoading({
     chainIds: [1 as ChainId],
     user: undefined,
+  });
+
+  // Fetch transaction history data
+  const { data: transactions, loading: transactionsLoading } = useAaveUserTransactionHistory({
+    market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Polygon V3 Ethereum
+    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"), // Hardcoded
+    chainId: chainId(137), // Polygon mainnet
+    orderBy: { date: OrderDirection.Desc },
+    pageSize: PageSize.Fifty,
   });
 
   useEffect(() => {
@@ -158,13 +169,7 @@ export default function LendingPage() {
                   </div>
                 </div>
               )}
-              {activeTab === "history" && (
-                <div className="p-8 text-center">
-                  <div className="text-[#A1A1AA] text-lg">
-                    History content coming soon...
-                  </div>
-                </div>
-              )}
+              { activeTab === "history" && <TransactionContent data={transactions} loading={transactionsLoading} /> }
             </>
           )}
         </div>
