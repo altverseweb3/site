@@ -1,15 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import MarketCard from "./MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import { Market } from "@/types/aave";
+
+const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
   markets: Market[] | null | undefined;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
   if (!markets || markets.length === 0) {
     return (
       <div className="text-center py-16">
@@ -89,9 +93,19 @@ const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
     return Array.from(assetMap.values());
   });
 
+  const totalPages = Math.ceil(unifiedMarkets.length / ITEMS_PER_PAGE);
+  const paginatedMarkets = unifiedMarkets.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <CardsList
-      data={unifiedMarkets}
+      data={paginatedMarkets}
       renderCard={(market) => (
         <MarketCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
@@ -99,10 +113,10 @@ const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
           onDetails={() => {}}
         />
       )}
-      currentPage={1}
-      totalPages={1}
-      onPageChange={() => {}}
-      itemsPerPage={unifiedMarkets.length}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageChange}
+      itemsPerPage={ITEMS_PER_PAGE}
       totalItems={unifiedMarkets.length}
     />
   );
