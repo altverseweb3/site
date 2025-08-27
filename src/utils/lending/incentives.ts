@@ -52,7 +52,12 @@ export const getDeduplicatedIncentives = (
         key: `${incentive.__typename}-${index}`,
         text,
         aprValue,
-        type: incentive.__typename.includes("Supply") ? "supply" : "borrow",
+        type:
+          incentive.__typename === "MeritBorrowAndSupplyIncentiveCondition"
+            ? "mixed"
+            : incentive.__typename.includes("Supply")
+              ? "supply"
+              : "borrow",
       });
     }
   });
@@ -72,6 +77,9 @@ export const calculateApyWithIncentives = (
   );
   const borrowBonuses = deduplicatedIncentives.filter(
     (incentive) => incentive.type === "borrow",
+  );
+  const mixedIncentives = deduplicatedIncentives.filter(
+    (incentive) => incentive.type === "mixed",
   );
 
   const supplyBonusTotal = supplyBonuses.reduce(
@@ -98,5 +106,6 @@ export const calculateApyWithIncentives = (
     finalBorrowAPY: (Number(baseBorrowAPY) - Number(borrowBonusTotal)) * 100,
     hasSupplyBonuses: supplyBonuses.length > 0,
     hasBorrowBonuses: borrowBonuses.length > 0,
+    hasMixedIncentives: mixedIncentives.length > 0,
   };
 };

@@ -14,7 +14,7 @@ import TruncatedText from "@/components/ui/TruncatedText";
 import Image from "next/image";
 import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
 import { Reserve, Market } from "@/types/aave";
-import { SquarePlus, SquareMinus } from "lucide-react";
+import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 
 interface UnifiedMarketData extends Reserve {
@@ -50,8 +50,17 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
   const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
   // Calculate final APYs with incentives
-  const { finalSupplyAPY, finalBorrowAPY, hasSupplyBonuses, hasBorrowBonuses } =
-    calculateApyWithIncentives(baseSupplyAPY, baseBorrowAPY, market.incentives);
+  const {
+    finalSupplyAPY,
+    finalBorrowAPY,
+    hasSupplyBonuses,
+    hasBorrowBonuses,
+    hasMixedIncentives,
+  } = calculateApyWithIncentives(
+    baseSupplyAPY,
+    baseBorrowAPY,
+    market.incentives,
+  );
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
@@ -113,6 +122,9 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
             {hasSupplyBonuses && (
               <SquarePlus className="w-5 h-5 text-green-500" />
             )}
+            {hasMixedIncentives && (
+              <SquareEqual className="w-5 h-5 text-indigo-500" />
+            )}
             <span className="text-green-500 text-sm font-semibold font-mono">
               {formatAPY(finalSupplyAPY)}
             </span>
@@ -143,6 +155,9 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
           <div className="flex items-center gap-1">
             {hasBorrowBonuses && (
               <SquareMinus className="w-5 h-5 text-amber-500" />
+            )}
+            {hasMixedIncentives && (
+              <SquareEqual className="w-5 h-5 text-indigo-500" />
             )}
             <span className="text-red-500 text-sm font-semibold font-mono">
               {formatAPY(finalBorrowAPY)}
