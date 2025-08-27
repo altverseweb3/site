@@ -10,11 +10,13 @@ interface HistoryContentProps {
 
 const HistoryContent = ({ data, loading }: HistoryContentProps) => {
   if (loading) {
-    return (<div className="text-center py-16">
-      <div className="text-[#A1A1AA]">loading transaction history...</div>
-    </div>)
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA]">loading transaction history...</div>
+      </div>
+    );
   }
-  
+
   if (!data || !data.items || data.items.length === 0) {
     return (
       <div className="text-center py-16">

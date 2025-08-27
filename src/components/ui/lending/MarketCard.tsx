@@ -14,6 +14,8 @@ import TruncatedText from "@/components/ui/TruncatedText";
 import Image from "next/image";
 import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
 import { Reserve, Market } from "@/types/aave";
+import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
+import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 
 interface UnifiedMarketData extends Reserve {
   marketInfo: Market;
@@ -40,167 +42,25 @@ interface MarketCardProps {
 
 const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
   // Extract data from unified structure
-  const supplyAPY = market.supplyData.apy;
-  const borrowAPY = market.borrowData.apy;
+  const baseSupplyAPY = market.supplyData.apy;
+  const baseBorrowAPY = market.borrowData.apy;
   const totalSupplied = market.supplyData.totalSupplied;
   const totalBorrowed = market.borrowData.totalBorrowed;
   const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
   const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
-  // Process incentives with deduplication
-  const getIncentiveDisplay = (incentives: Reserve["incentives"]) => {
-    if (!incentives || incentives.length === 0) return null;
-
-    const seen = new Set<string>();
-    const uniqueIncentives: {
-      key: string;
-      text: string;
-      aprValue: number;
-      type: string;
-      rawValue: string;
-      decimals: number;
-      formattedValue: string;
-      claimLink?: unknown;
-      rewardTokenAddress?: string;
-      rewardTokenSymbol?: string;
-      supplyToken?: {
-        address: string;
-        imageUrl: string;
-        name: string;
-        symbol: string;
-        decimals: number;
-        chainId: number;
-      };
-      borrowToken?: {
-        address: string;
-        imageUrl: string;
-        name: string;
-        symbol: string;
-        decimals: number;
-        chainId: number;
-      };
-    }[] = [];
-
-    incentives.forEach((incentive, index) => {
-      let text = "";
-      let aprValue = 0;
-      let dedupeKey = "";
-      let rawValue = "";
-      let decimals = 0;
-      let formattedValue = "";
-      let claimLink: unknown;
-      let rewardTokenAddress: string | undefined;
-      let rewardTokenSymbol: string | undefined;
-      let supplyToken:
-        | {
-            address: string;
-            imageUrl: string;
-            name: string;
-            symbol: string;
-            decimals: number;
-            chainId: number;
-          }
-        | undefined;
-      let borrowToken:
-        | {
-            address: string;
-            imageUrl: string;
-            name: string;
-            symbol: string;
-            decimals: number;
-            chainId: number;
-          }
-        | undefined;
-
-      switch (incentive.__typename) {
-        case "MeritSupplyIncentive":
-          text = "merit supply";
-          aprValue = incentive.extraSupplyApr.value;
-          rawValue = incentive.extraSupplyApr.raw;
-          decimals = incentive.extraSupplyApr.decimals;
-          formattedValue = incentive.extraSupplyApr.formatted.toString();
-          claimLink = incentive.claimLink;
-          dedupeKey = "merit-supply";
-          break;
-        case "MeritBorrowIncentive":
-          text = "merit borrow";
-          aprValue = incentive.borrowAprDiscount.value;
-          rawValue = incentive.borrowAprDiscount.raw;
-          decimals = incentive.borrowAprDiscount.decimals;
-          formattedValue = incentive.borrowAprDiscount.formatted.toString();
-          claimLink = incentive.claimLink;
-          dedupeKey = "merit-borrow";
-          break;
-        case "MeritBorrowAndSupplyIncentiveCondition":
-          text = `merit ${incentive.supplyToken.symbol}/${incentive.borrowToken.symbol}`;
-          aprValue = incentive.extraApr.value;
-          rawValue = incentive.extraApr.raw;
-          decimals = incentive.extraApr.decimals;
-          formattedValue = incentive.extraApr.formatted.toString();
-          claimLink = incentive.claimLink;
-          supplyToken = {
-            address: incentive.supplyToken.address,
-            imageUrl: incentive.supplyToken.imageUrl,
-            name: incentive.supplyToken.name,
-            symbol: incentive.supplyToken.symbol,
-            decimals: incentive.supplyToken.decimals,
-            chainId: incentive.supplyToken.chainId,
-          };
-          borrowToken = {
-            address: incentive.borrowToken.address,
-            imageUrl: incentive.borrowToken.imageUrl,
-            name: incentive.borrowToken.name,
-            symbol: incentive.borrowToken.symbol,
-            decimals: incentive.borrowToken.decimals,
-            chainId: incentive.borrowToken.chainId,
-          };
-          dedupeKey = `merit-condition-${incentive.supplyToken.symbol}-${incentive.borrowToken.symbol}`;
-          break;
-        case "AaveSupplyIncentive":
-          text = `${incentive.rewardTokenSymbol} supply`;
-          aprValue = incentive.extraSupplyApr.value;
-          rawValue = incentive.extraSupplyApr.raw;
-          decimals = incentive.extraSupplyApr.decimals;
-          formattedValue = incentive.extraSupplyApr.formatted.toString();
-          rewardTokenAddress = incentive.rewardTokenAddress;
-          rewardTokenSymbol = incentive.rewardTokenSymbol;
-          dedupeKey = `aave-supply-${incentive.rewardTokenSymbol}`;
-          break;
-        case "AaveBorrowIncentive":
-          text = `${incentive.rewardTokenSymbol} borrow`;
-          aprValue = incentive.borrowAprDiscount.value;
-          rawValue = incentive.borrowAprDiscount.raw;
-          decimals = incentive.borrowAprDiscount.decimals;
-          formattedValue = incentive.borrowAprDiscount.formatted.toString();
-          rewardTokenAddress = incentive.rewardTokenAddress;
-          rewardTokenSymbol = incentive.rewardTokenSymbol;
-          dedupeKey = `aave-borrow-${incentive.rewardTokenSymbol}`;
-          break;
-      }
-
-      if (!seen.has(dedupeKey)) {
-        seen.add(dedupeKey);
-        uniqueIncentives.push({
-          key: `${incentive.__typename}-${index}`,
-          text,
-          aprValue,
-          type: incentive.__typename.includes("Supply") ? "supply" : "borrow",
-          rawValue,
-          decimals,
-          formattedValue,
-          claimLink,
-          rewardTokenAddress,
-          rewardTokenSymbol,
-          supplyToken,
-          borrowToken,
-        });
-      }
-    });
-
-    return uniqueIncentives;
-  };
-
-  const incentiveDisplays = getIncentiveDisplay(market.incentives);
+  // Calculate final APYs with incentives
+  const {
+    finalSupplyAPY,
+    finalBorrowAPY,
+    hasSupplyBonuses,
+    hasBorrowBonuses,
+    hasMixedIncentives,
+  } = calculateApyWithIncentives(
+    baseSupplyAPY,
+    baseBorrowAPY,
+    market.incentives,
+  );
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
@@ -258,8 +118,16 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
         {/* Supply APY row - always show */}
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">supply APY</div>
-          <div className="text-green-500 text-sm font-semibold font-mono">
-            {formatAPY(supplyAPY)}
+          <div className="flex items-center gap-1">
+            {hasSupplyBonuses && (
+              <SquarePlus className="w-5 h-5 text-green-500" />
+            )}
+            {hasMixedIncentives && (
+              <SquareEqual className="w-5 h-5 text-indigo-500" />
+            )}
+            <span className="text-green-500 text-sm font-semibold font-mono">
+              {formatAPY(finalSupplyAPY)}
+            </span>
           </div>
         </div>
 
@@ -284,37 +152,18 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
         {/* Borrow APY row - always show */}
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">borrow APY</div>
-          <div className="text-red-500 text-sm font-semibold font-mono">
-            {formatAPY(borrowAPY)}
+          <div className="flex items-center gap-1">
+            {hasBorrowBonuses && (
+              <SquareMinus className="w-5 h-5 text-amber-500" />
+            )}
+            {hasMixedIncentives && (
+              <SquareEqual className="w-5 h-5 text-indigo-500" />
+            )}
+            <span className="text-red-500 text-sm font-semibold font-mono">
+              {formatAPY(finalBorrowAPY)}
+            </span>
           </div>
         </div>
-
-        {/* Incentives section */}
-        {incentiveDisplays && incentiveDisplays.length > 0 && (
-          <div className="border-t border-[#27272A] pt-3 mt-3">
-            <div className="text-[#A1A1AA] text-xs mb-2">incentives</div>
-            <div className="space-y-1">
-              {incentiveDisplays.map((incentive) => (
-                <div
-                  key={incentive.key}
-                  className="flex justify-between items-center"
-                >
-                  <div className="text-[#A1A1AA] text-xs">{incentive.text}</div>
-                  <div
-                    className={`text-xs font-semibold font-mono ${
-                      incentive.type === "supply"
-                        ? "text-green-400"
-                        : "text-orange-400"
-                    }`}
-                  >
-                    {incentive.type === "supply" ? "+" : "-"}
-                    {formatAPY(incentive.aprValue)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
