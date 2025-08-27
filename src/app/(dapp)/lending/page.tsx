@@ -16,6 +16,7 @@ import { WalletType } from "@/types/web3";
 import {
   useIsWalletTypeConnected,
   useSetActiveSwapSection,
+  useWalletByType,
 } from "@/store/web3Store";
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
@@ -43,18 +44,25 @@ export default function LendingPage() {
   }, [aaveChains]);
   const setActiveSwapSection = useSetActiveSwapSection();
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+  const userWalletAddress = useWalletByType(WalletType.REOWN_EVM)?.address;
+
+  const determineChainsToFetch = () => {
+    if (selectedChains.length === 0 && supportedChains.length > 0)
+      return supportedChains.map((chain) => chain.chainId as ChainId);
+    return selectedChains.map((chain) => chain.chainId as ChainId);
+  };
 
   // Fetch markets data with loading state (like earn page)
   const { markets, loading } = useAaveMarketsWithLoading({
-    chainIds: [1 as ChainId],
-    user: undefined,
+    chainIds: determineChainsToFetch(),
+    user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
   });
 
   // Fetch transaction history data
   const { data: transactions, loading: transactionsLoading } =
     useAaveUserTransactionHistory({
       market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Polygon V3 Ethereum
-      user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"), // Hardcoded
+      user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
       chainId: chainId(137), // Polygon mainnet
       orderBy: { date: OrderDirection.Desc },
       pageSize: PageSize.Fifty,
