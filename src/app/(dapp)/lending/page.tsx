@@ -51,13 +51,14 @@ export default function LendingPage() {
   });
 
   // Fetch transaction history data
-  const { data: transactions, loading: transactionsLoading } = useAaveUserTransactionHistory({
-    market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Polygon V3 Ethereum
-    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"), // Hardcoded
-    chainId: chainId(137), // Polygon mainnet
-    orderBy: { date: OrderDirection.Desc },
-    pageSize: PageSize.Fifty,
-  });
+  const { data: transactions, loading: transactionsLoading } =
+    useAaveUserTransactionHistory({
+      market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Polygon V3 Ethereum
+      user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"), // Hardcoded
+      chainId: chainId(137), // Polygon mainnet
+      orderBy: { date: OrderDirection.Desc },
+      pageSize: PageSize.Fifty,
+    });
 
   useEffect(() => {
     setActiveSwapSection("lending");
@@ -169,7 +170,12 @@ export default function LendingPage() {
                   </div>
                 </div>
               )}
-              { activeTab === "history" && <TransactionContent data={transactions} loading={transactionsLoading} /> }
+              {activeTab === "history" && (
+                <TransactionContent
+                  data={transactions}
+                  loading={transactionsLoading}
+                />
+              )}
             </>
           )}
         </div>

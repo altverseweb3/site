@@ -8,7 +8,7 @@ import {
   formatTransactionAmount,
   formatTransactionUsdValue,
   isUserLiquidationCallTransaction,
-} from "@/utils/lending/transactionUtils";
+} from "@/utils/lending/transactions";
 import Image from "next/image";
 
 export const TransactionCard: React.FC<{

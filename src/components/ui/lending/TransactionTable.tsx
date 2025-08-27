@@ -6,7 +6,7 @@ import {
   getTransactionLabel,
   formatTransactionAmount,
   formatTransactionUsdValue,
-} from "@/utils/lending/transactionUtils";
+} from "@/utils/lending/transactions";
 import TransactionIcon from "@/components/ui/lending/TransactionIcon";
 import Image from "next/image";
 
