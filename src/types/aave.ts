@@ -78,3 +78,10 @@ export type {
   UserUsageAsCollateralTransaction,
   UserLiquidationCallTransaction,
 };
+
+export interface AaveMarket {
+  name: string;
+  address: string;
+  chainId: number;
+  isActive: boolean;
+}
