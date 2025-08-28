@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Switch } from "@/components/ui/Switch";
+import { Info } from "lucide-react";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -10,6 +11,7 @@ interface DashboardContentProps {
 export default function DashboardContent({}: DashboardContentProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
+  const [showZeroBalance, setShowZeroBalance] = useState(false);
 
   const globalData = {
     netWorth: "$12,345.67",
@@ -36,26 +38,26 @@ export default function DashboardContent({}: DashboardContentProps) {
         {/* Global Overview */}
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-medium text-white">Global Overview</h3>
+            <h3 className="text-sm font-medium text-white">global overview</h3>
             <button className="px-2 py-1 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
-              Risk Details
+              risk details
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">Net Worth</div>
+              <div className="text-xs text-[#A1A1AA] mb-1">net worth</div>
               <div className="text-sm font-semibold text-white">
                 {globalData.netWorth}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">Net APY</div>
+              <div className="text-xs text-[#A1A1AA] mb-1">net APY</div>
               <div className="text-sm font-semibold text-green-400">
                 {globalData.netAPY}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">Health Factor</div>
+              <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
               <div className="text-sm font-semibold text-white">
                 {globalData.healthFactor}
               </div>
@@ -67,17 +69,17 @@ export default function DashboardContent({}: DashboardContentProps) {
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">
-              {isSupplyMode ? "Supply Overview" : "Borrow Overview"}
+              {isSupplyMode ? "supply overview" : "borrow overview"}
             </h3>
             <button
               className={`px-2 py-1 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
             >
-              E-Mode
+              e-mode
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">Balance</div>
+              <div className="text-xs text-[#A1A1AA] mb-1">balance</div>
               <div className="text-sm font-semibold text-white">
                 {isSupplyMode ? supplyData.balance : borrowData.balance}
               </div>
@@ -92,7 +94,7 @@ export default function DashboardContent({}: DashboardContentProps) {
             </div>
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">
-                {isSupplyMode ? "Collateral" : "Borrow Power"}
+                {isSupplyMode ? "collateral" : "borrow power"}
               </div>
               <div
                 className={`text-sm font-semibold ${isSupplyMode ? "text-white" : "text-orange-400"}`}
@@ -107,39 +109,67 @@ export default function DashboardContent({}: DashboardContentProps) {
       </div>
 
       {/* Switches Above Positions */}
-      <div className="flex gap-4 mb-4 pl-0.5">
-        <div className="flex items-center space-x-2">
-          <span
-            className={`text-xs ${!isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
-          >
-            Supply
-          </span>
-          <Switch
-            checked={!isSupplyMode}
-            onCheckedChange={(checked) => setIsSupplyMode(!checked)}
-          />
-          <span
-            className={`text-xs ${isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
-          >
-            Borrow
-          </span>
-        </div>
+      <div className="space-y-3 mb-4 ml-0.5">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex gap-4">
+            <div className="flex items-center space-x-2">
+              <span
+                className={`text-xs ${!isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
+              >
+                supply
+              </span>
+              <Switch
+                checked={!isSupplyMode}
+                onCheckedChange={(checked) => setIsSupplyMode(!checked)}
+              />
+              <span
+                className={`text-xs ${isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
+              >
+                borrow
+              </span>
+            </div>
 
-        <div className="flex items-center space-x-2">
-          <span
-            className={`text-xs ${!showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
-          >
-            Available
-          </span>
-          <Switch
-            checked={!showAvailable}
-            onCheckedChange={(checked) => setShowAvailable(!checked)}
-          />
-          <span
-            className={`text-xs ${showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
-          >
-            {isSupplyMode ? "Supplied" : "Borrowed"}
-          </span>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`text-xs ${!showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
+              >
+                available
+              </span>
+              <Switch
+                checked={!showAvailable}
+                onCheckedChange={(checked) => setShowAvailable(!checked)}
+              />
+              <span
+                className={`text-xs ${showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
+              >
+                {isSupplyMode ? "supplied" : "borrowed"}
+              </span>
+            </div>
+          </div>
+
+          {/* Conditional Content */}
+          <div className="flex items-center">
+            {isSupplyMode ? (
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showZeroBalance}
+                  onChange={(e) => setShowZeroBalance(e.target.checked)}
+                  className="w-4 h-4 bg-[#27272A] border border-[#3F3F46] rounded text-blue-500 focus:ring-blue-500 focus:ring-1"
+                />
+                <span className="text-xs text-[#A1A1AA]">
+                  show assets with 0 balance
+                </span>
+              </label>
+            ) : (
+              <div className="flex items-center space-x-1 text-sky-500">
+                <Info className="w-5 h-5" />
+                <span className="text-xs pl-1 sm:pl-0">
+                  to borrow you need to supply assets to be used as collateral
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -148,8 +178,8 @@ export default function DashboardContent({}: DashboardContentProps) {
         <div className="text-center py-8">
           <div className="text-[#A1A1AA] text-sm">
             {showAvailable
-              ? `Available ${isSupplyMode ? "supply" : "borrow"} positions will be displayed here`
-              : `Your ${isSupplyMode ? "supplied" : "borrowed"} positions will be displayed here`}
+              ? `available ${isSupplyMode ? "supply" : "borrow"} positions will be displayed here`
+              : `your ${isSupplyMode ? "supplied" : "borrowed"} positions will be displayed here`}
           </div>
         </div>
       </div>
