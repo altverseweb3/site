@@ -21,6 +21,7 @@ import {
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
 import TransactionContent from "@/components/ui/lending/TransactionContent";
+import DashboardContent from "@/components/ui/lending/DashboardContent";
 import { ChainId } from "@/types/aave";
 import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
 import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
@@ -172,11 +173,7 @@ export default function LendingPage() {
             <>
               {activeTab === "markets" && <MarketContent markets={markets} />}
               {activeTab === "dashboard" && (
-                <div className="p-8 text-center">
-                  <div className="text-[#A1A1AA] text-lg">
-                    Dashboard content coming soon...
-                  </div>
-                </div>
+                <DashboardContent userAddress={userWalletAddress} />
               )}
               {activeTab === "history" && (
                 <TransactionContent
