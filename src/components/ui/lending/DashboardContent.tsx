@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Switch } from "@/components/ui/Switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 
 interface DashboardContentProps {
@@ -39,7 +39,7 @@ export default function DashboardContent({}: DashboardContentProps) {
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">global overview</h3>
-            <button className="px-2 py-1 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
+            <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
               risk details
             </button>
           </div>
@@ -72,7 +72,7 @@ export default function DashboardContent({}: DashboardContentProps) {
               {isSupplyMode ? "supply overview" : "borrow overview"}
             </h3>
             <button
-              className={`px-2 py-1 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
+              className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
             >
               e-mode
             </button>
@@ -108,43 +108,53 @@ export default function DashboardContent({}: DashboardContentProps) {
         </div>
       </div>
 
-      {/* Switches Above Positions */}
-      <div className="space-y-3 mb-4 ml-0.5">
+      {/* Toggle Group Above Positions */}
+      <div className="space-y-2 mb-4 ml-0.5">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="flex gap-4">
-            <div className="flex items-center space-x-2">
-              <span
-                className={`text-xs ${!isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
+            <ToggleGroup
+              type="single"
+              value={isSupplyMode ? "supply" : "borrow"}
+              onValueChange={(value) => setIsSupplyMode(value === "supply")}
+            >
+              <ToggleGroupItem
+                value="supply"
+                className="data-[state=on]:bg-amber-500/25 data-[state=on]:text-amber-300 data-[state=on]:border-[#61410B]"
               >
                 supply
-              </span>
-              <Switch
-                checked={!isSupplyMode}
-                onCheckedChange={(checked) => setIsSupplyMode(!checked)}
-              />
-              <span
-                className={`text-xs ${isSupplyMode ? "text-[#A1A1AA]" : "text-white"}`}
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="borrow"
+                className="data-[state=on]:bg-amber-500/25 data-[state=on]:text-amber-300 data-[state=on]:border-[#61410B]"
               >
                 borrow
-              </span>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-            <div className="flex items-center space-x-2">
-              <span
-                className={`text-xs ${!showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
+            <ToggleGroup
+              type="single"
+              value={
+                showAvailable
+                  ? "available"
+                  : isSupplyMode
+                    ? "supplied"
+                    : "borrowed"
+              }
+              onValueChange={(value) => setShowAvailable(value === "available")}
+            >
+              <ToggleGroupItem
+                value="available"
+                className="data-[state=on]:bg-sky-500/25 data-[state=on]:text-sky-300 data-[state=on]:border-sky-800"
               >
                 available
-              </span>
-              <Switch
-                checked={!showAvailable}
-                onCheckedChange={(checked) => setShowAvailable(!checked)}
-              />
-              <span
-                className={`text-xs ${showAvailable ? "text-[#A1A1AA]" : "text-white"}`}
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value={isSupplyMode ? "supplied" : "borrowed"}
+                className="data-[state=on]:bg-sky-500/25 data-[state=on]:text-sky-300 data-[state=on]:border-sky-800"
               >
-                {isSupplyMode ? "supplied" : "borrowed"}
-              </span>
-            </div>
+                open
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Conditional Content */}
@@ -155,7 +165,7 @@ export default function DashboardContent({}: DashboardContentProps) {
                   type="checkbox"
                   checked={showZeroBalance}
                   onChange={(e) => setShowZeroBalance(e.target.checked)}
-                  className="w-4 h-4 bg-[#27272A] border border-[#3F3F46] rounded text-blue-500 focus:ring-blue-500 focus:ring-1"
+                  className="w-4 h-4 bg-[#27272A] border border-[#3F3F46] rounded text-amber-500"
                 />
                 <span className="text-xs text-[#A1A1AA]">
                   show assets with 0 balance
