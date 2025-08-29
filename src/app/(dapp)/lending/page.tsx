@@ -20,11 +20,13 @@ import {
 } from "@/store/web3Store";
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
-import TransactionContent from "@/components/ui/lending/TransactionContent";
 import DashboardContent from "@/components/ui/lending/DashboardContent";
 import { ChainId } from "@/types/aave";
-import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
-import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
+import { evmAddress } from "@aave/react";
+import { getActiveAaveMarketsByChainId } from "@/utils/lending/marketConfig";
+import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
+import HistoryContent from "@/components/ui/lending/TransactionContent";
+
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
 export default function LendingPage() {
@@ -43,31 +45,37 @@ export default function LendingPage() {
       aaveSupportedChainIds.includes(chain.chainId),
     );
   }, [aaveChains]);
+
   const setActiveSwapSection = useSetActiveSwapSection();
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
   const userWalletAddress = useWalletByType(WalletType.REOWN_EVM)?.address;
 
-  const determineChainsToFetch = () => {
+  const determineChainsToFetch = (): ChainId[] => {
     if (selectedChains.length === 0 && supportedChains.length > 0)
       return supportedChains.map((chain) => chain.chainId as ChainId);
     return selectedChains.map((chain) => chain.chainId as ChainId);
   };
 
-  // Fetch markets data with loading state (like earn page)
+  // Compute active markets for transaction history
+  const activeMarkets = useMemo(() => {
+    const chainIds: ChainId[] =
+      selectedChains.length === 0 && supportedChains.length > 0
+        ? supportedChains.map((chain) => chain.chainId as ChainId)
+        : selectedChains.map((chain) => chain.chainId as ChainId);
+
+    return chainIds.flatMap((chainId) =>
+      getActiveAaveMarketsByChainId(chainId).map((market) => ({
+        ...market,
+        chainId,
+      })),
+    );
+  }, [selectedChains, supportedChains]);
+
+  // Fetch markets data with loading state
   const { markets, loading } = useAaveMarketsWithLoading({
     chainIds: determineChainsToFetch(),
     user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
   });
-
-  // Fetch transaction history data
-  const { data: transactions, loading: transactionsLoading } =
-    useAaveUserTransactionHistory({
-      market: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"), // Polygon V3 Ethereum
-      user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
-      chainId: chainId(137), // Polygon mainnet
-      orderBy: { date: OrderDirection.Desc },
-      pageSize: PageSize.Fifty,
-    });
 
   useEffect(() => {
     setActiveSwapSection("lending");
@@ -77,9 +85,10 @@ export default function LendingPage() {
     setActiveTab(value);
   };
 
-  // Show wallet connection requirement only for dashboard tab (like earn page pattern)
+  // Show wallet connection requirement for dashboard and history tabs
   const showWalletConnectionRequired =
-    !isEvmWalletConnected && activeTab === "dashboard";
+    !isEvmWalletConnected &&
+    (activeTab === "dashboard" || activeTab === "history");
 
   return (
     <div className="container mx-auto px-2 md:py-8">
@@ -176,10 +185,14 @@ export default function LendingPage() {
                 <DashboardContent userAddress={userWalletAddress} />
               )}
               {activeTab === "history" && (
-                <TransactionContent
-                  data={transactions}
-                  loading={transactionsLoading}
-                />
+                <AggregatedTransactionHistory
+                  activeMarkets={activeMarkets}
+                  userWalletAddress={evmAddress(userWalletAddress!)}
+                >
+                  {({ transactions, loading }) => (
+                    <HistoryContent data={transactions} loading={loading} />
+                  )}
+                </AggregatedTransactionHistory>
               )}
             </>
           )}
