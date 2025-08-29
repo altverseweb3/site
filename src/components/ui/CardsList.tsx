@@ -28,7 +28,7 @@ const CardsList = <T,>({
   className,
 }: CardsListProps<T>) => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, data.length);
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div className={cn("w-full", className)}>
