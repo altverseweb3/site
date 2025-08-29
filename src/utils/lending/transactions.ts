@@ -110,14 +110,20 @@ const formatTransactionUsdValue = (
 const getReserveInfo = (transaction: UserTransactionItem) => {
   if (!hasReserve(transaction)) {
     return {
-      symbol: "UNKNOWN",
-      imageUrl: "",
+      market: "UNKNOWN",
+      assetSymbol: "UNKNOWN",
+      assetImageUrl: "",
+      chainSymbol: "UNKNOWN",
+      chainIconUrl: "",
     };
   }
 
   return {
-    symbol: transaction.reserve?.underlyingToken?.symbol || "UNKNOWN",
-    imageUrl: transaction.reserve?.underlyingToken?.imageUrl || "",
+    market: transaction.reserve?.market?.name || "UNKNOWN",
+    assetSymbol: transaction.reserve?.underlyingToken?.symbol || "UNKNOWN",
+    assetImageUrl: transaction.reserve?.underlyingToken?.imageUrl || "",
+    chainSymbol: transaction.reserve?.market?.chain?.name || "UNKNOWN",
+    chainIconUrl: transaction.reserve?.market?.chain?.icon || "",
   };
 };
 
