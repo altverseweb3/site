@@ -72,7 +72,7 @@ export const useAaveUserMarketState = (args: UseUserStateArgs) => {
 export const useAaveUserTransactionHistory = (
   args: UseUserTransactionHistoryArgs,
 ) => {
-  const { data, loading } = useUserTransactionHistory({
+  const { data, loading, error } = useUserTransactionHistory({
     market: args.market,
     user: args.user,
     chainId: args.chainId,
@@ -80,5 +80,5 @@ export const useAaveUserTransactionHistory = (
     pageSize: args.pageSize,
   });
 
-  return { data, loading };
+  return { data, loading, error };
 };
