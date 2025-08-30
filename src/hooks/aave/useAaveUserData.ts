@@ -66,6 +66,20 @@ export const useAaveUserMarketState = (args: UseUserStateArgs) => {
 };
 
 /**
+ * Hook to fetch data for user market state without suspense.
+ * Returns loading and error states for manual handling.
+ */
+export const useAaveUserMarketStateWithLoading = (args: UseUserStateArgs) => {
+  const { data, loading, error } = useUserMarketState({
+    chainId: args.chainId,
+    market: args.market,
+    user: args.user,
+  });
+
+  return { data, loading, error };
+};
+
+/**
  * Hook to fetch data for user transaction history.
  * This hook will suspend the component until data is loaded.
  */
