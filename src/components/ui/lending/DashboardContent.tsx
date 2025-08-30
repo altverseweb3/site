@@ -6,8 +6,8 @@ import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
 import { AaveMarket } from "@/types/aave";
-import { AggregatedMarketUserState } from "./AggregatedMarketUserState";
-import { AggregatedMarketUserSupplies } from "./AggregatedMarketUserSupplies";
+import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
+import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { formatHealthFactor } from "@/utils/formatters";
 
 interface DashboardContentProps {

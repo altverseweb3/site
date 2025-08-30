@@ -4,40 +4,16 @@ import { ChainId, EvmAddress, AaveMarket } from "@/types/aave";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface MarketUserReserveSupplyPosition {
-  __typename: "MarketUserReserveSupplyPosition";
-  market: {
-    __typename: "MarketInfo";
-    name: string;
-    address: string;
-    chain: {
-      __typename: "Chain";
-      name: string;
-      chainId: number;
-    };
-  };
   currency: {
-    __typename: "Currency";
-    address: string;
-    name: string;
     symbol: string;
-    decimals: number;
-    chainId: number;
   };
   balance: {
-    __typename: "TokenAmount";
     usd: string;
-    amount: {
-      __typename: "DecimalValue";
-      value: string;
-    };
   };
   apy: {
-    __typename: "PercentValue";
     value: string;
-    formatted: string;
   };
   isCollateral: boolean;
-  canBeCollateral: boolean;
 }
 
 interface UserSupplyData {
