@@ -81,7 +81,17 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
           <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
             {market.underlyingToken.name}
           </CardTitle>
-          <CardDescription className="text-[#A1A1AA] text-xs mt-1">
+          <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
+            <Image
+              src={market.market.icon}
+              alt={market.market.chain.name}
+              width={16}
+              height={16}
+              className="object-contain rounded-full"
+              onError={(e) => {
+                e.currentTarget.src = "/images/markets/default.svg";
+              }}
+            />
             {market.marketName}
             {(market.isFrozen || market.isPaused) && (
               <span className="ml-1 text-red-400">
