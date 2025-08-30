@@ -107,6 +107,20 @@ const formatTransactionUsdValue = (
   return formatCurrency(amount.usd);
 };
 
+const getTransactionKey = (transaction: UserTransactionItem): string => {
+  let chainName: string;
+
+  if (isUserLiquidationCallTransaction(transaction)) {
+    chainName = transaction.collateral.reserve.market.chain.name;
+  } else if (hasReserve(transaction)) {
+    chainName = transaction.reserve.market.chain.name;
+  } else {
+    chainName = "unknown";
+  }
+
+  return `${transaction.txHash}-${chainName}-${transaction.timestamp}`;
+};
+
 const getReserveInfo = (transaction: UserTransactionItem) => {
   if (!hasReserve(transaction)) {
     return {
@@ -132,6 +146,7 @@ export {
   getTransactionLabel,
   formatTransactionAmount,
   formatTransactionUsdValue,
+  getTransactionKey,
   getReserveInfo,
   isUserBorrowTransaction,
   isUserWithdrawTransaction,
