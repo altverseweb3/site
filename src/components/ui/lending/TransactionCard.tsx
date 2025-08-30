@@ -48,11 +48,12 @@ export const TransactionCard: React.FC<{
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-sm">
+      {/* Asset and Market Info */}
+      <div className="flex items-center justify-between text-sm mb-2">
         <div className="flex items-center gap-2">
           <Image
-            src={reserveInfo.imageUrl}
-            alt={reserveInfo.symbol}
+            src={reserveInfo.assetImageUrl}
+            alt={reserveInfo.assetSymbol}
             height={32}
             width={32}
             className="w-5 h-5 rounded-full"
@@ -61,14 +62,31 @@ export const TransactionCard: React.FC<{
             }}
           />
           <span className="text-[#A1A1AA] font-mono uppercase">
-            {reserveInfo.symbol}
+            {reserveInfo.assetSymbol}
           </span>
         </div>
+        <div className="flex items-center gap-2">
+          <Image
+            src={reserveInfo.chainIconUrl}
+            alt={reserveInfo.chainSymbol}
+            height={20}
+            width={20}
+            className="w-4 h-4 rounded-full"
+            onError={(e) => {
+              e.currentTarget.src = "/images/chains/default.svg";
+            }}
+          />
+          <span className="text-[#A1A1AA] text-xs">{reserveInfo.market}</span>
+        </div>
+      </div>
+
+      {/* Transaction Link */}
+      <div className="flex justify-end">
         <a
           href={transaction.blockExplorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sky-400 hover:text-sky-300 transition-colors"
+          className="text-sky-400 hover:text-sky-300 transition-colors text-sm"
         >
           view transaction ↗
         </a>

@@ -24,6 +24,9 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
             <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
               asset
             </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
+              market
+            </th>
             <th className="text-right py-3 px-4 text-sm font-medium text-[#A1A1AA]">
               amount
             </th>
@@ -59,8 +62,8 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
                     <Image
-                      src={reserveInfo.imageUrl}
-                      alt={reserveInfo.symbol}
+                      src={reserveInfo.assetImageUrl}
+                      alt={reserveInfo.assetSymbol}
                       height={32}
                       width={32}
                       className="w-5 h-5 rounded-full"
@@ -69,7 +72,24 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
                       }}
                     />
                     <span className="text-white font-mono uppercase text-sm">
-                      {reserveInfo.symbol}
+                      {reserveInfo.assetSymbol}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={reserveInfo.chainIconUrl}
+                      alt={reserveInfo.chainSymbol}
+                      height={20}
+                      width={20}
+                      className="w-4 h-4 rounded-full"
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/chains/default.svg";
+                      }}
+                    />
+                    <span className="text-[#A1A1AA] text-sm">
+                      {reserveInfo.market}
                     </span>
                   </div>
                 </td>
