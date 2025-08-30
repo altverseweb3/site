@@ -5,12 +5,18 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
-import { Market, EModeStatus, UserSupplyData } from "@/types/aave";
+import {
+  Market,
+  EModeStatus,
+  UserSupplyData,
+  UserBorrowData,
+} from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedMarketUserBorrows";
 import { formatHealthFactor } from "@/utils/formatters";
 import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
+import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -50,7 +56,12 @@ export default function DashboardContent({
               activeMarkets={activeMarkets}
               userWalletAddress={evmAddress(userAddress)}
             >
-              {({ borrowData, loading: borrowLoading, error: borrowError }) => {
+              {({
+                borrowData,
+                loading: borrowLoading,
+                error: borrowError,
+                marketBorrowData,
+              }) => {
                 return (
                   <DashboardContentInner
                     globalData={globalData}
@@ -58,6 +69,7 @@ export default function DashboardContent({
                     eModeStatus={eModeStatus}
                     supplyData={supplyData}
                     marketSupplyData={marketSupplyData}
+                    marketBorrowData={marketBorrowData}
                     borrowData={borrowData}
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
@@ -92,6 +104,7 @@ interface DashboardContentInnerProps {
     apy: string;
   };
   marketSupplyData: Record<string, UserSupplyData>;
+  marketBorrowData: Record<string, UserBorrowData>;
   loading: boolean;
   error: boolean;
 }
@@ -103,6 +116,7 @@ function DashboardContentInner({
   supplyData,
   borrowData,
   marketSupplyData,
+  marketBorrowData,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -302,11 +316,10 @@ function DashboardContentInner({
         ) : isSupplyMode ? (
           <UserSupplyContent marketSupplyData={marketSupplyData} />
         ) : (
-          <div className="text-center py-8">
-            <div className="text-[#A1A1AA] text-sm">
-              your borrowed positions will be displayed here
-            </div>
-          </div>
+          <UserBorrowContent
+            marketBorrowData={marketBorrowData} // You'll need to pass this prop
+            showZeroBalance={showZeroBalance}
+          />
         )}
       </div>
     </div>

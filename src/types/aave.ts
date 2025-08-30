@@ -106,4 +106,18 @@ export interface UserBorrowData {
   hasData: boolean;
 }
 
+export interface UserBorrowData {
+  marketAddress: string;
+  marketName: string;
+  chainId: ChainId;
+  borrows: MarketUserReserveBorrowPosition[];
+}
+
+export interface UserBorrowPosition {
+  marketAddress: string;
+  marketName: string;
+  chainId: ChainId;
+  borrow: MarketUserReserveBorrowPosition;
+}
+
 export type EModeStatus = "on" | "off" | "mixed";
