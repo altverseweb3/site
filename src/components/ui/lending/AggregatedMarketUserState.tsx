@@ -8,10 +8,13 @@ interface MarketUserStateData {
   marketName: string;
   chainId: ChainId;
   data: MarketUserState | null;
+  eModeEnabled: boolean | null;
   loading: boolean;
   error: boolean;
   hasData: boolean;
 }
+
+type EModeStatus = "enabled" | "disabled" | "mixed";
 
 interface AggregatedMarketUserStateProps {
   activeMarkets: AaveMarket[];
@@ -21,6 +24,7 @@ interface AggregatedMarketUserStateProps {
       netWorth: string;
       netAPY: string;
     };
+    eModeStatus: EModeStatus;
     loading: boolean;
     error: boolean;
     hasData: boolean;
@@ -94,6 +98,24 @@ export const AggregatedMarketUserState: React.FC<
         marketData.data && !marketData.loading && !marketData.error,
     );
 
+    // Calculate e-mode status
+    let eModeStatus: EModeStatus = "disabled";
+    if (validStates.length > 0) {
+      const eModeStatuses = validStates.map(
+        (state) => state.data!.eModeEnabled,
+      );
+      const allEnabled = eModeStatuses.every((enabled) => enabled === true);
+      const allDisabled = eModeStatuses.every((enabled) => enabled === false);
+
+      if (allEnabled) {
+        eModeStatus = "enabled";
+      } else if (allDisabled) {
+        eModeStatus = "disabled";
+      } else {
+        eModeStatus = "mixed";
+      }
+    }
+
     // Calculate aggregated global data
     let globalData = {
       netWorth: formatCurrency(0),
@@ -164,6 +186,7 @@ export const AggregatedMarketUserState: React.FC<
 
     return {
       globalData,
+      eModeStatus,
       loading: isLoading,
       error: hasError,
       hasData,

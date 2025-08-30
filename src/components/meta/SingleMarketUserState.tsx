@@ -8,6 +8,7 @@ interface MarketUserStateData {
   marketName: string;
   chainId: ChainId;
   data: MarketUserState | null;
+  eModeEnabled: boolean | null;
   loading: boolean;
   error: boolean;
   hasData: boolean;
@@ -52,6 +53,7 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
       marketName: market.name,
       chainId: market.chainId as ChainId,
       data: data || null,
+      eModeEnabled: data?.eModeEnabled ?? null,
       error: !!error,
       loading,
       hasData: !!data,
