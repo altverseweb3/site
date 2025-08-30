@@ -6,7 +6,8 @@ import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
 import { AaveMarket } from "@/types/aave";
-import { AggregatedMarketUserState } from "./AggregatedMarketUserState";
+import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
+import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { formatHealthFactor } from "@/utils/formatters";
 
 interface DashboardContentProps {
@@ -33,13 +34,27 @@ export default function DashboardContent({
       userWalletAddress={evmAddress(userAddress)}
     >
       {({ globalData, healthFactorData, eModeStatus, loading, error }) => (
-        <DashboardContentInner
-          globalData={globalData}
-          healthFactorData={healthFactorData}
-          eModeStatus={eModeStatus}
-          loading={loading}
-          error={error}
-        />
+        <AggregatedMarketUserSupplies
+          activeMarkets={activeMarkets}
+          userWalletAddress={evmAddress(userAddress)}
+        >
+          {({ supplyData, loading: supplyLoading, error: supplyError }) => {
+            console.log(`[DashboardContent] Supply data received:`, supplyData);
+            console.log(
+              `[DashboardContent] Supply loading: ${supplyLoading}, error: ${supplyError}`,
+            );
+            return (
+              <DashboardContentInner
+                globalData={globalData}
+                healthFactorData={healthFactorData}
+                eModeStatus={eModeStatus}
+                supplyData={supplyData}
+                loading={loading || supplyLoading}
+                error={error || supplyError}
+              />
+            );
+          }}
+        </AggregatedMarketUserSupplies>
       )}
     </AggregatedMarketUserState>
   );
@@ -57,6 +72,11 @@ interface DashboardContentInnerProps {
     value: string | null;
   };
   eModeStatus: EModeStatus;
+  supplyData: {
+    balance: string;
+    apy: string;
+    collateral: string;
+  };
   loading: boolean;
   error: boolean;
 }
@@ -65,6 +85,7 @@ function DashboardContentInner({
   globalData,
   healthFactorData,
   eModeStatus,
+  supplyData,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -89,12 +110,6 @@ function DashboardContentInner({
       </div>
     );
   }
-
-  const supplyData = {
-    balance: "$8,234.56",
-    apy: "4.2%",
-    collateral: "$7,890.12",
-  };
 
   const borrowData = {
     balance: "$3,456.78",
