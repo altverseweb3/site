@@ -1,0 +1,142 @@
+"use client";
+
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
+import BrandedButton from "@/components/ui/BrandedButton";
+import Image from "next/image";
+import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { UserSupplyPosition } from "@/types/aave";
+import { Shield, ShieldOff } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+
+interface UserSupplyCardProps {
+  position: UserSupplyPosition;
+  onSupply?: (position: UserSupplyPosition) => void;
+  onWithdraw?: (position: UserSupplyPosition) => void;
+  onToggleCollateral?: (position: UserSupplyPosition) => void;
+}
+
+const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
+  position,
+  onSupply,
+  onWithdraw,
+  onToggleCollateral,
+}) => {
+  const { supply, marketName } = position;
+  const balanceUsd = parseFloat(supply.balance.usd) || 0;
+  const apy = parseFloat(supply.apy.value) || 0;
+
+  return (
+    <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
+      <CardHeader className="flex flex-row items-start p-4 pb-2 space-y-0">
+        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center mr-3 flex-shrink-0">
+          <Image
+            src={supply.currency.imageUrl}
+            alt={supply.currency.symbol}
+            width={32}
+            height={32}
+            className="object-contain"
+            onError={(e) => {
+              e.currentTarget.src = "/images/tokens/default.svg";
+            }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
+              {supply.currency.symbol}
+            </CardTitle>
+            <Tooltip.Provider>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  {supply.isCollateral ? (
+                    <Shield className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <ShieldOff className="w-4 h-4 text-[#A1A1AA]" />
+                  )}
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
+                    sideOffset={5}
+                  >
+                    {supply.isCollateral
+                      ? "enabled as collateral"
+                      : "not enabled as collateral"}
+                    <Tooltip.Arrow className="fill-[#27272A]" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
+          </div>
+          <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
+            <Image
+              src={supply.market.icon}
+              alt={marketName}
+              width={16}
+              height={16}
+              className="object-contain rounded-full"
+              onError={(e) => {
+                e.currentTarget.src = "/images/markets/default.svg";
+              }}
+            />
+            {marketName}
+          </CardDescription>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-2 space-y-3">
+        {/* Supplied Balance */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">supplied</div>
+          <div className="text-right">
+            <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
+              {formatCurrency(balanceUsd)}
+            </div>
+          </div>
+        </div>
+
+        {/* Supply APY */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">APY</div>
+          <div className="text-green-500 text-sm font-semibold font-mono">
+            {formatAPY(apy * 100)}
+          </div>
+        </div>
+
+        {/* Collateral Status */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">collateral</div>
+          <div className="flex items-center gap-1">
+            <span
+              className={`text-xs font-medium ${supply.isCollateral ? "text-green-500" : "text-[#A1A1AA]"}`}
+            >
+              {supply.isCollateral ? "enabled" : "disabled"}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex gap-2 p-4 pt-0">
+        <BrandedButton
+          buttonText="details"
+          onClick={() => {
+            //placeholder, we would be passing in these functions as props to the modal
+            console.log(onSupply, onWithdraw, onToggleCollateral);
+          }}
+          className="flex-1 text-xs py-2 h-8"
+          disabled={true}
+        />
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default UserSupplyCard;
