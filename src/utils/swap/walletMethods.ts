@@ -607,8 +607,12 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
 }
 
 interface TokenTransferOptions {
-  // "vanilla", "earn/etherFi", "earn/aave", "earn/pendle", "lend/aave"
-  type: "vanilla" | "earn/etherFi" | "earn/aave" | "earn/pendle" | "lend/aave";
+  type:
+    | "vanilla"
+    | "earn/etherFi"
+    | "earn/aave"
+    | "earn/pendle"
+    | "lending/aave";
   pauseQuoting?: boolean;
   enableTracking?: boolean; // New option to enable automatic tracking
   trackingOptions?: SwapTrackingOptions; // Pass through tracking configuration
