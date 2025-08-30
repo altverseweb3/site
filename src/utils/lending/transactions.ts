@@ -118,7 +118,7 @@ const getTransactionKey = (transaction: UserTransactionItem): string => {
     chainName = "unknown";
   }
 
-  return `${transaction.txHash}-${chainName}-${transaction.timestamp}`;
+  return `${transaction.txHash}-${chainName}-${transaction.timestamp}-${transaction.__typename}`;
 };
 
 const getReserveInfo = (transaction: UserTransactionItem) => {
