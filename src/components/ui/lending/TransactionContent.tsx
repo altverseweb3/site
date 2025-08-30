@@ -45,9 +45,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ data, loading }) => {
     <div>
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <div className="p-6">
-          <TransactionTable transactions={paginatedData} />
-        </div>
+        <TransactionTable transactions={paginatedData} />
 
         {/* Desktop Pagination Controls */}
         {totalPages > 1 && (
