@@ -23,7 +23,6 @@ import MarketContent from "@/components/ui/lending/MarketContent";
 import DashboardContent from "@/components/ui/lending/DashboardContent";
 import { ChainId } from "@/types/aave";
 import { evmAddress } from "@aave/react";
-import { getActiveAaveMarketsByChainId } from "@/utils/lending/marketConfig";
 import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionContent";
 
@@ -55,21 +54,6 @@ export default function LendingPage() {
       return supportedChains.map((chain) => chain.chainId as ChainId);
     return selectedChains.map((chain) => chain.chainId as ChainId);
   };
-
-  // Compute active markets for transaction history
-  const activeMarkets = useMemo(() => {
-    const chainIds: ChainId[] =
-      selectedChains.length === 0 && supportedChains.length > 0
-        ? supportedChains.map((chain) => chain.chainId as ChainId)
-        : selectedChains.map((chain) => chain.chainId as ChainId);
-
-    return chainIds.flatMap((chainId) =>
-      getActiveAaveMarketsByChainId(chainId).map((market) => ({
-        ...market,
-        chainId,
-      })),
-    );
-  }, [selectedChains, supportedChains]);
 
   // Fetch markets data with loading state
   const { markets, loading } = useAaveMarketsWithLoading({
@@ -188,12 +172,12 @@ export default function LendingPage() {
                 <DashboardContent
                   userAddress={userWalletAddress}
                   selectedChains={selectedChains}
-                  activeMarkets={activeMarkets}
+                  activeMarkets={markets || []}
                 />
               )}
               {activeTab === "history" && (
                 <AggregatedTransactionHistory
-                  activeMarkets={activeMarkets}
+                  activeMarkets={markets || []}
                   userWalletAddress={evmAddress(userWalletAddress!)}
                 >
                   {({ transactions, loading }) => (

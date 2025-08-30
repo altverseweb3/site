@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketTransactionHistory } from "@/components/meta/SingleMarketTransactionHistory";
-import { ChainId, EvmAddress, UserTransactionItem } from "@/types/aave";
+import { ChainId, EvmAddress, UserTransactionItem, Market } from "@/types/aave";
 
 interface MarketTransactionData {
   marketAddress: string;
@@ -12,15 +12,8 @@ interface MarketTransactionData {
   hasData: boolean;
 }
 
-interface ActiveMarket {
-  address: string;
-  name: string;
-  chainId: ChainId;
-  isActive: boolean;
-}
-
 interface AggregatedTransactionHistoryProps {
-  activeMarkets: ActiveMarket[];
+  activeMarkets: Market[];
   userWalletAddress: EvmAddress;
   children: (props: {
     transactions: UserTransactionItem[];
@@ -42,7 +35,9 @@ export const AggregatedTransactionHistory: React.FC<
   // create a set of current market keys for O(1) lookup
   const currentMarketKeys = useMemo(() => {
     return new Set(
-      activeMarkets.map((market) => `${market.chainId}-${market.address}`),
+      activeMarkets.map(
+        (market) => `${market.chain.chainId}-${market.address}`,
+      ),
     );
   }, [activeMarkets]);
 
@@ -135,7 +130,7 @@ export const AggregatedTransactionHistory: React.FC<
       {/* Render individual market components for data fetching */}
       {activeMarkets.map((market) => (
         <SingleMarketTransactionHistory
-          key={`${market.chainId}-${market.address}`}
+          key={`${market.chain.chainId}-${market.address}`}
           market={market}
           onDataChange={handleMarketDataChange}
           userWalletAddress={userWalletAddress}

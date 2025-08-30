@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserSupplies } from "@/components/meta/SingleMarketUserSupplies";
-import { EvmAddress, AaveMarket, UserSupplyData } from "@/types/aave";
+import { EvmAddress, Market, UserSupplyData } from "@/types/aave";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface AggregatedMarketUserSuppliesProps {
-  activeMarkets: AaveMarket[];
+  activeMarkets: Market[];
   userWalletAddress: EvmAddress;
   children: (props: {
     supplyData: {
@@ -29,7 +29,9 @@ export const AggregatedMarketUserSupplies: React.FC<
 
   const currentMarketKeys = useMemo(() => {
     return new Set(
-      activeMarkets.map((market) => `${market.chainId}-${market.address}`),
+      activeMarkets.map(
+        (market) => `${market.chain.chainId}-${market.address}`,
+      ),
     );
   }, [activeMarkets]);
 
@@ -141,7 +143,7 @@ export const AggregatedMarketUserSupplies: React.FC<
     <>
       {activeMarkets.map((market) => (
         <SingleMarketUserSupplies
-          key={`${market.chainId}-${market.address}`}
+          key={`${market.chain.chainId}-${market.address}`}
           market={market}
           onDataChange={handleMarketSupplyDataChange}
           userWalletAddress={userWalletAddress}
