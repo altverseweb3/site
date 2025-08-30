@@ -4,7 +4,7 @@ import {
   ChainId,
   EvmAddress,
   MarketUserState,
-  AaveMarket,
+  Market,
   PercentValue,
   BigDecimal,
 } from "@/types/aave";
@@ -27,7 +27,7 @@ interface MarketUserStateData {
 type EModeStatus = "enabled" | "disabled" | "mixed";
 
 interface AggregatedMarketUserStateProps {
-  activeMarkets: AaveMarket[];
+  activeMarkets: Market[];
   userWalletAddress: EvmAddress;
   children: (props: {
     globalData: {
@@ -57,7 +57,9 @@ export const AggregatedMarketUserState: React.FC<
   // create a set of current market keys for O(1) lookup
   const currentMarketKeys = useMemo(() => {
     return new Set(
-      activeMarkets.map((market) => `${market.chainId}-${market.address}`),
+      activeMarkets.map(
+        (market) => `${market.chain.chainId}-${market.address}`,
+      ),
     );
   }, [activeMarkets]);
 
@@ -245,7 +247,7 @@ export const AggregatedMarketUserState: React.FC<
       {/* Render individual market components for data fetching */}
       {activeMarkets.map((market) => (
         <SingleMarketUserState
-          key={`${market.chainId}-${market.address}`}
+          key={`${market.chain.chainId}-${market.address}`}
           market={market}
           onDataChange={handleMarketDataChange}
           userWalletAddress={userWalletAddress}
