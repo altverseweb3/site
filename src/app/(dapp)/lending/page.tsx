@@ -82,7 +82,10 @@ export default function LendingPage() {
   }, [setActiveSwapSection]);
 
   const handleTabChange = (value: LendingTabType) => {
-    setActiveTab(value);
+    // Only update if a valid value is provided (prevents deselection)
+    if (value) {
+      setActiveTab(value);
+    }
   };
 
   // Show wallet connection requirement for dashboard and history tabs
