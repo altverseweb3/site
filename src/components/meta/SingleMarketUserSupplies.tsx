@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { evmAddress, chainId } from "@aave/react";
 import { useAaveUserSupplies } from "@/hooks/aave/useAaveUserData";
-import { ChainId, EvmAddress, AaveMarket, UserSupplyData } from "@/types/aave";
+import { ChainId, EvmAddress, Market, UserSupplyData } from "@/types/aave";
 
 interface SingleMarketUserSuppliesProps {
-  market: AaveMarket;
+  market: Market;
   onDataChange: (supplyData: UserSupplyData) => void;
   userWalletAddress: EvmAddress;
 }
@@ -16,7 +16,7 @@ export const SingleMarketUserSupplies: React.FC<
   const { data } = useAaveUserSupplies({
     markets: [
       {
-        chainId: chainId(market.chainId),
+        chainId: chainId(market.chain.chainId),
         address: evmAddress(market.address),
       },
     ],
@@ -30,7 +30,7 @@ export const SingleMarketUserSupplies: React.FC<
     const supplyData: UserSupplyData = {
       marketAddress: market.address,
       marketName: market.name,
-      chainId: market.chainId as ChainId,
+      chainId: market.chain.chainId as ChainId,
       supplies: data || [],
       error,
       loading,
@@ -44,7 +44,7 @@ export const SingleMarketUserSupplies: React.FC<
     error,
     market.address,
     market.name,
-    market.chainId,
+    market.chain.chainId,
     onDataChange,
   ]);
 

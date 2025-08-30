@@ -1,12 +1,7 @@
 import { useEffect } from "react";
 import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
 import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
-import {
-  ChainId,
-  EvmAddress,
-  AaveMarket,
-  UserTransactionItem,
-} from "@/types/aave";
+import { ChainId, EvmAddress, Market, UserTransactionItem } from "@/types/aave";
 
 interface MarketTransactionData {
   marketAddress: string;
@@ -19,7 +14,7 @@ interface MarketTransactionData {
 }
 
 interface SingleMarketTransactionHistoryProps {
-  market: AaveMarket;
+  market: Market;
   onDataChange: (marketData: MarketTransactionData) => void;
   userWalletAddress: EvmAddress;
 }
@@ -30,7 +25,7 @@ export const SingleMarketTransactionHistory: React.FC<
   const { data, loading, error } = useAaveUserTransactionHistory({
     market: evmAddress(market.address),
     user: userWalletAddress,
-    chainId: chainId(market.chainId),
+    chainId: chainId(market.chain.chainId),
     orderBy: { date: OrderDirection.Desc },
     pageSize: PageSize.Fifty,
   });
@@ -39,7 +34,7 @@ export const SingleMarketTransactionHistory: React.FC<
     const marketData: MarketTransactionData = {
       marketAddress: market.address,
       marketName: market.name,
-      chainId: market.chainId as ChainId,
+      chainId: market.chain.chainId as ChainId,
       data: data?.items || null,
       error: !!error,
       loading,
@@ -53,7 +48,7 @@ export const SingleMarketTransactionHistory: React.FC<
     error,
     market.address,
     market.name,
-    market.chainId,
+    market.chain.chainId,
     onDataChange,
   ]);
 

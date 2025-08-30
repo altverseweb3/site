@@ -5,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
-import { AaveMarket, EModeStatus } from "@/types/aave";
+import { Market, EModeStatus } from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedMarketUserBorrows";
@@ -14,7 +14,7 @@ import { formatHealthFactor } from "@/utils/formatters";
 interface DashboardContentProps {
   userAddress?: string;
   selectedChains: Chain[];
-  activeMarkets: AaveMarket[];
+  activeMarkets: Market[];
 }
 
 export default function DashboardContent({

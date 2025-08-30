@@ -4,7 +4,7 @@ import { useAaveUserMarketStateWithLoading } from "@/hooks/aave/useAaveUserData"
 import {
   ChainId,
   EvmAddress,
-  AaveMarket,
+  Market,
   MarketUserState,
   PercentValue,
   BigDecimal,
@@ -25,7 +25,7 @@ interface MarketUserStateData {
 }
 
 interface SingleMarketUserStateProps {
-  market: AaveMarket;
+  market: Market;
   onDataChange: (marketData: MarketUserStateData) => void;
   userWalletAddress: EvmAddress;
 }
@@ -36,7 +36,7 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
   userWalletAddress,
 }) => {
   const { data, loading, error } = useAaveUserMarketStateWithLoading({
-    chainId: chainId(market.chainId),
+    chainId: chainId(market.chain.chainId),
     market: evmAddress(market.address),
     user: userWalletAddress,
   });
@@ -61,7 +61,7 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
     const marketData: MarketUserStateData = {
       marketAddress: market.address,
       marketName: market.name,
-      chainId: market.chainId as ChainId,
+      chainId: market.chain.chainId as ChainId,
       data: data || null,
       eModeEnabled: data?.eModeEnabled ?? null,
       healthFactor: data?.healthFactor ?? null,
@@ -79,7 +79,7 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
     error,
     market.address,
     market.name,
-    market.chainId,
+    market.chain.chainId,
     onDataChange,
   ]);
 

@@ -79,13 +79,6 @@ export type {
   UserLiquidationCallTransaction,
 };
 
-export interface AaveMarket {
-  name: string;
-  address: string;
-  chainId: number;
-  isActive: boolean;
-}
-
 export interface UserSupplyPosition {
   marketAddress: string;
   marketName: string;
