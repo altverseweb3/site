@@ -15,7 +15,7 @@ export const aaveMarkets: AaveMarket[] = [
   },
   {
     name: "Ethereum Horizon RWA Market",
-    address: "0x4e033931ad43597d96D6bcc25c280717730B58B1",
+    address: "0xAe05Cd22df81871bc7cC2a04BeCfb516bFe332C8",
     chainId: 1,
     isActive: true,
   },
@@ -87,7 +87,7 @@ export const aaveMarkets: AaveMarket[] = [
   },
   {
     name: "Sonic V3 Market",
-    address: "0x956DE559DFc27678FD69d4f49f485196b50BDD0F",
+    address: "0x5362dBb1e601abF3a4c14c22ffEdA64042E5eAA3",
     chainId: 146,
     isActive: false,
   },
@@ -105,7 +105,7 @@ export const aaveMarkets: AaveMarket[] = [
   },
   {
     name: "Ethereum V3 EtherFi Market",
-    address: "0x020E4359255f907DF480EbFfc8a7b7beac0c0216",
+    address: "0x0AA97c284e98396202b6A04024F5E2c65026F3c0",
     chainId: 1,
     isActive: true,
   },
