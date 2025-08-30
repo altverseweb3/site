@@ -1,9 +1,12 @@
 import { useEffect } from "react";
 import { evmAddress, chainId, PageSize, OrderDirection } from "@aave/react";
 import { useAaveUserTransactionHistory } from "@/hooks/aave/useAaveUserData";
-import { ChainId, AaveMarket, UserTransactionItem } from "@/types/aave";
-import { WalletType } from "@/types/web3";
-import { useWalletByType } from "@/store/web3Store";
+import {
+  ChainId,
+  EvmAddress,
+  AaveMarket,
+  UserTransactionItem,
+} from "@/types/aave";
 
 interface MarketTransactionData {
   marketAddress: string;
@@ -18,16 +21,15 @@ interface MarketTransactionData {
 interface SingleMarketTransactionHistoryProps {
   market: AaveMarket;
   onDataChange: (marketData: MarketTransactionData) => void;
+  userWalletAddress: EvmAddress;
 }
 
 export const SingleMarketTransactionHistory: React.FC<
   SingleMarketTransactionHistoryProps
-> = ({ market, onDataChange }) => {
-  const userWalletAddress = useWalletByType(WalletType.REOWN_EVM)?.address;
-
+> = ({ market, onDataChange, userWalletAddress }) => {
   const { data, loading, error } = useAaveUserTransactionHistory({
     market: evmAddress(market.address),
-    user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
+    user: userWalletAddress,
     chainId: chainId(market.chainId),
     orderBy: { date: OrderDirection.Desc },
     pageSize: PageSize.Fifty,

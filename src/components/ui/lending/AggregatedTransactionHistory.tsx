@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketTransactionHistory } from "@/components/meta/SingleMarketTransactionHistory";
-import { getActiveAaveMarketsByChainId } from "@/utils/lending/marketConfig";
-import { ChainId, UserTransactionItem } from "@/types/aave";
+import { ChainId, EvmAddress, UserTransactionItem } from "@/types/aave";
 
 interface MarketTransactionData {
   marketAddress: string;
@@ -13,8 +12,16 @@ interface MarketTransactionData {
   hasData: boolean;
 }
 
+interface ActiveMarket {
+  address: string;
+  name: string;
+  chainId: ChainId;
+  isActive: boolean;
+}
+
 interface AggregatedTransactionHistoryProps {
-  chainIds: ChainId[];
+  activeMarkets: ActiveMarket[];
+  userWalletAddress: EvmAddress;
   children: (props: {
     transactions: UserTransactionItem[];
     loading: boolean;
@@ -27,20 +34,10 @@ interface AggregatedTransactionHistoryProps {
 
 export const AggregatedTransactionHistory: React.FC<
   AggregatedTransactionHistoryProps
-> = ({ chainIds, children }) => {
+> = ({ activeMarkets, children, userWalletAddress }) => {
   const [marketDataMap, setMarketDataMap] = useState<
     Record<string, MarketTransactionData>
   >({});
-
-  // get all active markets for selected chains
-  const activeMarkets = useMemo(() => {
-    return chainIds.flatMap((chainId) =>
-      getActiveAaveMarketsByChainId(chainId).map((market) => ({
-        ...market,
-        chainId,
-      })),
-    );
-  }, [chainIds]);
 
   // create a set of current market keys for O(1) lookup
   const currentMarketKeys = useMemo(() => {
@@ -49,7 +46,7 @@ export const AggregatedTransactionHistory: React.FC<
     );
   }, [activeMarkets]);
 
-  // clean up stale market data when selected chainIds change
+  // clean up stale market data when activeMarkets change
   useEffect(() => {
     setMarketDataMap((prev) => {
       const filtered: Record<string, MarketTransactionData> = {};
@@ -141,6 +138,7 @@ export const AggregatedTransactionHistory: React.FC<
           key={`${market.chainId}-${market.address}`}
           market={market}
           onDataChange={handleMarketDataChange}
+          userWalletAddress={userWalletAddress}
         />
       ))}
 
