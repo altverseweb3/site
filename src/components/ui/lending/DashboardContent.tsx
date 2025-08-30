@@ -3,21 +3,80 @@
 import { useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
+import { evmAddress } from "@aave/react";
+import { Chain } from "@/types/web3";
+import { AaveMarket } from "@/types/aave";
+import { AggregatedMarketUserState } from "./AggregatedMarketUserState";
 
 interface DashboardContentProps {
   userAddress?: string;
+  selectedChains: Chain[];
+  activeMarkets: AaveMarket[];
 }
 
-export default function DashboardContent({}: DashboardContentProps) {
+export default function DashboardContent({
+  userAddress,
+  activeMarkets,
+}: DashboardContentProps) {
+  if (!userAddress) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA]">wallet not connected</div>
+      </div>
+    );
+  }
+
+  return (
+    <AggregatedMarketUserState
+      activeMarkets={activeMarkets}
+      userWalletAddress={evmAddress(userAddress)}
+    >
+      {({ globalData, loading, error }) => (
+        <DashboardContentInner
+          globalData={globalData}
+          loading={loading}
+          error={error}
+        />
+      )}
+    </AggregatedMarketUserState>
+  );
+}
+
+interface DashboardContentInnerProps {
+  globalData: {
+    netWorth: string;
+    netAPY: string;
+  };
+  loading: boolean;
+  error: boolean;
+}
+
+function DashboardContentInner({
+  globalData,
+  loading,
+  error,
+}: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
   const [showZeroBalance, setShowZeroBalance] = useState(false);
 
-  const globalData = {
-    netWorth: "$12,345.67",
-    netAPY: "3.45%",
-    healthFactor: "2.34",
-  };
+  // Show loading state if any market is still loading
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA]">loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  // Show error state if any market has error
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-red-400">error loading dashboard data</div>
+      </div>
+    );
+  }
 
   const supplyData = {
     balance: "$8,234.56",
@@ -38,12 +97,14 @@ export default function DashboardContent({}: DashboardContentProps) {
         {/* Global Overview */}
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-medium text-white">global overview</h3>
+            <h3 className="text-sm font-medium text-white">
+              global overview (all selected chains)
+            </h3>
             <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
               risk details
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">net worth</div>
               <div className="text-sm font-semibold text-white">
@@ -56,12 +117,6 @@ export default function DashboardContent({}: DashboardContentProps) {
                 {globalData.netAPY}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
-              <div className="text-sm font-semibold text-white">
-                {globalData.healthFactor}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -69,7 +124,9 @@ export default function DashboardContent({}: DashboardContentProps) {
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">
-              {isSupplyMode ? "supply overview" : "borrow overview"}
+              {isSupplyMode
+                ? "supply overview (all selected chains)"
+                : "borrow overview (all selected chains)"}
             </h3>
             <button
               className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}

@@ -182,7 +182,11 @@ export default function LendingPage() {
             <>
               {activeTab === "markets" && <MarketContent markets={markets} />}
               {activeTab === "dashboard" && (
-                <DashboardContent userAddress={userWalletAddress} />
+                <DashboardContent
+                  userAddress={userWalletAddress}
+                  selectedChains={selectedChains}
+                  activeMarkets={activeMarkets}
+                />
               )}
               {activeTab === "history" && (
                 <AggregatedTransactionHistory
