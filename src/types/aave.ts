@@ -85,3 +85,20 @@ export interface AaveMarket {
   chainId: number;
   isActive: boolean;
 }
+
+export interface UserSupplyPosition {
+  marketAddress: string;
+  marketName: string;
+  chainId: ChainId;
+  supply: MarketUserReserveSupplyPosition;
+}
+
+export interface UserSupplyData {
+  marketAddress: string;
+  marketName: string;
+  chainId: ChainId;
+  supplies: MarketUserReserveSupplyPosition[];
+  loading: boolean;
+  error: boolean;
+  hasData: boolean;
+}

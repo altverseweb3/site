@@ -1,30 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserSupplies } from "@/components/meta/SingleMarketUserSupplies";
-import { ChainId, EvmAddress, AaveMarket } from "@/types/aave";
+import { EvmAddress, AaveMarket, UserSupplyData } from "@/types/aave";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
-
-interface MarketUserReserveSupplyPosition {
-  currency: {
-    symbol: string;
-  };
-  balance: {
-    usd: string;
-  };
-  apy: {
-    value: string;
-  };
-  isCollateral: boolean;
-}
-
-interface UserSupplyData {
-  marketAddress: string;
-  marketName: string;
-  chainId: ChainId;
-  supplies: MarketUserReserveSupplyPosition[];
-  loading: boolean;
-  error: boolean;
-  hasData: boolean;
-}
 
 interface AggregatedMarketUserSuppliesProps {
   activeMarkets: AaveMarket[];

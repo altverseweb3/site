@@ -1,30 +1,7 @@
 import { useEffect } from "react";
 import { evmAddress, chainId } from "@aave/react";
 import { useAaveUserSupplies } from "@/hooks/aave/useAaveUserData";
-import { ChainId, EvmAddress, AaveMarket } from "@/types/aave";
-
-interface MarketUserReserveSupplyPosition {
-  currency: {
-    symbol: string;
-  };
-  balance: {
-    usd: string;
-  };
-  apy: {
-    value: string;
-  };
-  isCollateral: boolean;
-}
-
-interface UserSupplyData {
-  marketAddress: string;
-  marketName: string;
-  chainId: ChainId;
-  supplies: MarketUserReserveSupplyPosition[];
-  loading: boolean;
-  error: boolean;
-  hasData: boolean;
-}
+import { ChainId, EvmAddress, AaveMarket, UserSupplyData } from "@/types/aave";
 
 interface SingleMarketUserSuppliesProps {
   market: AaveMarket;
