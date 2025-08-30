@@ -31,9 +31,10 @@ export default function DashboardContent({
       activeMarkets={activeMarkets}
       userWalletAddress={evmAddress(userAddress)}
     >
-      {({ globalData, loading, error }) => (
+      {({ globalData, eModeStatus, loading, error }) => (
         <DashboardContentInner
           globalData={globalData}
+          eModeStatus={eModeStatus}
           loading={loading}
           error={error}
         />
@@ -42,17 +43,21 @@ export default function DashboardContent({
   );
 }
 
+type EModeStatus = "enabled" | "disabled" | "mixed";
+
 interface DashboardContentInnerProps {
   globalData: {
     netWorth: string;
     netAPY: string;
   };
+  eModeStatus: EModeStatus;
   loading: boolean;
   error: boolean;
 }
 
 function DashboardContentInner({
   globalData,
+  eModeStatus,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -131,7 +136,7 @@ function DashboardContentInner({
             <button
               className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
             >
-              e-mode
+              e-mode: {eModeStatus}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
