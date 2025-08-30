@@ -608,7 +608,7 @@ export const DEPOSIT_ASSETS: Record<string, DepositAsset> = {
   },
   sdeusd: {
     chain: "ethereum",
-    contractAddress: "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497",
+    contractAddress: "0x5C5b196aBE0d54485975D1Ec29617D42D9198326",
     decimals: 18,
     imagePath: "/images/etherFi/ethereum-assets/sdeusd.png",
     stable: true,
