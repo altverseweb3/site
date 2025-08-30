@@ -1,7 +1,14 @@
 import { useEffect } from "react";
 import { evmAddress, chainId } from "@aave/react";
 import { useAaveUserMarketStateWithLoading } from "@/hooks/aave/useAaveUserData";
-import { ChainId, EvmAddress, AaveMarket, MarketUserState } from "@/types/aave";
+import {
+  ChainId,
+  EvmAddress,
+  AaveMarket,
+  MarketUserState,
+  PercentValue,
+  BigDecimal,
+} from "@/types/aave";
 
 interface MarketUserStateData {
   marketAddress: string;
@@ -9,6 +16,9 @@ interface MarketUserStateData {
   chainId: ChainId;
   data: MarketUserState | null;
   eModeEnabled: boolean | null;
+  healthFactor: BigDecimal | null;
+  ltv: PercentValue | null;
+  currentLiquidationThreshold: PercentValue | null;
   loading: boolean;
   error: boolean;
   hasData: boolean;
@@ -54,6 +64,9 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
       chainId: market.chainId as ChainId,
       data: data || null,
       eModeEnabled: data?.eModeEnabled ?? null,
+      healthFactor: data?.healthFactor ?? null,
+      ltv: data?.ltv ?? null,
+      currentLiquidationThreshold: data?.currentLiquidationThreshold ?? null,
       error: !!error,
       loading,
       hasData: !!data,

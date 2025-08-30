@@ -1,6 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserState } from "@/components/meta/SingleMarketUserState";
-import { ChainId, EvmAddress, MarketUserState, AaveMarket } from "@/types/aave";
+import {
+  ChainId,
+  EvmAddress,
+  MarketUserState,
+  AaveMarket,
+  PercentValue,
+  BigDecimal,
+} from "@/types/aave";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface MarketUserStateData {
@@ -9,6 +16,9 @@ interface MarketUserStateData {
   chainId: ChainId;
   data: MarketUserState | null;
   eModeEnabled: boolean | null;
+  healthFactor: BigDecimal | null;
+  ltv: PercentValue | null;
+  currentLiquidationThreshold: PercentValue | null;
   loading: boolean;
   error: boolean;
   hasData: boolean;
@@ -23,6 +33,10 @@ interface AggregatedMarketUserStateProps {
     globalData: {
       netWorth: string;
       netAPY: string;
+    };
+    healthFactorData: {
+      show: boolean;
+      value: string | null;
     };
     eModeStatus: EModeStatus;
     loading: boolean;
@@ -116,6 +130,36 @@ export const AggregatedMarketUserState: React.FC<
       }
     }
 
+    // Calculate health factor data
+    const healthFactorData = {
+      show: false,
+      value: null as string | null,
+    };
+
+    if (validStates.length > 0) {
+      // Get all non-null health factors
+      const healthFactors = validStates
+        .map((state) => state.healthFactor)
+        .filter((hf): hf is BigDecimal => hf !== null);
+
+      if (healthFactors.length > 0) {
+        healthFactorData.show = true;
+
+        if (healthFactors.length === 1) {
+          // Single value: display as-is
+          healthFactorData.value = healthFactors[0];
+        } else {
+          // Multiple values: check if they're all the same
+          const uniqueValues = new Set(healthFactors);
+          if (uniqueValues.size === 1) {
+            healthFactorData.value = healthFactors[0];
+          } else {
+            healthFactorData.value = "mixed";
+          }
+        }
+      }
+    }
+
     // Calculate aggregated global data
     let globalData = {
       netWorth: formatCurrency(0),
@@ -186,6 +230,7 @@ export const AggregatedMarketUserState: React.FC<
 
     return {
       globalData,
+      healthFactorData,
       eModeStatus,
       loading: isLoading,
       error: hasError,
