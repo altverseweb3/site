@@ -109,16 +109,20 @@ const formatTransactionUsdValue = (
 
 const getTransactionKey = (transaction: UserTransactionItem): string => {
   let chainName: string;
+  let underlyingTokenAddress = "";
 
   if (isUserLiquidationCallTransaction(transaction)) {
     chainName = transaction.collateral.reserve.market.chain.name;
+    underlyingTokenAddress =
+      transaction.collateral.reserve.underlyingToken.address;
   } else if (hasReserve(transaction)) {
     chainName = transaction.reserve.market.chain.name;
+    underlyingTokenAddress = transaction.reserve.underlyingToken.address;
   } else {
     chainName = "unknown";
   }
 
-  return `${transaction.txHash}-${chainName}-${transaction.timestamp}-${transaction.__typename}`;
+  return `${transaction.txHash}-${chainName}-${transaction.timestamp}-${transaction.__typename}-${underlyingTokenAddress}`;
 };
 
 const getReserveInfo = (transaction: UserTransactionItem) => {
