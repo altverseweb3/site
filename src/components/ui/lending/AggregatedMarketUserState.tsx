@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserState } from "@/components/meta/SingleMarketUserState";
 import { ChainId, EvmAddress, MarketUserState, AaveMarket } from "@/types/aave";
+import { formatCurrency, formatAPY } from "@/utils/formatters";
 
 interface MarketUserStateData {
   marketAddress: string;
@@ -95,30 +96,59 @@ export const AggregatedMarketUserState: React.FC<
 
     // Calculate aggregated global data
     let globalData = {
-      netWorth: "$0.00",
-      netAPY: "0.00%",
+      netWorth: formatCurrency(0),
+      netAPY: formatAPY(0),
     };
 
     if (validStates.length > 0) {
+      // console.log('=== Aggregation Debug Info ===');
+      // console.log('Valid states count:', validStates.length);
+
+      // // Log individual market data for debugging
+      // validStates.forEach((state, index) => {
+      //   console.log(`Market ${index + 1} (${state.marketName}):`);
+      //   console.log('  - netWorth.value:', state.data!.netWorth);
+      //   console.log('  - netAPY.value:', state.data!.netAPY.value);
+      //   console.log('  - netWorth parsed:', parseFloat(state.data!.netWorth) || 0);
+      //   console.log('  - netAPY parsed:', parseFloat(state.data!.netAPY.value) || 0);
+      // });
+
       // Calculate total net worth (sum of net_worth[i])
       const totalNetWorth = validStates.reduce((sum, state) => {
-        const netWorth = parseFloat(state.data!.netWorth.value) || 0;
+        const netWorth = parseFloat(state.data!.netWorth) || 0;
         return sum + netWorth;
       }, 0);
 
-      // Calculate weighted net APY (sum(net_worth[i] * APY[i]) / sum(net_worth[i]))
-      const weightedAPYNumerator = validStates.reduce((sum, state) => {
-        const netWorth = parseFloat(state.data!.netWorth.value) || 0;
+      // Filter out markets with exactly 0 net worth for APY calculation
+      const marketsWithPositions = validStates.filter((state) => {
+        const netWorth = parseFloat(state.data!.netWorth) || 0;
+        return netWorth !== 0;
+      });
+
+      // Calculate weighted net APY only for markets where we have positions
+      const weightedAPYNumerator = marketsWithPositions.reduce((sum, state) => {
+        const netWorth = parseFloat(state.data!.netWorth) || 0;
         const apy = parseFloat(state.data!.netAPY.value) || 0;
         return sum + netWorth * apy;
       }, 0);
 
+      // Sum of net worth only for markets where we have positions
+      const totalNetWorthWithPositions = marketsWithPositions.reduce(
+        (sum, state) => {
+          const netWorth = parseFloat(state.data!.netWorth) || 0;
+          return sum + netWorth;
+        },
+        0,
+      );
+
       const netAPY =
-        totalNetWorth > 0 ? weightedAPYNumerator / totalNetWorth : 0;
+        totalNetWorthWithPositions > 0
+          ? weightedAPYNumerator / totalNetWorthWithPositions
+          : 0;
 
       globalData = {
-        netWorth: `$${totalNetWorth.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        netAPY: `${(netAPY * 100).toFixed(2)}%`,
+        netWorth: formatCurrency(totalNetWorth),
+        netAPY: formatAPY(netAPY * 100),
       };
     }
 

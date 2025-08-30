@@ -41,10 +41,10 @@ export const SingleMarketUserState: React.FC<SingleMarketUserStateProps> = ({
       );
     }
     if (data) {
-      console.log(
-        `Market ${market.name} (${market.address}) loaded successfully:`,
-        data,
-      );
+      // console.log(
+      //   `Market ${market.name} (${market.address}) loaded successfully:`,
+      //   data,
+      // );
     }
 
     const marketData: MarketUserStateData = {
