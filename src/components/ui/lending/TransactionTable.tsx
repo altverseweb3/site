@@ -6,6 +6,7 @@ import {
   getTransactionLabel,
   formatTransactionAmount,
   formatTransactionUsdValue,
+  getTransactionKey,
 } from "@/utils/lending/transactions";
 import TransactionIcon from "@/components/ui/lending/TransactionIcon";
 import Image from "next/image";
@@ -36,7 +37,7 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
 
             return (
               <tr
-                key={transaction.txHash}
+                key={getTransactionKey(transaction)}
                 className="hover:bg-[#1C1C1F] transition-colors"
               >
                 <td className="px-4 py-3">

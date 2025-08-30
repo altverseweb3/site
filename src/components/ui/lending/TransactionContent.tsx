@@ -4,6 +4,7 @@ import CardsList from "@/components/ui/CardsList";
 import TransactionCard from "@/components/ui/lending/TransactionCard";
 import TransactionTable from "@/components/ui/lending/TransactionTable";
 import { UserTransactionItem } from "@/types/aave";
+import { getTransactionKey } from "@/utils/lending/transactions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -108,7 +109,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ data, loading }) => {
           data={paginatedData}
           renderCard={(transaction) => (
             <TransactionCard
-              key={`${transaction.txHash.toString()}-${transaction.timestamp}`}
+              key={getTransactionKey(transaction)}
               transaction={transaction}
             />
           )}

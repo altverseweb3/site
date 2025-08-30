@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketTransactionHistory } from "@/components/meta/SingleMarketTransactionHistory";
 import { ChainId, EvmAddress, UserTransactionItem } from "@/types/aave";
+import { getTransactionKey } from "@/utils/lending/transactions";
 
 interface MarketTransactionData {
   marketAddress: string;
@@ -84,7 +85,7 @@ export const AggregatedTransactionHistory: React.FC<
       .map(([, data]) => data);
 
     // combine all transactions from current markets only
-    const allTransactions = currentMarketData
+    const allTransactionsWithDuplicates = currentMarketData
       .filter((marketData) => marketData.data && marketData.data.length > 0)
       .flatMap((marketData) => {
         // give each transaction market context
@@ -94,6 +95,18 @@ export const AggregatedTransactionHistory: React.FC<
           _marketName: marketData.marketName,
           _chainId: marketData.chainId,
         }));
+      });
+
+    // deduplicate transactions
+    const seenTransactions = new Set<string>();
+    const allTransactions = allTransactionsWithDuplicates
+      .filter((transaction) => {
+        const key = getTransactionKey(transaction);
+        if (seenTransactions.has(key)) {
+          return false; // duplicate found, filter out
+        }
+        seenTransactions.add(key);
+        return true;
       })
       .sort((a, b) => {
         // Sort by date descending
