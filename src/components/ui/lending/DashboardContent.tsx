@@ -5,10 +5,11 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
-import { AaveMarket } from "@/types/aave";
+import { AaveMarket, UserSupplyData } from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { formatHealthFactor } from "@/utils/formatters";
+import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -38,7 +39,12 @@ export default function DashboardContent({
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
         >
-          {({ supplyData, loading: supplyLoading, error: supplyError }) => {
+          {({
+            supplyData,
+            loading: supplyLoading,
+            error: supplyError,
+            marketSupplyData,
+          }) => {
             console.log(`[DashboardContent] Supply data received:`, supplyData);
             console.log(
               `[DashboardContent] Supply loading: ${supplyLoading}, error: ${supplyError}`,
@@ -49,6 +55,7 @@ export default function DashboardContent({
                 healthFactorData={healthFactorData}
                 eModeStatus={eModeStatus}
                 supplyData={supplyData}
+                marketSupplyData={marketSupplyData}
                 loading={loading || supplyLoading}
                 error={error || supplyError}
               />
@@ -77,6 +84,7 @@ interface DashboardContentInnerProps {
     apy: string;
     collateral: string;
   };
+  marketSupplyData: Record<string, UserSupplyData>;
   loading: boolean;
   error: boolean;
 }
@@ -86,6 +94,7 @@ function DashboardContentInner({
   healthFactorData,
   eModeStatus,
   supplyData,
+  marketSupplyData,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -283,13 +292,25 @@ function DashboardContentInner({
 
       {/* Positions Content */}
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
-        <div className="text-center py-8">
-          <div className="text-[#A1A1AA] text-sm">
-            {showAvailable
-              ? `available ${isSupplyMode ? "supply" : "borrow"} positions will be displayed here`
-              : `your ${isSupplyMode ? "supplied" : "borrowed"} positions will be displayed here`}
+        {showAvailable ? (
+          <div className="text-center py-8">
+            <div className="text-[#A1A1AA] text-sm">
+              available {isSupplyMode ? "supply" : "borrow"} positions will be
+              displayed here
+            </div>
           </div>
-        </div>
+        ) : isSupplyMode ? (
+          <UserSupplyContent
+            marketSupplyData={marketSupplyData}
+            showZeroBalance={showZeroBalance}
+          />
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-[#A1A1AA] text-sm">
+              your borrowed positions will be displayed here
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
