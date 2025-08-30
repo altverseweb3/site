@@ -7,6 +7,7 @@ import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
 import { AaveMarket } from "@/types/aave";
 import { AggregatedMarketUserState } from "./AggregatedMarketUserState";
+import { formatHealthFactor } from "@/utils/formatters";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -31,9 +32,10 @@ export default function DashboardContent({
       activeMarkets={activeMarkets}
       userWalletAddress={evmAddress(userAddress)}
     >
-      {({ globalData, eModeStatus, loading, error }) => (
+      {({ globalData, healthFactorData, eModeStatus, loading, error }) => (
         <DashboardContentInner
           globalData={globalData}
+          healthFactorData={healthFactorData}
           eModeStatus={eModeStatus}
           loading={loading}
           error={error}
@@ -50,6 +52,10 @@ interface DashboardContentInnerProps {
     netWorth: string;
     netAPY: string;
   };
+  healthFactorData: {
+    show: boolean;
+    value: string | null;
+  };
   eModeStatus: EModeStatus;
   loading: boolean;
   error: boolean;
@@ -57,6 +63,7 @@ interface DashboardContentInnerProps {
 
 function DashboardContentInner({
   globalData,
+  healthFactorData,
   eModeStatus,
   loading,
   error,
@@ -105,11 +112,15 @@ function DashboardContentInner({
             <h3 className="text-sm font-medium text-white">
               global overview (all selected chains)
             </h3>
-            <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
-              risk details
-            </button>
+            {healthFactorData.show && (
+              <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
+                risk details
+              </button>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div
+            className={`grid ${healthFactorData.show ? "grid-cols-3" : "grid-cols-2"} gap-3`}
+          >
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">net worth</div>
               <div className="text-sm font-semibold text-white">
@@ -122,6 +133,16 @@ function DashboardContentInner({
                 {globalData.netAPY}
               </div>
             </div>
+            {healthFactorData.show && (
+              <div className="text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
+                <div
+                  className={`text-sm font-semibold ${formatHealthFactor(healthFactorData.value).colorClass}`}
+                >
+                  {formatHealthFactor(healthFactorData.value).value}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

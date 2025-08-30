@@ -108,10 +108,28 @@ export const formatNetWorth = (netWorth: number): string => {
   });
 };
 
-export const formatHealthFactor = (healthFactor: number | null): string => {
-  if (healthFactor === null) return "--";
-  if (healthFactor === Infinity) return "∞";
-  return healthFactor.toFixed(2);
+export const formatHealthFactor = (
+  healthFactor: number | string | null,
+): { value: string; colorClass: string } => {
+  if (healthFactor === null) {
+    return { value: "--", colorClass: "text-gray-400" };
+  }
+
+  if (healthFactor === "mixed") {
+    return { value: "mixed", colorClass: "text-amber-400" };
+  }
+
+  const numericValue =
+    typeof healthFactor === "string" ? parseFloat(healthFactor) : healthFactor;
+
+  if (numericValue === Infinity) {
+    return { value: "∞", colorClass: "text-green-400" };
+  }
+
+  const formattedValue = numericValue.toFixed(2);
+  const colorClass = numericValue < 1.5 ? "text-red-400" : "text-green-400";
+
+  return { value: formattedValue, colorClass };
 };
 
 export const calculateUSDValue = (
