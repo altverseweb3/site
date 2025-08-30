@@ -5,9 +5,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
-import { AaveMarket } from "@/types/aave";
+import { AaveMarket, EModeStatus } from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
+import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedMarketUserBorrows";
 import { formatHealthFactor } from "@/utils/formatters";
 
 interface DashboardContentProps {
@@ -38,29 +39,31 @@ export default function DashboardContent({
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
         >
-          {({ supplyData, loading: supplyLoading, error: supplyError }) => {
-            console.log(`[DashboardContent] Supply data received:`, supplyData);
-            console.log(
-              `[DashboardContent] Supply loading: ${supplyLoading}, error: ${supplyError}`,
-            );
-            return (
-              <DashboardContentInner
-                globalData={globalData}
-                healthFactorData={healthFactorData}
-                eModeStatus={eModeStatus}
-                supplyData={supplyData}
-                loading={loading || supplyLoading}
-                error={error || supplyError}
-              />
-            );
-          }}
+          {({ supplyData, loading: supplyLoading, error: supplyError }) => (
+            <AggregatedMarketUserBorrows
+              activeMarkets={activeMarkets}
+              userWalletAddress={evmAddress(userAddress)}
+            >
+              {({ borrowData, loading: borrowLoading, error: borrowError }) => {
+                return (
+                  <DashboardContentInner
+                    globalData={globalData}
+                    healthFactorData={healthFactorData}
+                    eModeStatus={eModeStatus}
+                    supplyData={supplyData}
+                    borrowData={borrowData}
+                    loading={loading || supplyLoading || borrowLoading}
+                    error={error || supplyError || borrowError}
+                  />
+                );
+              }}
+            </AggregatedMarketUserBorrows>
+          )}
         </AggregatedMarketUserSupplies>
       )}
     </AggregatedMarketUserState>
   );
 }
-
-type EModeStatus = "enabled" | "disabled" | "mixed";
 
 interface DashboardContentInnerProps {
   globalData: {
@@ -77,6 +80,10 @@ interface DashboardContentInnerProps {
     apy: string;
     collateral: string;
   };
+  borrowData: {
+    balance: string;
+    apy: string;
+  };
   loading: boolean;
   error: boolean;
 }
@@ -86,6 +93,7 @@ function DashboardContentInner({
   healthFactorData,
   eModeStatus,
   supplyData,
+  borrowData,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -111,12 +119,6 @@ function DashboardContentInner({
     );
   }
 
-  const borrowData = {
-    balance: "$3,456.78",
-    apy: "2.8%",
-    borrowPowerUsed: "42%",
-  };
-
   return (
     <div className="p-4">
       {/* Side-by-side Overview Cards */}
@@ -125,7 +127,7 @@ function DashboardContentInner({
         <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">
-              global overview (all selected chains)
+              global info (selected chains)
             </h3>
             {healthFactorData.show && (
               <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
@@ -166,8 +168,8 @@ function DashboardContentInner({
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">
               {isSupplyMode
-                ? "supply overview (all selected chains)"
-                : "borrow overview (all selected chains)"}
+                ? "supply info (selected chains)"
+                : "borrow info (selected chains)"}
             </h3>
             <button
               className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
@@ -192,14 +194,12 @@ function DashboardContentInner({
             </div>
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">
-                {isSupplyMode ? "collateral" : "borrow power"}
+                {isSupplyMode ? "collateral" : "borrow % used"}
               </div>
               <div
                 className={`text-sm font-semibold ${isSupplyMode ? "text-white" : "text-orange-400"}`}
               >
-                {isSupplyMode
-                  ? supplyData.collateral
-                  : borrowData.borrowPowerUsed}
+                {isSupplyMode ? supplyData.collateral : "42%"}
               </div>
             </div>
           </div>
