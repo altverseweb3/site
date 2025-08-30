@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import UserSupplyCard from "./UserSupplyCard";
+import UserSupplyCard from "@/components/ui/lending/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
 import { UserSupplyData, UserSupplyPosition } from "@/types/aave";
 
