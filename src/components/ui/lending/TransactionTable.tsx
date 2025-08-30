@@ -13,35 +13,23 @@ import Image from "next/image";
 const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
   transactions,
 }) => {
+  const tableHeaderClass = `px-4 py-2 text-left text-sm font-semibold text-zinc-300 lowercase tracking-wider`;
+
   return (
-    <div className="overflow-x-auto">
+    <div className="w-full overflow-hidden">
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-[#27272A]">
-            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              type
-            </th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              asset
-            </th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              market
-            </th>
-            <th className="text-right py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              amount
-            </th>
-            <th className="text-right py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              value
-            </th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              date
-            </th>
-            <th className="text-center py-3 px-4 text-sm font-medium text-[#A1A1AA]">
-              tx
-            </th>
+        <thead className="bg-zinc-800/90 border-b border-[#27272A]">
+          <tr>
+            <th className={tableHeaderClass}>type</th>
+            <th className={tableHeaderClass}>asset</th>
+            <th className={tableHeaderClass}>market</th>
+            <th className={`${tableHeaderClass} text-right`}>amount</th>
+            <th className={`${tableHeaderClass} text-right`}>value</th>
+            <th className={tableHeaderClass}>date</th>
+            <th className={`${tableHeaderClass} text-center`}>tx</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="bg-[#18181B] divide-y divide-[#27272A]">
           {transactions.map((transaction) => {
             const reserveInfo = getReserveInfo(transaction);
             const amount = getTransactionAmount(transaction);
@@ -49,17 +37,17 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
             return (
               <tr
                 key={transaction.txHash}
-                className="border-b border-[#27272A]/50 hover:bg-[#27272A]/20 transition-colors"
+                className="hover:bg-[#1C1C1F] transition-colors"
               >
-                <td className="py-3 px-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <TransactionIcon transaction={transaction} />
-                    <span className="text-white text-sm">
+                    <span className="text-[#FAFAFA] text-sm">
                       {getTransactionLabel(transaction)}
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Image
                       src={reserveInfo.assetImageUrl}
@@ -71,12 +59,12 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
                         e.currentTarget.src = "/images/tokens/default.svg";
                       }}
                     />
-                    <span className="text-white font-mono uppercase text-sm">
+                    <span className="text-[#FAFAFA] font-mono uppercase text-sm">
                       {reserveInfo.assetSymbol}
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Image
                       src={reserveInfo.chainIconUrl}
@@ -93,22 +81,22 @@ const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-right">
-                  <span className="text-white font-mono text-sm">
+                <td className="px-4 py-3 text-right">
+                  <span className="text-[#FAFAFA] font-mono text-sm">
                     {formatTransactionAmount(amount)}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-right">
+                <td className="px-4 py-3 text-right">
                   <span className="text-[#A1A1AA] font-mono text-sm">
                     {formatTransactionUsdValue(amount)}
                   </span>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-4 py-3">
                   <span className="text-[#A1A1AA] text-sm font-mono">
                     {formatDate(transaction.timestamp)}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-center">
+                <td className="px-4 py-3 text-center">
                   <a
                     href={transaction.blockExplorerUrl}
                     target="_blank"
