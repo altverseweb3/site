@@ -102,3 +102,15 @@ export interface UserSupplyData {
   error: boolean;
   hasData: boolean;
 }
+
+export interface UserBorrowData {
+  marketAddress: string;
+  marketName: string;
+  chainId: ChainId;
+  borrows: MarketUserReserveBorrowPosition[];
+  loading: boolean;
+  error: boolean;
+  hasData: boolean;
+}
+
+export type EModeStatus = "on" | "off" | "mixed";

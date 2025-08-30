@@ -7,6 +7,7 @@ import {
   AaveMarket,
   PercentValue,
   BigDecimal,
+  EModeStatus,
 } from "@/types/aave";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
 
@@ -23,8 +24,6 @@ interface MarketUserStateData {
   error: boolean;
   hasData: boolean;
 }
-
-type EModeStatus = "enabled" | "disabled" | "mixed";
 
 interface AggregatedMarketUserStateProps {
   activeMarkets: AaveMarket[];
@@ -113,7 +112,7 @@ export const AggregatedMarketUserState: React.FC<
     );
 
     // Calculate e-mode status
-    let eModeStatus: EModeStatus = "disabled";
+    let eModeStatus: EModeStatus = "off";
     if (validStates.length > 0) {
       const eModeStatuses = validStates.map(
         (state) => state.data!.eModeEnabled,
@@ -122,9 +121,9 @@ export const AggregatedMarketUserState: React.FC<
       const allDisabled = eModeStatuses.every((enabled) => enabled === false);
 
       if (allEnabled) {
-        eModeStatus = "enabled";
+        eModeStatus = "on";
       } else if (allDisabled) {
-        eModeStatus = "disabled";
+        eModeStatus = "off";
       } else {
         eModeStatus = "mixed";
       }
