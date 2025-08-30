@@ -85,24 +85,9 @@ export const AggregatedMarketUserSupplies: React.FC<
   );
 
   const aggregatedData = useMemo(() => {
-    console.log(`[AggregatedMarketUserSupplies] Recalculating aggregated data`);
-    console.log(
-      `[AggregatedMarketUserSupplies] Current market keys:`,
-      Array.from(currentMarketKeys),
-    );
-    console.log(
-      `[AggregatedMarketUserSupplies] Market supply data map:`,
-      marketSupplyDataMap,
-    );
-
     const currentMarketSupplyData = Object.entries(marketSupplyDataMap)
       .filter(([key]) => currentMarketKeys.has(key))
       .map(([, data]) => data);
-
-    console.log(
-      `[AggregatedMarketUserSupplies] Current market supply data:`,
-      currentMarketSupplyData,
-    );
 
     const isLoading = currentMarketSupplyData.some(
       (marketData) => marketData.loading,
@@ -117,14 +102,6 @@ export const AggregatedMarketUserSupplies: React.FC<
         marketData.supplies && !marketData.loading && !marketData.error,
     );
 
-    console.log(
-      `[AggregatedMarketUserSupplies] Valid supply states:`,
-      validSupplyStates,
-    );
-    console.log(
-      `[AggregatedMarketUserSupplies] Loading: ${isLoading}, Error: ${hasError}`,
-    );
-
     let supplyData = {
       balance: formatCurrency(0),
       apy: formatAPY(0),
@@ -132,26 +109,15 @@ export const AggregatedMarketUserSupplies: React.FC<
     };
 
     if (validSupplyStates.length > 0) {
-      console.log(
-        `[AggregatedMarketUserSupplies] Processing ${validSupplyStates.length} valid supply states`,
-      );
       let totalBalance = 0;
       let totalCollateral = 0;
       let weightedAPYNumerator = 0;
       let totalBalanceForAPY = 0;
 
-      validSupplyStates.forEach((state, stateIndex) => {
-        console.log(
-          `[AggregatedMarketUserSupplies] Processing state ${stateIndex} for market ${state.marketName}:`,
-          state.supplies,
-        );
-        state.supplies.forEach((supply, supplyIndex) => {
+      validSupplyStates.forEach((state) => {
+        state.supplies.forEach((supply) => {
           const balanceUsd = parseFloat(supply.balance.usd) || 0;
           const apyValue = parseFloat(supply.apy.value) || 0;
-
-          console.log(
-            `[AggregatedMarketUserSupplies] Supply ${supplyIndex} - ${supply.currency.symbol}: balance=${balanceUsd}, apy=${apyValue}, isCollateral=${supply.isCollateral}`,
-          );
 
           totalBalance += balanceUsd;
 
@@ -169,22 +135,11 @@ export const AggregatedMarketUserSupplies: React.FC<
       const weightedAPY =
         totalBalanceForAPY > 0 ? weightedAPYNumerator / totalBalanceForAPY : 0;
 
-      console.log(`[AggregatedMarketUserSupplies] Final calculations:`);
-      console.log(`  - Total Balance: ${totalBalance}`);
-      console.log(`  - Total Collateral: ${totalCollateral}`);
-      console.log(`  - Weighted APY: ${weightedAPY}`);
-      console.log(`  - Total Balance for APY: ${totalBalanceForAPY}`);
-
       supplyData = {
         balance: formatCurrency(totalBalance),
         apy: formatAPY(weightedAPY * 100),
         collateral: formatCurrency(totalCollateral),
       };
-
-      console.log(
-        `[AggregatedMarketUserSupplies] Final formatted supply data:`,
-        supplyData,
-      );
     }
 
     const hasData = validSupplyStates.some((state) => state.hasData);
