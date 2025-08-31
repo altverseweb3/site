@@ -12,7 +12,11 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import TruncatedText from "@/components/ui/TruncatedText";
 import Image from "next/image";
-import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
+import {
+  formatCurrency,
+  formatBalance,
+  formatPercentage,
+} from "@/utils/formatters";
 import { UnifiedMarketData } from "@/types/aave";
 import { SquareMinus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -130,7 +134,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
               <SquareEqual className="w-5 h-5 text-indigo-500" />
             )}
             <span className="text-red-500 text-sm font-semibold font-mono">
-              {formatAPY(finalBorrowAPY)}
+              {formatPercentage(finalBorrowAPY)}
             </span>
           </div>
         </div>
@@ -154,18 +158,6 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
             >
               {formatCurrency(Math.max(0, availableUsd))}
             </div>
-          </div>
-        </div>
-
-        {/* Borrow Type */}
-        <div className="flex justify-between items-center">
-          <div className="text-[#A1A1AA] text-sm">borrow type</div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-medium text-[#A1A1AA]">
-              {market.borrowInfo?.variableRateSlope1
-                ? "Variable, Stable"
-                : "Variable"}
-            </span>
           </div>
         </div>
       </CardContent>
