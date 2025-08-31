@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserBorrows } from "@/components/meta/SingleMarketUserBorrows";
 import { EvmAddress, Market, UserBorrowData } from "@/types/aave";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 
 interface AggregatedMarketUserBorrowsProps {
   activeMarkets: Market[];
@@ -82,7 +82,7 @@ export const AggregatedMarketUserBorrows: React.FC<
 
     let borrowData = {
       balance: formatCurrency(0),
-      apy: formatAPY(0),
+      apy: formatPercentage(0),
     };
 
     if (validBorrowStates.length > 0) {
@@ -109,7 +109,7 @@ export const AggregatedMarketUserBorrows: React.FC<
 
       borrowData = {
         balance: formatCurrency(totalBalance),
-        apy: formatAPY(weightedAPY * 100),
+        apy: formatPercentage(weightedAPY * 100),
       };
     }
 

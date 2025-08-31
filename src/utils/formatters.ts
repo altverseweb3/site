@@ -72,7 +72,7 @@ export function formatCurrency(value: number): string {
   return `$${Number(value).toFixed(2)}`;
 }
 
-export const formatAPY = (apy: number | string): string => {
+export const formatPercentage = (apy: number | string): string => {
   // Handle null, undefined, or zero cases
   if (apy === null || apy === undefined) {
     return "--";

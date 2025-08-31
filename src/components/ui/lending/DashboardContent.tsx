@@ -6,6 +6,7 @@ import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
 import {
+  ChainId,
   Market,
   EModeStatus,
   UserSupplyData,
@@ -41,7 +42,15 @@ export default function DashboardContent({
       activeMarkets={activeMarkets}
       userWalletAddress={evmAddress(userAddress)}
     >
-      {({ globalData, healthFactorData, eModeStatus, loading, error }) => (
+      {({
+        globalData,
+        healthFactorData,
+        eModeStatus,
+        borrowData,
+        chainRiskData,
+        loading,
+        error,
+      }) => (
         <AggregatedMarketUserSupplies
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
@@ -71,6 +80,7 @@ export default function DashboardContent({
                     marketSupplyData={marketSupplyData}
                     marketBorrowData={marketBorrowData}
                     borrowData={borrowData}
+                    chainRiskData={chainRiskData}
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
                   />
@@ -99,12 +109,22 @@ interface DashboardContentInnerProps {
     apy: string;
     collateral: string;
   };
+  borrowAPY: string;
   borrowData: {
-    balance: string;
-    apy: string;
+    debt: string;
+    collateral: string;
+    borrowPercentUsed: string | null;
   };
   marketSupplyData: Record<string, UserSupplyData>;
   marketBorrowData: Record<string, UserBorrowData>;
+  chainRiskData: Record<
+    ChainId,
+    {
+      healthFactor: string | null;
+      ltv: string | null;
+      currentLiquidationThreshold: string | null;
+    }
+  >;
   loading: boolean;
   error: boolean;
 }
@@ -114,6 +134,7 @@ function DashboardContentInner({
   healthFactorData,
   eModeStatus,
   supplyData,
+  borrowAPY,
   borrowData,
   marketSupplyData,
   marketBorrowData,
@@ -200,11 +221,15 @@ function DashboardContentInner({
               e-mode: {eModeStatus}
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div
+            className={`grid ${isSupplyMode || borrowData.borrowPercentUsed ? "grid-cols-3" : "grid-cols-2"} gap-3`}
+          >
             <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">balance</div>
+              <div className="text-xs text-[#A1A1AA] mb-1">
+                {isSupplyMode ? "balance" : "debt"}
+              </div>
               <div className="text-sm font-semibold text-white">
-                {isSupplyMode ? supplyData.balance : borrowData.balance}
+                {isSupplyMode ? supplyData.balance : borrowData.debt}
               </div>
             </div>
             <div className="text-center">
@@ -212,19 +237,23 @@ function DashboardContentInner({
               <div
                 className={`text-sm font-semibold ${isSupplyMode ? "text-green-400" : "text-red-400"}`}
               >
-                {isSupplyMode ? supplyData.apy : borrowData.apy}
+                {isSupplyMode ? supplyData.apy : borrowAPY}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-[#A1A1AA] mb-1">
-                {isSupplyMode ? "collateral" : "borrow % used"}
+            {(isSupplyMode || borrowData.borrowPercentUsed) && (
+              <div className="text-center">
+                <div className="text-xs text-[#A1A1AA] mb-1">
+                  {isSupplyMode ? "collateral" : "borrow % used"}
+                </div>
+                <div
+                  className={`text-sm font-semibold ${isSupplyMode ? "text-white" : "text-orange-400"}`}
+                >
+                  {isSupplyMode
+                    ? supplyData.collateral
+                    : borrowData.borrowPercentUsed}
+                </div>
               </div>
-              <div
-                className={`text-sm font-semibold ${isSupplyMode ? "text-white" : "text-orange-400"}`}
-              >
-                {isSupplyMode ? supplyData.collateral : "42%"}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
