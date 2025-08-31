@@ -66,7 +66,7 @@ export default function DashboardContent({
               userWalletAddress={evmAddress(userAddress)}
             >
               {({
-                borrowData,
+                borrowData: borrowAPYData,
                 loading: borrowLoading,
                 error: borrowError,
                 marketBorrowData,
@@ -79,6 +79,7 @@ export default function DashboardContent({
                     supplyData={supplyData}
                     marketSupplyData={marketSupplyData}
                     marketBorrowData={marketBorrowData}
+                    borrowAPY={borrowAPYData.apy}
                     borrowData={borrowData}
                     chainRiskData={chainRiskData}
                     loading={loading || supplyLoading || borrowLoading}

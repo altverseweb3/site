@@ -12,7 +12,7 @@ import {
 import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UserSupplyPosition } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -116,7 +116,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">APY</div>
           <div className="text-green-500 text-sm font-semibold font-mono">
-            {formatAPY(apy * 100)}
+            {formatPercentage(apy * 100)}
           </div>
         </div>
 
