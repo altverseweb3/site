@@ -83,13 +83,6 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
                   </Tooltip.Portal>
                 </Tooltip.Root>
               </Tooltip.Provider>
-
-              <Switch
-                checked={supply.isCollateral}
-                onCheckedChange={handleCollateralToggle}
-                className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-[#3F3F46]"
-                disabled={!onToggleCollateral}
-              />
             </div>
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
@@ -131,11 +124,12 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">collateral</div>
           <div className="flex items-center gap-1">
-            <span
-              className={`text-xs font-medium ${supply.isCollateral ? "text-green-500" : "text-[#A1A1AA]"}`}
-            >
-              {supply.isCollateral ? "enabled" : "disabled"}
-            </span>
+            <Switch
+              checked={supply.isCollateral}
+              onCheckedChange={handleCollateralToggle}
+              className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-[#3F3F46]"
+              disabled={!onToggleCollateral}
+            />
           </div>
         </div>
       </CardContent>

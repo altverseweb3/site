@@ -266,7 +266,7 @@ function DashboardContentInner({
 
           {/* Conditional Content */}
           <div className="flex items-center">
-            {isSupplyMode ? (
+            {isSupplyMode && showAvailable ? (
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
