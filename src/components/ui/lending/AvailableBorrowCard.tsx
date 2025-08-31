@@ -16,6 +16,7 @@ import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
 import { Reserve, Market } from "@/types/aave";
 import { SquareMinus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 interface UnifiedMarketData extends Reserve {
   marketInfo: Market;
@@ -89,7 +90,34 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
               {market.underlyingToken.name}
             </CardTitle>
             {(!isAvailable || !hasLiquidity) && (
-              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
+                      sideOffset={5}
+                    >
+                      {!hasLiquidity
+                        ? "No Liquidity"
+                        : market.isFrozen && market.isPaused
+                          ? "Frozen, Paused"
+                          : market.isFrozen
+                            ? "Frozen"
+                            : market.isPaused
+                              ? "Paused"
+                              : !market.borrowInfo?.borrowingState ||
+                                  market.borrowInfo?.borrowingState ===
+                                    "DISABLED"
+                                ? "Borrow Disabled"
+                                : "Not Available"}
+                      <Tooltip.Arrow className="fill-[#27272A]" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
             )}
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
@@ -104,23 +132,6 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
               }}
             />
             {market.marketName}
-            {!isAvailable && (
-              <span className="ml-1 text-red-400">
-                {market.isFrozen && market.isPaused
-                  ? "(Frozen, Paused)"
-                  : market.isFrozen
-                    ? "(Frozen)"
-                    : market.isPaused
-                      ? "(Paused)"
-                      : !market.borrowInfo?.borrowingState ||
-                          market.borrowInfo?.borrowingState === "DISABLED"
-                        ? "(Borrow Disabled)"
-                        : ""}
-              </span>
-            )}
-            {!hasLiquidity && isAvailable && (
-              <span className="ml-1 text-orange-400">(No Liquidity)</span>
-            )}
           </CardDescription>
         </div>
       </CardHeader>
@@ -179,7 +190,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
 
       <CardFooter className="flex justify-center p-4 pt-0">
         <BrandedButton
-          buttonText="borrow"
+          buttonText="details"
           onClick={() => onBorrow?.(market)}
           className="w-full text-xs py-2 h-8"
           disabled={!isAvailable || !hasLiquidity}

@@ -315,7 +315,7 @@ function DashboardContentInner({
 
           {/* Conditional Content */}
           <div className="flex items-center">
-            {isSupplyMode && showAvailable ? (
+            {(isSupplyMode && showAvailable) || !isSupplyMode ? (
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -342,23 +342,18 @@ function DashboardContentInner({
       {/* Positions Content */}
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
         {showAvailable ? (
-          // Show available positions using the new components
+          // Show available positions
           isSupplyMode ? (
             <AvailableSupplyContent
               markets={activeMarkets}
               showZeroBalance={showZeroBalance}
             />
           ) : (
-            <AvailableBorrowContent
-              markets={activeMarkets}
-              showZeroBalance={showZeroBalance}
-            />
+            <AvailableBorrowContent markets={activeMarkets} />
           )
-        ) : // Show open positions using existing components
+        ) : // Show open positions
         isSupplyMode ? (
-          <UserSupplyContent
-            marketSupplyData={marketSupplyData}
-          />
+          <UserSupplyContent marketSupplyData={marketSupplyData} />
         ) : (
           <UserBorrowContent
             marketBorrowData={marketBorrowData}
