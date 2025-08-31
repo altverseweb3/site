@@ -13,7 +13,7 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { chains } from "@/config/chains";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 
 interface EarnCardProps {
   type: EarnTableType;
@@ -208,7 +208,7 @@ const EarnCard: React.FC<EarnCardProps> = ({ type, data, onDetails }) => {
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">apy</div>
           <div className="text-green-500 text-sm font-semibold font-mono">
-            {data.apy != 0 ? formatAPY(data.apy) : "--"}
+            {data.apy != 0 ? formatPercentage(data.apy) : "--"}
           </div>
         </div>
       </CardContent>

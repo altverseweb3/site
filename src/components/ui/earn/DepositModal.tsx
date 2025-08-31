@@ -54,7 +54,7 @@ import ProgressTracker, {
   StepState,
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
-import { formatAPY } from "@/utils/formatters";
+import { formatPercentage } from "@/utils/formatters";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -939,7 +939,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
             <span className="text-sm text-[#FAFAFA]">
               current apy:{" "}
               <span className="text-green-500 font-semibold font-mono">
-                {apy && apy != 0 ? formatAPY(apy) : "--"}
+                {apy && apy != 0 ? formatPercentage(apy) : "--"}
               </span>
             </span>
           </div>

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/Card";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UserBorrowPosition } from "@/types/aave";
 
 interface UserBorrowCardProps {
@@ -81,7 +81,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">APY</div>
           <div className="text-red-500 text-sm font-semibold font-mono">
-            {formatAPY(apy * 100)}
+            {formatPercentage(apy * 100)}
           </div>
         </div>
       </CardContent>

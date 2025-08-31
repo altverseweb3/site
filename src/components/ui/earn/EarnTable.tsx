@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { chains } from "@/config/chains";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 
 interface EarnTableProps {
   type: EarnTableType;
@@ -192,7 +192,7 @@ const EarnTable: React.FC<EarnTableProps> = ({
                 )}
                 <td className="px-4 py-3">
                   <span className="text-green-500 font-semibold font-mono">
-                    {row.apy != 0 ? formatAPY(row.apy) : "--"}
+                    {row.apy != 0 ? formatPercentage(row.apy) : "--"}
                   </span>
                 </td>
                 <td className="px-4 py-3 pr-6">

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { SingleMarketUserSupplies } from "@/components/meta/SingleMarketUserSupplies";
 import { EvmAddress, Market, UserSupplyData } from "@/types/aave";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 
 interface AggregatedMarketUserSuppliesProps {
   activeMarkets: Market[];
@@ -83,7 +83,7 @@ export const AggregatedMarketUserSupplies: React.FC<
 
     let supplyData = {
       balance: formatCurrency(0),
-      apy: formatAPY(0),
+      apy: formatPercentage(0),
       collateral: formatCurrency(0),
     };
 
@@ -116,7 +116,7 @@ export const AggregatedMarketUserSupplies: React.FC<
 
       supplyData = {
         balance: formatCurrency(totalBalance),
-        apy: formatAPY(weightedAPY * 100),
+        apy: formatPercentage(weightedAPY * 100),
         collateral: formatCurrency(totalCollateral),
       };
     }

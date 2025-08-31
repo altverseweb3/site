@@ -9,7 +9,7 @@ import {
   BigDecimal,
   EModeStatus,
 } from "@/types/aave";
-import { formatCurrency, formatAPY } from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 
 interface MarketUserStateData {
   marketAddress: string;
@@ -38,6 +38,19 @@ interface AggregatedMarketUserStateProps {
       value: string | null;
     };
     eModeStatus: EModeStatus;
+    borrowData: {
+      debt: string;
+      collateral: string;
+      borrowPercentUsed: string | null;
+    };
+    chainRiskData: Record<
+      ChainId,
+      {
+        healthFactor: string | null;
+        ltv: string | null;
+        currentLiquidationThreshold: string | null;
+      }
+    >;
     loading: boolean;
     error: boolean;
     hasData: boolean;
@@ -164,7 +177,7 @@ export const AggregatedMarketUserState: React.FC<
     // Calculate aggregated global data
     let globalData = {
       netWorth: formatCurrency(0),
-      netAPY: formatAPY(0),
+      netAPY: formatPercentage(0),
     };
 
     if (validStates.length > 0) {
@@ -215,9 +228,87 @@ export const AggregatedMarketUserState: React.FC<
 
       globalData = {
         netWorth: formatCurrency(totalNetWorth),
-        netAPY: formatAPY(netAPY * 100),
+        netAPY: formatPercentage(netAPY * 100),
       };
     }
+
+    // Calculate enhanced borrow data
+    let borrowData = {
+      debt: formatCurrency(0),
+      collateral: formatCurrency(0),
+      borrowPercentUsed: null as string | null,
+    };
+
+    if (validStates.length > 0) {
+      const totalDebtBase = validStates.reduce((sum, state) => {
+        return sum + parseFloat(state.data!.totalDebtBase);
+      }, 0);
+
+      const totalCollateralBase = validStates.reduce((sum, state) => {
+        return sum + parseFloat(state.data!.totalCollateralBase);
+      }, 0);
+
+      // Calculate borrow % used
+      let borrowPercentUsed: string | null = null;
+      const healthFactors = validStates
+        .map((state) => state.healthFactor)
+        .filter((hf) => hf !== null);
+
+      if (healthFactors.length > 0) {
+        if (healthFactors.length === 1) {
+          // Single market - use its individual data
+          const market = validStates.find(
+            (state) => state.healthFactor !== null,
+          );
+          if (market && market.ltv && market.data) {
+            const marketDebt = parseFloat(market.data.totalDebtBase);
+            const marketCollateral = parseFloat(
+              market.data.totalCollateralBase,
+            );
+            const ltvValue = parseFloat(market.ltv.value);
+
+            if (marketCollateral > 0) {
+              const borrowUsed =
+                (marketDebt * 100) / (marketCollateral * ltvValue);
+              borrowPercentUsed = formatPercentage(borrowUsed);
+            }
+          }
+        } else {
+          borrowPercentUsed = "mixed";
+        }
+      }
+
+      borrowData = {
+        debt: formatCurrency(totalDebtBase),
+        collateral: formatCurrency(totalCollateralBase),
+        borrowPercentUsed,
+      };
+    }
+
+    // Chain-specific risk data
+    const chainRiskData: Record<
+      ChainId,
+      {
+        healthFactor: string | null;
+        ltv: string | null;
+        currentLiquidationThreshold: string | null;
+      }
+    > = {};
+
+    validStates.forEach((state) => {
+      const chainId = state.chainId;
+      chainRiskData[chainId] = {
+        healthFactor: state.healthFactor,
+        ltv: state.ltv
+          ? formatPercentage(parseFloat(state.ltv.value) * 100)
+          : null,
+        currentLiquidationThreshold: state.currentLiquidationThreshold
+          ? formatPercentage(
+              parseFloat(state.currentLiquidationThreshold.value) * 100,
+            )
+          : null,
+      };
+    });
 
     // Check if we have any data
     const hasData = validStates.length > 0;
@@ -233,6 +324,8 @@ export const AggregatedMarketUserState: React.FC<
       globalData,
       healthFactorData,
       eModeStatus,
+      borrowData,
+      chainRiskData,
       loading: isLoading,
       error: hasError,
       hasData,
