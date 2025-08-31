@@ -317,7 +317,7 @@ function DashboardContentInner({
           <UserSupplyContent marketSupplyData={marketSupplyData} />
         ) : (
           <UserBorrowContent
-            marketBorrowData={marketBorrowData} // You'll need to pass this prop
+            marketBorrowData={marketBorrowData}
             showZeroBalance={showZeroBalance}
           />
         )}

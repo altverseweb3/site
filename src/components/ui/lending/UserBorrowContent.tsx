@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
 import { UserBorrowData, UserBorrowPosition } from "@/types/aave";
@@ -14,47 +14,36 @@ const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   marketBorrowData,
-  showZeroBalance = false,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Transform marketBorrowData into individual borrow positions
-  const userBorrowPositions = useMemo(() => {
-    const positions: UserBorrowPosition[] = [];
-
-    Object.values(marketBorrowData).forEach((marketData) => {
-      if (marketData.borrows && marketData.borrows.length > 0) {
-        marketData.borrows.forEach((borrow) => {
-          const balanceUsd = parseFloat(borrow.debt.usd) || 0;
-
-          // Filter based on showZeroBalance setting
-          if (showZeroBalance || balanceUsd > 0) {
-            positions.push({
-              marketAddress: marketData.marketAddress,
-              marketName: marketData.marketName,
-              chainId: marketData.chainId,
-              borrow,
-            });
-          }
+  const positions: UserBorrowPosition[] = [];
+  Object.values(marketBorrowData).forEach((marketData) => {
+    if (marketData.borrows && marketData.borrows.length > 0) {
+      marketData.borrows.forEach((borrow) => {
+        positions.push({
+          marketAddress: marketData.marketAddress,
+          marketName: marketData.marketName,
+          chainId: marketData.chainId,
+          borrow,
         });
-      }
-    });
+      });
+    }
+  });
 
-    // Sort by balance (highest first)
-    return positions.sort((a, b) => {
-      const balanceA = parseFloat(a.borrow.debt.usd) || 0;
-      const balanceB = parseFloat(b.borrow.debt.usd) || 0;
-      return balanceB - balanceA;
-    });
-  }, [marketBorrowData, showZeroBalance]);
+  // Sort by balance (highest first)
+  const userBorrowPositions = positions.sort((a, b) => {
+    const balanceA = parseFloat(a.borrow.debt.usd) || 0;
+    const balanceB = parseFloat(b.borrow.debt.usd) || 0;
+    return balanceB - balanceA;
+  });
 
   if (userBorrowPositions.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA] text-sm">
-          {showZeroBalance
-            ? "no borrow positions found"
-            : "no active borrow positions found"}
+          your borrow positions will be displayed here
         </div>
       </div>
     );
