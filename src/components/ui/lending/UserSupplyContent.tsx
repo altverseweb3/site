@@ -1,60 +1,47 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
 import { UserSupplyData, UserSupplyPosition } from "@/types/aave";
 
 interface UserSupplyContentProps {
   marketSupplyData: Record<string, UserSupplyData>;
-  showZeroBalance?: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   marketSupplyData,
-  showZeroBalance = false,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Transform marketSupplyData into individual supply positions
-  const userSupplyPositions = useMemo(() => {
-    const positions: UserSupplyPosition[] = [];
-
-    Object.values(marketSupplyData).forEach((marketData) => {
-      if (marketData.supplies && marketData.supplies.length > 0) {
-        marketData.supplies.forEach((supply) => {
-          const balanceUsd = parseFloat(supply.balance.usd) || 0;
-
-          // Filter based on showZeroBalance setting
-          if (showZeroBalance || balanceUsd > 0) {
-            positions.push({
-              marketAddress: marketData.marketAddress,
-              marketName: marketData.marketName,
-              chainId: marketData.chainId,
-              supply,
-            });
-          }
+  const positions: UserSupplyPosition[] = [];
+  Object.values(marketSupplyData).forEach((marketData) => {
+    if (marketData.supplies && marketData.supplies.length > 0) {
+      marketData.supplies.forEach((supply) => {
+        positions.push({
+          marketAddress: marketData.marketAddress,
+          marketName: marketData.marketName,
+          chainId: marketData.chainId,
+          supply,
         });
-      }
-    });
+      });
+    }
+  });
 
-    // Sort by balance (highest first)
-    return positions.sort((a, b) => {
-      const balanceA = parseFloat(a.supply.balance.usd) || 0;
-      const balanceB = parseFloat(b.supply.balance.usd) || 0;
-      return balanceB - balanceA;
-    });
-  }, [marketSupplyData, showZeroBalance]);
+  // Sort by balance (highest first)
+  const userSupplyPositions = positions.sort((a, b) => {
+    const balanceA = parseFloat(a.supply.balance.usd) || 0;
+    const balanceB = parseFloat(b.supply.balance.usd) || 0;
+    return balanceB - balanceA;
+  });
 
   if (userSupplyPositions.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA] text-sm">
-          {showZeroBalance
-            ? "no supply positions found"
-            : "no active supply positions found"}
+          your supply positions will be displayed here
         </div>
       </div>
     );

@@ -9,6 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/Card";
+import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatAPY } from "@/utils/formatters";
@@ -33,6 +34,12 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
   const apy = parseFloat(supply.apy.value) || 0;
 
+  const handleCollateralToggle = () => {
+    if (onToggleCollateral) {
+      onToggleCollateral(position);
+    }
+  };
+
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
       <CardHeader className="flex flex-row items-start p-4 pb-2 space-y-0">
@@ -53,28 +60,37 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
               {supply.currency.symbol}
             </CardTitle>
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  {supply.isCollateral ? (
-                    <Shield className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <ShieldOff className="w-4 h-4 text-[#A1A1AA]" />
-                  )}
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                    className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
-                    sideOffset={5}
-                  >
-                    {supply.isCollateral
-                      ? "enabled as collateral"
-                      : "not enabled as collateral"}
-                    <Tooltip.Arrow className="fill-[#27272A]" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
+            <div className="flex items-center gap-2">
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    {supply.isCollateral ? (
+                      <Shield className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <ShieldOff className="w-4 h-4 text-[#A1A1AA]" />
+                    )}
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
+                      sideOffset={5}
+                    >
+                      {supply.isCollateral
+                        ? "enabled as collateral"
+                        : "not enabled as collateral"}
+                      <Tooltip.Arrow className="fill-[#27272A]" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+
+              <Switch
+                checked={supply.isCollateral}
+                onCheckedChange={handleCollateralToggle}
+                className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-[#3F3F46]"
+                disabled={!onToggleCollateral}
+              />
+            </div>
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image

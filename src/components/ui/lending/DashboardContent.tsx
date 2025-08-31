@@ -40,7 +40,12 @@ export default function DashboardContent({
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
         >
-          {({ supplyData, loading: supplyLoading, error: supplyError, marketSupplyData }) => (
+          {({
+            supplyData,
+            loading: supplyLoading,
+            error: supplyError,
+            marketSupplyData,
+          }) => (
             <AggregatedMarketUserBorrows
               activeMarkets={activeMarkets}
               userWalletAddress={evmAddress(userAddress)}
@@ -295,10 +300,7 @@ function DashboardContentInner({
             </div>
           </div>
         ) : isSupplyMode ? (
-          <UserSupplyContent
-            marketSupplyData={marketSupplyData}
-            showZeroBalance={showZeroBalance}
-          />
+          <UserSupplyContent marketSupplyData={marketSupplyData} />
         ) : (
           <div className="text-center py-8">
             <div className="text-[#A1A1AA] text-sm">
