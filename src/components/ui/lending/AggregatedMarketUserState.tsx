@@ -43,12 +43,13 @@ interface AggregatedMarketUserStateProps {
       collateral: string;
       borrowPercentUsed: string | null;
     };
-    chainRiskData: Record<
-      ChainId,
+    marketRiskData: Record<
+      string,
       {
         healthFactor: string | null;
         ltv: string | null;
         currentLiquidationThreshold: string | null;
+        chainId: ChainId;
       }
     >;
     loading: boolean;
@@ -160,16 +161,11 @@ export const AggregatedMarketUserState: React.FC<
         healthFactorData.show = true;
 
         if (healthFactors.length === 1) {
-          // Single value: display as-is
+          // Single market - display its health factor value
           healthFactorData.value = healthFactors[0];
         } else {
-          // Multiple values: check if they're all the same
-          const uniqueValues = new Set(healthFactors);
-          if (uniqueValues.size === 1) {
-            healthFactorData.value = healthFactors[0];
-          } else {
-            healthFactorData.value = "mixed";
-          }
+          // Multiple markets - show "mixed"
+          healthFactorData.value = "mixed";
         }
       }
     }
@@ -181,19 +177,7 @@ export const AggregatedMarketUserState: React.FC<
     };
 
     if (validStates.length > 0) {
-      // console.log('=== Aggregation Debug Info ===');
-      // console.log('Valid states count:', validStates.length);
-
-      // // Log individual market data for debugging
-      // validStates.forEach((state, index) => {
-      //   console.log(`Market ${index + 1} (${state.marketName}):`);
-      //   console.log('  - netWorth.value:', state.data!.netWorth);
-      //   console.log('  - netAPY.value:', state.data!.netAPY.value);
-      //   console.log('  - netWorth parsed:', parseFloat(state.data!.netWorth) || 0);
-      //   console.log('  - netAPY parsed:', parseFloat(state.data!.netAPY.value) || 0);
-      // });
-
-      // Calculate total net worth (sum of net_worth[i])
+      // Calculate total net worth
       const totalNetWorth = validStates.reduce((sum, state) => {
         const netWorth = parseFloat(state.data!.netWorth) || 0;
         return sum + netWorth;
@@ -206,25 +190,30 @@ export const AggregatedMarketUserState: React.FC<
       });
 
       // Calculate weighted net APY only for markets where we have positions
-      const weightedAPYNumerator = marketsWithPositions.reduce((sum, state) => {
-        const netWorth = parseFloat(state.data!.netWorth) || 0;
-        const apy = parseFloat(state.data!.netAPY.value) || 0;
-        return sum + netWorth * apy;
-      }, 0);
+      let netAPY = 0;
+      if (marketsWithPositions.length > 0) {
+        const weightedAPYNumerator = marketsWithPositions.reduce(
+          (sum, state) => {
+            const netWorth = parseFloat(state.data!.netWorth) || 0;
+            const apy = parseFloat(state.data!.netAPY.value) || 0;
+            return sum + netWorth * apy;
+          },
+          0,
+        );
 
-      // Sum of net worth only for markets where we have positions
-      const totalNetWorthWithPositions = marketsWithPositions.reduce(
-        (sum, state) => {
-          const netWorth = parseFloat(state.data!.netWorth) || 0;
-          return sum + netWorth;
-        },
-        0,
-      );
+        const totalNetWorthWithPositions = marketsWithPositions.reduce(
+          (sum, state) => {
+            const netWorth = parseFloat(state.data!.netWorth) || 0;
+            return sum + netWorth;
+          },
+          0,
+        );
 
-      const netAPY =
-        totalNetWorthWithPositions > 0
-          ? weightedAPYNumerator / totalNetWorthWithPositions
-          : 0;
+        netAPY =
+          totalNetWorthWithPositions > 0
+            ? weightedAPYNumerator / totalNetWorthWithPositions
+            : 0;
+      }
 
       globalData = {
         netWorth: formatCurrency(totalNetWorth),
@@ -285,19 +274,20 @@ export const AggregatedMarketUserState: React.FC<
       };
     }
 
-    // Chain-specific risk data
-    const chainRiskData: Record<
-      ChainId,
+    // Market-specific risk data (one entry per chainId-marketAddress combination)
+    const marketRiskData: Record<
+      string,
       {
         healthFactor: string | null;
         ltv: string | null;
         currentLiquidationThreshold: string | null;
+        chainId: ChainId;
       }
     > = {};
 
     validStates.forEach((state) => {
-      const chainId = state.chainId;
-      chainRiskData[chainId] = {
+      const marketKey = `${state.chainId}-${state.marketAddress}`;
+      marketRiskData[marketKey] = {
         healthFactor: state.healthFactor,
         ltv: state.ltv
           ? formatPercentage(parseFloat(state.ltv.value) * 100)
@@ -307,6 +297,7 @@ export const AggregatedMarketUserState: React.FC<
               parseFloat(state.currentLiquidationThreshold.value) * 100,
             )
           : null,
+        chainId: state.chainId,
       };
     });
 
@@ -325,7 +316,7 @@ export const AggregatedMarketUserState: React.FC<
       healthFactorData,
       eModeStatus,
       borrowData,
-      chainRiskData,
+      marketRiskData,
       loading: isLoading,
       error: hasError,
       hasData,
