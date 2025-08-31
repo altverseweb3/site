@@ -1,6 +1,6 @@
-import { Market } from "@/types/aave";
+import { Market, UnifiedMarketData } from "@/types/aave";
 
-export const unifyMarkets = (markets: Market[]) => {
+export const unifyMarkets = (markets: Market[]): UnifiedMarketData[] => {
   return markets.flatMap((market) => {
     // Create a map of assets by their underlying token address
     const assetMap = new Map();

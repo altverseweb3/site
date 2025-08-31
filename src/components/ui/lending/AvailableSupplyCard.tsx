@@ -13,27 +13,9 @@ import BrandedButton from "@/components/ui/BrandedButton";
 import TruncatedText from "@/components/ui/TruncatedText";
 import Image from "next/image";
 import { formatCurrency, formatAPY, formatBalance } from "@/utils/formatters";
-import { Reserve, Market } from "@/types/aave";
+import { UnifiedMarketData } from "@/types/aave";
 import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
-
-interface UnifiedMarketData extends Reserve {
-  marketInfo: Market;
-  marketName: string;
-  supplyData: {
-    apy: number;
-    totalSupplied: string;
-    totalSuppliedUsd: number;
-  };
-  borrowData: {
-    apy: number;
-    totalBorrowed: string;
-    totalBorrowedUsd: number;
-  };
-  usdExchangeRate: number;
-  isFrozen: boolean;
-  isPaused: boolean;
-}
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
