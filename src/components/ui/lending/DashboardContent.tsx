@@ -20,6 +20,7 @@ import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
 import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
 import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
+import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -144,6 +145,7 @@ function DashboardContentInner({
   borrowData,
   marketSupplyData,
   marketBorrowData,
+  marketRiskData,
   activeMarkets,
   loading,
   error,
@@ -151,6 +153,7 @@ function DashboardContentInner({
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
   const [showZeroBalance, setShowZeroBalance] = useState(false);
+  const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
 
   // Show loading state if any market is still loading
   if (loading) {
@@ -181,7 +184,10 @@ function DashboardContentInner({
               global info (selected chains)
             </h3>
             {healthFactorData.show && (
-              <button className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white">
+              <button
+                onClick={() => setIsRiskDetailsModalOpen(true)}
+                className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white"
+              >
                 risk details
               </button>
             )}
@@ -366,6 +372,13 @@ function DashboardContentInner({
           />
         )}
       </div>
+
+      {/* Risk Details Modal */}
+      <RiskDetailsModal
+        isOpen={isRiskDetailsModalOpen}
+        onClose={() => setIsRiskDetailsModalOpen(false)}
+        marketRiskData={marketRiskData}
+      />
     </div>
   );
 }

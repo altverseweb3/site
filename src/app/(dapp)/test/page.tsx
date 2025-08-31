@@ -25,14 +25,16 @@ function ConsoleOutput({ data }: { data: unknown }) {
 
 function MarketsDataRenderer() {
   const { markets } = useAaveMarketsData({
-    chainIds: [chainId(1), chainId(42161)],
+    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"),
+    chainIds: [chainId(137)],
   });
   return <ConsoleOutput data={markets} />;
 }
 function SingleMarketDataRenderer() {
   const { market } = useAaveSingleMarketData({
+    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"),
+    chainId: chainId(137),
     address: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"),
-    chainId: chainId(42161),
   });
   return <ConsoleOutput data={market} />;
 }
@@ -80,14 +82,10 @@ function UserSuppliesRenderer() {
 
 function UserBorrowsRenderer() {
   const { data } = useAaveUserBorrows({
-    user: TEST_USER_ADDRESS,
+    user: evmAddress("0xf5d8777EA028Ad29515aA81E38e9B85afb7d6303"),
     markets: [
       {
-        chainId: chainId(1),
-        address: evmAddress("0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2"),
-      },
-      {
-        chainId: chainId(42161),
+        chainId: chainId(137),
         address: evmAddress("0x794a61358D6845594F94dc1DB02A252b5b4814aD"),
       },
     ],
