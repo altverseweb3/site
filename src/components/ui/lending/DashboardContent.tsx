@@ -5,11 +5,12 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
-import { Market, EModeStatus } from "@/types/aave";
+import { Market, EModeStatus, UserSupplyData } from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
 import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedMarketUserBorrows";
 import { formatHealthFactor } from "@/utils/formatters";
+import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -39,7 +40,12 @@ export default function DashboardContent({
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
         >
-          {({ supplyData, loading: supplyLoading, error: supplyError }) => (
+          {({
+            supplyData,
+            loading: supplyLoading,
+            error: supplyError,
+            marketSupplyData,
+          }) => (
             <AggregatedMarketUserBorrows
               activeMarkets={activeMarkets}
               userWalletAddress={evmAddress(userAddress)}
@@ -51,6 +57,7 @@ export default function DashboardContent({
                     healthFactorData={healthFactorData}
                     eModeStatus={eModeStatus}
                     supplyData={supplyData}
+                    marketSupplyData={marketSupplyData}
                     borrowData={borrowData}
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
@@ -84,6 +91,7 @@ interface DashboardContentInnerProps {
     balance: string;
     apy: string;
   };
+  marketSupplyData: Record<string, UserSupplyData>;
   loading: boolean;
   error: boolean;
 }
@@ -94,6 +102,7 @@ function DashboardContentInner({
   eModeStatus,
   supplyData,
   borrowData,
+  marketSupplyData,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -257,7 +266,7 @@ function DashboardContentInner({
 
           {/* Conditional Content */}
           <div className="flex items-center">
-            {isSupplyMode ? (
+            {isSupplyMode && showAvailable ? (
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -283,13 +292,22 @@ function DashboardContentInner({
 
       {/* Positions Content */}
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
-        <div className="text-center py-8">
-          <div className="text-[#A1A1AA] text-sm">
-            {showAvailable
-              ? `available ${isSupplyMode ? "supply" : "borrow"} positions will be displayed here`
-              : `your ${isSupplyMode ? "supplied" : "borrowed"} positions will be displayed here`}
+        {showAvailable ? (
+          <div className="text-center py-8">
+            <div className="text-[#A1A1AA] text-sm">
+              available {isSupplyMode ? "supply" : "borrow"} positions will be
+              displayed here
+            </div>
           </div>
-        </div>
+        ) : isSupplyMode ? (
+          <UserSupplyContent marketSupplyData={marketSupplyData} />
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-[#A1A1AA] text-sm">
+              your borrowed positions will be displayed here
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
