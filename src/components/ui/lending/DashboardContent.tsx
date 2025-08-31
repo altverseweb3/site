@@ -18,6 +18,8 @@ import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedM
 import { formatHealthFactor } from "@/utils/formatters";
 import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
+import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
+import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
 
 interface DashboardContentProps {
   userAddress?: string;
@@ -80,6 +82,7 @@ export default function DashboardContent({
                     marketSupplyData={marketSupplyData}
                     marketBorrowData={marketBorrowData}
                     borrowAPY={borrowAPYData.apy}
+                    activeMarkets={activeMarkets}
                     borrowData={borrowData}
                     chainRiskData={chainRiskData}
                     loading={loading || supplyLoading || borrowLoading}
@@ -126,6 +129,7 @@ interface DashboardContentInnerProps {
       currentLiquidationThreshold: string | null;
     }
   >;
+  activeMarkets: Market[];
   loading: boolean;
   error: boolean;
 }
@@ -139,6 +143,7 @@ function DashboardContentInner({
   borrowData,
   marketSupplyData,
   marketBorrowData,
+  activeMarkets,
   loading,
   error,
 }: DashboardContentInnerProps) {
@@ -337,14 +342,23 @@ function DashboardContentInner({
       {/* Positions Content */}
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
         {showAvailable ? (
-          <div className="text-center py-8">
-            <div className="text-[#A1A1AA] text-sm">
-              available {isSupplyMode ? "supply" : "borrow"} positions will be
-              displayed here
-            </div>
-          </div>
-        ) : isSupplyMode ? (
-          <UserSupplyContent marketSupplyData={marketSupplyData} />
+          // Show available positions using the new components
+          isSupplyMode ? (
+            <AvailableSupplyContent
+              markets={activeMarkets}
+              showZeroBalance={showZeroBalance}
+            />
+          ) : (
+            <AvailableBorrowContent
+              markets={activeMarkets}
+              showZeroBalance={showZeroBalance}
+            />
+          )
+        ) : // Show open positions using existing components
+        isSupplyMode ? (
+          <UserSupplyContent
+            marketSupplyData={marketSupplyData}
+          />
         ) : (
           <UserBorrowContent
             marketBorrowData={marketBorrowData}

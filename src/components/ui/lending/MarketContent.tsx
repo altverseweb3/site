@@ -37,6 +37,7 @@ const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
 
   return (
     <CardsList
+      className="bg-[#1F1F23]"
       data={paginatedMarkets}
       renderCard={(market) => (
         <MarketCard
