@@ -1,0 +1,88 @@
+"use client";
+
+import React, { useState } from "react";
+import AvailableSupplyCard from "@/components/ui/lending/AvailableSupplyCard";
+import CardsList from "@/components/ui/CardsList";
+import { Market } from "@/types/aave";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+
+interface AvailableSupplyContentProps {
+  markets: Market[] | null | undefined;
+  showZeroBalance?: boolean;
+}
+
+const ITEMS_PER_PAGE = 10;
+
+const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
+  markets,
+  showZeroBalance = false,
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const unifiedMarkets = unifyMarkets(markets!);
+  const availableSupplyMarkets = unifiedMarkets
+    .filter((market) => {
+      if (showZeroBalance) return true;
+      if (!market.userState) return false;
+      const userBalance =
+        parseFloat(market.userState.balance.amount.value) || 0;
+      return userBalance > 0;
+    })
+    .sort((a, b) => {
+      //TODO: change this to custom sorting based on header
+      const aSupplyAPY = a.supplyData.apy || 0;
+      const bSupplyAPY = b.supplyData.apy || 0;
+      return bSupplyAPY - aSupplyAPY;
+    });
+
+  if (!markets || markets.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA] text-sm">no markets found</div>
+      </div>
+    );
+  }
+
+  if (availableSupplyMarkets.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-[#A1A1AA] text-sm">
+          no supply opportunities available
+        </div>
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(availableSupplyMarkets.length / ITEMS_PER_PAGE);
+  const paginatedMarkets = availableSupplyMarkets.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  return (
+    <CardsList
+      data={paginatedMarkets}
+      renderCard={(market) => (
+        <AvailableSupplyCard
+          key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
+          market={market}
+          onSupply={() => {
+            // TODO: Implement supply modal/flow
+            console.log("Supply clicked for:", market.underlyingToken.symbol);
+          }}
+        />
+      )}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageChange}
+      itemsPerPage={ITEMS_PER_PAGE}
+      totalItems={availableSupplyMarkets.length}
+    />
+  );
+};
+
+export default AvailableSupplyContent;

@@ -120,4 +120,22 @@ export interface UserBorrowPosition {
   borrow: MarketUserReserveBorrowPosition;
 }
 
+export interface UnifiedMarketData extends Reserve {
+  marketInfo: Market;
+  marketName: string;
+  supplyData: {
+    apy: number;
+    totalSupplied: string;
+    totalSuppliedUsd: number;
+  };
+  borrowData: {
+    apy: number;
+    totalBorrowed: string;
+    totalBorrowedUsd: number;
+  };
+  usdExchangeRate: number;
+  isFrozen: boolean;
+  isPaused: boolean;
+}
+
 export type EModeStatus = "on" | "off" | "mixed";
