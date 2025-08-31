@@ -49,7 +49,7 @@ export default function DashboardContent({
         healthFactorData,
         eModeStatus,
         borrowData,
-        chainRiskData,
+        marketRiskData,
         loading,
         error,
       }) => (
@@ -84,7 +84,7 @@ export default function DashboardContent({
                     borrowAPY={borrowAPYData.apy}
                     activeMarkets={activeMarkets}
                     borrowData={borrowData}
-                    chainRiskData={chainRiskData}
+                    marketRiskData={marketRiskData}
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
                   />
@@ -121,12 +121,13 @@ interface DashboardContentInnerProps {
   };
   marketSupplyData: Record<string, UserSupplyData>;
   marketBorrowData: Record<string, UserBorrowData>;
-  chainRiskData: Record<
-    ChainId,
+  marketRiskData: Record<
+    string,
     {
       healthFactor: string | null;
       ltv: string | null;
       currentLiquidationThreshold: string | null;
+      chainId: ChainId;
     }
   >;
   activeMarkets: Market[];
