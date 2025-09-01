@@ -20,6 +20,7 @@ import {
 import { UnifiedMarketData } from "@/types/aave";
 import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
@@ -144,15 +145,17 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
-        <BrandedButton
-          buttonText="details"
-          onClick={() => {
-            onSupply?.(market);
-            onBorrow?.(market);
-          }}
-          className="w-full text-xs py-2 h-8"
-          disabled={!isAvailable}
-        />
+        <AssetDetailsModal
+          market={market}
+          onSupply={onSupply}
+          onBorrow={onBorrow}
+        >
+          <BrandedButton
+            buttonText="details"
+            className="w-full text-xs py-2 h-8"
+            disabled={!isAvailable}
+          />
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

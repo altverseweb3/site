@@ -20,6 +20,7 @@ import {
 import { UnifiedMarketData } from "@/types/aave";
 import { SquareMinus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
 interface AvailableBorrowCardProps {
@@ -165,15 +166,17 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
-        <BrandedButton
-          buttonText="details"
-          onClick={() => {
-            onBorrow?.(market);
-            onSupply?.(market);
-          }}
-          className="w-full text-xs py-2 h-8"
-          disabled={!isAvailable || !hasLiquidity}
-        />
+        <AssetDetailsModal
+          market={market}
+          onSupply={onSupply}
+          onBorrow={onBorrow}
+        >
+          <BrandedButton
+            buttonText="details"
+            className="w-full text-xs py-2 h-8"
+            disabled={!isAvailable || !hasLiquidity}
+          />
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );
