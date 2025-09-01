@@ -23,12 +23,14 @@ import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
-  onSupply?: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   market,
   onSupply,
+  onBorrow,
 }) => {
   // Extract supply data
   const baseSupplyAPY = market.supplyData.apy;
@@ -144,7 +146,10 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
       <CardFooter className="flex justify-center p-4 pt-0">
         <BrandedButton
           buttonText="details"
-          onClick={() => onSupply?.(market)}
+          onClick={() => {
+            onSupply?.(market);
+            onBorrow?.(market);
+          }}
           className="w-full text-xs py-2 h-8"
           disabled={!isAvailable}
         />

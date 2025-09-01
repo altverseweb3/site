@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import AvailableSupplyCard from "@/components/ui/lending/AvailableSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { Market } from "@/types/aave";
+import { Market, UnifiedMarketData } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface AvailableSupplyContentProps {
@@ -70,9 +70,13 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
         <AvailableSupplyCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
-          onSupply={() => {
+          onSupply={(market: UnifiedMarketData) => {
             // TODO: Implement supply modal/flow
             console.log("Supply clicked for:", market.underlyingToken.symbol);
+          }}
+          onBorrow={(market: UnifiedMarketData) => {
+            // TODO: Implement borrow modal/flow
+            console.log("Borrow clicked for:", market.underlyingToken.symbol);
           }}
         />
       )}

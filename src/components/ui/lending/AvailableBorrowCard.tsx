@@ -24,11 +24,13 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 
 interface AvailableBorrowCardProps {
   market: UnifiedMarketData;
-  onBorrow?: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   market,
+  onSupply,
   onBorrow,
 }) => {
   // Extract borrow data
@@ -165,7 +167,10 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
       <CardFooter className="flex justify-center p-4 pt-0">
         <BrandedButton
           buttonText="details"
-          onClick={() => onBorrow?.(market)}
+          onClick={() => {
+            onBorrow?.(market);
+            onSupply?.(market);
+          }}
           className="w-full text-xs py-2 h-8"
           disabled={!isAvailable || !hasLiquidity}
         />
