@@ -242,7 +242,9 @@ export default function RiskDetailsModal({
 
               <p className="text-[#A1A1AA] text-xs">
                 if your loan to value goes above the liquidation threshold your
-                collateral supplied may be liquidated.
+                collateral supplied may be liquidated. you can borrow up to a
+                maximum LTV of{" "}
+                <span className="text-amber-500">{ltvValue.toFixed(2)}%</span>.
               </p>
             </div>
           </div>
