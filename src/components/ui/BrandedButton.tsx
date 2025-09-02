@@ -1,6 +1,13 @@
 import { ButtonHTMLAttributes } from "react";
 import { Button } from "@/components/ui/Button";
-import { Coins, Cable, Wallet, ArrowLeftRight } from "lucide-react";
+import {
+  Coins,
+  Cable,
+  Wallet,
+  ArrowLeftRight,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { AvailableIconName } from "@/types/ui";
 
 interface BrandedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -23,6 +30,8 @@ export function BrandedButton({
         Cable,
         Wallet,
         ArrowLeftRight,
+        TrendingUp,
+        TrendingDown,
       }[iconName]
     : null;
 
