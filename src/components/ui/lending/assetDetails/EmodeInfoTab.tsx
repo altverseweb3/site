@@ -33,17 +33,17 @@ export const EModeInfoTab: React.FC<{ market: UnifiedMarketData }> = ({
           <InfoRow
             label="max LTV"
             value={formatPercentage(eMode.maxLTV.value)}
-            tooltip="Maximum loan-to-value ratio in this efficiency mode"
+            tooltip="maximum loan-to-value ratio in this efficiency mode"
           />
           <InfoRow
             label="liquidation threshold"
             value={formatPercentage(eMode.liquidationThreshold.value)}
-            tooltip="Liquidation threshold when using this efficiency mode"
+            tooltip="liquidation threshold when using this efficiency mode"
           />
           <InfoRow
             label="liquidation penalty"
             value={formatPercentage(eMode.liquidationPenalty.value)}
-            tooltip="Penalty applied during liquidation in this efficiency mode"
+            tooltip="penalty applied during liquidation in this efficiency mode"
           />
 
           <div className="flex justify-between items-center py-2">
@@ -68,8 +68,8 @@ export const EModeInfoTab: React.FC<{ market: UnifiedMarketData }> = ({
           about efficiency mode
         </h3>
         <p className="text-[#A1A1AA] text-xs leading-relaxed">
-          Efficiency mode (E-Mode) allows higher borrowing power for correlated
-          assets by offering optimized risk parameters. When enabled, you can
+          efficiency mode (E-Mode) allows higher borrowing power for correlated
+          assets by offering optimized risk parameters. when enabled, you can
           achieve higher LTV ratios and lower liquidation thresholds for assets
           within the same category.
         </p>

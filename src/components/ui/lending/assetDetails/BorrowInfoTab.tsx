@@ -90,7 +90,7 @@ export const BorrowInfoTab: React.FC<{
         <InfoRow
           label="reserve factor"
           value={formatPercentage(borrowInfo.reserveFactor.value)}
-          tooltip="Percentage of interest that goes to the protocol reserves"
+          tooltip="percentage of interest that goes to the protocol reserves"
         />
       </div>
 
@@ -133,7 +133,7 @@ export const BorrowInfoTab: React.FC<{
           {market.incentives.map((incentive, index) => (
             <div key={index} className="py-1 text-xs text-[#A1A1AA]">
               {incentive.__typename.includes("Borrow") && (
-                <span>Borrow incentive available</span>
+                <span>borrow incentive available</span>
               )}
             </div>
           ))}

@@ -84,24 +84,24 @@ const SupplyInfoTab: React.FC<{
         <InfoRow
           label="can be collateral?"
           value={supplyInfo.canBeCollateral ? "yes" : "no"}
-          tooltip="Whether this asset can be used as collateral for borrowing"
+          tooltip="whether this asset can be used as collateral for borrowing"
         />
         {supplyInfo.canBeCollateral && (
           <>
             <InfoRow
               label="max LTV"
               value={formatPercentage(supplyInfo.maxLTV.value)}
-              tooltip="Maximum loan-to-value ratio - the max amount you can borrow against this collateral"
+              tooltip="maximum loan-to-value ratio - the max amount you can borrow against this collateral"
             />
             <InfoRow
               label="liquidation threshold"
               value={formatPercentage(supplyInfo.liquidationThreshold.value)}
-              tooltip="Threshold at which your position becomes liquidatable"
+              tooltip="threshold at which your position becomes liquidatable"
             />
             <InfoRow
               label="liquidation penalty"
               value={formatPercentage(supplyInfo.liquidationBonus.value)}
-              tooltip="Bonus received by liquidators when liquidating this asset"
+              tooltip="bonus received by liquidators when liquidating this asset"
             />
           </>
         )}
@@ -136,7 +136,7 @@ const SupplyInfoTab: React.FC<{
           {market.incentives.map((incentive, index) => (
             <div key={index} className="py-1 text-xs text-[#A1A1AA]">
               {incentive.__typename.includes("Supply") && (
-                <span>Supply bonus available</span>
+                <span>supply bonus available</span>
               )}
             </div>
           ))}
