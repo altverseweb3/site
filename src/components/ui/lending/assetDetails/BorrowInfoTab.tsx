@@ -1,5 +1,6 @@
 import { InfoRow } from "@/components/ui/lending/assetDetails/InfoRow";
 import { UnifiedMarketData } from "@/types/aave";
+import HorizontalProgressBar from "@/components/ui/HorizontalProgressBar";
 import {
   formatCurrency,
   formatPercentage,
@@ -10,6 +11,7 @@ import {
   SquareMinus,
   SquareEqual,
   AlertTriangle,
+  Infinity,
 } from "lucide-react";
 
 export const BorrowInfoTab: React.FC<{
@@ -33,32 +35,72 @@ export const BorrowInfoTab: React.FC<{
   // Calculate borrow utilization
   const hasBorrowCap = borrowInfo.borrowCap.amount.value !== "0";
   const borrowCapTokens = hasBorrowCap
-    ? borrowInfo.borrowCap.amount.value
-    : "0";
+    ? parseFloat(borrowInfo.borrowCap.amount.value)
+    : 0;
   const borrowCapUsd = hasBorrowCap ? borrowInfo.borrowCap.usd : 0;
+  const currentBorrowedTokens = parseFloat(market.borrowData.totalBorrowed);
+  const currentBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
-  const totalBorrowedAmount = hasBorrowCap
-    ? `${formatBalance(market.borrowData.totalBorrowed)} out of ${formatBalance(borrowCapTokens)} ${market.underlyingToken.symbol}`
-    : `${formatBalance(market.borrowData.totalBorrowed)} ${market.underlyingToken.symbol}`;
-
-  const totalBorrowedUsd = hasBorrowCap
-    ? `${formatCurrency(market.borrowData.totalBorrowedUsd)} out of ${formatCurrency(borrowCapUsd)}`
-    : formatCurrency(market.borrowData.totalBorrowedUsd);
+  // Format values for display
+  const primaryValue = `${formatBalance(market.borrowData.totalBorrowed)} ${market.underlyingToken.symbol}`;
+  const secondaryValue = formatCurrency(currentBorrowedUsd);
+  const maxPrimaryValue = hasBorrowCap
+    ? `${formatBalance(borrowInfo.borrowCap.amount.value)} ${market.underlyingToken.symbol}`
+    : "Unlimited";
+  const maxSecondaryValue = hasBorrowCap
+    ? formatCurrency(borrowCapUsd)
+    : "No cap";
 
   return (
     <div className="space-y-4">
-      {/* Total Borrowed Amount */}
+      {/* Total Borrowed Amount with Progress Bar */}
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
-        <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
           <TrendingDown className="w-4 h-4 text-red-400" />
           borrow liquidity
         </h3>
-        <InfoRow label="total borrowed amount" value={totalBorrowedAmount} />
-        <InfoRow label="total borrowed amount (USD)" value={totalBorrowedUsd} />
+
+        {hasBorrowCap ? (
+          <HorizontalProgressBar
+            current={currentBorrowedTokens}
+            max={borrowCapTokens}
+            label="total amount borrowed"
+            primaryValue={`${primaryValue} of ${maxPrimaryValue}`}
+            secondaryValue={`${secondaryValue} of ${maxSecondaryValue}`}
+            color="red"
+          />
+        ) : (
+          // Fallback for unlimited borrow cap
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Infinity className="w-4 h-4 text-blue-400" />
+                <span className="text-sm text-zinc-300">
+                  Unlimited Borrow Cap
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+              <div className="flex justify-between">
+                <span className="text-sm text-zinc-400">Total Borrowed:</span>
+                <span className="text-sm font-medium text-red-400">
+                  {primaryValue}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-zinc-400">USD Value:</span>
+                <span className="text-sm font-medium text-blue-400">
+                  {secondaryValue}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {borrowInfo.borrowCapReached && (
-          <div className="flex items-center gap-2 text-orange-400 text-xs mt-2">
-            <AlertTriangle className="w-3 h-3" />
-            borrow cap reached
+          <div className="flex items-center gap-2 text-orange-400 text-xs mt-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Borrow cap has been reached</span>
           </div>
         )}
       </div>
