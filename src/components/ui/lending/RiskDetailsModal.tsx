@@ -41,11 +41,13 @@ export default function RiskDetailsModal({
 }: RiskDetailsModalProps) {
   // Create dropdown options from market risk data
   const dropdownOptions: DropdownOption[] = React.useMemo(() => {
-    return Object.entries(marketRiskData).map(([key, data]) => ({
-      key,
-      label: `${data.chainName} - ${data.marketName}`, // Display chain name and market name
-      data,
-    }));
+    return Object.entries(marketRiskData)
+      .filter(([, data]) => data.healthFactor !== null) // Only include markets with borrow positions
+      .map(([key, data]) => ({
+        key,
+        label: `${data.chainName} - ${data.marketName}`, // Display chain name and market name
+        data,
+      }));
   }, [marketRiskData]);
 
   const [selectedMarketKey, setSelectedMarketKey] = useState<string>(
