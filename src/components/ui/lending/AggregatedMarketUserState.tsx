@@ -50,6 +50,8 @@ interface AggregatedMarketUserStateProps {
         ltv: string | null;
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
+        chainName: string;
+        marketName: string;
       }
     >;
     loading: boolean;
@@ -282,11 +284,19 @@ export const AggregatedMarketUserState: React.FC<
         ltv: string | null;
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
+        chainName: string;
+        marketName: string;
       }
     > = {};
 
     validStates.forEach((state) => {
       const marketKey = `${state.chainId}-${state.marketAddress}`;
+      // Find the corresponding market from activeMarkets to get chain name and market name
+      const market = activeMarkets.find(
+        (m) =>
+          m.chain.chainId === state.chainId &&
+          m.address === state.marketAddress,
+      );
       marketRiskData[marketKey] = {
         healthFactor: state.healthFactor,
         ltv: state.ltv
@@ -298,6 +308,8 @@ export const AggregatedMarketUserState: React.FC<
             )
           : null,
         chainId: state.chainId,
+        chainName: market?.chain.name || "",
+        marketName: market?.name || "",
       };
     });
 
@@ -323,7 +335,7 @@ export const AggregatedMarketUserState: React.FC<
       marketCount: activeMarkets.length,
       marketData: filteredMarketData,
     };
-  }, [marketDataMap, activeMarkets.length, currentMarketKeys]);
+  }, [marketDataMap, activeMarkets, currentMarketKeys]);
 
   return (
     <>

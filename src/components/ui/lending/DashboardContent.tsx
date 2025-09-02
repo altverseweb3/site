@@ -129,6 +129,8 @@ interface DashboardContentInnerProps {
       ltv: string | null;
       currentLiquidationThreshold: string | null;
       chainId: ChainId;
+      chainName: string;
+      marketName: string;
     }
   >;
   activeMarkets: Market[];

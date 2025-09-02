@@ -18,6 +18,8 @@ interface MarketRiskData {
   ltv: string | null;
   currentLiquidationThreshold: string | null;
   chainId: ChainId;
+  chainName: string;
+  marketName: string;
 }
 
 interface RiskDetailsModalProps {
@@ -41,7 +43,7 @@ export default function RiskDetailsModal({
   const dropdownOptions: DropdownOption[] = React.useMemo(() => {
     return Object.entries(marketRiskData).map(([key, data]) => ({
       key,
-      label: key, // Using the market key as label for now
+      label: `${data.chainName} - ${data.marketName}`, // Display chain name and market name
       data,
     }));
   }, [marketRiskData]);
@@ -92,7 +94,10 @@ export default function RiskDetailsModal({
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="w-full flex items-center justify-between p-2 sm:p-3 bg-[#1F1F23] border border-[#27272A] rounded-lg text-[#FAFAFA] hover:bg-[#27272A]/50 transition-colors text-sm sm:text-base"
               >
-                <span className="truncate pr-2">{selectedMarketKey}</span>
+                <span className="truncate pr-2">
+                  {dropdownOptions.find((opt) => opt.key === selectedMarketKey)
+                    ?.label || selectedMarketKey}
+                </span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#A1A1AA] transition-transform flex-shrink-0 ${
                     isDropdownOpen ? "rotate-180" : ""
