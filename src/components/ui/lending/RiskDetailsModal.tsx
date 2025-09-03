@@ -26,6 +26,14 @@ interface RiskDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   marketRiskData: Record<string, MarketRiskData>;
+  borrowMarketData: Record<
+    string,
+    {
+      debt: string;
+      collateral: string;
+      currentLtv: string | null;
+    }
+  >;
 }
 
 interface DropdownOption {
@@ -38,6 +46,7 @@ export default function RiskDetailsModal({
   isOpen,
   onClose,
   marketRiskData,
+  borrowMarketData,
 }: RiskDetailsModalProps) {
   // Create dropdown options from market risk data
   const dropdownOptions: DropdownOption[] = React.useMemo(() => {
@@ -65,7 +74,14 @@ export default function RiskDetailsModal({
     ? parseFloat(selectedMarketData.healthFactor)
     : 0;
 
-  const ltvValue = selectedMarketData.ltv
+  // Get the current LTV usage from borrowMarketData (calculated as debt/collateral * 100)
+  const currentLtvData = borrowMarketData[selectedMarketKey];
+  const currentLtvValue = currentLtvData?.currentLtv
+    ? parseFloat(currentLtvData.currentLtv)
+    : 0;
+
+  // Get the maximum LTV from market data (protocol limit)
+  const maxLtvValue = selectedMarketData.ltv
     ? parseFloat(selectedMarketData.ltv)
     : 0;
 
@@ -214,7 +230,7 @@ export default function RiskDetailsModal({
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="flex-1 min-w-0">
                   <Slider
-                    value={[ltvValue]}
+                    value={[currentLtvValue]}
                     min={0}
                     max={100}
                     step={0.01}
@@ -229,7 +245,7 @@ export default function RiskDetailsModal({
                   />
                 </div>
                 <div className="text-right text-[#FAFAFA] text-xs font-mono w-10 sm:w-[60px] flex-shrink-0">
-                  {ltvValue.toFixed(2)}%
+                  {currentLtvValue.toFixed(2)}%
                 </div>
               </div>
 
@@ -244,7 +260,10 @@ export default function RiskDetailsModal({
                 if your loan to value goes above the liquidation threshold your
                 collateral supplied may be liquidated. you can borrow up to a
                 maximum LTV of{" "}
-                <span className="text-amber-500">{ltvValue.toFixed(2)}%</span>.
+                <span className="text-amber-500">
+                  {maxLtvValue.toFixed(2)}%
+                </span>
+                .
               </p>
             </div>
           </div>

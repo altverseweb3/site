@@ -119,6 +119,14 @@ interface DashboardContentInnerProps {
     debt: string;
     collateral: string;
     borrowPercentUsed: string | null;
+    marketData: Record<
+      string,
+      {
+        debt: string;
+        collateral: string;
+        currentLtv: string | null;
+      }
+    >;
   };
   marketSupplyData: Record<string, UserSupplyData>;
   marketBorrowData: Record<string, UserBorrowData>;
@@ -380,6 +388,7 @@ function DashboardContentInner({
         isOpen={isRiskDetailsModalOpen}
         onClose={() => setIsRiskDetailsModalOpen(false)}
         marketRiskData={marketRiskData}
+        borrowMarketData={borrowData.marketData}
       />
     </div>
   );
