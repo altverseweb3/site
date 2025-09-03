@@ -55,7 +55,6 @@ export default function RiskDetailsModal({
   marketRiskData,
   borrowMarketData,
 }: RiskDetailsModalProps) {
-  // Create dropdown options from market risk data
   const dropdownOptions: DropdownOption[] = React.useMemo(() => {
     return Object.entries(marketRiskData)
       .filter(([, data]) => data.healthFactor !== null) // Only include markets with borrow positions
@@ -192,10 +191,10 @@ export default function RiskDetailsModal({
               {/* Slider Labels */}
               <div className="relative text-xs sm:text-sm text-[#A1A1AA] px-1 pb-7">
                 <div className="absolute left-0">0</div>
-                <div className="absolute" style={{ left: "20%" }}>
+                <div className="absolute" style={{ left: "15%" }}>
                   1.00
                 </div>
-                <div className="absolute right-0" style={{ right: "18%" }}>
+                <div className="absolute right-0" style={{ right: "17.5%" }}>
                   5+
                 </div>
               </div>
