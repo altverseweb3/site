@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/StyledDialog";
 import { Slider } from "@/components/ui/Slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { ChainId } from "@/types/aave";
 import { formatHealthFactor } from "@/utils/formatters";
 
@@ -62,7 +69,6 @@ export default function RiskDetailsModal({
   const [selectedMarketKey, setSelectedMarketKey] = useState<string>(
     dropdownOptions[0]?.key || "",
   );
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const selectedMarketData = marketRiskData[selectedMarketKey];
 
@@ -94,7 +100,7 @@ export default function RiskDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-0.5rem)] max-w-[500px] bg-[#18181B] border-[#27272A] max-h-[95vh] overflow-y-auto mx-1 sm:mx-4 sm:w-[calc(100vw-2rem)]">
+      <DialogContent className="w-[calc(100vw-0.5rem)] max-w-[500px] bg-[#18181B] border-[#27272A] max-h-[95vh] overflow-y-auto sm:w-[calc(100vw-2rem)]">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="text-[#FAFAFA] text-base sm:text-lg font-semibold">
             liquidation risk details
@@ -102,48 +108,33 @@ export default function RiskDetailsModal({
         </DialogHeader>
 
         <div className="space-y-3 sm:space-y-4">
-          {/* Market Selection Dropdown */}
+          {/* Market Selection */}
           <div className="space-y-1.5">
             <label className="text-xs sm:text-sm text-[#A1A1AA]">
-              select chain/market
+              select chain/market:
             </label>
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between p-2 sm:p-3 bg-[#1F1F23] border border-[#27272A] rounded-lg text-[#FAFAFA] hover:bg-[#27272A]/50 transition-colors text-sm sm:text-base"
-              >
-                <span className="truncate pr-2">
+            <Select
+              value={selectedMarketKey}
+              onValueChange={setSelectedMarketKey}
+            >
+              <SelectTrigger className="w-full p-2 sm:p-3 bg-[#1F1F23] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]/50 text-sm sm:text-base focus:ring-1 focus:ring-sky-500 focus:ring-offset-0">
+                <SelectValue>
                   {dropdownOptions.find((opt) => opt.key === selectedMarketKey)
                     ?.label || selectedMarketKey}
-                </span>
-                <ChevronDown
-                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#A1A1AA] transition-transform flex-shrink-0 ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1F1F23] border border-[#27272A] rounded-lg shadow-lg overflow-hidden">
-                  {dropdownOptions.map((option) => (
-                    <button
-                      key={option.key}
-                      onClick={() => {
-                        setSelectedMarketKey(option.key);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full text-left p-2 sm:p-3 hover:bg-[#27272A]/50 transition-colors text-sm sm:text-base ${
-                        selectedMarketKey === option.key
-                          ? "bg-[#27272A]/50 text-[#FAFAFA]"
-                          : "text-[#A1A1AA]"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-[#1F1F23] border-[#27272A]">
+                {dropdownOptions.map((option) => (
+                  <SelectItem
+                    key={option.key}
+                    value={option.key}
+                    className="text-[#A1A1AA] hover:bg-[#27272A]/50 focus:bg-[#27272A]/50 focus:text-[#FAFAFA] text-sm sm:text-base"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Information Paragraph */}
@@ -199,7 +190,7 @@ export default function RiskDetailsModal({
               </div>
 
               {/* Slider Labels */}
-              <div className="relative text-xs text-[#A1A1AA] px-1 pb-1.5">
+              <div className="relative text-xs sm:text-sm text-[#A1A1AA] px-1 pb-7">
                 <div className="absolute left-0">0</div>
                 <div className="absolute" style={{ left: "20%" }}>
                   1.00
@@ -217,17 +208,17 @@ export default function RiskDetailsModal({
           </div>
 
           {/* Current LTV Card */}
-          <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-2.5 sm:p-4 space-y-2.5 sm:space-y-3">
-            <h3 className="text-[#FAFAFA] font-medium text-xs sm:text-base">
+          <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <h3 className="text-[#FAFAFA] font-medium text-sm sm:text-base">
               current LTV
             </h3>
-            <p className="text-[#A1A1AA] text-xs">
+            <p className="text-[#A1A1AA] text-xs sm:text-sm">
               your current loan to value based on your collateral supplied.
             </p>
 
             {/* LTV Slider */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="flex-1 min-w-0">
                   <Slider
                     value={[currentLtvValue]}
@@ -244,19 +235,19 @@ export default function RiskDetailsModal({
                     "
                   />
                 </div>
-                <div className="text-right text-[#FAFAFA] text-xs font-mono w-10 sm:w-[60px] flex-shrink-0">
+                <div className="text-right text-[#FAFAFA] text-xs sm:text-sm font-mono w-12 sm:w-[60px] flex-shrink-0">
                   {currentLtvValue.toFixed(2)}%
                 </div>
               </div>
 
               {/* Liquidation Threshold Label */}
-              <div className="flex justify-center pb-1.5">
-                <span className="text-xs text-[#A1A1AA]">
+              <div className="flex justify-center pb-2">
+                <span className="text-xs sm:text-sm text-[#A1A1AA]">
                   liquidation threshold: {liquidationThreshold.toFixed(2)}%
                 </span>
               </div>
 
-              <p className="text-[#A1A1AA] text-xs">
+              <p className="text-[#A1A1AA] text-xs sm:text-sm">
                 if your loan to value goes above the liquidation threshold your
                 collateral supplied may be liquidated. you can borrow up to a
                 maximum LTV of{" "}
