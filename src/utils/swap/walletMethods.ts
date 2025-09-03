@@ -1,6 +1,6 @@
 // utils/walletMethods.ts
 
-import { WalletInfo, WalletType, Token, Chain } from "@/types/web3";
+import { WalletInfo, WalletType, Chain } from "@/types/web3";
 import useWeb3Store from "@/store/web3Store";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
@@ -24,8 +24,11 @@ import { useSwapTracking } from "@/hooks/swap/useSwapTracking";
 import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
 import { Connection } from "@solana/web3.js";
 import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
-import { SwapStatus } from "@/types/web3";
-import { SwapTrackingOptions } from "@/types/web3";
+import {
+  TokenTransferOptions,
+  TokenTransferState,
+  ExtendedQuote,
+} from "@/types/web3";
 import { recordSwap } from "@/utils/swap/swapRecorder";
 import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
 import {
@@ -604,74 +607,6 @@ export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
     `No connected ${neededWalletType} wallet available for ${sourceChain.name}`,
   );
   return false;
-}
-
-interface TokenTransferOptions {
-  type:
-    | "vanilla"
-    | "earn/etherFi"
-    | "earn/aave"
-    | "earn/pendle"
-    | "lending/aave";
-  pauseQuoting?: boolean;
-  enableTracking?: boolean; // New option to enable automatic tracking
-  trackingOptions?: SwapTrackingOptions; // Pass through tracking configuration
-  onSuccess?: (
-    amount: string,
-    sourceToken: Token,
-    destinationToken?: Token,
-  ) => void;
-  onError?: (error: string) => void;
-  onSwapInitiated?: (swapId: string) => void; // New callback when swap starts
-  onTrackingComplete?: (status: SwapStatus) => void; // New callback when tracking completes
-  sourceChain: Chain;
-  destinationChain: Chain;
-  sourceToken?: Token | null;
-  destinationToken?: Token | null;
-  transactionDetails: {
-    slippage: "auto" | string;
-    receiveAddress: string | null;
-    gasDrop: number;
-  };
-}
-
-interface TokenTransferState {
-  // Input state
-  amount: string;
-  setAmount: (amount: string) => void;
-  handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-
-  isProcessing: boolean;
-
-  isValid: boolean;
-  isButtonDisabled: boolean;
-
-  isWalletCompatible: boolean;
-  quoteData: Quote[] | null;
-  receiveAmount: string;
-  isLoadingQuote: boolean;
-
-  // Add estimated time in seconds from the quote
-  estimatedTimeSeconds: number | null;
-
-  // Add fee information
-  protocolFeeBps: number | null;
-  protocolFeeUsd: number | null;
-  relayerFeeUsd: number | null;
-  totalFeeUsd: number | null;
-
-  swapId: string | null;
-  swapStatus: SwapStatus | null;
-  isTracking: boolean;
-  trackingError: Error | null;
-
-  swapAmounts: () => Promise<void>;
-  handleTransfer: () => Promise<string | void>;
-}
-
-// I had to include this as it appears the Mayan SDK is outdated
-interface ExtendedQuote extends Quote {
-  toTokenPrice?: number;
 }
 
 /**
