@@ -100,7 +100,7 @@ export default function RiskDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100vw-0.5rem)] max-w-[500px] bg-[#18181B] border-[#27272A] max-h-[95vh] overflow-y-auto sm:w-[calc(100vw-2rem)]">
-        <DialogHeader className="pb-1 sm:pb-2">
+        <DialogHeader className="pb-1 sm:pb-2 text-left">
           <DialogTitle className="text-[#FAFAFA] text-base sm:text-lg font-semibold">
             liquidation risk details
           </DialogTitle>
