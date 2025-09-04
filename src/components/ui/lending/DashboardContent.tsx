@@ -21,16 +21,19 @@ import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
 import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
 import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
 import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
+import { TokenTransferState } from "@/types/web3";
 
 interface DashboardContentProps {
   userAddress?: string;
   selectedChains: Chain[];
   activeMarkets: Market[];
+  tokenTransferState: TokenTransferState;
 }
 
 export default function DashboardContent({
   userAddress,
   activeMarkets,
+  tokenTransferState,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -88,6 +91,7 @@ export default function DashboardContent({
                     marketRiskData={marketRiskData}
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
+                    tokenTransferState={tokenTransferState}
                   />
                 );
               }}
@@ -145,6 +149,7 @@ interface DashboardContentInnerProps {
   activeMarkets: Market[];
   loading: boolean;
   error: boolean;
+  tokenTransferState: TokenTransferState;
 }
 
 function DashboardContentInner({
@@ -160,6 +165,7 @@ function DashboardContentInner({
   activeMarkets,
   loading,
   error,
+  tokenTransferState,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -365,21 +371,27 @@ function DashboardContentInner({
             <AvailableSupplyContent
               markets={activeMarkets}
               showZeroBalance={showZeroBalance}
+              tokenTransferState={tokenTransferState}
             />
           ) : (
-            <AvailableBorrowContent markets={activeMarkets} />
+            <AvailableBorrowContent
+              markets={activeMarkets}
+              tokenTransferState={tokenTransferState}
+            />
           )
         ) : // Show open positions
         isSupplyMode ? (
           <UserSupplyContent
             marketSupplyData={marketSupplyData}
             activeMarkets={activeMarkets}
+            tokenTransferState={tokenTransferState}
           />
         ) : (
           <UserBorrowContent
             marketBorrowData={marketBorrowData}
             showZeroBalance={showZeroBalance}
             activeMarkets={activeMarkets}
+            tokenTransferState={tokenTransferState}
           />
         )}
       </div>

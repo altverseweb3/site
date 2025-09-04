@@ -21,17 +21,20 @@ import { UnifiedMarketData } from "@/types/aave";
 import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   market,
   onSupply,
   onBorrow,
+  tokenTransferState,
 }) => {
   // Extract supply data
   const baseSupplyAPY = market.supplyData.apy;
@@ -149,6 +152,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           market={market}
           onSupply={onSupply}
           onBorrow={onBorrow}
+          tokenTransferState={tokenTransferState}
         >
           <BrandedButton
             buttonText="details"

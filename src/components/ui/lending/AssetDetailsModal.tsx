@@ -21,6 +21,7 @@ import EModeInfoTab from "@/components/ui/lending/assetDetails/EmodeInfoTab";
 import SupplyInfoTab from "@/components/ui/lending/assetDetails/SupplyInfoTab";
 import BorrowInfoTab from "@/components/ui/lending/assetDetails/BorrowInfoTab";
 import BrandedButton from "@/components/ui/BrandedButton";
+import { TokenTransferState } from "@/types/web3";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -29,6 +30,7 @@ interface AssetDetailsModalProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";

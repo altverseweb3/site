@@ -9,11 +9,13 @@ import {
   UnifiedMarketData,
 } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { TokenTransferState } from "@/types/web3";
 
 interface UserBorrowContentProps {
   marketBorrowData: Record<string, UserBorrowData>;
-  activeMarkets: Market[]; // Add this prop
+  activeMarkets: Market[];
   showZeroBalance?: boolean;
+  tokenTransferState: TokenTransferState;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
@@ -26,6 +28,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   marketBorrowData,
   activeMarkets,
   showZeroBalance = false,
+  tokenTransferState,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -108,6 +111,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           onRepay={(position: UserBorrowPosition) => {
             console.log(position); // TODO: update me
           }}
+          tokenTransferState={tokenTransferState}
         />
       )}
       currentPage={currentPage}

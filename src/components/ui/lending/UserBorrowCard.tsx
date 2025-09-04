@@ -14,6 +14,7 @@ import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import { TokenTransferState } from "@/types/web3";
 
 interface UserBorrowCardProps {
   position: UserBorrowPosition;
@@ -21,6 +22,7 @@ interface UserBorrowCardProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (position: UserBorrowPosition) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
@@ -29,6 +31,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   onSupply,
   onBorrow,
   onRepay,
+  tokenTransferState,
 }) => {
   const { borrow, marketName } = position;
   const balanceUsd = parseFloat(borrow.debt.usd) || 0;
@@ -97,6 +100,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}
+          tokenTransferState={tokenTransferState}
         >
           <BrandedButton
             buttonText="details"

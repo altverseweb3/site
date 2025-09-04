@@ -12,11 +12,16 @@ import {
 } from "@/store/web3Store";
 import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
-import { WalletType } from "@/types/web3";
+import { WalletType, SwapStatus } from "@/types/web3";
 import {
   useIsWalletTypeConnected,
   useSetActiveSwapSection,
   useWalletByType,
+  useSourceChain,
+  useDestinationChain,
+  useSourceToken,
+  useDestinationToken,
+  useTransactionDetails,
 } from "@/store/web3Store";
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
@@ -25,6 +30,8 @@ import { ChainId } from "@/types/aave";
 import { evmAddress } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionContent";
+import { useTokenTransfer } from "@/utils/swap/walletMethods";
+import { Button } from "@/components/ui/Button";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -34,6 +41,11 @@ export default function LendingPage() {
   const { data: aaveChains } = useAaveChainsData({});
   const selectedChains = useSelectedAaveChains();
   const setSelectedChains = useSetSelectedAaveChains();
+  const sourceChain = useSourceChain();
+  const destinationChain = useDestinationChain();
+  const sourceToken = useSourceToken();
+  const destinationToken = useDestinationToken();
+  const transactionDetails = useTransactionDetails();
 
   const supportedChains = useMemo(() => {
     if (!aaveChains) return [];
@@ -59,6 +71,26 @@ export default function LendingPage() {
   const { markets, loading } = useAaveMarketsWithLoading({
     chainIds: determineChainsToFetch(),
     user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
+  });
+
+  const tokenTransferState = useTokenTransfer({
+    type: "lending/aave", // remember to change me when we integrate with other vaults
+    sourceChain,
+    destinationChain,
+    sourceToken,
+    destinationToken,
+    transactionDetails,
+    enableTracking: true,
+    pauseQuoting: true, // TODO: validate me
+    onSuccess: () => {
+      console.log("lending swap initiated successfully");
+    },
+    onTrackingComplete: (status: SwapStatus) => {
+      console.log("lending swap completed successfully with status", status);
+    },
+    onError: (error) => {
+      console.error("lending swap error:", error);
+    },
   });
 
   useEffect(() => {
@@ -167,12 +199,18 @@ export default function LendingPage() {
             </div>
           ) : (
             <>
-              {activeTab === "markets" && <MarketContent markets={markets} />}
+              {activeTab === "markets" && (
+                <MarketContent
+                  markets={markets}
+                  tokenTransferState={tokenTransferState}
+                />
+              )}
               {activeTab === "dashboard" && (
                 <DashboardContent
                   userAddress={userWalletAddress}
                   selectedChains={selectedChains}
                   activeMarkets={markets || []}
+                  tokenTransferState={tokenTransferState}
                 />
               )}
               {activeTab === "history" && (
@@ -187,6 +225,14 @@ export default function LendingPage() {
               )}
             </>
           )}
+          <Button
+            onClick={() => {
+              console.log(tokenTransferState);
+              debugger;
+            }}
+          >
+            HELLO MATE
+          </Button>
         </div>
       </div>
     </div>
