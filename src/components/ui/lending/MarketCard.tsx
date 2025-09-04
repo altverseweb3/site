@@ -17,16 +17,29 @@ import {
   formatPercentage,
   formatBalance,
 } from "@/utils/formatters";
-import { UnifiedMarketData } from "@/types/aave";
+import {
+  UnifiedMarketData,
+  UserBorrowPosition,
+  UserSupplyPosition,
+} from "@/types/aave";
 import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface MarketCardProps {
   market: UnifiedMarketData;
+  onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
+  onRepay?: (market: UserBorrowPosition) => void;
+  onWithdraw?: (market: UserSupplyPosition) => void;
   onDetails?: (market: UnifiedMarketData) => void;
 }
 
-const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
+const MarketCard: React.FC<MarketCardProps> = ({
+  market,
+  onSupply,
+  onBorrow,
+}) => {
   // Extract data from unified structure
   const baseSupplyAPY = market.supplyData.apy;
   const baseBorrowAPY = market.borrowData.apy;
@@ -163,12 +176,16 @@ const MarketCard: React.FC<MarketCardProps> = ({ market, onDetails }) => {
       </CardContent>
 
       <CardFooter className="flex justify-center p-4 pt-0">
-        <BrandedButton
-          buttonText="details"
-          onClick={() => onDetails?.(market)}
-          className="w-full text-xs py-2 h-8"
-          disabled={true}
-        />
+        <AssetDetailsModal
+          market={market}
+          onSupply={onSupply}
+          onBorrow={onBorrow}
+        >
+          <BrandedButton
+            buttonText="details"
+            className="w-full text-xs py-2 h-8"
+          />
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );
