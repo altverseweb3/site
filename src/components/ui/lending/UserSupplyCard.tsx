@@ -13,20 +13,25 @@ import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UserSupplyPosition } from "@/types/aave";
+import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
 interface UserSupplyCardProps {
   position: UserSupplyPosition;
-  onSupply?: (position: UserSupplyPosition) => void;
-  onWithdraw?: (position: UserSupplyPosition) => void;
+  unifiedMarket: UnifiedMarketData;
+  onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
+  onWithdraw: (position: UserSupplyPosition) => void;
   onToggleCollateral?: (position: UserSupplyPosition) => void;
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   position,
+  unifiedMarket,
   onSupply,
+  onBorrow,
   onWithdraw,
   onToggleCollateral,
 }) => {
@@ -135,15 +140,18 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex gap-2 p-4 pt-0">
-        <BrandedButton
-          buttonText="details"
-          onClick={() => {
-            //placeholder, we would be passing in these functions as props to the modal
-            console.log(onSupply, onWithdraw, onToggleCollateral);
-          }}
-          className="flex-1 text-xs py-2 h-8"
-          disabled={true}
-        />
+        <AssetDetailsModal
+          market={unifiedMarket}
+          onSupply={onSupply}
+          onBorrow={onBorrow}
+          onWithdraw={onWithdraw}
+        >
+          <BrandedButton
+            buttonText="details"
+            className="w-full text-xs py-2 h-8"
+            disabled={false}
+          />
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

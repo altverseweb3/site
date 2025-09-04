@@ -1,39 +1,71 @@
 "use client";
-
 import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserBorrowData, UserBorrowPosition } from "@/types/aave";
+import {
+  UserBorrowData,
+  UserBorrowPosition,
+  Market,
+  UnifiedMarketData,
+} from "@/types/aave";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface UserBorrowContentProps {
   marketBorrowData: Record<string, UserBorrowData>;
+  activeMarkets: Market[]; // Add this prop
   showZeroBalance?: boolean;
+}
+
+interface EnhancedUserBorrowPosition extends UserBorrowPosition {
+  unifiedMarket: UnifiedMarketData;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   marketBorrowData,
+  activeMarkets,
+  showZeroBalance = false,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Transform marketBorrowData into individual borrow positions
-  const positions: UserBorrowPosition[] = [];
+  const unifiedMarkets = unifyMarkets(activeMarkets);
+
+  // lookup map for unified markets by market address and chain
+  const unifiedMarketMap = new Map<string, UnifiedMarketData>();
+  unifiedMarkets.forEach((market) => {
+    const key = `${market.marketInfo.address}-${market.marketInfo.chain.chainId}`;
+    unifiedMarketMap.set(key, market);
+  });
+
+  const enhancedPositions: EnhancedUserBorrowPosition[] = [];
+
   Object.values(marketBorrowData).forEach((marketData) => {
     if (marketData.borrows && marketData.borrows.length > 0) {
       marketData.borrows.forEach((borrow) => {
-        positions.push({
-          marketAddress: marketData.marketAddress,
-          marketName: marketData.marketName,
-          chainId: marketData.chainId,
-          borrow,
-        });
+        const marketKey = `${marketData.marketAddress}-${marketData.chainId}`;
+        const unifiedMarket = unifiedMarketMap.get(marketKey);
+
+        if (unifiedMarket) {
+          const debtAmount = parseFloat(borrow.debt.usd) || 0;
+          if (!showZeroBalance && debtAmount === 0) {
+            return;
+          }
+
+          enhancedPositions.push({
+            marketAddress: marketData.marketAddress,
+            marketName: marketData.marketName,
+            chainId: marketData.chainId,
+            borrow,
+            unifiedMarket,
+          });
+        }
       });
     }
   });
 
-  // Sort by balance (highest first)
-  const userBorrowPositions = positions.sort((a, b) => {
+  // Sort by debt amount (highest first)
+  const userBorrowPositions = enhancedPositions.sort((a, b) => {
     const balanceA = parseFloat(a.borrow.debt.usd) || 0;
     const balanceB = parseFloat(b.borrow.debt.usd) || 0;
     return balanceB - balanceA;
@@ -66,8 +98,16 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
         <UserBorrowCard
           key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
-          onBorrow={() => {}}
-          onRepay={() => {}}
+          unifiedMarket={position.unifiedMarket}
+          onSupply={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onBorrow={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onRepay={(position: UserBorrowPosition) => {
+            console.log(position); // TODO: update me
+          }}
         />
       )}
       currentPage={currentPage}
