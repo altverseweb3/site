@@ -3,7 +3,12 @@
 import React, { useState } from "react";
 import MarketCard from "@/components/ui/lending/MarketCard";
 import CardsList from "@/components/ui/CardsList";
-import { Market } from "@/types/aave";
+import {
+  Market,
+  UnifiedMarketData,
+  UserBorrowPosition,
+  UserSupplyPosition,
+} from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 const ITEMS_PER_PAGE = 10;
@@ -43,7 +48,18 @@ const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
         <MarketCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
-          onDetails={() => {}}
+          onSupply={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onBorrow={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onRepay={(market: UserBorrowPosition) => {
+            console.log(market); // TODO: update me
+          }}
+          onWithdraw={(market: UserSupplyPosition) => {
+            console.log(market); // TODO: update me
+          }}
         />
       )}
       currentPage={currentPage}
