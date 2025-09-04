@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/Select";
 import { ChainId } from "@/types/aave";
 import { formatHealthFactor } from "@/utils/formatters";
+import Image from "next/image";
 
 interface MarketRiskData {
   healthFactor: string | null;
@@ -25,6 +26,7 @@ interface MarketRiskData {
   currentLiquidationThreshold: string | null;
   chainId: ChainId;
   chainName: string;
+  chainIcon: string;
   marketName: string;
 }
 
@@ -115,8 +117,28 @@ export default function RiskDetailsModal({
             >
               <SelectTrigger className="w-full p-2 sm:p-3 bg-[#1F1F23] border-[#27272A] text-[#FAFAFA] hover:bg-[#27272A]/50 text-sm sm:text-base focus:ring-1 focus:ring-sky-500 focus:ring-offset-0">
                 <SelectValue>
-                  {dropdownOptions.find((opt) => opt.key === selectedMarketKey)
-                    ?.label || selectedMarketKey}
+                  {(() => {
+                    const selectedOption = dropdownOptions.find(
+                      (opt) => opt.key === selectedMarketKey,
+                    );
+                    return selectedOption ? (
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={selectedOption.data.chainIcon}
+                          alt={selectedOption.data.chainName}
+                          width={22}
+                          height={22}
+                          className="object-contain"
+                          onError={(e) => {
+                            e.currentTarget.src = "/images/tokens/default.svg";
+                          }}
+                        />
+                        <span>{selectedOption.label}</span>
+                      </div>
+                    ) : (
+                      selectedMarketKey
+                    );
+                  })()}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-[#1F1F23] border-[#27272A]">
@@ -126,7 +148,19 @@ export default function RiskDetailsModal({
                     value={option.key}
                     className="text-[#A1A1AA] hover:bg-[#27272A]/50 focus:bg-[#27272A]/50 focus:text-[#FAFAFA] text-sm sm:text-base"
                   >
-                    {option.label}
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src={option.data.chainIcon}
+                        alt={option.data.chainName}
+                        width={22}
+                        height={22}
+                        className="object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/tokens/default.svg";
+                        }}
+                      />
+                      <span>{option.label}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

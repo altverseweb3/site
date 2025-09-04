@@ -59,6 +59,7 @@ interface AggregatedMarketUserStateProps {
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
         chainName: string;
+        chainIcon: string;
         marketName: string;
       }
     >;
@@ -331,6 +332,7 @@ export const AggregatedMarketUserState: React.FC<
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
         chainName: string;
+        chainIcon: string;
         marketName: string;
       }
     > = {};
@@ -355,6 +357,7 @@ export const AggregatedMarketUserState: React.FC<
           : null,
         chainId: state.chainId,
         chainName: market?.chain.name || "",
+        chainIcon: market?.chain.icon || "",
         marketName: market?.name || "",
       };
     });
