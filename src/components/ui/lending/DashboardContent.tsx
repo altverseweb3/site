@@ -138,6 +138,7 @@ interface DashboardContentInnerProps {
       currentLiquidationThreshold: string | null;
       chainId: ChainId;
       chainName: string;
+      chainIcon: string;
       marketName: string;
     }
   >;
