@@ -1,6 +1,7 @@
 // types/web3.ts
 
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
+import { Quote } from "@mayanfinance/swap-sdk";
 
 export interface WalletInfo {
   type: WalletType; // Static Enum to type/identify the wallet
@@ -495,4 +496,68 @@ export interface WalletFilterProps {
   selectedWallet: WalletFilterType;
   onWalletChange: (wallet: WalletFilterType) => void;
   className?: string;
+}
+
+export interface TokenTransferOptions {
+  type:
+    | "vanilla"
+    | "earn/etherFi"
+    | "earn/aave"
+    | "earn/pendle"
+    | "lending/aave";
+  pauseQuoting?: boolean;
+  enableTracking?: boolean;
+  trackingOptions?: SwapTrackingOptions;
+  onSuccess?: (
+    amount: string,
+    sourceToken: Token,
+    destinationToken?: Token,
+  ) => void;
+  onError?: (error: string) => void;
+  onSwapInitiated?: (swapId: string) => void;
+  onTrackingComplete?: (status: SwapStatus) => void;
+  sourceChain: Chain;
+  destinationChain: Chain;
+  sourceToken?: Token | null;
+  destinationToken?: Token | null;
+  transactionDetails: {
+    slippage: "auto" | string;
+    receiveAddress: string | null;
+    gasDrop: number;
+  };
+}
+
+export interface TokenTransferState {
+  amount: string;
+  setAmount: (amount: string) => void;
+  handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+  isProcessing: boolean;
+
+  isValid: boolean;
+  isButtonDisabled: boolean;
+
+  isWalletCompatible: boolean;
+  quoteData: Quote[] | null;
+  receiveAmount: string;
+  isLoadingQuote: boolean;
+
+  estimatedTimeSeconds: number | null;
+
+  protocolFeeBps: number | null;
+  protocolFeeUsd: number | null;
+  relayerFeeUsd: number | null;
+  totalFeeUsd: number | null;
+
+  swapId: string | null;
+  swapStatus: SwapStatus | null;
+  isTracking: boolean;
+  trackingError: Error | null;
+
+  swapAmounts: () => Promise<void>;
+  handleTransfer: () => Promise<string | void>;
+}
+
+export interface ExtendedQuote extends Quote {
+  toTokenPrice?: number;
 }
