@@ -10,10 +10,12 @@ import {
   UnifiedMarketData,
 } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { TokenTransferState } from "@/types/web3";
 
 interface UserSupplyContentProps {
   marketSupplyData: Record<string, UserSupplyData>;
   activeMarkets: Market[];
+  tokenTransferState: TokenTransferState;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -25,6 +27,7 @@ const ITEMS_PER_PAGE = 10;
 const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   marketSupplyData,
   activeMarkets,
+  tokenTransferState,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -105,6 +108,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           onToggleCollateral={(position: UserSupplyPosition) => {
             console.log(position); // TODO: update me
           }}
+          tokenTransferState={tokenTransferState}
         />
       )}
       currentPage={currentPage}

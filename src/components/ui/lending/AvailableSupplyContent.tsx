@@ -5,10 +5,12 @@ import AvailableSupplyCard from "@/components/ui/lending/AvailableSupplyCard";
 import CardsList from "@/components/ui/CardsList";
 import { Market, UnifiedMarketData } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyContentProps {
   markets: Market[] | null | undefined;
   showZeroBalance?: boolean;
+  tokenTransferState: TokenTransferState;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -16,6 +18,7 @@ const ITEMS_PER_PAGE = 10;
 const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
   markets,
   showZeroBalance = false,
+  tokenTransferState,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -78,6 +81,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
             // TODO: Implement borrow modal/flow
             console.log("Borrow clicked for:", market.underlyingToken.symbol);
           }}
+          tokenTransferState={tokenTransferState}
         />
       )}
       currentPage={currentPage}

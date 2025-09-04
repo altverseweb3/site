@@ -10,14 +10,19 @@ import {
   UserSupplyPosition,
 } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { TokenTransferState } from "@/types/web3";
 
 const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
   markets: Market[] | null | undefined;
+  tokenTransferState: TokenTransferState;
 }
 
-const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
+const MarketContent: React.FC<MarketContentProps> = ({
+  markets,
+  tokenTransferState,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   if (!markets || markets.length === 0) {
@@ -60,6 +65,7 @@ const MarketContent: React.FC<MarketContentProps> = ({ markets }) => {
           onWithdraw={(market: UserSupplyPosition) => {
             console.log(market); // TODO: update me
           }}
+          tokenTransferState={tokenTransferState}
         />
       )}
       currentPage={currentPage}

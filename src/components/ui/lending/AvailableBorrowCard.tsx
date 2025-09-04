@@ -22,17 +22,20 @@ import { SquareMinus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { TokenTransferState } from "@/types/web3";
 
 interface AvailableBorrowCardProps {
   market: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   market,
   onSupply,
   onBorrow,
+  tokenTransferState,
 }) => {
   // Extract borrow data
   const baseBorrowAPY = market.borrowData.apy;
@@ -170,6 +173,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
           market={market}
           onSupply={onSupply}
           onBorrow={onBorrow}
+          tokenTransferState={tokenTransferState}
         >
           <BrandedButton
             buttonText="details"

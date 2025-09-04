@@ -17,6 +17,7 @@ import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { TokenTransferState } from "@/types/web3";
 
 interface UserSupplyCardProps {
   position: UserSupplyPosition;
@@ -25,6 +26,7 @@ interface UserSupplyCardProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (position: UserSupplyPosition) => void;
   onToggleCollateral?: (position: UserSupplyPosition) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
@@ -34,6 +36,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   onBorrow,
   onWithdraw,
   onToggleCollateral,
+  tokenTransferState,
 }) => {
   const { supply, marketName } = position;
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
@@ -145,6 +148,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
+          tokenTransferState={tokenTransferState}
         >
           <BrandedButton
             buttonText="details"

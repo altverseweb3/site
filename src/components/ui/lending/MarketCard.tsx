@@ -25,6 +25,7 @@ import {
 import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import { TokenTransferState } from "@/types/web3";
 
 interface MarketCardProps {
   market: UnifiedMarketData;
@@ -33,12 +34,14 @@ interface MarketCardProps {
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
   onDetails?: (market: UnifiedMarketData) => void;
+  tokenTransferState: TokenTransferState;
 }
 
 const MarketCard: React.FC<MarketCardProps> = ({
   market,
   onSupply,
   onBorrow,
+  tokenTransferState,
 }) => {
   // Extract data from unified structure
   const baseSupplyAPY = market.supplyData.apy;
@@ -180,6 +183,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           market={market}
           onSupply={onSupply}
           onBorrow={onBorrow}
+          tokenTransferState={tokenTransferState}
         >
           <BrandedButton
             buttonText="details"
