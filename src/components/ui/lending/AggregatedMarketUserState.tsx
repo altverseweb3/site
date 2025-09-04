@@ -42,6 +42,14 @@ interface AggregatedMarketUserStateProps {
       debt: string;
       collateral: string;
       borrowPercentUsed: string | null;
+      marketData: Record<
+        string,
+        {
+          debt: string;
+          collateral: string;
+          currentLtv: string | null;
+        }
+      >;
     };
     marketRiskData: Record<
       string,
@@ -50,6 +58,9 @@ interface AggregatedMarketUserStateProps {
         ltv: string | null;
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
+        chainName: string;
+        chainIcon: string;
+        marketName: string;
       }
     >;
     loading: boolean;
@@ -226,6 +237,14 @@ export const AggregatedMarketUserState: React.FC<
       debt: formatCurrency(0),
       collateral: formatCurrency(0),
       borrowPercentUsed: null as string | null,
+      marketData: {} as Record<
+        string,
+        {
+          debt: string;
+          collateral: string;
+          currentLtv: string | null;
+        }
+      >,
     };
 
     if (validStates.length > 0) {
@@ -236,6 +255,35 @@ export const AggregatedMarketUserState: React.FC<
       const totalCollateralBase = validStates.reduce((sum, state) => {
         return sum + parseFloat(state.data!.totalCollateralBase);
       }, 0);
+
+      // Calculate per-market debt, collateral, and current LTV
+      const marketData: Record<
+        string,
+        {
+          debt: string;
+          collateral: string;
+          currentLtv: string | null;
+        }
+      > = {};
+
+      validStates.forEach((state) => {
+        const marketKey = `${state.chainId}-${state.marketAddress}`;
+        const marketDebt = parseFloat(state.data!.totalDebtBase);
+        const marketCollateral = parseFloat(state.data!.totalCollateralBase);
+
+        // Calculate current LTV as (debt * 100 / collateral)
+        let currentLtv: string | null = null;
+        if (marketCollateral > 0) {
+          const ltvRatio = (marketDebt * 100) / marketCollateral;
+          currentLtv = formatPercentage(ltvRatio);
+        }
+
+        marketData[marketKey] = {
+          debt: formatCurrency(marketDebt),
+          collateral: formatCurrency(marketCollateral),
+          currentLtv,
+        };
+      });
 
       // Calculate borrow % used
       let borrowPercentUsed: string | null = null;
@@ -271,6 +319,7 @@ export const AggregatedMarketUserState: React.FC<
         debt: formatCurrency(totalDebtBase),
         collateral: formatCurrency(totalCollateralBase),
         borrowPercentUsed,
+        marketData,
       };
     }
 
@@ -282,11 +331,20 @@ export const AggregatedMarketUserState: React.FC<
         ltv: string | null;
         currentLiquidationThreshold: string | null;
         chainId: ChainId;
+        chainName: string;
+        chainIcon: string;
+        marketName: string;
       }
     > = {};
 
     validStates.forEach((state) => {
       const marketKey = `${state.chainId}-${state.marketAddress}`;
+      // Find the corresponding market from activeMarkets to get chain name and market name
+      const market = activeMarkets.find(
+        (m) =>
+          m.chain.chainId === state.chainId &&
+          m.address === state.marketAddress,
+      );
       marketRiskData[marketKey] = {
         healthFactor: state.healthFactor,
         ltv: state.ltv
@@ -298,6 +356,9 @@ export const AggregatedMarketUserState: React.FC<
             )
           : null,
         chainId: state.chainId,
+        chainName: market?.chain.name || "",
+        chainIcon: market?.chain.icon || "",
+        marketName: market?.name || "",
       };
     });
 
@@ -323,7 +384,7 @@ export const AggregatedMarketUserState: React.FC<
       marketCount: activeMarkets.length,
       marketData: filteredMarketData,
     };
-  }, [marketDataMap, activeMarkets.length, currentMarketKeys]);
+  }, [marketDataMap, activeMarkets, currentMarketKeys]);
 
   return (
     <>
