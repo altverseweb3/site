@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/StyledDialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import Image from "next/image";
-import { UnifiedMarketData } from "@/types/aave";
+import {
+  UnifiedMarketData,
+  UserBorrowPosition,
+  UserSupplyPosition,
+} from "@/types/aave";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import UserInfoTab from "@/components/ui/lending/assetDetails/UserInfoTab";
 import EModeInfoTab from "@/components/ui/lending/assetDetails/EmodeInfoTab";
@@ -23,6 +27,8 @@ interface AssetDetailsModalProps {
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  onRepay?: (market: UserBorrowPosition) => void;
+  onWithdraw?: (market: UserSupplyPosition) => void;
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";

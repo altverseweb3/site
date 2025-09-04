@@ -12,16 +12,21 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UserBorrowPosition } from "@/types/aave";
+import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
 
 interface UserBorrowCardProps {
   position: UserBorrowPosition;
-  onBorrow?: (position: UserBorrowPosition) => void;
+  unifiedMarket: UnifiedMarketData;
+  onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (position: UserBorrowPosition) => void;
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   position,
+  unifiedMarket,
+  onSupply,
   onBorrow,
   onRepay,
 }) => {
@@ -87,15 +92,18 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex gap-2 p-4 pt-0">
-        <BrandedButton
-          buttonText="details"
-          onClick={() => {
-            //placeholder, we would be passing in these functions as props to the modal
-            console.log(onBorrow, onRepay);
-          }}
-          className="flex-1 text-xs py-2 h-8"
-          disabled={true}
-        />
+        <AssetDetailsModal
+          market={unifiedMarket}
+          onSupply={onSupply}
+          onBorrow={onBorrow}
+          onRepay={onRepay}
+        >
+          <BrandedButton
+            buttonText="details"
+            className="w-full text-xs py-2 h-8"
+            disabled={false}
+          />
+        </AssetDetailsModal>
       </CardFooter>
     </Card>
   );

@@ -3,35 +3,63 @@
 import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserSupplyData, UserSupplyPosition } from "@/types/aave";
+import {
+  UserSupplyData,
+  UserSupplyPosition,
+  Market,
+  UnifiedMarketData,
+} from "@/types/aave";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface UserSupplyContentProps {
   marketSupplyData: Record<string, UserSupplyData>;
+  activeMarkets: Market[];
+}
+
+interface EnhancedUserSupplyPosition extends UserSupplyPosition {
+  unifiedMarket: UnifiedMarketData;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   marketSupplyData,
+  activeMarkets,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const positions: UserSupplyPosition[] = [];
+  const unifiedMarkets = unifyMarkets(activeMarkets);
+
+  // lookup map for unified markets by market address and chain
+  const unifiedMarketMap = new Map<string, UnifiedMarketData>();
+  unifiedMarkets.forEach((market) => {
+    const key = `${market.marketInfo.address}-${market.marketInfo.chain.chainId}`;
+    unifiedMarketMap.set(key, market);
+  });
+
+  const enhancedPositions: EnhancedUserSupplyPosition[] = [];
+
   Object.values(marketSupplyData).forEach((marketData) => {
     if (marketData.supplies && marketData.supplies.length > 0) {
       marketData.supplies.forEach((supply) => {
-        positions.push({
-          marketAddress: marketData.marketAddress,
-          marketName: marketData.marketName,
-          chainId: marketData.chainId,
-          supply,
-        });
+        const marketKey = `${marketData.marketAddress}-${marketData.chainId}`;
+        const unifiedMarket = unifiedMarketMap.get(marketKey);
+
+        if (unifiedMarket) {
+          enhancedPositions.push({
+            marketAddress: marketData.marketAddress,
+            marketName: marketData.marketName,
+            chainId: marketData.chainId,
+            supply,
+            unifiedMarket,
+          });
+        }
       });
     }
   });
 
   // Sort by balance (highest first)
-  const userSupplyPositions = positions.sort((a, b) => {
+  const userSupplyPositions = enhancedPositions.sort((a, b) => {
     const balanceA = parseFloat(a.supply.balance.usd) || 0;
     const balanceB = parseFloat(b.supply.balance.usd) || 0;
     return balanceB - balanceA;
@@ -64,9 +92,19 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
         <UserSupplyCard
           key={`${position.marketAddress}-${position.supply.currency.symbol}`}
           position={position}
-          onSupply={() => {}}
-          onWithdraw={() => {}}
-          onToggleCollateral={() => {}}
+          unifiedMarket={position.unifiedMarket}
+          onSupply={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onBorrow={(market: UnifiedMarketData) => {
+            console.log(market); // TODO: update me
+          }}
+          onWithdraw={(position: UserSupplyPosition) => {
+            console.log(position); // TODO: update me
+          }}
+          onToggleCollateral={(position: UserSupplyPosition) => {
+            console.log(position); // TODO: update me
+          }}
         />
       )}
       currentPage={currentPage}

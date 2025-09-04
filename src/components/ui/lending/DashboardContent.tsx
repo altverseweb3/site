@@ -354,11 +354,15 @@ function DashboardContentInner({
           )
         ) : // Show open positions
         isSupplyMode ? (
-          <UserSupplyContent marketSupplyData={marketSupplyData} />
+          <UserSupplyContent
+            marketSupplyData={marketSupplyData}
+            activeMarkets={activeMarkets}
+          />
         ) : (
           <UserBorrowContent
             marketBorrowData={marketBorrowData}
             showZeroBalance={showZeroBalance}
+            activeMarkets={activeMarkets}
           />
         )}
       </div>
