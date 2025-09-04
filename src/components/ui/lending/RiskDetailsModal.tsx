@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import {
@@ -55,15 +54,13 @@ export default function RiskDetailsModal({
   marketRiskData,
   borrowMarketData,
 }: RiskDetailsModalProps) {
-  const dropdownOptions: DropdownOption[] = React.useMemo(() => {
-    return Object.entries(marketRiskData)
-      .filter(([, data]) => data.healthFactor !== null) // Only include markets with borrow positions
-      .map(([key, data]) => ({
-        key,
-        label: `${data.chainName} - ${data.marketName}`, // Display chain name and market name
-        data,
-      }));
-  }, [marketRiskData]);
+  const dropdownOptions: DropdownOption[] = Object.entries(marketRiskData)
+    .filter(([, data]) => data.healthFactor !== null)
+    .map(([key, data]) => ({
+      key,
+      label: `${data.chainName} - ${data.marketName}`,
+      data,
+    }));
 
   const [selectedMarketKey, setSelectedMarketKey] = useState<string>(
     dropdownOptions[0]?.key || "",
