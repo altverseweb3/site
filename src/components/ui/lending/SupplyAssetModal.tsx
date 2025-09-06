@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -62,14 +62,20 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   const setAmount = tokenTransferState.setAmount;
 
   const isDirectSupply =
-    sourceToken && destinationToken && sourceToken.id === destinationToken.id;
+    sourceToken &&
+    destinationToken &&
+    sourceToken.address === destinationToken.address &&
+    sourceToken.chainId === destinationToken.chainId;
 
+  // Swap state management - using proper tracking lifecycle
+  const [swapInitiated, setSwapInitiated] = useState(false);
   const [swapCompleted, setSwapCompleted] = useState(false);
-  const [hasInitiatedSwap, setHasInitiatedSwap] = useState(false);
-  const [updateStep, setUpdateStep] = useState<
+  const [stateUpdateStep, setStateUpdateStep] = useState<
     "none" | "amount" | "chain" | "token" | "complete"
   >("none");
-  const [showProgressTracker, setShowProgressTracker] = useState(false);
+
+  // Ref to track previous tracking state
+  const previousTrackingState = useRef(tokenTransferState.isTracking);
 
   // Debug logging for token transfer state
   useEffect(() => {
@@ -78,88 +84,88 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
       swapStatus: tokenTransferState.swapStatus,
       isTracking: tokenTransferState.isTracking,
       isProcessing: tokenTransferState.isProcessing,
-      hasInitiatedSwap,
+      swapInitiated,
       swapCompleted,
-      updateStep,
+      stateUpdateStep,
     });
   }, [
     tokenTransferState.swapId,
     tokenTransferState.swapStatus,
     tokenTransferState.isTracking,
     tokenTransferState.isProcessing,
-    hasInitiatedSwap,
+    swapInitiated,
     swapCompleted,
-    updateStep,
+    stateUpdateStep,
   ]);
 
-  // Monitor swap completion status
+  // Monitor for tracking completion (when swap actually finishes and user receives funds)
   useEffect(() => {
+    // Detect when tracking stops (swap completed)
     if (
-      hasInitiatedSwap &&
-      tokenTransferState.swapStatus &&
-      updateStep === "none"
+      previousTrackingState.current &&
+      !tokenTransferState.isTracking &&
+      tokenTransferState.swapId
     ) {
-      const status = tokenTransferState.swapStatus.status;
-      console.log("SupplyAssetModal: Swap status changed to:", status);
-      if (status === "COMPLETED") {
-        console.log("SupplyAssetModal: Setting swapCompleted to true");
-        setSwapCompleted(true);
+      // Tracking just stopped and we have a swapId - swap completed!
+      const finalStatus = tokenTransferState.swapStatus?.status;
+      console.log(
+        "SupplyAssetModal: Swap tracking completed with status:",
+        finalStatus,
+      );
 
-        // Start the state update sequence if we have the required data
-        if (destinationToken && tokenTransferState.receiveAmount) {
-          console.log("SupplyAssetModal: Starting state update sequence");
-          setUpdateStep("amount");
-        }
-      } else if (status === "FAILED" || status === "REFUNDED") {
-        // Reset states on failure
-        console.log("SupplyAssetModal: Resetting states due to failure");
+      if (
+        finalStatus === "COMPLETED" &&
+        destinationToken &&
+        tokenTransferState.receiveAmount
+      ) {
+        console.log(
+          "SupplyAssetModal: Swap completed successfully, starting state transition",
+        );
+        setSwapCompleted(true);
+        setStateUpdateStep("amount");
+      } else if (finalStatus === "FAILED" || finalStatus === "REFUNDED") {
+        console.log("SupplyAssetModal: Swap failed, resetting states");
         setSwapCompleted(false);
-        setHasInitiatedSwap(false);
-        setUpdateStep("none");
+        setSwapInitiated(false);
+        setStateUpdateStep("none");
       }
     }
-  }, [
-    hasInitiatedSwap,
-    tokenTransferState.swapStatus,
-    updateStep,
-    destinationToken,
-    tokenTransferState.receiveAmount,
-  ]);
 
-  // Show ProgressTracker when swap is initiated (and persist until modal close)
-  useEffect(() => {
-    if (hasInitiatedSwap && !isDirectSupply && !showProgressTracker) {
-      console.log("SupplyAssetModal: Showing ProgressTracker for swap flow");
-      setShowProgressTracker(true);
-    }
-  }, [hasInitiatedSwap, isDirectSupply, showProgressTracker]);
+    previousTrackingState.current = tokenTransferState.isTracking;
+  }, [
+    tokenTransferState.isTracking,
+    tokenTransferState.swapId,
+    tokenTransferState.swapStatus,
+    tokenTransferState.receiveAmount,
+    destinationToken,
+  ]);
 
   // Sequential state updates after swap completion
   useEffect(() => {
-    if (updateStep === "amount" && tokenTransferState.receiveAmount) {
+    if (stateUpdateStep === "amount" && tokenTransferState.receiveAmount) {
       console.log(
         "SupplyAssetModal: Step 1 - Updating amount to:",
         tokenTransferState.receiveAmount,
       );
       setAmount(tokenTransferState.receiveAmount);
-      setUpdateStep("chain");
-    } else if (updateStep === "chain" && destinationChain) {
+      setStateUpdateStep("chain");
+    } else if (stateUpdateStep === "chain" && destinationChain) {
       console.log(
         "SupplyAssetModal: Step 2 - Updating source chain to:",
         destinationChain.name,
       );
       setSourceChain(destinationChain);
-      setUpdateStep("token");
-    } else if (updateStep === "token" && destinationToken) {
+      setStateUpdateStep("token");
+    } else if (stateUpdateStep === "token" && destinationToken) {
       console.log(
         "SupplyAssetModal: Step 3 - Updating source token to:",
         destinationToken.ticker,
       );
       setSourceToken(destinationToken);
-      setUpdateStep("complete");
+      setStateUpdateStep("complete");
     }
   }, [
-    updateStep,
+    stateUpdateStep,
     tokenTransferState.receiveAmount,
     destinationChain,
     destinationToken,
@@ -171,58 +177,67 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   // Monitor swap processing state - reset if swap stops processing without a swapId
   useEffect(() => {
     if (
-      hasInitiatedSwap &&
+      swapInitiated &&
       !tokenTransferState.isProcessing &&
       !tokenTransferState.swapId
     ) {
       // Swap stopped processing but no swap ID was generated - likely failed at approval/initiation
-      setHasInitiatedSwap(false);
+      setSwapInitiated(false);
       setSwapCompleted(false);
-      setUpdateStep("none");
+      setStateUpdateStep("none");
     }
   }, [
-    hasInitiatedSwap,
+    swapInitiated,
     tokenTransferState.isProcessing,
     tokenTransferState.swapId,
   ]);
 
-  // Reset states when modal is closed or tokens change
+  // Reset states when switching to direct supply mode
   useEffect(() => {
     if (isDirectSupply) {
       setSwapCompleted(false);
-      setHasInitiatedSwap(false);
-      setUpdateStep("none");
-      setShowProgressTracker(false);
+      setSwapInitiated(false);
+      setStateUpdateStep("none");
     }
   }, [isDirectSupply]);
 
-  // Create progress steps for swap-then-supply flow
+  // Create progress steps for swap-then-supply flow using proper tracking state
   const getSwapSupplySteps = (): Step[] => {
-    if (isDirectSupply) return []; // No steps needed for direct supply
+    if (
+      isDirectSupply ||
+      (!tokenTransferState.isTracking &&
+        !swapInitiated &&
+        !tokenTransferState.swapId)
+    ) {
+      return []; // No steps needed for direct supply or when no swap activity
+    }
 
     const steps: Step[] = [];
 
-    // Get current swap status
+    // Get current swap status from proper tracking
     const swapStatus = tokenTransferState.swapStatus?.status;
+    const isTracking = tokenTransferState.isTracking;
+    const swapId = tokenTransferState.swapId;
 
-    // Step 1: Cross-chain swap
+    // Step 1: Cross-chain swap - using proper tracking states
     let swapState: StepState = "pending";
     let swapDescription =
       sourceToken && destinationToken
         ? `${sourceToken.ticker} → ${destinationToken.ticker}`
         : "preparing swap...";
 
-    if (!hasInitiatedSwap) {
-      swapState = "pending";
-    } else if (hasInitiatedSwap && !swapCompleted) {
+    if (!swapId && swapInitiated) {
+      // Swap initiated but no swap ID yet
       swapState = "active";
-      if (tokenTransferState.isProcessing) {
-        swapDescription =
-          sourceToken && destinationToken
-            ? `swapping ${sourceToken.ticker} to ${destinationToken.ticker}...`
-            : "processing swap...";
-      }
-    } else if (swapCompleted || swapStatus === "COMPLETED") {
+      swapDescription = "initiating swap...";
+    } else if (swapId && (isTracking || tokenTransferState.isProcessing)) {
+      // Swap is being tracked/processed
+      swapState = "active";
+      swapDescription =
+        sourceToken && destinationToken
+          ? `swapping ${sourceToken.ticker} to ${destinationToken.ticker}...`
+          : "processing swap...";
+    } else if (swapStatus === "COMPLETED") {
       swapState = "completed";
     } else if (swapStatus === "FAILED" || swapStatus === "REFUNDED") {
       swapState = "failed";
@@ -238,20 +253,17 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
       ? `supply ${destinationToken.ticker} to ${market.underlyingToken.symbol} market`
       : "preparing supply...";
 
-    if (!swapCompleted) {
-      supplyState = "pending";
-    } else if (
-      swapCompleted &&
-      updateStep !== "none" &&
-      updateStep !== "complete"
-    ) {
-      supplyState = "active";
-      supplyDescription = "updating token state for supply...";
-    } else if (updateStep === "complete") {
-      supplyState = "pending"; // Ready for user to click supply
-      supplyDescription = destinationToken
-        ? `ready to supply ${destinationToken.ticker}`
-        : "ready to supply";
+    // Only show supply as active/ready after swap completes
+    if (swapStatus === "COMPLETED") {
+      if (stateUpdateStep !== "none" && stateUpdateStep !== "complete") {
+        supplyState = "active";
+        supplyDescription = "preparing tokens for supply...";
+      } else if (stateUpdateStep === "complete") {
+        supplyState = "pending"; // Ready for user to click supply
+        supplyDescription = destinationToken
+          ? `ready to supply ${destinationToken.ticker}`
+          : "ready to supply";
+      }
     }
 
     steps.push(
@@ -278,9 +290,8 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
 
       // Also reset all swap-related states
       setSwapCompleted(false);
-      setHasInitiatedSwap(false);
-      setUpdateStep("none");
-      setShowProgressTracker(false);
+      setSwapInitiated(false);
+      setStateUpdateStep("none");
     }
   };
 
@@ -306,16 +317,17 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
             featuredTokensDescription="directly supply"
           />
 
-          {/* Progress Tracker - Show during swap-then-supply flow (persist until modal close) */}
-          {showProgressTracker && (
-            <div className="mt-4">
-              <ProgressTracker
-                steps={getSwapSupplySteps()}
-                title="processing your transaction"
-                show={true}
-              />
-            </div>
-          )}
+          {/* Progress Tracker - Show during swap-then-supply flow */}
+          {(tokenTransferState.isTracking || swapInitiated) &&
+            !isDirectSupply && (
+              <div className="mt-4">
+                <ProgressTracker
+                  steps={getSwapSupplySteps()}
+                  title="processing your transaction"
+                  show={true}
+                />
+              </div>
+            )}
 
           {/* Transaction Summary */}
           <div className="mt-4 bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
@@ -542,7 +554,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               console.log("SupplyAssetModal: Button clicked", {
                 isDirectSupply,
                 swapCompleted,
-                hasInitiatedSwap,
+                swapInitiated,
               });
 
               if (isDirectSupply) {
@@ -551,10 +563,10 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               } else if (swapCompleted) {
                 console.log("SupplyAssetModal: Swap completed, now supply");
                 onSupply(market);
-              } else if (!hasInitiatedSwap) {
+              } else if (!swapInitiated) {
                 console.log("SupplyAssetModal: Initiating swap");
                 // Initiate swap
-                setHasInitiatedSwap(true);
+                setSwapInitiated(true);
                 try {
                   const result = await tokenTransferState.handleTransfer();
                   console.log(
@@ -563,15 +575,14 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                   );
                   // If handleTransfer returns undefined/void, it likely failed
                   if (!result) {
-                    setHasInitiatedSwap(false);
+                    setSwapInitiated(false);
                   }
                 } catch (error) {
                   // Reset on error
                   console.error("Swap initiation failed:", error);
-                  setHasInitiatedSwap(false);
+                  setSwapInitiated(false);
                   setSwapCompleted(false);
-                  setUpdateStep("none");
-                  setShowProgressTracker(false);
+                  setStateUpdateStep("none");
                 }
               } else {
                 console.log(
@@ -581,7 +592,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
             }}
             disabled={
               tokenTransferState.isButtonDisabled ||
-              (hasInitiatedSwap && !swapCompleted)
+              (swapInitiated && !swapCompleted)
             }
             className="mt-3 flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
             buttonText={
@@ -589,7 +600,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                 ? "supply"
                 : swapCompleted
                   ? "supply"
-                  : hasInitiatedSwap
+                  : swapInitiated
                     ? "swapping..."
                     : "swap"
             }
