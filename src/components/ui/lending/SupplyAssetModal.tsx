@@ -25,6 +25,7 @@ import {
   useDestinationChain,
 } from "@/store/web3Store";
 import useWeb3Store from "@/store/web3Store";
+import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { TransactionDetails } from "@/components/ui/TransactionDetails";
 import { BrandedButton } from "@/components/ui/BrandedButton";
@@ -34,6 +35,7 @@ import ProgressTracker, {
   createStep,
   StepState,
 } from "@/components/ui/ProgressTracker";
+import WalletConnectButton from "@/components/ui/WalletConnectButton";
 
 interface SupplyAssetModalProps {
   market: UnifiedMarketData;
@@ -60,6 +62,8 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   const setSourceToken = useWeb3Store((state) => state.setSourceToken);
   const setSourceChain = useWeb3Store((state) => state.setSourceChain);
   const setAmount = tokenTransferState.setAmount;
+
+  const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
 
   const isDirectSupply =
     sourceToken &&
@@ -321,7 +325,14 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
             featuredTokens={[destinationToken!]}
             featuredTokensDescription="directly supply"
           />
-
+          {!sourceWalletConnected && (
+            <div className="mt-4 flex justify-end">
+              <WalletConnectButton
+                walletType={sourceChain.walletType}
+                className="w-auto"
+              />
+            </div>
+          )}
           {/* Progress Tracker - Show during swap-then-supply flow */}
           {(tokenTransferState.isTracking ||
             swapInitiated ||
@@ -605,7 +616,8 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
             }}
             disabled={
               tokenTransferState.isButtonDisabled ||
-              (swapInitiated && !swapCompleted)
+              (swapInitiated && !swapCompleted) ||
+              !sourceWalletConnected
             }
             className="mt-3 flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
             buttonText={
