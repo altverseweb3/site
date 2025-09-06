@@ -6,7 +6,7 @@ import { Chain } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { useAaveChainsData } from "@/hooks/aave/useAaveChainsData";
-import {
+import useWeb3Store, {
   useSelectedAaveChains,
   useSetSelectedAaveChains,
 } from "@/store/web3Store";
@@ -58,6 +58,7 @@ export default function LendingPage() {
   }, [aaveChains]);
 
   const setActiveSwapSection = useSetActiveSwapSection();
+  const loadTokens = useWeb3Store((state) => state.loadTokens);
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
   const userWalletAddress = useWalletByType(WalletType.REOWN_EVM)?.address;
 
@@ -81,7 +82,7 @@ export default function LendingPage() {
     destinationToken,
     transactionDetails,
     enableTracking: true,
-    pauseQuoting: true, // TODO: validate me
+    pauseQuoting: sourceToken?.id === destinationToken?.id, // TODO: validate me
     onSuccess: () => {
       console.log("lending swap initiated successfully");
     },
@@ -95,7 +96,8 @@ export default function LendingPage() {
 
   useEffect(() => {
     setActiveSwapSection("lending");
-  }, [setActiveSwapSection]);
+    loadTokens();
+  }, [setActiveSwapSection, loadTokens]);
 
   const handleTabChange = (value: LendingTabType) => {
     // Only update if a valid value is provided (prevents deselection)
@@ -228,7 +230,6 @@ export default function LendingPage() {
           <Button
             onClick={() => {
               console.log(tokenTransferState);
-              debugger;
             }}
           >
             HELLO MATE
