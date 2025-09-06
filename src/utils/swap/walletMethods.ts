@@ -632,6 +632,7 @@ export function useTokenTransfer(
   const [protocolFeeUsd, setProtocolFeeUsd] = useState<number | null>(null);
   const [relayerFeeUsd, setRelayerFeeUsd] = useState<number | null>(null);
   const [totalFeeUsd, setTotalFeeUsd] = useState<number | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
   const [swapId, setSwapId] = useState<string | null>(null);
   const isTrackingEnabled = options.enableTracking ?? false;
   const [progressToastId, setProgressToastId] = useState<
@@ -1012,6 +1013,7 @@ export function useTokenTransfer(
         }
 
         toast.error(`Error: ${errorMessage}`);
+        setQuoteError(errorMessage);
         failQuote();
       } finally {
         // Only update loading state if this is the latest request
@@ -1058,7 +1060,7 @@ export function useTokenTransfer(
       if (isLoadingQuote || isProcessing) return;
 
       setRefreshTrigger((prev) => prev + 1);
-    }, 5000);
+    }, 10000);
 
     return () => {
       clearInterval(intervalId);
@@ -1353,6 +1355,7 @@ export function useTokenTransfer(
     quoteData,
     receiveAmount,
     isLoadingQuote,
+    quoteError,
 
     // Store state
     estimatedTimeSeconds,

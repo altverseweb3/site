@@ -541,6 +541,7 @@ export interface TokenTransferState {
   quoteData: Quote[] | null;
   receiveAmount: string;
   isLoadingQuote: boolean;
+  quoteError: string | null;
 
   estimatedTimeSeconds: number | null;
 
