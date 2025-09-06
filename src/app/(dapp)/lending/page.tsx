@@ -82,7 +82,9 @@ export default function LendingPage() {
     destinationToken,
     transactionDetails,
     enableTracking: true,
-    pauseQuoting: sourceToken?.id === destinationToken?.id, // TODO: validate me
+    pauseQuoting:
+      sourceToken?.address === destinationToken?.address &&
+      sourceChain?.id === destinationChain?.id, // TODO: validate me
     onSuccess: () => {
       console.log("lending swap initiated successfully");
     },
