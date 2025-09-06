@@ -851,6 +851,7 @@ export function useTokenTransfer(
   useEffect(() => {
     if (options.pauseQuoting === true) {
       failQuote();
+      setQuoteError(null);
       return;
     }
 
@@ -864,12 +865,14 @@ export function useTokenTransfer(
       // Reset if no valid amount
       if (!amount || parseFloat(amount) <= 0) {
         failQuote();
+        setQuoteError(null);
         return;
       }
 
       // For swap: Check if we have both source and destination tokens
       if (!options.sourceToken || !options.destinationToken) {
         failQuote();
+        setQuoteError(null);
         return;
       }
 
@@ -918,6 +921,7 @@ export function useTokenTransfer(
         setQuoteData(quotes);
 
         if (quotes && quotes.length > 0) {
+          setQuoteError(null);
           // Cast the quote to ExtendedQuote to access additional properties
           const quote = quotes[0] as ExtendedQuote;
           const expectedAmountOut = quote.expectedAmountOut;
@@ -1031,6 +1035,7 @@ export function useTokenTransfer(
       timeoutId = setTimeout(fetchQuote, 300);
     } else {
       failQuote();
+      setQuoteError(null);
     }
 
     return () => {
@@ -1198,20 +1203,45 @@ export function useTokenTransfer(
       if (!quoteData || quoteData.length === 0) {
         // Fetch fresh quote
         if (sourceToken && destinationToken) {
-          quotes = await getMayanQuote({
-            amount,
-            sourceToken,
-            destinationToken,
-            sourceChain,
-            destinationChain,
-            slippageBps,
-            gasDrop,
-            referrer,
-            referrerBps,
-          });
-        }
+          try {
+            quotes = await getMayanQuote({
+              amount,
+              sourceToken,
+              destinationToken,
+              sourceChain,
+              destinationChain,
+              slippageBps,
+              gasDrop,
+              referrer,
+              referrerBps,
+            });
+            setQuoteData(quotes);
+            // Clear quote error on successful quote during transfer
+            if (quotes && quotes.length > 0) {
+              setQuoteError(null);
+            }
+          } catch (error) {
+            let errorMessage = "Failed to get quote for transfer";
+            if (
+              error &&
+              typeof error === "object" &&
+              "message" in error &&
+              typeof error.message === "string"
+            ) {
+              errorMessage = error.message;
+            } else if (error instanceof Error) {
+              errorMessage = error.message;
+            } else if (typeof error === "string") {
+              errorMessage = error;
+            }
 
-        setQuoteData(quotes);
+            console.error("Quote error during transfer:", error);
+            setQuoteError(errorMessage);
+            throw error;
+          }
+        } else {
+          setQuoteData(quotes);
+        }
       } else {
         // Use existing quote
         quotes = quoteData;
