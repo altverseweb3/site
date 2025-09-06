@@ -145,3 +145,13 @@ export function getExplorerUrl(
 
   return `${chain.explorerUrl}/tx/${txHash}`;
 }
+
+export function calculateTokenPrice(amount: string, usdValue: string): number {
+  const numericAmount = parseFloat(amount);
+  const numericUsdValue = parseFloat(usdValue);
+
+  if (numericAmount === 0) {
+    return 0;
+  }
+  return numericUsdValue * numericAmount;
+}
