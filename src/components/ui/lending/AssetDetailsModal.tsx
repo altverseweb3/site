@@ -22,6 +22,10 @@ import SupplyInfoTab from "@/components/ui/lending/assetDetails/SupplyInfoTab";
 import BorrowInfoTab from "@/components/ui/lending/assetDetails/BorrowInfoTab";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { TokenTransferState } from "@/types/web3";
+import SupplyAssetModal from "@/components/ui/lending/SupplyAssetModal";
+import { getChainByChainId } from "@/config/chains";
+import useWeb3Store from "@/store/web3Store";
+import { getLendingToken } from "@/utils/lending/tokens";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -40,6 +44,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   children,
   onSupply,
   onBorrow,
+  tokenTransferState,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -67,6 +72,20 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   const handleBorrow = () => {
     onBorrow(market);
   };
+  const tokensByCompositeKey = useWeb3Store(
+    (state) => state.tokensByCompositeKey,
+  );
+  const lendingToken = getLendingToken(market, tokensByCompositeKey);
+  const lendingChain = getChainByChainId(lendingToken.chainId);
+
+  const setSourceToken = useWeb3Store((state) => state.setSourceToken);
+  const setDestinationToken = useWeb3Store(
+    (state) => state.setDestinationToken,
+  );
+  const setSourceChain = useWeb3Store((state) => state.setSourceChain);
+  const setDestinationChain = useWeb3Store(
+    (state) => state.setDestinationChain,
+  );
 
   return (
     <Dialog>
@@ -239,13 +258,27 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
         {/* Footer with CTA buttons */}
         <div className="bg-[#18181B] flex-shrink-0 px-1">
           <div className="flex gap-3 w-full">
-            <BrandedButton
-              iconName="TrendingUp"
-              buttonText="supply"
-              onClick={handleSupply}
-              className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
-              iconClassName="h-4 w-4"
-            />
+            <SupplyAssetModal
+              market={market}
+              onSupply={onSupply}
+              onBorrow={onBorrow}
+              tokenTransferState={tokenTransferState}
+            >
+              <BrandedButton
+                iconName="TrendingUp"
+                buttonText="supply"
+                onClick={() => {
+                  setSourceChain(lendingChain);
+                  setDestinationChain(lendingChain);
+                  setSourceToken(lendingToken);
+                  setDestinationToken(lendingToken);
+                  console.log(handleSupply); // just to silence linting warnings
+                }}
+                className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
+                iconClassName="h-4 w-4"
+              />
+            </SupplyAssetModal>
+
             <BrandedButton
               iconName="TrendingDown"
               buttonText="borrow"
