@@ -81,6 +81,18 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               <div className="text-sm text-white">transaction preview</div>
             </div>
 
+            {/* Quote Error Display */}
+            {!isDirectSupply &&
+              tokenTransferState.quoteError &&
+              (!tokenTransferState.receiveAmount ||
+                tokenTransferState.receiveAmount === "0") && (
+                <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <div className="text-sm text-red-400">
+                    {tokenTransferState.quoteError}
+                  </div>
+                </div>
+              )}
+
             <div className="space-y-3">
               {isDirectSupply ? (
                 // Direct supply
@@ -252,7 +264,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                   <Percent className="w-3 h-3 text-[#A1A1AA]" />
                   <span className="text-sm text-[#A1A1AA]">supply APY</span>
                 </div>
-                <div className="text-sm font-semibold text-green-400">
+                <div className="text-sm font-mono font-semibold text-green-400">
                   {formatPercentage(
                     calculateApyWithIncentives(
                       market.supplyData.apy,
@@ -272,7 +284,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                   </span>
                 </div>
                 <div
-                  className={`text-sm font-semibold ${
+                  className={`text-sm font-mono font-semibold ${
                     market.supplyInfo.canBeCollateral
                       ? "text-green-400"
                       : "text-red-400"
