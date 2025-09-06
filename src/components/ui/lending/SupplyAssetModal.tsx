@@ -73,6 +73,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   const [stateUpdateStep, setStateUpdateStep] = useState<
     "none" | "amount" | "chain" | "token" | "complete"
   >("none");
+  const [isSwapThenSupplyFlow, setIsSwapThenSupplyFlow] = useState(false); // Track if we're in swap-then-supply mode
 
   // Ref to track previous tracking state
   const previousTrackingState = useRef(tokenTransferState.isTracking);
@@ -128,6 +129,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
         setSwapCompleted(false);
         setSwapInitiated(false);
         setStateUpdateStep("none");
+        setIsSwapThenSupplyFlow(false);
       }
     }
 
@@ -185,6 +187,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
       setSwapInitiated(false);
       setSwapCompleted(false);
       setStateUpdateStep("none");
+      setIsSwapThenSupplyFlow(false);
     }
   }, [
     swapInitiated,
@@ -192,24 +195,25 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
     tokenTransferState.swapId,
   ]);
 
-  // Reset states when switching to direct supply mode
+  // Reset states when switching to direct supply mode (but not during swap-then-supply flow)
   useEffect(() => {
-    if (isDirectSupply) {
+    if (isDirectSupply && !isSwapThenSupplyFlow) {
       setSwapCompleted(false);
       setSwapInitiated(false);
       setStateUpdateStep("none");
     }
-  }, [isDirectSupply]);
+  }, [isDirectSupply, isSwapThenSupplyFlow]);
 
   // Create progress steps for swap-then-supply flow using proper tracking state
   const getSwapSupplySteps = (): Step[] => {
     if (
-      isDirectSupply ||
+      (!isSwapThenSupplyFlow && isDirectSupply) ||
       (!tokenTransferState.isTracking &&
         !swapInitiated &&
-        !tokenTransferState.swapId)
+        !tokenTransferState.swapId &&
+        !isSwapThenSupplyFlow)
     ) {
-      return []; // No steps needed for direct supply or when no swap activity
+      return []; // No steps needed for direct supply (not swap-then-supply) or when no swap activity
     }
 
     const steps: Step[] = [];
@@ -292,6 +296,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
       setSwapCompleted(false);
       setSwapInitiated(false);
       setStateUpdateStep("none");
+      setIsSwapThenSupplyFlow(false);
     }
   };
 
@@ -318,16 +323,17 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
           />
 
           {/* Progress Tracker - Show during swap-then-supply flow */}
-          {(tokenTransferState.isTracking || swapInitiated) &&
-            !isDirectSupply && (
-              <div className="mt-4">
-                <ProgressTracker
-                  steps={getSwapSupplySteps()}
-                  title="processing your transaction"
-                  show={true}
-                />
-              </div>
-            )}
+          {(tokenTransferState.isTracking ||
+            swapInitiated ||
+            isSwapThenSupplyFlow) && (
+            <div className="mt-4">
+              <ProgressTracker
+                steps={getSwapSupplySteps()}
+                title="processing your transaction"
+                show={true}
+              />
+            </div>
+          )}
 
           {/* Transaction Summary */}
           <div className="mt-4 bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
@@ -557,16 +563,22 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                 swapInitiated,
               });
 
-              if (isDirectSupply) {
+              if (isDirectSupply && !isSwapThenSupplyFlow) {
                 console.log("SupplyAssetModal: Direct supply");
                 onSupply(market);
-              } else if (swapCompleted) {
-                console.log("SupplyAssetModal: Swap completed, now supply");
+              } else if (
+                swapCompleted ||
+                (isDirectSupply && isSwapThenSupplyFlow)
+              ) {
+                console.log("SupplyAssetModal: Supply after swap completion");
                 onSupply(market);
+                // Clear the swap-then-supply flag after supply action
+                setIsSwapThenSupplyFlow(false);
               } else if (!swapInitiated) {
                 console.log("SupplyAssetModal: Initiating swap");
-                // Initiate swap
+                // Initiate swap and mark as swap-then-supply flow
                 setSwapInitiated(true);
+                setIsSwapThenSupplyFlow(true);
                 try {
                   const result = await tokenTransferState.handleTransfer();
                   console.log(
@@ -583,6 +595,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                   setSwapInitiated(false);
                   setSwapCompleted(false);
                   setStateUpdateStep("none");
+                  setIsSwapThenSupplyFlow(false);
                 }
               } else {
                 console.log(
