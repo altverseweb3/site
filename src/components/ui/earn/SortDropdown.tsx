@@ -80,7 +80,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-32 bg-[#18181B] border-[#27272A]"
+        className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-32 bg-[#18181B] border-[#27272A]"
       >
         {sortOptions.map((option) => (
           <DropdownMenuItem

@@ -10,12 +10,15 @@ import {
 } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { TokenTransferState } from "@/types/web3";
+import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserBorrowContentProps {
   marketBorrowData: Record<string, UserBorrowData>;
   activeMarkets: Market[];
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
+  filters?: LendingFilters;
+  sortConfig?: LendingSortConfig | null;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
@@ -29,6 +32,8 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   activeMarkets,
   showZeroBalance = false,
   tokenTransferState,
+  filters,
+  sortConfig,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -67,12 +72,57 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
     }
   });
 
-  // Sort by debt amount (highest first)
-  const userBorrowPositions = enhancedPositions.sort((a, b) => {
-    const balanceA = parseFloat(a.borrow.debt.usd) || 0;
-    const balanceB = parseFloat(b.borrow.debt.usd) || 0;
-    return balanceB - balanceA;
-  });
+  // Apply asset filter
+  let filteredPositions = enhancedPositions;
+  if (filters?.assetFilter) {
+    const filterLower = filters.assetFilter.toLowerCase();
+    filteredPositions = enhancedPositions.filter((position) => {
+      return (
+        // Filter by title (underlyingToken.name)
+        position.unifiedMarket.underlyingToken.name
+          .toLowerCase()
+          .includes(filterLower) ||
+        // Filter by ticker (currency.symbol)
+        position.borrow.currency.symbol.toLowerCase().includes(filterLower) ||
+        // Also include market name for broader matching
+        position.marketName.toLowerCase().includes(filterLower)
+      );
+    });
+  }
+
+  // Apply sorting
+  let userBorrowPositions: EnhancedUserBorrowPosition[];
+  if (sortConfig) {
+    userBorrowPositions = [...filteredPositions].sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      switch (sortConfig.column) {
+        case "borrowApy":
+          aValue = parseFloat(a.borrow.apy.value) || 0;
+          bValue = parseFloat(b.borrow.apy.value) || 0;
+          break;
+        case "userBorrowedValue":
+          aValue = parseFloat(a.borrow.debt.usd) || 0;
+          bValue = parseFloat(b.borrow.debt.usd) || 0;
+          break;
+        default:
+          // Default sort by borrowed value (highest first)
+          aValue = parseFloat(a.borrow.debt.usd) || 0;
+          bValue = parseFloat(b.borrow.debt.usd) || 0;
+          break;
+      }
+
+      return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
+    });
+  } else {
+    // Default sort by debt amount (highest first)
+    userBorrowPositions = filteredPositions.sort((a, b) => {
+      const balanceA = parseFloat(a.borrow.debt.usd) || 0;
+      const balanceB = parseFloat(b.borrow.debt.usd) || 0;
+      return balanceB - balanceA;
+    });
+  }
 
   if (userBorrowPositions.length === 0) {
     return (

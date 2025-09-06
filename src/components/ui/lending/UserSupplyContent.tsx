@@ -11,11 +11,14 @@ import {
 } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { TokenTransferState } from "@/types/web3";
+import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserSupplyContentProps {
   marketSupplyData: Record<string, UserSupplyData>;
   activeMarkets: Market[];
   tokenTransferState: TokenTransferState;
+  filters?: LendingFilters;
+  sortConfig?: LendingSortConfig | null;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -28,6 +31,8 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   marketSupplyData,
   activeMarkets,
   tokenTransferState,
+  filters,
+  sortConfig,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -61,12 +66,57 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     }
   });
 
-  // Sort by balance (highest first)
-  const userSupplyPositions = enhancedPositions.sort((a, b) => {
-    const balanceA = parseFloat(a.supply.balance.usd) || 0;
-    const balanceB = parseFloat(b.supply.balance.usd) || 0;
-    return balanceB - balanceA;
-  });
+  // Apply asset filter
+  let filteredPositions = enhancedPositions;
+  if (filters?.assetFilter) {
+    const filterLower = filters.assetFilter.toLowerCase();
+    filteredPositions = enhancedPositions.filter((position) => {
+      return (
+        // Filter by title (underlyingToken.name)
+        position.unifiedMarket.underlyingToken.name
+          .toLowerCase()
+          .includes(filterLower) ||
+        // Filter by ticker (currency.symbol)
+        position.supply.currency.symbol.toLowerCase().includes(filterLower) ||
+        // Also include market name for broader matching
+        position.marketName.toLowerCase().includes(filterLower)
+      );
+    });
+  }
+
+  // Apply sorting
+  let userSupplyPositions: EnhancedUserSupplyPosition[];
+  if (sortConfig) {
+    userSupplyPositions = [...filteredPositions].sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      switch (sortConfig.column) {
+        case "supplyApy":
+          aValue = parseFloat(a.supply.apy.value) || 0;
+          bValue = parseFloat(b.supply.apy.value) || 0;
+          break;
+        case "userSuppliedValue":
+          aValue = parseFloat(a.supply.balance.usd) || 0;
+          bValue = parseFloat(b.supply.balance.usd) || 0;
+          break;
+        default:
+          // Default sort by supplied value (highest first)
+          aValue = parseFloat(a.supply.balance.usd) || 0;
+          bValue = parseFloat(b.supply.balance.usd) || 0;
+          break;
+      }
+
+      return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
+    });
+  } else {
+    // Default sort by balance (highest first)
+    userSupplyPositions = filteredPositions.sort((a, b) => {
+      const balanceA = parseFloat(a.supply.balance.usd) || 0;
+      const balanceB = parseFloat(b.supply.balance.usd) || 0;
+      return balanceB - balanceA;
+    });
+  }
 
   if (userSupplyPositions.length === 0) {
     return (

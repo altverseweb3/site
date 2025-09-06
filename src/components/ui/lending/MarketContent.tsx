@@ -4,36 +4,32 @@ import React, { useState } from "react";
 import MarketCard from "@/components/ui/lending/MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import {
-  Market,
   UnifiedMarketData,
   UserBorrowPosition,
   UserSupplyPosition,
 } from "@/types/aave";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { TokenTransferState } from "@/types/web3";
 
 const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
-  markets: Market[] | null | undefined;
+  unifiedMarkets: UnifiedMarketData[] | null | undefined;
   tokenTransferState: TokenTransferState;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
-  markets,
+  unifiedMarkets,
   tokenTransferState,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  if (!markets || markets.length === 0) {
+  if (!unifiedMarkets || unifiedMarkets.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA]">no markets found</div>
       </div>
     );
   }
-
-  const unifiedMarkets = unifyMarkets(markets);
 
   const totalPages = Math.ceil(unifiedMarkets.length / ITEMS_PER_PAGE);
   const paginatedMarkets = unifiedMarkets.slice(

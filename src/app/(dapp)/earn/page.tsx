@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import ProtocolFilter from "@/components/ui/earn/ProtocolFilter";
 import SortDropdown from "@/components/ui/earn/SortDropdown";
-import { Input } from "@/components/ui/Input";
+import AssetFilter from "@/components/ui/AssetFilter";
 import EarnTable from "@/components/ui/earn/EarnTable";
 import CardsList from "@/components/ui/CardsList";
 import EarnCard from "@/components/ui/earn/EarnCard";
@@ -340,11 +340,11 @@ export default function EarnPage() {
                 </div>
               </div>
 
-              <Input
-                placeholder="filter by asset (e.g., ETH, BTC)"
+              <AssetFilter
                 value={filters.assetFilter}
-                onChange={(e) => handleAssetFilterChange(e.target.value)}
-                className="h-8 w-full sm:w-60 border-[#27272A] bg-[#18181B] text-[#FAFAFA] placeholder:text-[#A1A1AA] focus:border-amber-500/80 focus:ring-amber-500/80 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                onChange={handleAssetFilterChange}
+                placeholder="filter by asset (e.g., ETH, BTC)"
+                className="w-full sm:w-60"
               />
             </div>
           </div>
