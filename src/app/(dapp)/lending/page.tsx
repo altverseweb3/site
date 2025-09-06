@@ -2,6 +2,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { History } from "lucide-react";
+import SortDropdown from "@/components/ui/lending/SortDropdown";
+import AssetFilter from "@/components/ui/AssetFilter";
 import { Chain } from "@/types/web3";
 import { chainList } from "@/config/chains";
 import ChainPicker from "@/components/ui/ChainPicker";
@@ -26,17 +28,24 @@ import {
 import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
 import MarketContent from "@/components/ui/lending/MarketContent";
 import DashboardContent from "@/components/ui/lending/DashboardContent";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { ChainId } from "@/types/aave";
 import { evmAddress } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
+import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
 export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<LendingTabType>("markets");
+  const [filters, setFilters] = useState<LendingFilters>({
+    assetFilter: "",
+  });
+  const [sortConfig, setSortConfig] = useState<LendingSortConfig | null>(null);
+  const [sortDropdownValue, setSortDropdownValue] = useState<string>("");
 
   const { data: aaveChains } = useAaveChainsData({});
   const selectedChains = useSelectedAaveChains();
@@ -73,6 +82,63 @@ export default function LendingPage() {
     user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
   });
 
+  // Filter and sort unified markets
+  const filteredAndSortedUnifiedMarkets = useMemo(() => {
+    if (!markets) return null;
+
+    // First unify the markets
+    const unifiedMarkets = unifyMarkets(markets);
+    let filtered = unifiedMarkets;
+
+    // Filter by asset
+    if (filters.assetFilter) {
+      const filterLower = filters.assetFilter.toLowerCase();
+      filtered = unifiedMarkets.filter((market) => {
+        return (
+          market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
+          market.underlyingToken.name.toLowerCase().includes(filterLower) ||
+          market.marketName.toLowerCase().includes(filterLower)
+        );
+      });
+    }
+
+    // Sort unified markets
+    if (sortConfig) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: number;
+        let bValue: number;
+
+        switch (sortConfig.column) {
+          case "supplyApy":
+            aValue = a.supplyData.apy;
+            bValue = b.supplyData.apy;
+            break;
+          case "borrowApy":
+            aValue = a.borrowData.apy;
+            bValue = b.borrowData.apy;
+            break;
+          case "suppliedMarketCap":
+            aValue = a.supplyData.totalSuppliedUsd;
+            bValue = b.supplyData.totalSuppliedUsd;
+            break;
+          case "borrowedMarketCap":
+            aValue = a.borrowData.totalBorrowedUsd;
+            bValue = b.borrowData.totalBorrowedUsd;
+            break;
+          default:
+            aValue = 0;
+            bValue = 0;
+        }
+
+        return sortConfig.direction === "asc"
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    }
+
+    return filtered;
+  }, [markets, filters, sortConfig]);
+
   const tokenTransferState = useTokenTransfer({
     type: "lending/aave", // remember to change me when we integrate with other vaults
     sourceChain,
@@ -101,8 +167,28 @@ export default function LendingPage() {
     // Only update if a valid value is provided (prevents deselection)
     if (value) {
       setActiveTab(value);
+      // Reset sort when switching tabs
+      setSortConfig(null);
+      setSortDropdownValue("");
     }
   };
+
+  const handleSortDropdownChange = (
+    column: string,
+    direction: "asc" | "desc",
+  ) => {
+    setSortConfig({ column, direction });
+    // Set dropdown value based on column and direction
+    const sortOption = `${column.replace("Apy", "-apy").replace("MarketCap", "-mc").replace("Available", "-available").replace("user", "value-").replace("SuppliedValue", "supplied").replace("BorrowedValue", "borrowed")}-${direction}`;
+    setSortDropdownValue(sortOption);
+  };
+
+  const handleAssetFilterChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, assetFilter: value }));
+  };
+
+  const [currentSubsection, setCurrentSubsection] =
+    useState("supply-available");
 
   // Show wallet connection requirement for dashboard and history tabs
   const showWalletConnectionRequired =
@@ -112,10 +198,12 @@ export default function LendingPage() {
   return (
     <div className="container mx-auto px-2 md:py-8">
       <div className="max-w-6xl mx-auto">
-        {/* Tab Toggle and Chain Picker */}
+        {/* Tab Toggle, Chain Picker, Sort and Filter */}
         <div className="mb-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+          {/* Single Row Layout - fits all components when there's space */}
+          <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+            {/* Left Side: Tab Toggle and Chain Picker */}
+            <div className="flex flex-col sm:flex-row gap-4 xl:flex-1">
               {/* Tabs */}
               <div className="overflow-x-auto">
                 <ToggleGroup
@@ -145,24 +233,49 @@ export default function LendingPage() {
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-              {/* Chain Picker */}
-              <div className="flex justify-start">
-                <ChainPicker
-                  type="multiple"
-                  value={selectedChains.map((chain) => chain.id)}
-                  onSelectionChange={(value) => {
-                    const valueArray = Array.isArray(value) ? value : [value];
-                    const selected = valueArray
-                      .map((id) =>
-                        supportedChains.find((chain) => chain.id === id),
-                      )
-                      .filter(Boolean) as Chain[];
-                    setSelectedChains(selected);
-                  }}
-                  chains={supportedChains}
-                  size="sm"
-                  className="!mb-0 !pb-0"
-                />
+
+              <ChainPicker
+                type="multiple"
+                value={selectedChains.map((chain) => chain.id)}
+                onSelectionChange={(value) => {
+                  const valueArray = Array.isArray(value) ? value : [value];
+                  const selected = valueArray
+                    .map((id) =>
+                      supportedChains.find((chain) => chain.id === id),
+                    )
+                    .filter(Boolean) as Chain[];
+                  setSelectedChains(selected);
+                }}
+                chains={supportedChains}
+                size="sm"
+                className="!mb-0 !pb-0"
+              />
+            </div>
+
+            {/* Right Side: Sort Dropdown and Asset Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center xl:shrink-0">
+              {/* Sort Dropdown and Asset Filter - side by side */}
+              <div className="flex gap-4 w-full sm:w-auto">
+                <div className="flex-1 sm:flex-none">
+                  <SortDropdown
+                    value={sortDropdownValue}
+                    onSortChange={handleSortDropdownChange}
+                    activeSection={activeTab}
+                    activeSubSection={
+                      activeTab === "dashboard" ? currentSubsection : activeTab
+                    }
+                    className="w-full sm:w-32"
+                  />
+                </div>
+                <div className="flex-1 sm:flex-none">
+                  <AssetFilter
+                    value={filters.assetFilter}
+                    onChange={handleAssetFilterChange}
+                    placeholder="filter by asset (e.g., ETH, BTC)"
+                    mobilePlaceholder="filter by asset"
+                    className="w-full sm:w-60"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -193,7 +306,9 @@ export default function LendingPage() {
             <div className="text-center py-16">
               <div className="text-[#A1A1AA]">loading markets...</div>
             </div>
-          ) : activeTab === "markets" && (!markets || markets.length === 0) ? (
+          ) : activeTab === "markets" &&
+            (!filteredAndSortedUnifiedMarkets ||
+              filteredAndSortedUnifiedMarkets.length === 0) ? (
             <div className="text-center py-16">
               <div className="text-[#A1A1AA]">no markets found</div>
             </div>
@@ -201,7 +316,7 @@ export default function LendingPage() {
             <>
               {activeTab === "markets" && (
                 <MarketContent
-                  markets={markets}
+                  unifiedMarkets={filteredAndSortedUnifiedMarkets}
                   tokenTransferState={tokenTransferState}
                 />
               )}
@@ -211,6 +326,9 @@ export default function LendingPage() {
                   selectedChains={selectedChains}
                   activeMarkets={markets || []}
                   tokenTransferState={tokenTransferState}
+                  filters={filters}
+                  sortConfig={sortConfig}
+                  onSubsectionChange={setCurrentSubsection}
                 />
               )}
               {activeTab === "history" && (

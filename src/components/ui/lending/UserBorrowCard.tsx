@@ -55,7 +55,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {borrow.currency.symbol}
+              {unifiedMarket.underlyingToken.name}
             </CardTitle>
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
@@ -90,6 +90,14 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
           <div className="text-[#A1A1AA] text-sm">APY</div>
           <div className="text-red-500 text-sm font-semibold font-mono">
             {formatPercentage(apy * 100)}
+          </div>
+        </div>
+
+        {/* Ticker */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">ticker</div>
+          <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
+            {borrow.currency.symbol}
           </div>
         </div>
       </CardContent>
