@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
@@ -22,18 +22,25 @@ import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyConte
 import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
 import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
 import { TokenTransferState } from "@/types/web3";
+import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface DashboardContentProps {
   userAddress?: string;
   selectedChains: Chain[];
   activeMarkets: Market[];
   tokenTransferState: TokenTransferState;
+  filters?: LendingFilters;
+  sortConfig?: LendingSortConfig | null;
+  onSubsectionChange?: (subsection: string) => void;
 }
 
 export default function DashboardContent({
   userAddress,
   activeMarkets,
   tokenTransferState,
+  filters,
+  sortConfig,
+  onSubsectionChange,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -92,6 +99,9 @@ export default function DashboardContent({
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
                     tokenTransferState={tokenTransferState}
+                    filters={filters}
+                    sortConfig={sortConfig}
+                    onSubsectionChange={onSubsectionChange}
                   />
                 );
               }}
@@ -150,6 +160,9 @@ interface DashboardContentInnerProps {
   loading: boolean;
   error: boolean;
   tokenTransferState: TokenTransferState;
+  filters?: LendingFilters;
+  sortConfig?: LendingSortConfig | null;
+  onSubsectionChange?: (subsection: string) => void;
 }
 
 function DashboardContentInner({
@@ -166,11 +179,28 @@ function DashboardContentInner({
   loading,
   error,
   tokenTransferState,
+  filters,
+  sortConfig,
+  onSubsectionChange,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
   const [showZeroBalance, setShowZeroBalance] = useState(false);
   const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
+
+  // Notify parent of subsection changes
+  useEffect(() => {
+    if (onSubsectionChange) {
+      const currentSubsection = showAvailable
+        ? isSupplyMode
+          ? "supply-available"
+          : "borrow-available"
+        : isSupplyMode
+          ? "supply-open"
+          : "borrow-open";
+      onSubsectionChange(currentSubsection);
+    }
+  }, [isSupplyMode, showAvailable, onSubsectionChange]);
 
   // Show loading state if any market is still loading
   if (loading) {
@@ -372,11 +402,15 @@ function DashboardContentInner({
               markets={activeMarkets}
               showZeroBalance={showZeroBalance}
               tokenTransferState={tokenTransferState}
+              filters={filters}
+              sortConfig={sortConfig}
             />
           ) : (
             <AvailableBorrowContent
               markets={activeMarkets}
               tokenTransferState={tokenTransferState}
+              filters={filters}
+              sortConfig={sortConfig}
             />
           )
         ) : // Show open positions
@@ -385,6 +419,8 @@ function DashboardContentInner({
             marketSupplyData={marketSupplyData}
             activeMarkets={activeMarkets}
             tokenTransferState={tokenTransferState}
+            filters={filters}
+            sortConfig={sortConfig}
           />
         ) : (
           <UserBorrowContent
@@ -392,6 +428,8 @@ function DashboardContentInner({
             showZeroBalance={showZeroBalance}
             activeMarkets={activeMarkets}
             tokenTransferState={tokenTransferState}
+            filters={filters}
+            sortConfig={sortConfig}
           />
         )}
       </div>
