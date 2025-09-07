@@ -15,11 +15,13 @@ const ITEMS_PER_PAGE = 10;
 interface MarketContentProps {
   unifiedMarkets: UnifiedMarketData[] | null | undefined;
   tokenTransferState: TokenTransferState;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
   unifiedMarkets,
   tokenTransferState,
+  onSupply,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -49,9 +51,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
         <MarketCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
-          onSupply={(market: UnifiedMarketData) => {
-            console.log(market); // TODO: update me
-          }}
+          onSupply={onSupply}
           onBorrow={(market: UnifiedMarketData) => {
             console.log(market); // TODO: update me
           }}
