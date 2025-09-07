@@ -352,92 +352,52 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               <div className="text-sm text-white">transaction preview</div>
             </div>
 
-            {/* Quote Error Display */}
-            {!isDirectSupply &&
-              tokenTransferState.quoteError &&
-              (!tokenTransferState.receiveAmount ||
-                tokenTransferState.receiveAmount === "0") && (
-                <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <div className="text-sm text-red-400">
-                    {tokenTransferState.quoteError}
-                  </div>
+            {!sourceToken ? (
+              <div className="text-center py-4">
+                <div className="text-sm text-[#A1A1AA]">
+                  please select a source token
                 </div>
-              )}
-
-            <div className="space-y-3">
-              {isDirectSupply ? (
-                // Direct supply
-                <div className="space-y-2">
-                  <div className="text-sm text-[#A1A1AA]">you will supply</div>
-                  <div className="flex items-start gap-3">
-                    <TokenImage
-                      token={sourceToken}
-                      chain={sourceChain}
-                      size="sm"
-                    />
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-mono text-white-400 font-semibold">
-                          {tokenTransferState.amount || "0"}
-                        </span>
-                        <span className="text-white">{sourceToken.ticker}</span>
+              </div>
+            ) : (
+              <>
+                {/* Quote Error Display */}
+                {!isDirectSupply &&
+                  tokenTransferState.quoteError &&
+                  (!tokenTransferState.receiveAmount ||
+                    tokenTransferState.receiveAmount === "0") && (
+                    <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                      <div className="text-sm text-red-400">
+                        {tokenTransferState.quoteError}
                       </div>
-                      {(() => {
-                        const usdAmount = calculateTokenPrice(
-                          tokenTransferState.amount || "0",
-                          market.usdExchangeRate.toString(),
-                        );
-                        return (
-                          usdAmount > 0 && (
-                            <span className="text-sm text-[#71717A] font-mono">
-                              {formatCurrency(usdAmount)}
-                            </span>
-                          )
-                        );
-                      })()}
                     </div>
-                  </div>
-                </div>
-              ) : (
-                // Swap + supply
+                  )}
+
                 <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="text-sm text-[#A1A1AA]">you will swap</div>
-                    <div className="flex items-start gap-3">
-                      <div className="relative">
-                        {sourceToken && (
-                          <TokenImage
-                            token={sourceToken}
-                            chain={sourceChain}
-                            size="sm"
-                          />
-                        )}
-                        {sourceChain && (
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#18181B] border border-[#27272A] flex items-center justify-center">
-                            <Image
-                              src={sourceChain.brandedIcon}
-                              alt={sourceChain.name}
-                              width={10}
-                              height={10}
-                              className="rounded-full"
-                            />
-                          </div>
-                        )}
+                  {isDirectSupply ? (
+                    // Direct supply
+                    <div className="space-y-2">
+                      <div className="text-sm text-[#A1A1AA]">
+                        you will supply
                       </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-mono text-white-400 font-semibold">
-                            {tokenTransferState.amount || "0"}
-                          </span>
-                          <span className="text-white">
-                            {sourceToken?.ticker || "???"}
-                          </span>
-                        </div>
-                        {sourceToken &&
-                          (() => {
+                      <div className="flex items-start gap-3">
+                        <TokenImage
+                          token={sourceToken}
+                          chain={sourceChain}
+                          size="sm"
+                        />
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-mono text-white-400 font-semibold">
+                              {tokenTransferState.amount || "0"}
+                            </span>
+                            <span className="text-white">
+                              {sourceToken.ticker}
+                            </span>
+                          </div>
+                          {(() => {
                             const usdAmount = calculateTokenPrice(
                               tokenTransferState.amount || "0",
-                              sourceToken.priceUsd || "0",
+                              market.usdExchangeRate.toString(),
                             );
                             return (
                               usdAmount > 0 && (
@@ -447,74 +407,130 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                               )
                             );
                           })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <ArrowDown className="w-4 h-4 text-[#A1A1AA]" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-sm text-[#A1A1AA]">to receive</div>
-                    <div className="flex items-start gap-3">
-                      <div className="relative">
-                        {destinationToken && (
-                          <TokenImage
-                            token={destinationToken}
-                            chain={destinationChain}
-                            size="sm"
-                          />
-                        )}
-                        {destinationChain && (
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#18181B] border border-[#27272A] flex items-center justify-center">
-                            <Image
-                              src={destinationChain.brandedIcon}
-                              alt={destinationChain.name}
-                              width={10}
-                              height={10}
-                              className="rounded-full"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-lg font-mono text-white-400 font-semibold ${tokenTransferState.isLoadingQuote ? "animate-pulse" : ""}`}
-                          >
-                            {tokenTransferState.receiveAmount || "0"}
-                          </span>
-                          <span className="text-white">
-                            {destinationToken?.ticker || "???"}
-                          </span>
                         </div>
-                        {destinationToken &&
-                          (() => {
-                            const usdAmount = calculateTokenPrice(
-                              tokenTransferState.receiveAmount || "0",
-                              market.usdExchangeRate.toString() || "0",
-                            );
-                            return (
-                              usdAmount > 0 && (
-                                <span
-                                  className={`text-sm text-[#71717A] font-mono ${tokenTransferState.isLoadingQuote ? "animate-pulse" : ""}`}
-                                >
-                                  {formatCurrency(usdAmount)}
-                                </span>
-                              )
-                            );
-                          })()}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    // Swap + supply
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <div className="text-sm text-[#A1A1AA]">
+                          you will swap
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            {sourceToken && (
+                              <TokenImage
+                                token={sourceToken}
+                                chain={sourceChain}
+                                size="sm"
+                              />
+                            )}
+                            {sourceChain && (
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#18181B] border border-[#27272A] flex items-center justify-center">
+                                <Image
+                                  src={sourceChain.brandedIcon}
+                                  alt={sourceChain.name}
+                                  width={10}
+                                  height={10}
+                                  className="rounded-full"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-mono text-white-400 font-semibold">
+                                {tokenTransferState.amount || "0"}
+                              </span>
+                              <span className="text-white">
+                                {sourceToken?.ticker || "???"}
+                              </span>
+                            </div>
+                            {sourceToken &&
+                              (() => {
+                                const usdAmount = calculateTokenPrice(
+                                  tokenTransferState.amount || "0",
+                                  sourceToken.priceUsd || "0",
+                                );
+                                return (
+                                  usdAmount > 0 && (
+                                    <span className="text-sm text-[#71717A] font-mono">
+                                      {formatCurrency(usdAmount)}
+                                    </span>
+                                  )
+                                );
+                              })()}
+                          </div>
+                        </div>
+                      </div>
 
-                  <div className="text-sm text-[#A1A1AA] pt-1">
-                    then supply to lending pool
-                  </div>
+                      <div className="flex justify-center">
+                        <ArrowDown className="w-4 h-4 text-[#A1A1AA]" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="text-sm text-[#A1A1AA]">to receive</div>
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            {destinationToken && (
+                              <TokenImage
+                                token={destinationToken}
+                                chain={destinationChain}
+                                size="sm"
+                              />
+                            )}
+                            {destinationChain && (
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#18181B] border border-[#27272A] flex items-center justify-center">
+                                <Image
+                                  src={destinationChain.brandedIcon}
+                                  alt={destinationChain.name}
+                                  width={10}
+                                  height={10}
+                                  className="rounded-full"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-lg font-mono text-white-400 font-semibold ${tokenTransferState.isLoadingQuote ? "animate-pulse" : ""}`}
+                              >
+                                {tokenTransferState.receiveAmount || "0"}
+                              </span>
+                              <span className="text-white">
+                                {destinationToken?.ticker || "???"}
+                              </span>
+                            </div>
+                            {destinationToken &&
+                              (() => {
+                                const usdAmount = calculateTokenPrice(
+                                  tokenTransferState.receiveAmount || "0",
+                                  market.usdExchangeRate.toString() || "0",
+                                );
+                                return (
+                                  usdAmount > 0 && (
+                                    <span
+                                      className={`text-sm text-[#71717A] font-mono ${tokenTransferState.isLoadingQuote ? "animate-pulse" : ""}`}
+                                    >
+                                      {formatCurrency(usdAmount)}
+                                    </span>
+                                  )
+                                );
+                              })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-[#A1A1AA] pt-1">
+                        then supply to lending pool
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
           {!isDirectSupply && (
             <TransactionDetails
