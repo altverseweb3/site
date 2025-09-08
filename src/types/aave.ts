@@ -34,6 +34,7 @@ import type {
   UserRepayTransaction,
   UserUsageAsCollateralTransaction,
   UserLiquidationCallTransaction,
+  Signature,
 } from "@aave/react";
 
 /**
@@ -77,6 +78,7 @@ export type {
   UserRepayTransaction,
   UserUsageAsCollateralTransaction,
   UserLiquidationCallTransaction,
+  Signature,
 };
 
 export interface UserSupplyPosition {
@@ -139,3 +141,40 @@ export interface UnifiedMarketData extends Reserve {
 }
 
 export type EModeStatus = "on" | "off" | "mixed";
+
+export interface SupplyArgs {
+  /** The market address to supply to */
+  market: EvmAddress;
+  /** The amount to supply */
+  amount: BigDecimal;
+  /** The currency address to supply */
+  currency: EvmAddress;
+  /** The chain ID */
+  chainId: ChainId;
+  /** Whether to use native token (e.g., ETH instead of WETH) */
+  useNative?: boolean;
+  /** Address to send aTokens to (if different from sender) */
+  onBehalfOf?: EvmAddress;
+  /** Optional permit signature for gasless approval */
+  permitSig?: {
+    deadline: bigint;
+    signature: Signature;
+  };
+}
+
+/**
+ * Result of a supply operation
+ */
+export interface SupplyResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for supply operations
+ */
+export interface SupplyState {
+  loading: boolean;
+  error: string | null;
+}

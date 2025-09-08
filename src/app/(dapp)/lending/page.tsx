@@ -36,6 +36,7 @@ import HistoryContent from "@/components/ui/lending/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
+import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -159,6 +160,15 @@ export default function LendingPage() {
     },
     onError: (error) => {
       console.error("lending swap error:", error);
+    },
+  });
+
+  const { handleSupply } = useSupplyOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userWalletAddress || null,
+    tokenTransferState: {
+      amount: tokenTransferState.amount || "",
     },
   });
 
@@ -322,6 +332,7 @@ export default function LendingPage() {
                 <MarketContent
                   unifiedMarkets={filteredAndSortedUnifiedMarkets}
                   tokenTransferState={tokenTransferState}
+                  onSupply={handleSupply}
                 />
               )}
               {activeTab === "dashboard" && (
