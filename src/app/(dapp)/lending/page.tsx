@@ -344,6 +344,7 @@ export default function LendingPage() {
                   filters={filters}
                   sortConfig={sortConfig}
                   onSubsectionChange={setCurrentSubsection}
+                  onSupply={handleSupply}
                 />
               )}
               {activeTab === "history" && (

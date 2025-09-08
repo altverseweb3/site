@@ -19,6 +19,7 @@ interface UserBorrowContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
@@ -34,6 +35,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
+  onSupply,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -152,9 +154,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
-          onSupply={(market: UnifiedMarketData) => {
-            console.log(market); // TODO: update me
-          }}
+          onSupply={onSupply}
           onBorrow={(market: UnifiedMarketData) => {
             console.log(market); // TODO: update me
           }}
