@@ -14,6 +14,7 @@ interface AvailableSupplyContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -24,6 +25,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
+  onSupply,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -115,10 +117,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
         <AvailableSupplyCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
-          onSupply={(market: UnifiedMarketData) => {
-            // TODO: Implement supply modal/flow
-            console.log("Supply clicked for:", market.underlyingToken.symbol);
-          }}
+          onSupply={onSupply}
           onBorrow={(market: UnifiedMarketData) => {
             // TODO: Implement borrow modal/flow
             console.log("Borrow clicked for:", market.underlyingToken.symbol);

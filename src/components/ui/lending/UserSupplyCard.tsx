@@ -66,7 +66,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {unifiedMarket.underlyingToken.name}
+              {supply.currency.name}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Tooltip.Provider>

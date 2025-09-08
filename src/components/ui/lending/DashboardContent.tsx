@@ -11,6 +11,7 @@ import {
   EModeStatus,
   UserSupplyData,
   UserBorrowData,
+  UnifiedMarketData,
 } from "@/types/aave";
 import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
 import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
@@ -32,6 +33,7 @@ interface DashboardContentProps {
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 export default function DashboardContent({
@@ -41,6 +43,7 @@ export default function DashboardContent({
   filters,
   sortConfig,
   onSubsectionChange,
+  onSupply,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -102,6 +105,7 @@ export default function DashboardContent({
                     filters={filters}
                     sortConfig={sortConfig}
                     onSubsectionChange={onSubsectionChange}
+                    onSupply={onSupply}
                   />
                 );
               }}
@@ -163,6 +167,7 @@ interface DashboardContentInnerProps {
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 function DashboardContentInner({
@@ -182,6 +187,7 @@ function DashboardContentInner({
   filters,
   sortConfig,
   onSubsectionChange,
+  onSupply,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -404,6 +410,7 @@ function DashboardContentInner({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
+              onSupply={onSupply}
             />
           ) : (
             <AvailableBorrowContent
@@ -411,6 +418,7 @@ function DashboardContentInner({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
+              onSupply={onSupply}
             />
           )
         ) : // Show open positions
@@ -421,6 +429,7 @@ function DashboardContentInner({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
+            onSupply={onSupply}
           />
         ) : (
           <UserBorrowContent
@@ -430,6 +439,7 @@ function DashboardContentInner({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
+            onSupply={onSupply}
           />
         )}
       </div>

@@ -19,6 +19,7 @@ interface UserSupplyContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
+  onSupply: (market: UnifiedMarketData) => void;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -33,15 +34,16 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
+  onSupply,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const unifiedMarkets = unifyMarkets(activeMarkets);
 
-  // lookup map for unified markets by market address and chain
+  // lookup map for unified markets by currency address and chain
   const unifiedMarketMap = new Map<string, UnifiedMarketData>();
   unifiedMarkets.forEach((market) => {
-    const key = `${market.marketInfo.address}-${market.marketInfo.chain.chainId}`;
+    const key = `${market.underlyingToken.address.toLowerCase()}-${market.marketInfo.chain.chainId}`;
     unifiedMarketMap.set(key, market);
   });
 
@@ -50,8 +52,8 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   Object.values(marketSupplyData).forEach((marketData) => {
     if (marketData.supplies && marketData.supplies.length > 0) {
       marketData.supplies.forEach((supply) => {
-        const marketKey = `${marketData.marketAddress}-${marketData.chainId}`;
-        const unifiedMarket = unifiedMarketMap.get(marketKey);
+        const currencyKey = `${supply.currency.address.toLowerCase()}-${marketData.chainId}`;
+        const unifiedMarket = unifiedMarketMap.get(currencyKey);
 
         if (unifiedMarket) {
           enhancedPositions.push({
@@ -146,9 +148,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           key={`${position.marketAddress}-${position.supply.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
-          onSupply={(market: UnifiedMarketData) => {
-            console.log(market); // TODO: update me
-          }}
+          onSupply={onSupply}
           onBorrow={(market: UnifiedMarketData) => {
             console.log(market); // TODO: update me
           }}
