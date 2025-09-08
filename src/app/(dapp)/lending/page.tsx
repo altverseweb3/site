@@ -36,13 +36,7 @@ import HistoryContent from "@/components/ui/lending/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import { useAaveSupply, useAavePermit } from "@/hooks/aave/useAaveInteractions";
-import { bigDecimal } from "@aave/react";
-import { ethers } from "ethers";
-import { UnifiedMarketData } from "@/types/aave";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { toast } from "sonner";
-import { truncateAddress } from "@/utils/formatters";
+import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -169,107 +163,14 @@ export default function LendingPage() {
     },
   });
 
-  const { executeSupply } = useAaveSupply();
-  const { signPermit } = useAavePermit();
-  const { switchToChain } = useChainSwitch(sourceChain);
-
-  const handleSupply = async (market: UnifiedMarketData) => {
-    try {
-      if (!sourceToken || !tokenTransferState.amount || !userWalletAddress) {
-        console.error("Missing required supply data");
-        toast.error("Missing required data", {
-          description: "Please select a source token and enter an amount",
-        });
-        return;
-      }
-      await switchToChain(sourceChain);
-
-      const supplyToastId = toast.loading("Executing supply...", {
-        description: "Please confirm the transaction in your wallet",
-      });
-
-      let permitSig;
-
-      // Check if the token supports permits and we're not using native token
-      const useNative =
-        sourceToken.ticker === market.marketInfo.chain.nativeWrappedToken ||
-        false;
-      const supportsPermit = market.permitSupported && !useNative;
-
-      if (supportsPermit) {
-        try {
-          toast.loading("Creating permit signature...", {
-            id: supplyToastId,
-            description: "Please sign the permit message in your wallet",
-          });
-
-          // Convert amount to wei using token decimals
-          const amountInWei = ethers.parseUnits(
-            tokenTransferState.amount,
-            sourceToken.decimals,
-          );
-
-          permitSig = await signPermit({
-            amount: bigDecimal(amountInWei.toString()),
-            chainId: market.marketInfo.chain.chainId,
-            currency: evmAddress(sourceToken.address),
-            owner: evmAddress(userWalletAddress),
-            spender: evmAddress(market.marketInfo.address),
-          });
-
-          console.log("Permit signature created successfully");
-
-          // Small delay to ensure SDK state is properly reset
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        } catch (permitError) {
-          console.warn(
-            "Permit signing failed, falling back to standard approval:",
-            permitError,
-          );
-          // Continue without permit - the SDK will handle standard approval
-          permitSig = undefined;
-        }
-      }
-
-      toast.loading("Executing supply...", {
-        id: supplyToastId,
-        description:
-          supportsPermit && permitSig
-            ? "Executing supply transaction..."
-            : "Please confirm the transaction in your wallet",
-      });
-
-      const result = await executeSupply({
-        market: evmAddress(market.marketInfo.address),
-        amount: bigDecimal(tokenTransferState.amount),
-        currency: evmAddress(sourceToken.address),
-        chainId: market.marketInfo.chain.chainId,
-        useNative,
-        permitSig,
-      });
-
-      if (result.success) {
-        console.log("Supply successful:", result.transactionHash);
-        toast.success("Supply successful", {
-          id: supplyToastId,
-          description: `Transaction hash: ${truncateAddress(result.transactionHash!)}`,
-        });
-        // TODO: Refresh market data
-      } else {
-        console.error("Supply failed:", result.error);
-        toast.error("Supply failed", {
-          id: supplyToastId,
-          description: result.error || "An unknown error occurred",
-        });
-      }
-    } catch (error) {
-      console.error("Supply operation failed:", error);
-      toast.error("Supply operation failed", {
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    }
-  };
+  const { handleSupply } = useSupplyOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userWalletAddress || null,
+    tokenTransferState: {
+      amount: tokenTransferState.amount || "",
+    },
+  });
 
   useEffect(() => {
     setActiveSwapSection("lending");
