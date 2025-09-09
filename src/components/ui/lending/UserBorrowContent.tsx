@@ -20,6 +20,7 @@ interface UserBorrowContentProps {
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
@@ -36,15 +37,16 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   filters,
   sortConfig,
   onSupply,
+  onBorrow,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const unifiedMarkets = unifyMarkets(activeMarkets);
 
-  // lookup map for unified markets by market address and chain
+  // lookup map for unified markets by currency address and chain
   const unifiedMarketMap = new Map<string, UnifiedMarketData>();
   unifiedMarkets.forEach((market) => {
-    const key = `${market.marketInfo.address}-${market.marketInfo.chain.chainId}`;
+    const key = `${market.underlyingToken.address.toLowerCase()}-${market.marketInfo.chain.chainId}`;
     unifiedMarketMap.set(key, market);
   });
 
@@ -53,8 +55,8 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   Object.values(marketBorrowData).forEach((marketData) => {
     if (marketData.borrows && marketData.borrows.length > 0) {
       marketData.borrows.forEach((borrow) => {
-        const marketKey = `${marketData.marketAddress}-${marketData.chainId}`;
-        const unifiedMarket = unifiedMarketMap.get(marketKey);
+        const currencyKey = `${borrow.currency.address.toLowerCase()}-${marketData.chainId}`;
+        const unifiedMarket = unifiedMarketMap.get(currencyKey);
 
         if (unifiedMarket) {
           const debtAmount = parseFloat(borrow.debt.usd) || 0;
@@ -155,9 +157,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           position={position}
           unifiedMarket={position.unifiedMarket}
           onSupply={onSupply}
-          onBorrow={(market: UnifiedMarketData) => {
-            console.log(market); // TODO: update me
-          }}
+          onBorrow={onBorrow}
           onRepay={(position: UserBorrowPosition) => {
             console.log(position); // TODO: update me
           }}

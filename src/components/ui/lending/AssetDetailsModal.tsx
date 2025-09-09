@@ -26,6 +26,7 @@ import SupplyAssetModal from "@/components/ui/lending/SupplyAssetModal";
 import { getChainByChainId } from "@/config/chains";
 import useWeb3Store from "@/store/web3Store";
 import { getLendingToken } from "@/utils/lending/tokens";
+import BorrowAssetModal from "./BorrowAssetModal";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -65,13 +66,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
     if (value) setActiveTab(value);
   };
 
-  const handleSupply = () => {
-    onSupply(market);
-  };
-
-  const handleBorrow = () => {
-    onBorrow(market);
-  };
   const tokensByCompositeKey = useWeb3Store(
     (state) => state.tokensByCompositeKey,
   );
@@ -272,20 +266,29 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                   setDestinationChain(lendingChain);
                   setSourceToken(lendingToken);
                   setDestinationToken(lendingToken);
-                  console.log(handleSupply); // just to silence linting warnings
                 }}
                 className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
                 iconClassName="h-4 w-4"
               />
             </SupplyAssetModal>
-
-            <BrandedButton
-              iconName="TrendingDown"
-              buttonText="borrow"
-              onClick={handleBorrow}
-              className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
-              iconClassName="h-4 w-4"
-            />
+            <BorrowAssetModal
+              market={market}
+              onBorrow={onBorrow}
+              tokenTransferState={tokenTransferState}
+            >
+              <BrandedButton
+                iconName="TrendingDown"
+                buttonText="borrow"
+                onClick={() => {
+                  setSourceChain(lendingChain);
+                  setDestinationChain(lendingChain);
+                  setSourceToken(lendingToken);
+                  setDestinationToken(lendingToken);
+                }}
+                className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
+                iconClassName="h-4 w-4"
+              />
+            </BorrowAssetModal>
           </div>
         </div>
       </DialogContent>
