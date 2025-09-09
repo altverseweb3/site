@@ -25,12 +25,12 @@ import {
   useDestinationToken,
   useTransactionDetails,
 } from "@/store/web3Store";
-import { useAaveMarketsWithLoading } from "@/hooks/aave/useAaveMarketsData";
+import { AggregatedMarketData } from "@/components/meta/AggregatedMarketData";
 import MarketContent from "@/components/ui/lending/MarketContent";
 import DashboardContent from "@/components/ui/lending/DashboardContent";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { ChainId } from "@/types/aave";
-import { evmAddress } from "@aave/react";
+import { evmAddress, Market } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
@@ -78,14 +78,8 @@ export default function LendingPage() {
     return selectedChains.map((chain) => chain.chainId as ChainId);
   };
 
-  // Fetch markets data with loading state
-  const { markets, loading } = useAaveMarketsWithLoading({
-    chainIds: determineChainsToFetch(),
-    user: userWalletAddress ? evmAddress(userWalletAddress) : undefined,
-  });
-
-  // Filter and sort unified markets
-  const filteredAndSortedUnifiedMarkets = useMemo(() => {
+  // Create filtered and sorted unified markets function
+  const createFilteredAndSortedUnifiedMarkets = (markets: Market[] | null) => {
     if (!markets) return null;
 
     // First unify the markets
@@ -139,7 +133,7 @@ export default function LendingPage() {
     }
 
     return filtered;
-  }, [markets, filters, sortConfig]);
+  };
 
   const tokenTransferState = useTokenTransfer({
     type: "lending/aave", // remember to change me when we integrate with other vaults
@@ -210,164 +204,183 @@ export default function LendingPage() {
     (activeTab === "dashboard" || activeTab === "history");
 
   return (
-    <div className="container mx-auto px-2 md:py-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Tab Toggle, Chain Picker, Sort and Filter */}
-        <div className="mb-6">
-          {/* Single Row Layout - fits all components when there's space */}
-          <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
-            {/* Left Side: Tab Toggle and Chain Picker */}
-            <div className="flex flex-col sm:flex-row gap-4 xl:flex-1">
-              {/* Tabs */}
-              <div className="overflow-x-auto">
-                <ToggleGroup
-                  type="single"
-                  value={activeTab}
-                  onValueChange={handleTabChange}
-                  variant="outline"
-                  className="justify-start shrink-0 min-w-max"
-                >
-                  <ToggleGroupItem
-                    value="markets"
-                    className="data-[state=on]:text-[#FAFAFA]"
-                  >
-                    markets
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="dashboard"
-                    className="data-[state=on]:text-[#FAFAFA]"
-                  >
-                    dashboard
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="history"
-                    className="data-[state=on]:text-[#FAFAFA]"
-                  >
-                    <History className="h-4 w-4" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
+    <AggregatedMarketData
+      chainIds={determineChainsToFetch()}
+      user={userWalletAddress ? evmAddress(userWalletAddress) : undefined}
+    >
+      {({ markets, loading }) => {
+        const filteredAndSortedUnifiedMarkets =
+          createFilteredAndSortedUnifiedMarkets(markets);
+
+        return (
+          <div className="container mx-auto px-2 md:py-8">
+            <div className="max-w-6xl mx-auto">
+              {/* Tab Toggle, Chain Picker, Sort and Filter */}
+              <div className="mb-6">
+                {/* Single Row Layout - fits all components when there's space */}
+                <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+                  {/* Left Side: Tab Toggle and Chain Picker */}
+                  <div className="flex flex-col sm:flex-row gap-4 xl:flex-1">
+                    {/* Tabs */}
+                    <div className="overflow-x-auto">
+                      <ToggleGroup
+                        type="single"
+                        value={activeTab}
+                        onValueChange={handleTabChange}
+                        variant="outline"
+                        className="justify-start shrink-0 min-w-max"
+                      >
+                        <ToggleGroupItem
+                          value="markets"
+                          className="data-[state=on]:text-[#FAFAFA]"
+                        >
+                          markets
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="dashboard"
+                          className="data-[state=on]:text-[#FAFAFA]"
+                        >
+                          dashboard
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="history"
+                          className="data-[state=on]:text-[#FAFAFA]"
+                        >
+                          <History className="h-4 w-4" />
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+
+                    <ChainPicker
+                      type="multiple"
+                      value={selectedChains.map((chain) => chain.id)}
+                      onSelectionChange={(value) => {
+                        const valueArray = Array.isArray(value)
+                          ? value
+                          : [value];
+                        const selected = valueArray
+                          .map((id) =>
+                            supportedChains.find((chain) => chain.id === id),
+                          )
+                          .filter(Boolean) as Chain[];
+                        setSelectedChains(selected);
+                      }}
+                      chains={supportedChains}
+                      size="sm"
+                      className="!mb-0 !pb-0"
+                    />
+                  </div>
+
+                  {/* Right Side: Sort Dropdown and Asset Filter */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center xl:shrink-0">
+                    {/* Sort Dropdown and Asset Filter - side by side */}
+                    <div className="flex gap-4 w-full sm:w-auto">
+                      <div className="flex-1 sm:flex-none">
+                        <SortDropdown
+                          value={sortDropdownValue}
+                          onSortChange={handleSortDropdownChange}
+                          activeSection={activeTab}
+                          activeSubSection={
+                            activeTab === "dashboard"
+                              ? currentSubsection
+                              : activeTab
+                          }
+                          className="w-full sm:w-32"
+                        />
+                      </div>
+                      <div className="flex-1 sm:flex-none">
+                        <AssetFilter
+                          value={filters.assetFilter}
+                          onChange={handleAssetFilterChange}
+                          placeholder="filter by asset (e.g., ETH, BTC)"
+                          mobilePlaceholder="filter by asset"
+                          className="w-full sm:w-60"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <ChainPicker
-                type="multiple"
-                value={selectedChains.map((chain) => chain.id)}
-                onSelectionChange={(value) => {
-                  const valueArray = Array.isArray(value) ? value : [value];
-                  const selected = valueArray
-                    .map((id) =>
-                      supportedChains.find((chain) => chain.id === id),
-                    )
-                    .filter(Boolean) as Chain[];
-                  setSelectedChains(selected);
-                }}
-                chains={supportedChains}
-                size="sm"
-                className="!mb-0 !pb-0"
-              />
-            </div>
-
-            {/* Right Side: Sort Dropdown and Asset Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center xl:shrink-0">
-              {/* Sort Dropdown and Asset Filter - side by side */}
-              <div className="flex gap-4 w-full sm:w-auto">
-                <div className="flex-1 sm:flex-none">
-                  <SortDropdown
-                    value={sortDropdownValue}
-                    onSortChange={handleSortDropdownChange}
-                    activeSection={activeTab}
-                    activeSubSection={
-                      activeTab === "dashboard" ? currentSubsection : activeTab
-                    }
-                    className="w-full sm:w-32"
-                  />
-                </div>
-                <div className="flex-1 sm:flex-none">
-                  <AssetFilter
-                    value={filters.assetFilter}
-                    onChange={handleAssetFilterChange}
-                    placeholder="filter by asset (e.g., ETH, BTC)"
-                    mobilePlaceholder="filter by asset"
-                    className="w-full sm:w-60"
-                  />
-                </div>
+              {/* Tab Content */}
+              <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden 2xl:mb-0 mb-12">
+                {showWalletConnectionRequired ? (
+                  <div className="text-center py-16 md:py-24 px-4 md:px-8">
+                    <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
+                      please connect an EVM wallet (metamask, etc.) to view and
+                      manage your positions. other environments (sui, solana,
+                      etc.) are supported; however, presently your positions
+                      will only be held and managed on EVM wallets as they will
+                      opened and managed on ethereum or other EVM chains.
+                    </p>
+                    <ConnectWalletModal
+                      trigger={
+                        <BrandedButton
+                          iconName="Wallet"
+                          buttonText="connect EVM wallet"
+                          className="max-w-xs h-8 text-sm md:text-md"
+                        />
+                      }
+                    />
+                  </div>
+                ) : activeTab === "markets" && loading ? (
+                  <div className="text-center py-16">
+                    <div className="text-[#A1A1AA]">loading markets...</div>
+                  </div>
+                ) : activeTab === "markets" &&
+                  (!filteredAndSortedUnifiedMarkets ||
+                    filteredAndSortedUnifiedMarkets.length === 0) ? (
+                  <div className="text-center py-16">
+                    <div className="text-[#A1A1AA]">no markets found</div>
+                  </div>
+                ) : (
+                  <>
+                    {activeTab === "markets" && (
+                      <MarketContent
+                        unifiedMarkets={filteredAndSortedUnifiedMarkets}
+                        tokenTransferState={tokenTransferState}
+                        onSupply={handleSupply}
+                      />
+                    )}
+                    {activeTab === "dashboard" && (
+                      <DashboardContent
+                        userAddress={userWalletAddress}
+                        selectedChains={selectedChains}
+                        activeMarkets={markets || []}
+                        tokenTransferState={tokenTransferState}
+                        filters={filters}
+                        sortConfig={sortConfig}
+                        onSubsectionChange={setCurrentSubsection}
+                        onSupply={handleSupply}
+                      />
+                    )}
+                    {activeTab === "history" && (
+                      <AggregatedTransactionHistory
+                        activeMarkets={markets || []}
+                        userWalletAddress={evmAddress(userWalletAddress!)}
+                      >
+                        {({ transactions, loading }) => (
+                          <HistoryContent
+                            data={transactions}
+                            loading={loading}
+                          />
+                        )}
+                      </AggregatedTransactionHistory>
+                    )}
+                  </>
+                )}
+                <Button
+                  onClick={() => {
+                    console.log(tokenTransferState);
+                  }}
+                >
+                  HELLO MATE
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="bg-[#18181B] border border-[#27272A] rounded-lg overflow-hidden 2xl:mb-0 mb-12">
-          {showWalletConnectionRequired ? (
-            <div className="text-center py-16 md:py-24 px-4 md:px-8">
-              <p className="text-zinc-400 mb-6 px-2 sm:px-8 md:px-16 lg:px-20 text-sm md:text-lg max-w-3xl mx-auto leading-relaxed">
-                please connect an EVM wallet (metamask, etc.) to view and manage
-                your positions. other environments (sui, solana, etc.) are
-                supported; however, presently your positions will only be held
-                and managed on EVM wallets as they will opened and managed on
-                ethereum or other EVM chains.
-              </p>
-              <ConnectWalletModal
-                trigger={
-                  <BrandedButton
-                    iconName="Wallet"
-                    buttonText="connect EVM wallet"
-                    className="max-w-xs h-8 text-sm md:text-md"
-                  />
-                }
-              />
-            </div>
-          ) : activeTab === "markets" && loading ? (
-            <div className="text-center py-16">
-              <div className="text-[#A1A1AA]">loading markets...</div>
-            </div>
-          ) : activeTab === "markets" &&
-            (!filteredAndSortedUnifiedMarkets ||
-              filteredAndSortedUnifiedMarkets.length === 0) ? (
-            <div className="text-center py-16">
-              <div className="text-[#A1A1AA]">no markets found</div>
-            </div>
-          ) : (
-            <>
-              {activeTab === "markets" && (
-                <MarketContent
-                  unifiedMarkets={filteredAndSortedUnifiedMarkets}
-                  tokenTransferState={tokenTransferState}
-                  onSupply={handleSupply}
-                />
-              )}
-              {activeTab === "dashboard" && (
-                <DashboardContent
-                  userAddress={userWalletAddress}
-                  selectedChains={selectedChains}
-                  activeMarkets={markets || []}
-                  tokenTransferState={tokenTransferState}
-                  filters={filters}
-                  sortConfig={sortConfig}
-                  onSubsectionChange={setCurrentSubsection}
-                  onSupply={handleSupply}
-                />
-              )}
-              {activeTab === "history" && (
-                <AggregatedTransactionHistory
-                  activeMarkets={markets || []}
-                  userWalletAddress={evmAddress(userWalletAddress!)}
-                >
-                  {({ transactions, loading }) => (
-                    <HistoryContent data={transactions} loading={loading} />
-                  )}
-                </AggregatedTransactionHistory>
-              )}
-            </>
-          )}
-          <Button
-            onClick={() => {
-              console.log(tokenTransferState);
-            }}
-          >
-            HELLO MATE
-          </Button>
-        </div>
-      </div>
-    </div>
+        );
+      }}
+    </AggregatedMarketData>
   );
 }

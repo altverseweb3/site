@@ -71,6 +71,22 @@ export const useAaveSingleMarketData = (args: UseAaveMarketArgs) => {
 };
 
 /**
+ * Hook to fetch data for a single Aave market with loading states.
+ * This hook returns loading states instead of suspending.
+ */
+export const useAaveSingleMarketDataWithLoading = (args: UseAaveMarketArgs) => {
+  const { data, loading } = useAaveMarket({
+    address: args.address,
+    chainId: args.chainId,
+    user: args.user,
+    borrowsOrderBy: args.borrowsOrderBy,
+    suppliesOrderBy: args.suppliesOrderBy,
+  });
+
+  return { market: data ?? undefined, loading };
+};
+
+/**
  * Hook to fetch historical borrow APY using Suspense pattern.
  * This hook will suspend the component until data is loaded.
  */
