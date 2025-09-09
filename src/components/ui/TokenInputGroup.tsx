@@ -16,6 +16,8 @@ interface TokenInputGroupProps {
   isEnabled?: boolean; // New prop to control if input is enabled
   featuredTokens?: Token[];
   featuredTokensDescription?: string;
+  disableTokenSelect?: boolean;
+  disableWalletBalance?: boolean;
 }
 
 export function TokenInputGroup({
@@ -29,6 +31,8 @@ export function TokenInputGroup({
   isEnabled = true, // Default to true
   featuredTokens = [],
   featuredTokensDescription = "",
+  disableTokenSelect = false,
+  disableWalletBalance = false,
 }: TokenInputGroupProps) {
   const setSourceTokenSelectOpen = useUIStore(
     (state) => state.setSourceTokenSelectOpen,
@@ -52,6 +56,7 @@ export function TokenInputGroup({
           variant={variant}
           featuredTokens={featuredTokens}
           featuredTokensDescription={featuredTokensDescription}
+          disableTokenSelect={disableTokenSelect}
         />
       )}
       <TokenAmountInput
@@ -59,6 +64,7 @@ export function TokenInputGroup({
         onChange={onChange}
         dollarValue={dollarValue}
         readOnly={!isEnabled || readOnly}
+        disableWalletBalance={disableWalletBalance}
         isLoadingQuote={isLoadingQuote && variant === "destination"}
         variant={variant}
         onContainerClick={() => {

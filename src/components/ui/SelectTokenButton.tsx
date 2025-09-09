@@ -394,12 +394,14 @@ interface SelectTokenButtonProps {
   selectedToken?: Token;
   featuredTokens?: Token[];
   featuredTokensDescription?: string;
+  disableTokenSelect?: boolean;
 }
 
 export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
   variant,
   featuredTokens,
   featuredTokensDescription,
+  disableTokenSelect = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 150);
@@ -602,6 +604,10 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
+      if (disableTokenSelect) {
+        setIsOpen(false);
+        return;
+      }
       setIsOpen(open);
       if (open) {
         setSearchQuery("");
@@ -609,7 +615,7 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
         lookedUpAddresses.current.clear();
       }
     },
-    [getTokensForChain, chainToShow.chainId, setIsOpen],
+    [getTokensForChain, chainToShow.chainId, setIsOpen, disableTokenSelect],
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -668,22 +674,24 @@ export const SelectTokenButton: React.FC<SelectTokenButtonProps> = ({
           }}
         >
           {buttonContent}
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 flex-shrink-0"
-          >
-            <path
-              d="M5 7.5L10 12.5L15 7.5"
-              stroke={selectedToken ? "#A1A1A1" : "currentColor"}
-              strokeWidth="1.66667"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {!disableTokenSelect && (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 flex-shrink-0"
+            >
+              <path
+                d="M5 7.5L10 12.5L15 7.5"
+                stroke={selectedToken ? "#A1A1A1" : "currentColor"}
+                strokeWidth="1.66667"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent
