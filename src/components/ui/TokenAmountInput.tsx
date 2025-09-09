@@ -13,6 +13,7 @@ interface TokenAmountInputProps {
   isLoadingQuote?: boolean;
   variant?: "source" | "destination";
   onContainerClick: () => void; // Add this prop
+  disableWalletBalance?: boolean;
 }
 
 export function TokenAmountInput({
@@ -24,6 +25,7 @@ export function TokenAmountInput({
   isLoadingQuote = false,
   variant = "source",
   onContainerClick, // Add this parameter
+  disableWalletBalance = false,
 }: TokenAmountInputProps) {
   const isLoading = isLoadingQuote && readOnly;
   const sourceToken = useSourceToken();
@@ -100,7 +102,7 @@ export function TokenAmountInput({
             {displayedAmountUsd}
           </span>
         )}
-        {variant === "source" && requiredWallet && (
+        {variant === "source" && requiredWallet && !disableWalletBalance && (
           <div className="flex justify-end w-full mt-2 gap-2">
             {/* Balance display */}
             <div className="flex items-center px-1 py-0.5 rounded-md bg-amber-500 bg-opacity-25">
