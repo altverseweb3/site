@@ -16,12 +16,14 @@ interface MarketContentProps {
   unifiedMarkets: UnifiedMarketData[] | null | undefined;
   tokenTransferState: TokenTransferState;
   onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
   unifiedMarkets,
   tokenTransferState,
   onSupply,
+  onBorrow,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -52,9 +54,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
           onSupply={onSupply}
-          onBorrow={(market: UnifiedMarketData) => {
-            console.log(market); // TODO: update me
-          }}
+          onBorrow={onBorrow}
           onRepay={(market: UserBorrowPosition) => {
             console.log(market); // TODO: update me
           }}

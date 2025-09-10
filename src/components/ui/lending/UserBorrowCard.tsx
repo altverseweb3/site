@@ -55,7 +55,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {unifiedMarket.underlyingToken.name}
+              {borrow.currency.name}
             </CardTitle>
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">

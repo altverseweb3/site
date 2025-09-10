@@ -178,3 +178,115 @@ export interface SupplyState {
   loading: boolean;
   error: string | null;
 }
+
+/**
+ * Arguments for borrow operations
+ */
+export interface BorrowArgs {
+  /** The market address to borrow from */
+  market: EvmAddress;
+  /** The amount to borrow */
+  amount: BigDecimal;
+  /** The currency address to borrow */
+  currency: EvmAddress;
+  /** The chain ID */
+  chainId: ChainId;
+  /** Whether to use native token (e.g., ETH instead of WETH) */
+  useNative?: boolean;
+  /** Address to send borrowed tokens to (if different from sender) */
+  onBehalfOf?: EvmAddress;
+}
+
+/**
+ * Result of a borrow operation
+ */
+export interface BorrowResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for borrow operations
+ */
+export interface BorrowState {
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Arguments for repay operations
+ */
+export interface RepayArgs {
+  /** The market address to repay to */
+  market: EvmAddress;
+  /** The amount to repay (use max uint256 for full repayment) */
+  amount: BigDecimal;
+  /** The currency address to repay */
+  currency: EvmAddress;
+  /** The chain ID */
+  chainId: ChainId;
+  /** Interest rate mode: 1 for stable, 2 for variable */
+  interestRateMode: 1 | 2;
+  /** Whether to use native token (e.g., ETH instead of WETH) */
+  useNative?: boolean;
+  /** Address to repay on behalf of (if different from sender) */
+  onBehalfOf?: EvmAddress;
+  /** Optional permit signature for gasless approval */
+  permitSig?: {
+    deadline: bigint;
+    signature: Signature;
+  };
+}
+
+/**
+ * Result of a repay operation
+ */
+export interface RepayResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for repay operations
+ */
+export interface RepayState {
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Arguments for withdraw operations
+ */
+export interface WithdrawArgs {
+  /** The market address to withdraw from */
+  market: EvmAddress;
+  /** The amount to withdraw (use max uint256 for full withdrawal) */
+  amount: BigDecimal;
+  /** The currency address to withdraw */
+  currency: EvmAddress;
+  /** The chain ID */
+  chainId: ChainId;
+  /** Whether to use native token (e.g., ETH instead of WETH) */
+  useNative?: boolean;
+  /** Address to send withdrawn tokens to (if different from sender) */
+  to?: EvmAddress;
+}
+
+/**
+ * Result of a withdraw operation
+ */
+export interface WithdrawResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for withdraw operations
+ */
+export interface WithdrawState {
+  loading: boolean;
+  error: string | null;
+}

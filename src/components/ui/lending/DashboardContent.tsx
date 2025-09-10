@@ -34,6 +34,7 @@ interface DashboardContentProps {
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 export default function DashboardContent({
@@ -44,6 +45,7 @@ export default function DashboardContent({
   sortConfig,
   onSubsectionChange,
   onSupply,
+  onBorrow,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -106,6 +108,7 @@ export default function DashboardContent({
                     sortConfig={sortConfig}
                     onSubsectionChange={onSubsectionChange}
                     onSupply={onSupply}
+                    onBorrow={onBorrow}
                   />
                 );
               }}
@@ -168,6 +171,7 @@ interface DashboardContentInnerProps {
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedMarketData) => void;
 }
 
 function DashboardContentInner({
@@ -188,6 +192,7 @@ function DashboardContentInner({
   sortConfig,
   onSubsectionChange,
   onSupply,
+  onBorrow,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -411,6 +416,7 @@ function DashboardContentInner({
               filters={filters}
               sortConfig={sortConfig}
               onSupply={onSupply}
+              onBorrow={onBorrow}
             />
           ) : (
             <AvailableBorrowContent
@@ -419,6 +425,7 @@ function DashboardContentInner({
               filters={filters}
               sortConfig={sortConfig}
               onSupply={onSupply}
+              onBorrow={onBorrow}
             />
           )
         ) : // Show open positions
@@ -430,6 +437,7 @@ function DashboardContentInner({
             filters={filters}
             sortConfig={sortConfig}
             onSupply={onSupply}
+            onBorrow={onBorrow}
           />
         ) : (
           <UserBorrowContent
@@ -440,6 +448,7 @@ function DashboardContentInner({
             filters={filters}
             sortConfig={sortConfig}
             onSupply={onSupply}
+            onBorrow={onBorrow}
           />
         )}
       </div>

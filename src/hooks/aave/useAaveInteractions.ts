@@ -1,10 +1,26 @@
 "use client";
 
-import { useSupply, evmAddress, signatureFrom } from "@aave/react";
+import {
+  useSupply,
+  useBorrow,
+  useRepay,
+  useWithdraw,
+  evmAddress,
+  signatureFrom,
+} from "@aave/react";
 import {
   SupplyState,
   SupplyArgs,
   SupplyResult,
+  BorrowState,
+  BorrowArgs,
+  BorrowResult,
+  RepayState,
+  RepayArgs,
+  RepayResult,
+  WithdrawState,
+  WithdrawArgs,
+  WithdrawResult,
   EvmAddress,
   BigDecimal,
   ChainId,
@@ -267,5 +283,409 @@ export const useAavePermit = () => {
     signPermit,
     loading: state.loading,
     error: state.error,
+  };
+};
+
+/**
+ * Hook for executing Aave borrow operations
+ * Handles borrowing assets against supplied collateral
+ */
+export const useAaveBorrow = () => {
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const [borrow, borrowing] = useBorrow();
+  const [state, setState] = useState<BorrowState>({
+    loading: false,
+    error: null,
+  });
+
+  // Custom transaction sender that works with our async signer
+  const sendTransaction = useCallback(
+    async (transactionRequest: {
+      to: string;
+      data: string;
+      value?: string | number;
+      gas?: string | number;
+      gasPrice?: string | number;
+      maxFeePerGas?: string | number;
+      maxPriorityFeePerGas?: string | number;
+    }) => {
+      const signer = await getEvmSigner();
+
+      const tx = {
+        to: transactionRequest.to,
+        data: transactionRequest.data,
+        value: transactionRequest.value || 0,
+        gasLimit: transactionRequest.gas,
+        gasPrice: transactionRequest.gasPrice,
+        maxFeePerGas: transactionRequest.maxFeePerGas,
+        maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
+      };
+
+      const response = await signer.sendTransaction(tx);
+      await response.wait();
+      return response.hash;
+    },
+    [getEvmSigner],
+  );
+
+  /**
+   * Execute a borrow operation
+   */
+  const executeBorrow = useCallback(
+    async (args: BorrowArgs): Promise<BorrowResult> => {
+      if (borrowing.loading) {
+        const errorMessage = "Another borrow operation is already in progress";
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      setState({ loading: true, error: null });
+
+      try {
+        const signer = await getEvmSigner();
+        const userAddress = await signer.getAddress();
+
+        const borrowConfig = {
+          market: args.market,
+          amount: args.useNative
+            ? {
+                native: args.amount,
+              }
+            : {
+                erc20: {
+                  currency: args.currency,
+                  value: args.amount,
+                },
+              },
+          sender: evmAddress(userAddress),
+          chainId: args.chainId,
+          ...(args.onBehalfOf && { onBehalfOf: args.onBehalfOf }),
+        };
+
+        const planResult = await borrow(borrowConfig);
+
+        if (planResult.isErr()) {
+          throw planResult.error;
+        }
+
+        const plan = planResult.value;
+        let transactionHash: string;
+
+        switch (plan.__typename) {
+          case "TransactionRequest":
+            transactionHash = await sendTransaction(plan);
+            break;
+
+          default:
+            throw new Error(
+              `Execution plan type not supported: ${plan.__typename}`,
+            );
+        }
+
+        const finalResult: BorrowResult = {
+          success: true,
+          transactionHash,
+        };
+
+        setState({ loading: false, error: null });
+        return finalResult;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Borrow operation failed";
+        console.error("Borrow failed:", error);
+
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [borrow, sendTransaction, getEvmSigner, borrowing.loading],
+  );
+
+  return {
+    executeBorrow,
+    loading: state.loading || borrowing.loading,
+    error: state.error || borrowing.error,
+  };
+};
+
+/**
+ * Hook for executing Aave repay operations
+ * Handles repaying borrowed assets
+ */
+export const useAaveRepay = () => {
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const [repay, repaying] = useRepay();
+  const [state, setState] = useState<RepayState>({
+    loading: false,
+    error: null,
+  });
+
+  const sendTransaction = useCallback(
+    async (transactionRequest: {
+      to: string;
+      data: string;
+      value?: string | number;
+      gas?: string | number;
+      gasPrice?: string | number;
+      maxFeePerGas?: string | number;
+      maxPriorityFeePerGas?: string | number;
+    }) => {
+      const signer = await getEvmSigner();
+
+      const tx = {
+        to: transactionRequest.to,
+        data: transactionRequest.data,
+        value: transactionRequest.value || 0,
+        gasLimit: transactionRequest.gas,
+        gasPrice: transactionRequest.gasPrice,
+        maxFeePerGas: transactionRequest.maxFeePerGas,
+        maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
+      };
+
+      const response = await signer.sendTransaction(tx);
+      await response.wait();
+      return response.hash;
+    },
+    [getEvmSigner],
+  );
+
+  /**
+   * Execute a repay operation
+   */
+  const executeRepay = useCallback(
+    async (args: RepayArgs): Promise<RepayResult> => {
+      if (repaying.loading) {
+        const errorMessage = "Another repay operation is already in progress";
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      setState({ loading: true, error: null });
+
+      try {
+        const signer = await getEvmSigner();
+        const userAddress = await signer.getAddress();
+
+        const repayConfig = {
+          market: args.market,
+          amount: args.useNative
+            ? {
+                native: {
+                  value: { exact: args.amount },
+                },
+              }
+            : {
+                erc20: {
+                  currency: args.currency,
+                  value: { exact: args.amount },
+                  permitSig: args.permitSig
+                    ? {
+                        deadline: Number(args.permitSig.deadline),
+                        value: args.permitSig.signature,
+                      }
+                    : undefined,
+                },
+              },
+          sender: evmAddress(userAddress),
+          interestRateMode: args.interestRateMode,
+          chainId: args.chainId,
+          ...(args.onBehalfOf && { onBehalfOf: args.onBehalfOf }),
+        };
+
+        const planResult = await repay(repayConfig);
+
+        if (planResult.isErr()) {
+          throw planResult.error;
+        }
+
+        const plan = planResult.value;
+        let transactionHash: string;
+
+        switch (plan.__typename) {
+          case "TransactionRequest":
+            transactionHash = await sendTransaction(plan);
+            break;
+
+          case "ApprovalRequired":
+            const approvalHash = await sendTransaction(plan.approval);
+            console.log("Approval transaction:", approvalHash);
+
+            transactionHash = await sendTransaction(plan.originalTransaction);
+            break;
+
+          case "InsufficientBalanceError":
+            throw new Error(
+              `Insufficient balance: ${plan.required.value} required.`,
+            );
+
+          default:
+            throw new Error("Unknown execution plan type");
+        }
+
+        const finalResult: RepayResult = {
+          success: true,
+          transactionHash,
+        };
+
+        setState({ loading: false, error: null });
+        return finalResult;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Repay operation failed";
+        console.error("Repay failed:", error);
+
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [repay, sendTransaction, getEvmSigner, repaying.loading],
+  );
+
+  return {
+    executeRepay,
+    loading: state.loading || repaying.loading,
+    error: state.error || repaying.error,
+  };
+};
+
+/**
+ * Hook for executing Aave withdraw operations
+ * Handles withdrawing supplied assets (aTokens)
+ */
+export const useAaveWithdraw = () => {
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const [withdraw, withdrawing] = useWithdraw();
+  const [state, setState] = useState<WithdrawState>({
+    loading: false,
+    error: null,
+  });
+
+  const sendTransaction = useCallback(
+    async (transactionRequest: {
+      to: string;
+      data: string;
+      value?: string | number;
+      gas?: string | number;
+      gasPrice?: string | number;
+      maxFeePerGas?: string | number;
+      maxPriorityFeePerGas?: string | number;
+    }) => {
+      const signer = await getEvmSigner();
+
+      const tx = {
+        to: transactionRequest.to,
+        data: transactionRequest.data,
+        value: transactionRequest.value || 0,
+        gasLimit: transactionRequest.gas,
+        gasPrice: transactionRequest.gasPrice,
+        maxFeePerGas: transactionRequest.maxFeePerGas,
+        maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
+      };
+
+      const response = await signer.sendTransaction(tx);
+      await response.wait();
+      return response.hash;
+    },
+    [getEvmSigner],
+  );
+
+  /**
+   * Execute a withdraw operation
+   */
+  const executeWithdraw = useCallback(
+    async (args: WithdrawArgs): Promise<WithdrawResult> => {
+      if (withdrawing.loading) {
+        const errorMessage =
+          "Another withdraw operation is already in progress";
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      setState({ loading: true, error: null });
+
+      try {
+        const signer = await getEvmSigner();
+        const userAddress = await signer.getAddress();
+
+        const withdrawConfig = {
+          market: args.market,
+          amount: args.useNative
+            ? {
+                native: {
+                  value: { exact: args.amount },
+                },
+              }
+            : {
+                erc20: {
+                  currency: args.currency,
+                  value: { exact: args.amount },
+                },
+              },
+          sender: evmAddress(userAddress),
+          chainId: args.chainId,
+          ...(args.to && { recipient: args.to }),
+        };
+
+        const planResult = await withdraw(withdrawConfig);
+
+        if (planResult.isErr()) {
+          throw planResult.error;
+        }
+
+        const plan = planResult.value;
+        let transactionHash: string;
+
+        switch (plan.__typename) {
+          case "TransactionRequest":
+            transactionHash = await sendTransaction(plan);
+            break;
+
+          default:
+            throw new Error(
+              `Execution plan type not supported: ${plan.__typename}`,
+            );
+        }
+
+        const finalResult: WithdrawResult = {
+          success: true,
+          transactionHash,
+        };
+
+        setState({ loading: false, error: null });
+        return finalResult;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Withdraw operation failed";
+        console.error("Withdraw failed:", error);
+
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [withdraw, sendTransaction, getEvmSigner, withdrawing.loading],
+  );
+
+  return {
+    executeWithdraw,
+    loading: state.loading || withdrawing.loading,
+    error: state.error || withdrawing.error,
   };
 };
