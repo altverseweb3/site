@@ -24,7 +24,7 @@ interface UserSupplyCardProps {
   unifiedMarket: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (position: UserSupplyPosition) => void;
+  onWithdraw: (market: UnifiedMarketData) => void;
   onToggleCollateral?: (position: UserSupplyPosition) => void;
   tokenTransferState: TokenTransferState;
 }
@@ -157,6 +157,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
           tokenTransferState={tokenTransferState}
+          supplyPosition={position}
         >
           <BrandedButton
             buttonText="details"
