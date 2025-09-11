@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
+import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -172,6 +173,13 @@ export default function LendingPage() {
     sourceToken,
     userWalletAddress: userWalletAddress || null,
     tokenBorrowState: { amount: tokenTransferState.amount || "" },
+  });
+
+  const { handleWithdraw } = useWithdrawOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userWalletAddress || null,
+    tokenWithdrawState: { amount: tokenTransferState.amount || "" },
   });
 
   useEffect(() => {
@@ -362,6 +370,7 @@ export default function LendingPage() {
                         onSubsectionChange={setCurrentSubsection}
                         onSupply={handleSupply}
                         onBorrow={handleBorrow}
+                        onWithdraw={handleWithdraw}
                       />
                     )}
                     {activeTab === "history" && (

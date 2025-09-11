@@ -21,6 +21,7 @@ interface UserSupplyContentProps {
   sortConfig?: LendingSortConfig | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData) => void;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -37,6 +38,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   sortConfig,
   onSupply,
   onBorrow,
+  onWithdraw,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -152,9 +154,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           unifiedMarket={position.unifiedMarket}
           onSupply={onSupply}
           onBorrow={onBorrow}
-          onWithdraw={(position: UserSupplyPosition) => {
-            console.log(position); // TODO: update me
-          }}
+          onWithdraw={onWithdraw}
           onToggleCollateral={(position: UserSupplyPosition) => {
             console.log(position); // TODO: update me
           }}

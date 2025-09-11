@@ -153,6 +153,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
+          buttonsToShow={["supply", "borrow"]}
         >
           <BrandedButton
             buttonText="details"

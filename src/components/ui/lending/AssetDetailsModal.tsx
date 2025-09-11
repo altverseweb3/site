@@ -26,7 +26,8 @@ import SupplyAssetModal from "@/components/ui/lending/SupplyAssetModal";
 import { getChainByChainId } from "@/config/chains";
 import useWeb3Store from "@/store/web3Store";
 import { getLendingToken } from "@/utils/lending/tokens";
-import BorrowAssetModal from "./BorrowAssetModal";
+import BorrowAssetModal from "@/components/ui/lending/BorrowAssetModal";
+import WithdrawAssetModal from "@/components/ui/lending/WithdrawAssetModal";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -34,18 +35,24 @@ interface AssetDetailsModalProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
-  onWithdraw?: (market: UserSupplyPosition) => void;
+  onWithdraw?: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
+  supplyPosition?: UserSupplyPosition;
+  buttonsToShow: ctaButtons[];
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";
+type ctaButtons = "supply" | "borrow" | "withdraw" | "repay";
 
 const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   market,
   children,
   onSupply,
   onBorrow,
+  onWithdraw,
   tokenTransferState,
+  supplyPosition,
+  buttonsToShow,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -252,43 +259,68 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
         {/* Footer with CTA buttons */}
         <div className="bg-[#18181B] flex-shrink-0 px-1">
           <div className="flex gap-3 w-full">
-            <SupplyAssetModal
-              market={market}
-              onSupply={onSupply}
-              onBorrow={onBorrow}
-              tokenTransferState={tokenTransferState}
-            >
-              <BrandedButton
-                iconName="TrendingUp"
-                buttonText="supply"
-                onClick={() => {
-                  setSourceChain(lendingChain);
-                  setDestinationChain(lendingChain);
-                  setSourceToken(lendingToken);
-                  setDestinationToken(lendingToken);
-                }}
-                className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
-                iconClassName="h-4 w-4"
-              />
-            </SupplyAssetModal>
-            <BorrowAssetModal
-              market={market}
-              onBorrow={onBorrow}
-              tokenTransferState={tokenTransferState}
-            >
-              <BrandedButton
-                iconName="TrendingDown"
-                buttonText="borrow"
-                onClick={() => {
-                  setSourceChain(lendingChain);
-                  setDestinationChain(lendingChain);
-                  setSourceToken(lendingToken);
-                  setDestinationToken(lendingToken);
-                }}
-                className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
-                iconClassName="h-4 w-4"
-              />
-            </BorrowAssetModal>
+            {onSupply && buttonsToShow.includes("supply") && (
+              <SupplyAssetModal
+                market={market}
+                onSupply={onSupply}
+                onBorrow={onBorrow}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="TrendingUp"
+                  buttonText="supply"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </SupplyAssetModal>
+            )}
+            {onBorrow && buttonsToShow.includes("borrow") && (
+              <BorrowAssetModal
+                market={market}
+                onBorrow={onBorrow}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="TrendingDown"
+                  buttonText="borrow"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </BorrowAssetModal>
+            )}
+            {onWithdraw && buttonsToShow.includes("withdraw") && (
+              <WithdrawAssetModal
+                market={market}
+                position={supplyPosition}
+                onWithdraw={onWithdraw}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="Coins"
+                  buttonText="withdraw"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-amber-500/20 hover:bg-amber-500/30 hover:text-amber-300 text-amber-300 border-amber-500/50 hover:border-amber-500 transition-all duration-200 py-3 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </WithdrawAssetModal>
+            )}
           </div>
         </div>
       </DialogContent>

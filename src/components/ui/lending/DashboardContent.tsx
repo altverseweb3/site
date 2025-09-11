@@ -35,6 +35,7 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData) => void;
 }
 
 export default function DashboardContent({
@@ -46,6 +47,7 @@ export default function DashboardContent({
   onSubsectionChange,
   onSupply,
   onBorrow,
+  onWithdraw,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -109,6 +111,7 @@ export default function DashboardContent({
                     onSubsectionChange={onSubsectionChange}
                     onSupply={onSupply}
                     onBorrow={onBorrow}
+                    onWithdraw={onWithdraw}
                   />
                 );
               }}
@@ -172,6 +175,7 @@ interface DashboardContentInnerProps {
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData) => void;
 }
 
 function DashboardContentInner({
@@ -193,6 +197,7 @@ function DashboardContentInner({
   onSubsectionChange,
   onSupply,
   onBorrow,
+  onWithdraw,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -438,6 +443,7 @@ function DashboardContentInner({
             sortConfig={sortConfig}
             onSupply={onSupply}
             onBorrow={onBorrow}
+            onWithdraw={onWithdraw}
           />
         ) : (
           <UserBorrowContent
