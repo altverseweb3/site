@@ -224,7 +224,7 @@ export default function LendingPage() {
       chainIds={determineChainsToFetch()}
       user={userWalletAddress ? evmAddress(userWalletAddress) : undefined}
     >
-      {({ markets, loading }) => {
+      {({ markets, loading, refetchMarkets }) => {
         const filteredAndSortedUnifiedMarkets =
           createFilteredAndSortedUnifiedMarkets(markets);
 
@@ -371,6 +371,7 @@ export default function LendingPage() {
                         onSupply={handleSupply}
                         onBorrow={handleBorrow}
                         onWithdraw={handleWithdraw}
+                        refetchMarkets={refetchMarkets}
                       />
                     )}
                     {activeTab === "history" && (
