@@ -109,6 +109,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
           onBorrow={onBorrow}
           onRepay={onRepay}
           tokenTransferState={tokenTransferState}
+          buttonsToShow={["borrow", "repay"]}
         >
           <BrandedButton
             buttonText="details"

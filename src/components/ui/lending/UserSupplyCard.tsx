@@ -158,6 +158,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           onWithdraw={onWithdraw}
           tokenTransferState={tokenTransferState}
           supplyPosition={position}
+          buttonsToShow={["supply", "withdraw"]}
         >
           <BrandedButton
             buttonText="details"

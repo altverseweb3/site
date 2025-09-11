@@ -38,7 +38,7 @@ interface AssetDetailsModalProps {
   onWithdraw?: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
   supplyPosition?: UserSupplyPosition;
-  buttonsToShow?: ctaButtons[];
+  buttonsToShow: ctaButtons[];
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";
@@ -52,6 +52,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   onWithdraw,
   tokenTransferState,
   supplyPosition,
+  buttonsToShow,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -258,46 +259,48 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
         {/* Footer with CTA buttons */}
         <div className="bg-[#18181B] flex-shrink-0 px-1">
           <div className="flex gap-3 w-full">
-            <SupplyAssetModal
-              market={market}
-              onSupply={onSupply}
-              onBorrow={onBorrow}
-              tokenTransferState={tokenTransferState}
-            >
-              <BrandedButton
-                iconName="TrendingUp"
-                buttonText="supply"
-                onClick={() => {
-                  setSourceChain(lendingChain);
-                  setDestinationChain(lendingChain);
-                  setSourceToken(lendingToken);
-                  setDestinationToken(lendingToken);
-                }}
-                className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
-                iconClassName="h-4 w-4"
-              />
-            </SupplyAssetModal>
-            <BorrowAssetModal
-              market={market}
-              onBorrow={onBorrow}
-              tokenTransferState={tokenTransferState}
-            >
-              <BrandedButton
-                iconName="TrendingDown"
-                buttonText="borrow"
-                onClick={() => {
-                  debugger;
-                  console.log(market);
-                  setSourceChain(lendingChain);
-                  setDestinationChain(lendingChain);
-                  setSourceToken(lendingToken);
-                  setDestinationToken(lendingToken);
-                }}
-                className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
-                iconClassName="h-4 w-4"
-              />
-            </BorrowAssetModal>
-            {onWithdraw && (
+            {onSupply && buttonsToShow.includes("supply") && (
+              <SupplyAssetModal
+                market={market}
+                onSupply={onSupply}
+                onBorrow={onBorrow}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="TrendingUp"
+                  buttonText="supply"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </SupplyAssetModal>
+            )}
+            {onBorrow && buttonsToShow.includes("borrow") && (
+              <BorrowAssetModal
+                market={market}
+                onBorrow={onBorrow}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="TrendingDown"
+                  buttonText="borrow"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </BorrowAssetModal>
+            )}
+            {onWithdraw && buttonsToShow.includes("withdraw") && (
               <WithdrawAssetModal
                 market={market}
                 position={supplyPosition}

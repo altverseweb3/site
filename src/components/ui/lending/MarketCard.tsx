@@ -184,6 +184,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
+          buttonsToShow={["supply", "borrow"]}
         >
           <BrandedButton
             buttonText="details"
