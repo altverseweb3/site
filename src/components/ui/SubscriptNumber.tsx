@@ -1,6 +1,6 @@
 import { parseDecimalNumberToSubscript } from "@/utils/formatters";
 
-export const FormattedNumber = ({ value }: { value: string | number }) => {
+export const SubscriptNumber = ({ value }: { value: string | number }) => {
   const { hasSubscript, subscriptCount, remainingDigits } =
     parseDecimalNumberToSubscript(value);
   if (hasSubscript) {
@@ -15,4 +15,4 @@ export const FormattedNumber = ({ value }: { value: string | number }) => {
   return <span>{remainingDigits}</span>;
 };
 
-export default FormattedNumber;
+export default SubscriptNumber;
