@@ -479,14 +479,14 @@ export const useAaveRepay = () => {
           market: args.market,
           amount: args.useNative
             ? {
-                native: {
-                  value: { exact: args.amount },
-                },
+                native: args.amount, // Native amounts are passed directly, max logic handled at higher level
               }
             : {
                 erc20: {
                   currency: args.currency,
-                  value: { exact: args.amount },
+                  value: args.max
+                    ? ({ max: true } as const)
+                    : ({ exact: args.amount } as const),
                   permitSig: args.permitSig
                     ? {
                         deadline: Number(args.permitSig.deadline),
@@ -496,7 +496,6 @@ export const useAaveRepay = () => {
                 },
               },
           sender: evmAddress(userAddress),
-          interestRateMode: args.interestRateMode,
           chainId: args.chainId,
           ...(args.onBehalfOf && { onBehalfOf: args.onBehalfOf }),
         };
