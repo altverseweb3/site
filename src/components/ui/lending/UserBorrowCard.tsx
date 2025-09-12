@@ -21,7 +21,7 @@ interface UserBorrowCardProps {
   unifiedMarket: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onRepay?: (position: UserBorrowPosition) => void;
+  onRepay: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
 
@@ -105,6 +105,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
           market={unifiedMarket}
+          borrowPosition={position}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}

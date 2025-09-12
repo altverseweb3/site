@@ -28,16 +28,18 @@ import useWeb3Store from "@/store/web3Store";
 import { getLendingToken } from "@/utils/lending/tokens";
 import BorrowAssetModal from "@/components/ui/lending/BorrowAssetModal";
 import WithdrawAssetModal from "@/components/ui/lending/WithdrawAssetModal";
+import RepayAssetModal from "@/components/ui/lending/RepayAssetModal";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onRepay?: (market: UserBorrowPosition) => void;
+  onRepay?: (market: UnifiedMarketData, max: boolean) => void;
   onWithdraw?: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
   supplyPosition?: UserSupplyPosition;
+  borrowPosition?: UserBorrowPosition;
   buttonsToShow: ctaButtons[];
 }
 
@@ -50,8 +52,10 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   onSupply,
   onBorrow,
   onWithdraw,
+  onRepay,
   tokenTransferState,
   supplyPosition,
+  borrowPosition,
   buttonsToShow,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
@@ -320,6 +324,27 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                   iconClassName="h-4 w-4"
                 />
               </WithdrawAssetModal>
+            )}
+            {onRepay && buttonsToShow.includes("repay") && (
+              <RepayAssetModal
+                market={market}
+                position={borrowPosition}
+                onRepay={onRepay}
+                tokenTransferState={tokenTransferState}
+              >
+                <BrandedButton
+                  iconName="Coins"
+                  buttonText="repay"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-sky-500/20 hover:bg-sky-500/30 hover:text-sky-300 text-sky-300 border-sky-500/50 hover:border-sky-500 transition-all duration-200 py-3 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </RepayAssetModal>
             )}
           </div>
         </div>

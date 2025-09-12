@@ -38,6 +38,7 @@ interface DashboardContentProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData) => void;
   refetchMarkets?: () => void;
+  onRepay: (market: UnifiedMarketData, max: boolean) => void;
 }
 
 export default function DashboardContent({
@@ -51,6 +52,7 @@ export default function DashboardContent({
   onBorrow,
   onWithdraw,
   refetchMarkets,
+  onRepay,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -117,6 +119,7 @@ export default function DashboardContent({
                     onBorrow={onBorrow}
                     onWithdraw={onWithdraw}
                     refetchMarkets={refetchMarkets}
+                    onRepay={onRepay}
                   />
                 );
               }}
@@ -183,6 +186,7 @@ interface DashboardContentInnerProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData) => void;
   refetchMarkets?: () => void;
+  onRepay: (market: UnifiedMarketData, max: boolean) => void;
 }
 
 function DashboardContentInner({
@@ -207,6 +211,7 @@ function DashboardContentInner({
   onBorrow,
   onWithdraw,
   refetchMarkets,
+  onRepay,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -466,6 +471,7 @@ function DashboardContentInner({
             sortConfig={sortConfig}
             onSupply={onSupply}
             onBorrow={onBorrow}
+            onRepay={onRepay}
           />
         )}
       </div>
