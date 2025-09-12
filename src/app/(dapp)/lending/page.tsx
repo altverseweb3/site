@@ -39,6 +39,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
+import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -180,6 +181,13 @@ export default function LendingPage() {
     sourceToken,
     userWalletAddress: userWalletAddress || null,
     tokenWithdrawState: { amount: tokenTransferState.amount || "" },
+  });
+
+  const { handleRepay } = useRepayOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userWalletAddress || null,
+    tokenRepayState: { amount: tokenTransferState.amount || "" },
   });
 
   useEffect(() => {
@@ -372,6 +380,7 @@ export default function LendingPage() {
                         onBorrow={handleBorrow}
                         onWithdraw={handleWithdraw}
                         refetchMarkets={refetchMarkets}
+                        onRepay={handleRepay}
                       />
                     )}
                     {activeTab === "history" && (
