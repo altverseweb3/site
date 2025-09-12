@@ -73,6 +73,7 @@ interface AggregatedMarketDataProps {
     loading: boolean;
     error: boolean;
     hasData: boolean;
+    refetchMarkets: () => void;
   }) => React.ReactNode;
 }
 
@@ -86,6 +87,13 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
   const [marketDataMap, setMarketDataMap] = useState<
     Record<string, MarketData>
   >({});
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Create refetch function
+  const refetchMarkets = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
+    setMarketDataMap({}); // Clear existing data to force reload
+  }, []);
 
   // First, get market addresses from the original useAaveMarketsWithLoading
   const { markets: marketAddresses, loading: addressesLoading } =
@@ -171,15 +179,16 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
       loading: isLoading,
       error: hasError,
       hasData,
+      refetchMarkets,
     };
-  }, [marketDataMap, currentMarketKeys, addressesLoading]);
+  }, [marketDataMap, currentMarketKeys, addressesLoading, refetchMarkets]);
 
   return (
     <>
       {/* Render individual market components for data fetching */}
       {marketConfigs.map((config) => (
         <SingleMarketData
-          key={`${config.chainId}-${config.address}`}
+          key={`${config.chainId}-${config.address}-${refreshKey}`}
           marketAddress={config.address}
           chainId={config.chainId}
           user={user}

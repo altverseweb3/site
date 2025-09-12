@@ -22,6 +22,7 @@ import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
 import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
 import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
 import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
+import EmodeModal from "@/components/ui/lending/EmodeModal";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
@@ -36,6 +37,7 @@ interface DashboardContentProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData) => void;
+  refetchMarkets?: () => void;
 }
 
 export default function DashboardContent({
@@ -48,6 +50,7 @@ export default function DashboardContent({
   onSupply,
   onBorrow,
   onWithdraw,
+  refetchMarkets,
 }: DashboardContentProps) {
   if (!userAddress) {
     return (
@@ -106,12 +109,14 @@ export default function DashboardContent({
                     loading={loading || supplyLoading || borrowLoading}
                     error={error || supplyError || borrowError}
                     tokenTransferState={tokenTransferState}
+                    userAddress={userAddress}
                     filters={filters}
                     sortConfig={sortConfig}
                     onSubsectionChange={onSubsectionChange}
                     onSupply={onSupply}
                     onBorrow={onBorrow}
                     onWithdraw={onWithdraw}
+                    refetchMarkets={refetchMarkets}
                   />
                 );
               }}
@@ -170,12 +175,14 @@ interface DashboardContentInnerProps {
   loading: boolean;
   error: boolean;
   tokenTransferState: TokenTransferState;
+  userAddress: string;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData) => void;
+  refetchMarkets?: () => void;
 }
 
 function DashboardContentInner({
@@ -192,17 +199,20 @@ function DashboardContentInner({
   loading,
   error,
   tokenTransferState,
+  userAddress,
   filters,
   sortConfig,
   onSubsectionChange,
   onSupply,
   onBorrow,
   onWithdraw,
+  refetchMarkets,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
   const [showZeroBalance, setShowZeroBalance] = useState(false);
   const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
+  const [isEmodeModalOpen, setIsEmodeModalOpen] = useState(false);
 
   // Notify parent of subsection changes
   useEffect(() => {
@@ -292,6 +302,7 @@ function DashboardContentInner({
                 : "borrow info (selected chains)"}
             </h3>
             <button
+              onClick={() => setIsEmodeModalOpen(true)}
               className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
             >
               e-mode: {eModeStatus}
@@ -465,6 +476,16 @@ function DashboardContentInner({
         onClose={() => setIsRiskDetailsModalOpen(false)}
         marketRiskData={marketRiskData}
         borrowMarketData={borrowData.marketData}
+      />
+
+      {/* E-Mode Modal */}
+      <EmodeModal
+        isOpen={isEmodeModalOpen}
+        onClose={() => setIsEmodeModalOpen(false)}
+        activeMarkets={activeMarkets}
+        userAddress={userAddress}
+        refetchMarkets={refetchMarkets}
+        marketBorrowData={marketBorrowData}
       />
     </div>
   );
