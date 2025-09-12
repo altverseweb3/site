@@ -226,8 +226,6 @@ export interface RepayArgs {
   currency: EvmAddress;
   /** The chain ID */
   chainId: ChainId;
-  /** Interest rate mode: 1 for stable, 2 for variable */
-  interestRateMode: 1 | 2;
   /** Whether to use native token (e.g., ETH instead of WETH) */
   useNative?: boolean;
   /** Address to repay on behalf of (if different from sender) */
@@ -237,6 +235,7 @@ export interface RepayArgs {
     deadline: bigint;
     signature: Signature;
   };
+  max: boolean;
 }
 
 /**
