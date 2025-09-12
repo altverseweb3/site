@@ -484,7 +484,9 @@ export const useAaveRepay = () => {
             : {
                 erc20: {
                   currency: args.currency,
-                  value: args.max ? ({ max: true } as const) : ({ exact: args.amount } as const),
+                  value: args.max
+                    ? ({ max: true } as const)
+                    : ({ exact: args.amount } as const),
                   permitSig: args.permitSig
                     ? {
                         deadline: Number(args.permitSig.deadline),

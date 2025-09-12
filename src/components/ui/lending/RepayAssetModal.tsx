@@ -89,7 +89,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                 onClick={() => {
                   tokenTransferState.setAmount(maxRepayableTokensString);
                 }}
-                className="text-xs px-2 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 hover:text-sky-200 border border-sky-500/30 hover:border-sky-500/50 rounded transition-all duration-200"
+                className="px-1 py-0.5 rounded-md bg-sky-500 bg-opacity-25 text-sky-500 text-xs cursor-pointer"
               >
                 max
               </button>
@@ -185,7 +185,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-3 h-3 text-green-400" />
                   <span className="text-sm text-[#A1A1AA]">
-                    health factor calculation 
+                    health factor calculation
                   </span>
                 </div>
                 <div className="text-sm font-mono font-semibold text-green-400">
