@@ -1,3 +1,5 @@
+import { FormattedNumberParts } from "@/types/ui";
+
 // Format number in balances to look compact with string/hex handling and error handling
 export const formatBalance = (
   balance: string | number,
@@ -203,4 +205,62 @@ export const formatDate = (timestamp: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+export const parseDecimalNumberToSubscript = (
+  value: string | number,
+): FormattedNumberParts => {
+  const originalValue = value.toString();
+
+  if (!value || isNaN(parseFloat(originalValue))) {
+    return {
+      hasSubscript: false,
+      subscriptCount: 0,
+      remainingDigits: originalValue,
+      originalValue,
+    };
+  }
+
+  // Return empty string for zero values
+  if (parseFloat(originalValue) === 0) {
+    return {
+      hasSubscript: false,
+      subscriptCount: 0,
+      remainingDigits: "",
+      originalValue,
+    };
+  }
+
+  // Work directly with the original string to avoid scientific notation conversion
+  const match = originalValue.match(/^0\.0+/);
+
+  if (match) {
+    const zeroCount = match[0].length - 2; // Subtract "0."
+
+    // Only use subscript notation if more than 4 zeros
+    if (zeroCount > 4) {
+      let remainingDigits = originalValue.slice(match[0].length);
+
+      // Limit to 2 decimal places for subscripted numbers
+      remainingDigits = remainingDigits.slice(0, 2);
+
+      return {
+        hasSubscript: true,
+        subscriptCount: zeroCount,
+        remainingDigits,
+        originalValue,
+      };
+    }
+  }
+
+  // For regular numbers, limit to 4 decimal places
+  const num = parseFloat(originalValue);
+  const formattedNum = parseFloat(num.toFixed(4)).toString();
+
+  return {
+    hasSubscript: false,
+    subscriptCount: 0,
+    remainingDigits: formattedNum,
+    originalValue,
+  };
 };
