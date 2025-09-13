@@ -360,18 +360,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               </div>
             ) : (
               <>
-                {/* Quote Error Display */}
-                {!isDirectSupply &&
-                  tokenTransferState.quoteError &&
-                  (!tokenTransferState.receiveAmount ||
-                    tokenTransferState.receiveAmount === "0") && (
-                    <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                      <div className="text-sm text-red-400">
-                        {tokenTransferState.quoteError}
-                      </div>
-                    </div>
-                  )}
-
                 <div className="space-y-3">
                   {isDirectSupply ? (
                     // Direct supply

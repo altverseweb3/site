@@ -632,7 +632,6 @@ export function useTokenTransfer(
   const [protocolFeeUsd, setProtocolFeeUsd] = useState<number | null>(null);
   const [relayerFeeUsd, setRelayerFeeUsd] = useState<number | null>(null);
   const [totalFeeUsd, setTotalFeeUsd] = useState<number | null>(null);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
   const [swapId, setSwapId] = useState<string | null>(null);
   const isTrackingEnabled = options.enableTracking ?? false;
   const [progressToastId, setProgressToastId] = useState<
@@ -851,7 +850,6 @@ export function useTokenTransfer(
   useEffect(() => {
     if (options.pauseQuoting === true) {
       failQuote();
-      setQuoteError(null);
       return;
     }
 
@@ -865,14 +863,12 @@ export function useTokenTransfer(
       // Reset if no valid amount
       if (!amount || parseFloat(amount) <= 0) {
         failQuote();
-        setQuoteError(null);
         return;
       }
 
       // For swap: Check if we have both source and destination tokens
       if (!options.sourceToken || !options.destinationToken) {
         failQuote();
-        setQuoteError(null);
         return;
       }
 
@@ -921,7 +917,6 @@ export function useTokenTransfer(
         setQuoteData(quotes);
 
         if (quotes && quotes.length > 0) {
-          setQuoteError(null);
           // Cast the quote to ExtendedQuote to access additional properties
           const quote = quotes[0] as ExtendedQuote;
           const expectedAmountOut = quote.expectedAmountOut;
@@ -1017,7 +1012,6 @@ export function useTokenTransfer(
         }
 
         toast.error(`Error: ${errorMessage}`);
-        setQuoteError(errorMessage);
         failQuote();
       } finally {
         // Only update loading state if this is the latest request
@@ -1035,7 +1029,6 @@ export function useTokenTransfer(
       timeoutId = setTimeout(fetchQuote, 300);
     } else {
       failQuote();
-      setQuoteError(null);
     }
 
     return () => {
@@ -1065,7 +1058,7 @@ export function useTokenTransfer(
       if (isLoadingQuote || isProcessing) return;
 
       setRefreshTrigger((prev) => prev + 1);
-    }, 10000);
+    }, 5000);
 
     return () => {
       clearInterval(intervalId);
@@ -1203,45 +1196,20 @@ export function useTokenTransfer(
       if (!quoteData || quoteData.length === 0) {
         // Fetch fresh quote
         if (sourceToken && destinationToken) {
-          try {
-            quotes = await getMayanQuote({
-              amount,
-              sourceToken,
-              destinationToken,
-              sourceChain,
-              destinationChain,
-              slippageBps,
-              gasDrop,
-              referrer,
-              referrerBps,
-            });
-            setQuoteData(quotes);
-            // Clear quote error on successful quote during transfer
-            if (quotes && quotes.length > 0) {
-              setQuoteError(null);
-            }
-          } catch (error) {
-            let errorMessage = "Failed to get quote for transfer";
-            if (
-              error &&
-              typeof error === "object" &&
-              "message" in error &&
-              typeof error.message === "string"
-            ) {
-              errorMessage = error.message;
-            } else if (error instanceof Error) {
-              errorMessage = error.message;
-            } else if (typeof error === "string") {
-              errorMessage = error;
-            }
-
-            console.error("Quote error during transfer:", error);
-            setQuoteError(errorMessage);
-            throw error;
-          }
-        } else {
-          setQuoteData(quotes);
+          quotes = await getMayanQuote({
+            amount,
+            sourceToken,
+            destinationToken,
+            sourceChain,
+            destinationChain,
+            slippageBps,
+            gasDrop,
+            referrer,
+            referrerBps,
+          });
         }
+
+        setQuoteData(quotes);
       } else {
         // Use existing quote
         quotes = quoteData;
@@ -1258,7 +1226,7 @@ export function useTokenTransfer(
         // Get Solana signer
         const solanaSigner = await getSolanaSigner();
         const connection = new Connection(
-          `https://solana-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
+          `https://solana-rpc.publicnode.com`,
           "confirmed",
         );
         // Execute Solana swap
@@ -1385,7 +1353,6 @@ export function useTokenTransfer(
     quoteData,
     receiveAmount,
     isLoadingQuote,
-    quoteError,
 
     // Store state
     estimatedTimeSeconds,
