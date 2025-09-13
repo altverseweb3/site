@@ -161,6 +161,8 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
     // Calculate overall loading state
     const isLoading =
       addressesLoading ||
+      (marketConfigs.length > 0 &&
+        currentMarketData.length < marketConfigs.length) ||
       currentMarketData.some((marketData) => marketData.loading);
 
     // Calculate overall error state
@@ -181,7 +183,13 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
       hasData,
       refetchMarkets,
     };
-  }, [marketDataMap, currentMarketKeys, addressesLoading, refetchMarkets]);
+  }, [
+    marketDataMap,
+    currentMarketKeys,
+    addressesLoading,
+    refetchMarkets,
+    marketConfigs,
+  ]);
 
   return (
     <>
