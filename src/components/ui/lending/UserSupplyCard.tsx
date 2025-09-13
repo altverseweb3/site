@@ -24,7 +24,7 @@ interface UserSupplyCardProps {
   unifiedMarket: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   onToggleCollateral?: (position: UserSupplyPosition) => void;
   tokenTransferState: TokenTransferState;
 }

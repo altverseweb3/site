@@ -271,6 +271,8 @@ export interface WithdrawArgs {
   useNative?: boolean;
   /** Address to send withdrawn tokens to (if different from sender) */
   to?: EvmAddress;
+  /** Whether this is a max withdrawal */
+  max: boolean;
 }
 
 /**

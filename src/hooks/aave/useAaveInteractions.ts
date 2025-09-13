@@ -626,13 +626,17 @@ export const useAaveWithdraw = () => {
           amount: args.useNative
             ? {
                 native: {
-                  value: { exact: args.amount },
+                  value: args.max
+                    ? ({ max: true } as const)
+                    : ({ exact: args.amount } as const),
                 },
               }
             : {
                 erc20: {
                   currency: args.currency,
-                  value: { exact: args.amount },
+                  value: args.max
+                    ? ({ max: true } as const)
+                    : ({ exact: args.amount } as const),
                 },
               },
           sender: evmAddress(userAddress),

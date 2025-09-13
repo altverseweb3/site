@@ -36,7 +36,7 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   refetchMarkets?: () => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
 }
@@ -184,7 +184,7 @@ interface DashboardContentInnerProps {
   onSubsectionChange?: (subsection: string) => void;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   refetchMarkets?: () => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
 }

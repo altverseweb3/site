@@ -21,7 +21,7 @@ interface UserSupplyContentProps {
   sortConfig?: LendingSortConfig | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
