@@ -16,36 +16,18 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { BrandedButton } from "@/components/ui/BrandedButton";
-import { useUserEMode, evmAddress } from "@aave/react";
-import { useSendTransaction } from "@aave/react/ethers";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
-import { Market, EmodeMarketCategory, UserBorrowData } from "@/types/aave";
-import { getChainByChainId } from "@/config/chains";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
+import { useEmodeOperations } from "@/hooks/lending/useEmodeOperations";
+import { Market, UserBorrowData } from "@/types/aave";
 import Image from "next/image";
 import { formatPercentage } from "@/utils/formatters";
-import { Signer } from "ethers";
-import { toast } from "sonner";
 
 interface EmodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeMarkets: Market[];
-  userAddress?: string;
+  userAddress: string;
   refetchMarkets?: () => void;
   marketBorrowData: Record<string, UserBorrowData>;
-}
-
-interface MarketOption {
-  key: string;
-  label: string;
-  market: Market;
-  categories: EmodeMarketCategory[];
-}
-
-interface CategoryOption {
-  category: EmodeMarketCategory;
-  isCurrentlyEnabled: boolean;
 }
 
 export default function EmodeModal({
@@ -60,50 +42,25 @@ export default function EmodeModal({
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null,
   );
-  const [transactionError, setTransactionError] = useState<string | null>(null);
 
-  // Get ethers provider and signer
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
-  const [signer, setSigner] = useState<Signer>();
+  // Use the new emode operations hook
+  const {
+    handleEmodeToggle,
+    isLoading: isProcessing,
+    error: emodeError,
+    hasIncompatiblePositions,
+    getMarketsWithEmode,
+    getCategoryOptions,
+    getCurrentEmodeCategory,
+  } = useEmodeOperations({
+    userAddress,
+    activeMarkets,
+    marketBorrowData,
+    refetchMarkets,
+  });
 
-  // Get signer asynchronously
-  useEffect(() => {
-    const getSigner = async () => {
-      try {
-        const evmSigner = await getEvmSigner();
-        setSigner(evmSigner);
-      } catch (error) {
-        console.error("Failed to get EVM signer:", error);
-      }
-    };
-
-    getSigner();
-  }, [getEvmSigner]);
-
-  // Aave SDK hooks
-  const [setEmode, settingEmode] = useUserEMode();
-  const [sendTransaction, sending] = useSendTransaction(signer as Signer);
-
-  // Chain switching hook (initialized with Ethereum as default)
-  const { switchToChain, isLoading: isChainSwitching } = useChainSwitch(
-    getChainByChainId(1), // Ethereum as default
-  );
-
-  // Combined loading state
-  const isProcessing =
-    settingEmode.loading || sending.loading || isChainSwitching;
-
-  // Filter markets that have eMode categories
-  const marketsWithEmode: MarketOption[] = activeMarkets
-    .filter(
-      (market) => market.eModeCategories && market.eModeCategories.length > 0,
-    )
-    .map((market) => ({
-      key: `${market.chain.chainId}-${market.address}`,
-      label: `${market.chain.name} - ${market.name}`,
-      market,
-      categories: market.eModeCategories || [],
-    }));
+  // Get markets with eMode categories using the hook
+  const marketsWithEmode = getMarketsWithEmode();
 
   const selectedMarketData = marketsWithEmode.find(
     (option) => option.key === selectedMarketKey,
@@ -114,7 +71,6 @@ export default function EmodeModal({
     if (!isOpen) {
       setSelectedMarketKey("");
       setSelectedCategoryId(null);
-      setTransactionError(null);
     }
   }, [isOpen]);
 
@@ -130,126 +86,33 @@ export default function EmodeModal({
     }
   }, [isOpen, marketsWithEmode, selectedMarketKey]);
 
-  // Check if e-mode is currently enabled on any category in the selected market
-  const currentEmodeCategory = selectedMarketData?.market.borrowReserves?.find(
-    (reserve) => reserve.userState?.emode?.categoryId !== undefined,
-  )?.userState?.emode?.categoryId;
-
-  // Get category options for selected market
-  const categoryOptions: CategoryOption[] = selectedMarketData
-    ? selectedMarketData.categories.map((category) => {
-        // Check if this specific category is currently enabled by looking at borrow reserves
-        let isCurrentlyEnabled = false;
-
-        if (selectedMarketData.market.borrowReserves) {
-          // Check if any borrow reserve has this category enabled in userState.emode
-          isCurrentlyEnabled = selectedMarketData.market.borrowReserves.some(
-            (reserve) => {
-              return reserve.userState?.emode?.categoryId === category.id;
-            },
-          );
-        }
-
-        return {
-          category,
-          isCurrentlyEnabled,
-        };
-      })
-    : [];
+  // Get current emode category and category options using the hook
+  const currentEmodeCategory = getCurrentEmodeCategory(selectedMarketData);
+  const categoryOptions = getCategoryOptions(selectedMarketData);
 
   const selectedCategory = categoryOptions.find(
     (option) => option.category.id === selectedCategoryId,
   );
 
-  const handleEmodeToggle = async () => {
-    if (!selectedMarketData || !userAddress) return;
+  // Handle emode toggle - call the hook's function
+  const handleEmodeToggleWrapper = async () => {
+    if (!selectedMarketData || !selectedCategory) return;
 
-    // Clear any previous errors
-    setTransactionError(null);
-
-    try {
-      // Get the required chain for the selected market
-      const requiredChain = getChainByChainId(
-        selectedMarketData.market.chain.chainId,
-      );
-
-      // Switch to the required chain
-      const switchSuccess = await switchToChain(requiredChain);
-
-      if (!switchSuccess) {
-        toast.error(`failed to switch to ${requiredChain.name}`);
-        setTransactionError(
-          "failed to switch to the required network. please try again.",
-        );
-        return;
-      }
-
-      const categoryIdToSet = selectedCategory?.isCurrentlyEnabled
-        ? null
-        : selectedCategoryId;
-
-      const result = await setEmode({
-        market: selectedMarketData.market.address,
-        user: evmAddress(userAddress),
-        categoryId: categoryIdToSet,
-        chainId: selectedMarketData.market.chain.chainId,
-      }).andThen(sendTransaction);
-
-      if (result.isErr()) {
-        console.error("e-mode operation failed:", result.error);
-        setTransactionError("Transaction failed. Please try again.");
-      } else {
-        console.log("e-mode operation successful with hash:", result.value);
-        toast.success("e-mode operation completed successfully");
-        // Refetch markets data to reflect the updated state
-        if (refetchMarkets) {
-          refetchMarkets();
-        }
-        // Close modal on success
-        onClose();
-      }
-    } catch (error) {
-      console.error("e-mode operation error:", error);
-      setTransactionError("An unexpected error occurred. Please try again.");
-    }
-  };
-
-  // Check if user has incompatible open borrow positions for e-mode
-  const hasIncompatiblePositions = () => {
-    if (!selectedMarketData || !selectedCategory) return false;
-
-    // Get borrowable assets in the selected e-mode category
-    const borrowableAssetsInCategory = new Set(
-      selectedCategory.category.reserves
-        .filter((reserve) => reserve.canBeBorrowed)
-        .map((reserve) => reserve.underlyingToken.address.toLowerCase()),
+    await handleEmodeToggle(
+      selectedMarketData,
+      selectedCategory,
+      selectedCategoryId,
     );
 
-    // Get the market key for the selected market
-    const marketKey = selectedMarketData.key;
-    const userBorrowsForMarket = marketBorrowData[marketKey];
-
-    if (!userBorrowsForMarket || !userBorrowsForMarket.borrows) {
-      return false;
-    }
-
-    // Check each borrow position in the selected market
-    return userBorrowsForMarket.borrows.some((borrowPosition) => {
-      // Check if user has debt (borrowed amount > 0)
-      const hasDebt = parseFloat(borrowPosition.debt.amount.value) > 0;
-
-      if (!hasDebt) return false;
-
-      // Check if this borrowed asset is NOT borrowable in the selected e-mode category
-      const isIncompatible = !borrowableAssetsInCategory.has(
-        borrowPosition.currency.address.toLowerCase(),
-      );
-
-      return isIncompatible;
-    });
+    // Close modal on success (hook handles error toasts)
+    onClose();
   };
 
-  const incompatiblePositions = hasIncompatiblePositions();
+  // Check if user has incompatible positions using the hook
+  const incompatiblePositions =
+    selectedMarketData && selectedCategory
+      ? hasIncompatiblePositions(selectedMarketData, selectedCategory)
+      : false;
 
   const getButtonText = () => {
     if (isProcessing) return "processing...";
@@ -514,16 +377,16 @@ export default function EmodeModal({
           )}
 
           {/* Error Display */}
-          {transactionError && (
+          {emodeError && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{transactionError}</p>
+              <p className="text-red-400 text-sm">{emodeError}</p>
             </div>
           )}
 
           {/* Action Button */}
           <div className="pt-2">
             <BrandedButton
-              onClick={handleEmodeToggle}
+              onClick={handleEmodeToggleWrapper}
               disabled={isButtonDisabled}
               buttonText={getButtonText()}
               className="w-full"

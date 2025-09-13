@@ -291,3 +291,34 @@ export interface WithdrawState {
   loading: boolean;
   error: string | null;
 }
+
+/**
+ * Arguments for e-mode operations
+ */
+export interface EmodeArgs {
+  /** The market address */
+  market: EvmAddress;
+  /** The user address */
+  user: EvmAddress;
+  /** The e-mode category ID (null to disable e-mode) */
+  categoryId: number | null;
+  /** The chain ID */
+  chainId: ChainId;
+}
+
+/**
+ * Result of an e-mode operation
+ */
+export interface EmodeResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for e-mode operations
+ */
+export interface EmodeState {
+  loading: boolean;
+  error: string | null;
+}
