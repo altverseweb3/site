@@ -43,6 +43,7 @@ interface DashboardContentProps {
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   refetchMarkets?: () => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onCollateralToggle: (market: UnifiedMarketData) => void;
 }
 
 export default function DashboardContent({
@@ -57,6 +58,7 @@ export default function DashboardContent({
   onWithdraw,
   refetchMarkets,
   onRepay,
+  onCollateralToggle,
 }: DashboardContentProps) {
   // Calculate aggregated data from markets' internal userState
   const aggregatedUserState = useMemo(() => {
@@ -321,6 +323,7 @@ export default function DashboardContent({
                 onWithdraw={onWithdraw}
                 refetchMarkets={refetchMarkets}
                 onRepay={onRepay}
+                onCollateralToggle={onCollateralToggle}
               />
             );
           }}
@@ -386,6 +389,7 @@ interface DashboardContentInnerProps {
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   refetchMarkets?: () => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onCollateralToggle: (market: UnifiedMarketData) => void;
 }
 
 function DashboardContentInner({
@@ -411,6 +415,7 @@ function DashboardContentInner({
   onWithdraw,
   refetchMarkets,
   onRepay,
+  onCollateralToggle,
 }: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -659,6 +664,7 @@ function DashboardContentInner({
             onSupply={onSupply}
             onBorrow={onBorrow}
             onWithdraw={onWithdraw}
+            onCollateralToggle={onCollateralToggle}
           />
         ) : (
           <UserBorrowContent
