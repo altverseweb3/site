@@ -74,6 +74,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
     "none" | "amount" | "chain" | "token" | "complete"
   >("none");
   const [isSwapThenRepayFlow, setIsSwapThenRepayFlow] = useState(false); // Track if we're in swap-then-repay mode
+  const [maxButtonClicked, setMaxButtonClicked] = useState(false); // Track if user clicked the max button
 
   // Ref to track previous tracking state
   const previousTrackingState = useRef(tokenTransferState.isTracking);
@@ -208,6 +209,16 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
       setStateUpdateStep("none");
     }
   }, [isDirectRepay, isSwapThenRepayFlow]);
+
+  // Reset max button state if user manually changes amount
+  useEffect(() => {
+    if (
+      maxButtonClicked &&
+      tokenTransferState.amount !== maxRepayableTokensString
+    ) {
+      setMaxButtonClicked(false);
+    }
+  }, [tokenTransferState.amount, maxRepayableTokensString, maxButtonClicked]);
 
   // Create progress steps for swap-then-repay flow using proper tracking state
   const getSwapRepaySteps = (): Step[] => {
@@ -358,6 +369,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
               <button
                 onClick={() => {
                   tokenTransferState.setAmount(maxRepayableTokensString);
+                  setMaxButtonClicked(true);
                 }}
                 className="px-1 py-0.5 rounded-md bg-sky-500 bg-opacity-25 text-sky-500 text-xs cursor-pointer"
               >
@@ -368,15 +380,6 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
               </span>
             </div>
           </div>
-
-          {!sourceWalletConnected && (
-            <div className="mt-4 flex justify-end">
-              <WalletConnectButton
-                walletType={sourceChain.walletType}
-                className="w-auto"
-              />
-            </div>
-          )}
 
           {/* Transaction Summary */}
           <div className="mt-3 bg-[#1F1F23] border border-[#27272A] rounded-lg p-3">
@@ -642,27 +645,18 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
 
               if (isDirectRepay && !isSwapThenRepayFlow) {
                 console.log("RepayAssetModal: Direct repay");
-                // For direct repay, check if user is doing a max repay
-                const isMaxRepay =
-                  parseFloat(tokenTransferState.amount || "0") ===
-                  maxRepayableTokens;
-                onRepay(market, isMaxRepay);
+                // Use the max button state instead of comparing amounts
+                onRepay(market, maxButtonClicked);
               } else if (
                 swapCompleted ||
                 (isDirectRepay && isSwapThenRepayFlow)
               ) {
                 console.log("RepayAssetModal: Repay after swap completion");
-                // For swap-then-repay, determine if we should do max repay based on received amount
-                const receivedAmount = parseFloat(
-                  tokenTransferState.receiveAmount || "0",
-                );
-                const isMaxRepay = receivedAmount >= maxRepayableTokens;
+                // For swap-then-repay, use max button state
                 console.log("RepayAssetModal: Swap repay calculation", {
-                  receivedAmount,
-                  maxRepayableTokens,
-                  isMaxRepay,
+                  maxButtonClicked,
                 });
-                onRepay(market, isMaxRepay);
+                onRepay(market, maxButtonClicked);
                 // Clear the swap-then-repay flag after repay action
                 setIsSwapThenRepayFlow(false);
               } else if (!swapInitiated) {

@@ -1226,7 +1226,7 @@ export function useTokenTransfer(
         // Get Solana signer
         const solanaSigner = await getSolanaSigner();
         const connection = new Connection(
-          `https://solana-rpc.publicnode.com`,
+          `https://solana-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
           "confirmed",
         );
         // Execute Solana swap

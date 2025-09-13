@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,23 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   const maxWithdrawableTokensString =
     position?.supply.balance.amount.value || "0";
 
+  // Track if user clicked the max button
+  const [maxButtonClicked, setMaxButtonClicked] = useState(false);
+
+  // Reset max button state if user manually changes amount
+  useEffect(() => {
+    if (
+      maxButtonClicked &&
+      tokenTransferState.amount !== maxWithdrawableTokensString
+    ) {
+      setMaxButtonClicked(false);
+    }
+  }, [
+    tokenTransferState.amount,
+    maxWithdrawableTokensString,
+    maxButtonClicked,
+  ]);
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -92,7 +109,10 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
               <div className="mt-2 flex items-center gap-2">
                 <button
                   onClick={() => {
-                    tokenTransferState.setAmount(maxWithdrawableTokensString);
+                    tokenTransferState.setAmount(
+                      position.supply.balance.amount.value,
+                    );
+                    setMaxButtonClicked(true);
                   }}
                   className="px-1 py-0.5 rounded-md bg-green-500 bg-opacity-25 text-green-500 text-xs cursor-pointer"
                 >
@@ -204,11 +224,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
           </div>
           <BrandedButton
             onClick={async () => {
-              // Check if user is doing a max withdraw by comparing with the max withdrawable amount
-              const isMaxWithdraw =
-                parseFloat(tokenTransferState.amount || "0") ===
-                maxWithdrawableTokens;
-              onWithdraw(market, isMaxWithdraw);
+              onWithdraw(market, maxButtonClicked);
             }}
             disabled={
               !tokenTransferState.amount ||
