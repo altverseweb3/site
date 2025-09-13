@@ -322,3 +322,34 @@ export interface EmodeState {
   loading: boolean;
   error: string | null;
 }
+
+/**
+ * Arguments for collateral toggle operations
+ */
+export interface CollateralArgs {
+  /** The market address */
+  market: EvmAddress;
+  /** The underlying token address to toggle collateral for */
+  underlyingToken: EvmAddress;
+  /** The user address */
+  user: EvmAddress;
+  /** The chain ID */
+  chainId: ChainId;
+}
+
+/**
+ * Result of a collateral toggle operation
+ */
+export interface CollateralResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
+/**
+ * Loading state for collateral operations
+ */
+export interface CollateralState {
+  loading: boolean;
+  error: string | null;
+}

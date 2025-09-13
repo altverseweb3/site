@@ -6,6 +6,7 @@ import {
   useRepay,
   useWithdraw,
   useUserEMode,
+  useCollateralToggle,
   evmAddress,
   signatureFrom,
 } from "@aave/react";
@@ -25,6 +26,9 @@ import {
   EmodeState,
   EmodeArgs,
   EmodeResult,
+  CollateralState,
+  CollateralArgs,
+  CollateralResult,
   EvmAddress,
   BigDecimal,
   ChainId,
@@ -811,5 +815,125 @@ export const useAaveEMode = () => {
     executeEMode,
     loading: state.loading || settingEMode.loading,
     error: state.error || settingEMode.error,
+  };
+};
+
+/**
+ * Hook for executing Aave collateral toggle operations
+ * Handles enabling/disabling supplied assets as collateral for borrowing
+ */
+export const useAaveCollateral = () => {
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const [toggleCollateral, togglingCollateral] = useCollateralToggle();
+  const [state, setState] = useState<CollateralState>({
+    loading: false,
+    error: null,
+  });
+
+  // Custom transaction sender that works with our async signer
+  const sendTransaction = useCallback(
+    async (transactionRequest: {
+      to: string;
+      data: string;
+      value?: string | number;
+      gas?: string | number;
+      gasPrice?: string | number;
+      maxFeePerGas?: string | number;
+      maxPriorityFeePerGas?: string | number;
+    }) => {
+      const signer = await getEvmSigner();
+
+      // Convert the transaction request to ethers format
+      const tx = {
+        to: transactionRequest.to,
+        data: transactionRequest.data,
+        value: transactionRequest.value || 0,
+        gasLimit: transactionRequest.gas,
+        gasPrice: transactionRequest.gasPrice,
+        maxFeePerGas: transactionRequest.maxFeePerGas,
+        maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
+      };
+
+      const response = await signer.sendTransaction(tx);
+      await response.wait(); // Wait for confirmation
+      return response.hash;
+    },
+    [getEvmSigner],
+  );
+
+  /**
+   * Execute a collateral toggle operation
+   */
+  const executeCollateralToggle = useCallback(
+    async (args: CollateralArgs): Promise<CollateralResult> => {
+      // Check if another collateral operation is already in progress
+      if (togglingCollateral.loading) {
+        const errorMessage =
+          "Another collateral operation is already in progress";
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      setState({ loading: true, error: null });
+
+      try {
+        // Execute the collateral toggle operation using Aave SDK
+        const planResult = await toggleCollateral({
+          market: args.market,
+          underlyingToken: args.underlyingToken,
+          user: args.user,
+          chainId: args.chainId,
+        });
+
+        if (planResult.isErr()) {
+          throw planResult.error;
+        }
+
+        const plan = planResult.value;
+        let transactionHash: string;
+
+        switch (plan.__typename) {
+          case "TransactionRequest":
+            // Single transaction execution
+            transactionHash = await sendTransaction(plan);
+            break;
+
+          default:
+            throw new Error(
+              `Execution plan type not supported: ${plan.__typename}`,
+            );
+        }
+
+        const finalResult: CollateralResult = {
+          success: true,
+          transactionHash,
+        };
+
+        setState({ loading: false, error: null });
+        return finalResult;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Collateral operation failed";
+        console.error("Collateral toggle failed:", error);
+
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [toggleCollateral, sendTransaction, togglingCollateral.loading],
+  );
+
+  return {
+    executeCollateralToggle,
+    loading: state.loading || togglingCollateral.loading,
+    error: state.error || togglingCollateral.error,
   };
 };
