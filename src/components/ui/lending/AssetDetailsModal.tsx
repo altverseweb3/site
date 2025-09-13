@@ -36,7 +36,7 @@ interface AssetDetailsModalProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (market: UnifiedMarketData, max: boolean) => void;
-  onWithdraw?: (market: UnifiedMarketData) => void;
+  onWithdraw?: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
   supplyPosition?: UserSupplyPosition;
   borrowPosition?: UserBorrowPosition;

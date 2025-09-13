@@ -11,11 +11,7 @@ import { UnifiedMarketData, UserSupplyPosition } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
-import {
-  formatCurrency,
-  formatPercentage,
-  formatBalance,
-} from "@/utils/formatters";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { TrendingUp, AlertTriangle, Percent } from "lucide-react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
 import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
@@ -23,12 +19,13 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import SubscriptNumber from "@/components/ui/SubscriptNumber";
 
 interface WithdrawAssetModalProps {
   market: UnifiedMarketData;
   position?: UserSupplyPosition;
   children: React.ReactNode;
-  onWithdraw: (market: UnifiedMarketData) => void;
+  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
 
@@ -50,6 +47,8 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   const maxWithdrawableUsd = position
     ? parseFloat(position.supply.balance.usd) || 0
     : 0;
+  const maxWithdrawableTokensString =
+    position?.supply.balance.amount.value || "0";
 
   return (
     <Dialog>
@@ -82,7 +81,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
                 <div className="text-sm text-[#A1A1AA]">max withdrawable</div>
                 <div className="flex flex-col items-end">
                   <div className="text-sm font-mono font-semibold text-green-300">
-                    {formatBalance(position.supply.balance.amount.value)}{" "}
+                    <SubscriptNumber value={maxWithdrawableTokensString} />{" "}
                     {market.underlyingToken.symbol}
                   </div>
                   <div className="text-xs font-mono text-[#71717A]">
@@ -93,11 +92,9 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
               <div className="mt-2 flex items-center gap-2">
                 <button
                   onClick={() => {
-                    tokenTransferState.setAmount(
-                      position.supply.balance.amount.value,
-                    );
+                    tokenTransferState.setAmount(maxWithdrawableTokensString);
                   }}
-                  className="text-xs px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-300 hover:text-green-200 border border-green-500/30 hover:border-green-500/50 rounded transition-all duration-200"
+                  className="px-1 py-0.5 rounded-md bg-green-500 bg-opacity-25 text-green-500 text-xs cursor-pointer"
                 >
                   max
                 </button>
@@ -207,7 +204,11 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
           </div>
           <BrandedButton
             onClick={async () => {
-              onWithdraw(market);
+              // Check if user is doing a max withdraw by comparing with the max withdrawable amount
+              const isMaxWithdraw =
+                parseFloat(tokenTransferState.amount || "0") ===
+                maxWithdrawableTokens;
+              onWithdraw(market, isMaxWithdraw);
             }}
             disabled={
               !tokenTransferState.amount ||

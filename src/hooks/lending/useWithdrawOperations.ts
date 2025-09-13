@@ -28,7 +28,7 @@ export interface WithdrawOperationResult {
 }
 
 export interface WithdrawOperationHook {
-  handleWithdraw: (market: UnifiedMarketData) => Promise<void>;
+  handleWithdraw: (market: UnifiedMarketData, max: boolean) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -55,7 +55,7 @@ export const useWithdrawOperations = (
   const { switchToChain } = useChainSwitch(marketChain);
 
   const handleWithdraw = useCallback(
-    async (market: UnifiedMarketData): Promise<void> => {
+    async (market: UnifiedMarketData, max: boolean): Promise<void> => {
       try {
         // Validate required dependencies
         if (!sourceToken || !tokenWithdrawState.amount || !userWalletAddress) {
@@ -99,6 +99,7 @@ export const useWithdrawOperations = (
           currency: evmAddress(sourceToken.address),
           chainId: market.marketInfo.chain.chainId as ChainId,
           useNative,
+          max: max,
         });
 
         // Handle the result
