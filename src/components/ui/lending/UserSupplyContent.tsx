@@ -22,6 +22,7 @@ interface UserSupplyContentProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
+  onCollateralToggle: (market: UnifiedMarketData) => void;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -39,6 +40,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   onSupply,
   onBorrow,
   onWithdraw,
+  onCollateralToggle,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -155,9 +157,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
-          onToggleCollateral={(position: UserSupplyPosition) => {
-            console.log(position); // TODO: update me
-          }}
+          onCollateralToggle={onCollateralToggle}
           tokenTransferState={tokenTransferState}
         />
       )}

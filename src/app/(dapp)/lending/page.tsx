@@ -40,6 +40,7 @@ import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
+import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -188,6 +189,11 @@ export default function LendingPage() {
     sourceToken,
     userWalletAddress: userWalletAddress || null,
     tokenRepayState: { amount: tokenTransferState.amount || "" },
+  });
+
+  const { handleCollateralToggle } = useCollateralToggleOperations({
+    userWalletAddress: userWalletAddress || null,
+    targetChain: sourceChain,
   });
 
   useEffect(() => {
@@ -381,6 +387,7 @@ export default function LendingPage() {
                         onWithdraw={handleWithdraw}
                         refetchMarkets={refetchMarkets}
                         onRepay={handleRepay}
+                        onCollateralToggle={handleCollateralToggle}
                       />
                     )}
                     {activeTab === "history" && (
