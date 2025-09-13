@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import { evmAddress } from "@aave/react";
@@ -12,11 +12,15 @@ import {
   UserSupplyData,
   UserBorrowData,
   UnifiedMarketData,
+  BigDecimal,
 } from "@/types/aave";
-import { AggregatedMarketUserState } from "@/components/ui/lending/AggregatedMarketUserState";
-import { AggregatedMarketUserSupplies } from "@/components/ui/lending/AggregatedMarketUserSupplies";
-import { AggregatedMarketUserBorrows } from "@/components/ui/lending/AggregatedMarketUserBorrows";
-import { formatHealthFactor } from "@/utils/formatters";
+import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
+import { AggregatedMarketUserBorrows } from "@/components/meta/AggregatedMarketUserBorrows";
+import {
+  formatHealthFactor,
+  formatCurrency,
+  formatPercentage,
+} from "@/utils/formatters";
 import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
 import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
@@ -27,7 +31,7 @@ import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface DashboardContentProps {
-  userAddress?: string;
+  userAddress: string;
   selectedChains: Chain[];
   activeMarkets: Market[];
   tokenTransferState: TokenTransferState;
@@ -54,80 +58,275 @@ export default function DashboardContent({
   refetchMarkets,
   onRepay,
 }: DashboardContentProps) {
-  if (!userAddress) {
-    return (
-      <div className="text-center py-16">
-        <div className="text-[#A1A1AA]">wallet not connected</div>
-      </div>
+  // Calculate aggregated data from markets' internal userState
+  const aggregatedUserState = useMemo(() => {
+    const validMarkets = activeMarkets.filter((market) => market.userState);
+
+    if (validMarkets.length === 0) {
+      return {
+        globalData: {
+          netWorth: formatCurrency(0),
+          netAPY: formatPercentage(0),
+        },
+        healthFactorData: {
+          show: false,
+          value: null as string | null,
+        },
+        eModeStatus: "off" as EModeStatus,
+        borrowData: {
+          debt: formatCurrency(0),
+          collateral: formatCurrency(0),
+          borrowPercentUsed: null as string | null,
+          marketData: {} as Record<
+            string,
+            { debt: string; collateral: string; currentLtv: string | null }
+          >,
+        },
+        marketRiskData: {} as Record<
+          string,
+          {
+            healthFactor: string | null;
+            ltv: string | null;
+            currentLiquidationThreshold: string | null;
+            chainId: ChainId;
+            chainName: string;
+            chainIcon: string;
+            marketName: string;
+          }
+        >,
+      };
+    }
+
+    // Calculate total net worth
+    const totalNetWorth = validMarkets.reduce((sum, market) => {
+      const netWorth = parseFloat(market.userState!.netWorth) || 0;
+      return sum + netWorth;
+    }, 0);
+
+    // Calculate weighted net APY for markets with positions
+    const marketsWithPositions = validMarkets.filter((market) => {
+      const netWorth = parseFloat(market.userState!.netWorth) || 0;
+      return netWorth !== 0;
+    });
+
+    let netAPY = 0;
+    if (marketsWithPositions.length > 0) {
+      const weightedAPYNumerator = marketsWithPositions.reduce(
+        (sum, market) => {
+          const netWorth = parseFloat(market.userState!.netWorth) || 0;
+          const apy = parseFloat(market.userState!.netAPY.value) || 0;
+          return sum + netWorth * apy;
+        },
+        0,
+      );
+
+      const totalNetWorthWithPositions = marketsWithPositions.reduce(
+        (sum, market) => {
+          const netWorth = parseFloat(market.userState!.netWorth) || 0;
+          return sum + netWorth;
+        },
+        0,
+      );
+
+      netAPY =
+        totalNetWorthWithPositions > 0
+          ? weightedAPYNumerator / totalNetWorthWithPositions
+          : 0;
+    }
+
+    const globalData = {
+      netWorth: formatCurrency(totalNetWorth),
+      netAPY: formatPercentage(netAPY * 100),
+    };
+
+    // Calculate health factor data
+    const healthFactors = validMarkets
+      .map((market) => market.userState!.healthFactor)
+      .filter((hf): hf is BigDecimal => hf !== null);
+
+    const healthFactorData = {
+      show: healthFactors.length > 0,
+      value:
+        healthFactors.length === 1
+          ? healthFactors[0]
+          : healthFactors.length > 1
+            ? "mixed"
+            : null,
+    };
+
+    // Calculate e-mode status
+    const eModeStatuses = validMarkets.map(
+      (market) => market.userState!.eModeEnabled,
     );
-  }
+    const allEnabled = eModeStatuses.every((enabled) => enabled === true);
+    const allDisabled = eModeStatuses.every((enabled) => enabled === false);
+    const eModeStatus: EModeStatus = allEnabled
+      ? "on"
+      : allDisabled
+        ? "off"
+        : "mixed";
+
+    // Calculate borrow data
+    const totalDebtBase = validMarkets.reduce((sum, market) => {
+      return sum + parseFloat(market.userState!.totalDebtBase);
+    }, 0);
+
+    const totalCollateralBase = validMarkets.reduce((sum, market) => {
+      return sum + parseFloat(market.userState!.totalCollateralBase);
+    }, 0);
+
+    // Calculate per-market debt and collateral data
+    const marketData: Record<
+      string,
+      { debt: string; collateral: string; currentLtv: string | null }
+    > = {};
+    validMarkets.forEach((market) => {
+      const marketKey = `${market.chain.chainId}-${market.address}`;
+      const marketDebt = parseFloat(market.userState!.totalDebtBase);
+      const marketCollateral = parseFloat(
+        market.userState!.totalCollateralBase,
+      );
+
+      let currentLtv: string | null = null;
+      if (marketCollateral > 0) {
+        const ltvRatio = (marketDebt * 100) / marketCollateral;
+        currentLtv = formatPercentage(ltvRatio);
+      }
+
+      marketData[marketKey] = {
+        debt: formatCurrency(marketDebt),
+        collateral: formatCurrency(marketCollateral),
+        currentLtv,
+      };
+    });
+
+    // Calculate borrow % used
+    let borrowPercentUsed: string | null = null;
+    if (healthFactors.length > 0) {
+      if (healthFactors.length === 1) {
+        const market = validMarkets.find(
+          (m) => m.userState!.healthFactor !== null,
+        );
+        if (market && market.userState) {
+          const marketDebt = parseFloat(market.userState.totalDebtBase);
+          const marketCollateral = parseFloat(
+            market.userState.totalCollateralBase,
+          );
+          const ltvValue = parseFloat(market.userState.ltv.value);
+
+          if (marketCollateral > 0) {
+            const borrowUsed =
+              (marketDebt * 100) / (marketCollateral * ltvValue);
+            borrowPercentUsed = formatPercentage(borrowUsed);
+          }
+        }
+      } else {
+        borrowPercentUsed = "mixed";
+      }
+    }
+
+    const borrowData = {
+      debt: formatCurrency(totalDebtBase),
+      collateral: formatCurrency(totalCollateralBase),
+      borrowPercentUsed,
+      marketData,
+    };
+
+    // Market-specific risk data
+    const marketRiskData: Record<
+      string,
+      {
+        healthFactor: string | null;
+        ltv: string | null;
+        currentLiquidationThreshold: string | null;
+        chainId: ChainId;
+        chainName: string;
+        chainIcon: string;
+        marketName: string;
+      }
+    > = {};
+
+    validMarkets.forEach((market) => {
+      const marketKey = `${market.chain.chainId}-${market.address}`;
+      marketRiskData[marketKey] = {
+        healthFactor: market.userState!.healthFactor,
+        ltv: market.userState!.ltv
+          ? formatPercentage(parseFloat(market.userState!.ltv.value) * 100)
+          : null,
+        currentLiquidationThreshold: market.userState!
+          .currentLiquidationThreshold
+          ? formatPercentage(
+              parseFloat(market.userState!.currentLiquidationThreshold.value) *
+                100,
+            )
+          : null,
+        chainId: market.chain.chainId as ChainId,
+        chainName: market.chain.name,
+        chainIcon: market.chain.icon,
+        marketName: market.name,
+      };
+    });
+
+    return {
+      globalData,
+      healthFactorData,
+      eModeStatus,
+      borrowData,
+      marketRiskData,
+    };
+  }, [activeMarkets]);
 
   return (
-    <AggregatedMarketUserState
+    <AggregatedMarketUserSupplies
       activeMarkets={activeMarkets}
       userWalletAddress={evmAddress(userAddress)}
     >
       {({
-        globalData,
-        healthFactorData,
-        eModeStatus,
-        borrowData,
-        marketRiskData,
-        loading,
-        error,
+        supplyData,
+        loading: supplyLoading,
+        error: supplyError,
+        marketSupplyData,
       }) => (
-        <AggregatedMarketUserSupplies
+        <AggregatedMarketUserBorrows
           activeMarkets={activeMarkets}
           userWalletAddress={evmAddress(userAddress)}
         >
           {({
-            supplyData,
-            loading: supplyLoading,
-            error: supplyError,
-            marketSupplyData,
-          }) => (
-            <AggregatedMarketUserBorrows
-              activeMarkets={activeMarkets}
-              userWalletAddress={evmAddress(userAddress)}
-            >
-              {({
-                borrowData: borrowAPYData,
-                loading: borrowLoading,
-                error: borrowError,
-                marketBorrowData,
-              }) => {
-                return (
-                  <DashboardContentInner
-                    globalData={globalData}
-                    healthFactorData={healthFactorData}
-                    eModeStatus={eModeStatus}
-                    supplyData={supplyData}
-                    marketSupplyData={marketSupplyData}
-                    marketBorrowData={marketBorrowData}
-                    borrowAPY={borrowAPYData.apy}
-                    activeMarkets={activeMarkets}
-                    borrowData={borrowData}
-                    marketRiskData={marketRiskData}
-                    loading={loading || supplyLoading || borrowLoading}
-                    error={error || supplyError || borrowError}
-                    tokenTransferState={tokenTransferState}
-                    userAddress={userAddress}
-                    filters={filters}
-                    sortConfig={sortConfig}
-                    onSubsectionChange={onSubsectionChange}
-                    onSupply={onSupply}
-                    onBorrow={onBorrow}
-                    onWithdraw={onWithdraw}
-                    refetchMarkets={refetchMarkets}
-                    onRepay={onRepay}
-                  />
-                );
-              }}
-            </AggregatedMarketUserBorrows>
-          )}
-        </AggregatedMarketUserSupplies>
+            borrowData: borrowAPYData,
+            loading: borrowLoading,
+            error: borrowError,
+            marketBorrowData,
+          }) => {
+            return (
+              <DashboardContentInner
+                globalData={aggregatedUserState.globalData}
+                healthFactorData={aggregatedUserState.healthFactorData}
+                eModeStatus={aggregatedUserState.eModeStatus}
+                supplyData={supplyData}
+                marketSupplyData={marketSupplyData}
+                marketBorrowData={marketBorrowData}
+                borrowAPY={borrowAPYData.apy}
+                activeMarkets={activeMarkets}
+                borrowData={aggregatedUserState.borrowData}
+                marketRiskData={aggregatedUserState.marketRiskData}
+                loading={supplyLoading || borrowLoading}
+                error={supplyError || borrowError}
+                tokenTransferState={tokenTransferState}
+                userAddress={userAddress}
+                filters={filters}
+                sortConfig={sortConfig}
+                onSubsectionChange={onSubsectionChange}
+                onSupply={onSupply}
+                onBorrow={onBorrow}
+                onWithdraw={onWithdraw}
+                refetchMarkets={refetchMarkets}
+                onRepay={onRepay}
+              />
+            );
+          }}
+        </AggregatedMarketUserBorrows>
       )}
-    </AggregatedMarketUserState>
+    </AggregatedMarketUserSupplies>
   );
 }
 
