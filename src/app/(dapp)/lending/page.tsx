@@ -31,7 +31,7 @@ import DashboardContent from "@/components/ui/lending/DashboardContent";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { ChainId } from "@/types/aave";
 import { evmAddress, Market } from "@aave/react";
-import { AggregatedTransactionHistory } from "@/components/ui/lending/AggregatedTransactionHistory";
+import { AggregatedTransactionHistory } from "@/components/meta/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
@@ -367,7 +367,7 @@ export default function LendingPage() {
                         onBorrow={handleBorrow}
                       />
                     )}
-                    {activeTab === "dashboard" && (
+                    {activeTab === "dashboard" && userWalletAddress && (
                       <DashboardContent
                         userAddress={userWalletAddress}
                         selectedChains={selectedChains}
