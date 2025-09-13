@@ -5,6 +5,7 @@ import {
   useBorrow,
   useRepay,
   useWithdraw,
+  useUserEMode,
   evmAddress,
   signatureFrom,
 } from "@aave/react";
@@ -21,6 +22,9 @@ import {
   WithdrawState,
   WithdrawArgs,
   WithdrawResult,
+  EmodeState,
+  EmodeArgs,
+  EmodeResult,
   EvmAddress,
   BigDecimal,
   ChainId,
@@ -690,5 +694,122 @@ export const useAaveWithdraw = () => {
     executeWithdraw,
     loading: state.loading || withdrawing.loading,
     error: state.error || withdrawing.error,
+  };
+};
+
+/**
+ * Hook for executing Aave e-mode operations
+ * Handles enabling/disabling efficiency mode for improved capital efficiency
+ */
+export const useAaveEMode = () => {
+  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const [setEMode, settingEMode] = useUserEMode();
+  const [state, setState] = useState<EmodeState>({
+    loading: false,
+    error: null,
+  });
+
+  // Custom transaction sender that works with our async signer
+  const sendTransaction = useCallback(
+    async (transactionRequest: {
+      to: string;
+      data: string;
+      value?: string | number;
+      gas?: string | number;
+      gasPrice?: string | number;
+      maxFeePerGas?: string | number;
+      maxPriorityFeePerGas?: string | number;
+    }) => {
+      const signer = await getEvmSigner();
+
+      // Convert the transaction request to ethers format
+      const tx = {
+        to: transactionRequest.to,
+        data: transactionRequest.data,
+        value: transactionRequest.value || 0,
+        gasLimit: transactionRequest.gas,
+        gasPrice: transactionRequest.gasPrice,
+        maxFeePerGas: transactionRequest.maxFeePerGas,
+        maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
+      };
+
+      const response = await signer.sendTransaction(tx);
+      await response.wait(); // Wait for confirmation
+      return response.hash;
+    },
+    [getEvmSigner],
+  );
+
+  /**
+   * Execute an e-mode operation
+   */
+  const executeEMode = useCallback(
+    async (args: EmodeArgs): Promise<EmodeResult> => {
+      // Check if another e-mode operation is already in progress
+      if (settingEMode.loading) {
+        const errorMessage = "Another e-mode operation is already in progress";
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      setState({ loading: true, error: null });
+
+      try {
+        // Execute the e-mode operation using Aave SDK
+        const planResult = await setEMode({
+          market: args.market,
+          user: args.user,
+          categoryId: args.categoryId,
+          chainId: args.chainId,
+        });
+
+        if (planResult.isErr()) {
+          throw planResult.error;
+        }
+
+        const plan = planResult.value;
+        let transactionHash: string;
+
+        switch (plan.__typename) {
+          case "TransactionRequest":
+            // Single transaction execution
+            transactionHash = await sendTransaction(plan);
+            break;
+
+          default:
+            throw new Error(
+              `Execution plan type not supported: ${plan.__typename}`,
+            );
+        }
+
+        const finalResult: EmodeResult = {
+          success: true,
+          transactionHash,
+        };
+
+        setState({ loading: false, error: null });
+        return finalResult;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "E-mode operation failed";
+        console.error("E-mode failed:", error);
+
+        setState({ loading: false, error: errorMessage });
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [setEMode, sendTransaction, settingEMode.loading],
+  );
+
+  return {
+    executeEMode,
+    loading: state.loading || settingEMode.loading,
+    error: state.error || settingEMode.error,
   };
 };
