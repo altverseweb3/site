@@ -35,6 +35,8 @@ import type {
   UserUsageAsCollateralTransaction,
   UserLiquidationCallTransaction,
   Signature,
+  HealthFactorPreviewRequest,
+  HealthFactorPreviewResponse,
 } from "@aave/react";
 
 /**
@@ -79,6 +81,8 @@ export type {
   UserUsageAsCollateralTransaction,
   UserLiquidationCallTransaction,
   Signature,
+  HealthFactorPreviewRequest,
+  HealthFactorPreviewResponse,
 };
 
 export interface UserSupplyPosition {
@@ -353,3 +357,10 @@ export interface CollateralState {
   loading: boolean;
   error: string | null;
 }
+
+export type HealthFactorPreviewOperation =
+  | "borrow"
+  | "supply"
+  | "repay"
+  | "withdraw";
+export type HealthFactorRiskLevel = "ok" | "warning" | "danger";
