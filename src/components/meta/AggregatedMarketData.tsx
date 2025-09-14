@@ -12,8 +12,12 @@ import {
   EModeStatus,
   BigDecimal,
   AggregatedUserState,
+  UserSupplyData,
+  UserBorrowData,
 } from "@/types/aave";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
+import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
+import { AggregatedMarketUserBorrows } from "@/components/meta/AggregatedMarketUserBorrows";
 
 interface MarketData {
   marketAddress: string;
@@ -79,6 +83,21 @@ interface AggregatedMarketDataProps {
     hasData: boolean;
     refetchMarkets: () => void;
     aggregatedUserState: AggregatedUserState;
+    supplyData: {
+      balance: string;
+      apy: string;
+      collateral: string;
+    };
+    borrowData: {
+      balance: string;
+      apy: string;
+    };
+    marketSupplyData: Record<string, UserSupplyData>;
+    marketBorrowData: Record<string, UserBorrowData>;
+    supplyLoading: boolean;
+    borrowLoading: boolean;
+    supplyError: boolean;
+    borrowError: boolean;
   }) => React.ReactNode;
 }
 
@@ -428,8 +447,64 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
         />
       ))}
 
-      {/* Render children with aggregated data */}
-      {children(aggregatedData)}
+      {/* Wrap with supply and borrow data providers */}
+      {aggregatedData.markets && user ? (
+        <AggregatedMarketUserSupplies
+          activeMarkets={aggregatedData.markets}
+          userWalletAddress={user}
+        >
+          {({
+            supplyData,
+            loading: supplyLoading,
+            error: supplyError,
+            marketSupplyData,
+          }) => (
+            <AggregatedMarketUserBorrows
+              activeMarkets={aggregatedData.markets!}
+              userWalletAddress={user}
+            >
+              {({
+                borrowData,
+                loading: borrowLoading,
+                error: borrowError,
+                marketBorrowData,
+              }) =>
+                children({
+                  ...aggregatedData,
+                  supplyData,
+                  borrowData,
+                  marketSupplyData,
+                  marketBorrowData,
+                  supplyLoading,
+                  borrowLoading,
+                  supplyError,
+                  borrowError,
+                })
+              }
+            </AggregatedMarketUserBorrows>
+          )}
+        </AggregatedMarketUserSupplies>
+      ) : (
+        /* Render children with empty supply/borrow data when no user */
+        children({
+          ...aggregatedData,
+          supplyData: {
+            balance: formatCurrency(0),
+            apy: formatPercentage(0),
+            collateral: formatCurrency(0),
+          },
+          borrowData: {
+            balance: formatCurrency(0),
+            apy: formatPercentage(0),
+          },
+          marketSupplyData: {},
+          marketBorrowData: {},
+          supplyLoading: false,
+          borrowLoading: false,
+          supplyError: false,
+          borrowError: false,
+        })
+      )}
     </>
   );
 };

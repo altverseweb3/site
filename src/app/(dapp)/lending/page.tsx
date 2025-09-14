@@ -238,7 +238,20 @@ export default function LendingPage() {
       chainIds={determineChainsToFetch()}
       user={userWalletAddress ? evmAddress(userWalletAddress) : undefined}
     >
-      {({ markets, loading, refetchMarkets, aggregatedUserState }) => {
+      {({
+        markets,
+        loading,
+        refetchMarkets,
+        aggregatedUserState,
+        supplyData,
+        borrowData,
+        marketSupplyData,
+        marketBorrowData,
+        supplyLoading,
+        borrowLoading,
+        supplyError,
+        borrowError,
+      }) => {
         const filteredAndSortedUnifiedMarkets =
           createFilteredAndSortedUnifiedMarkets(markets);
 
@@ -379,6 +392,12 @@ export default function LendingPage() {
                         selectedChains={selectedChains}
                         activeMarkets={markets || []}
                         aggregatedUserState={aggregatedUserState}
+                        supplyData={supplyData}
+                        borrowData={borrowData}
+                        marketSupplyData={marketSupplyData}
+                        marketBorrowData={marketBorrowData}
+                        loading={loading || supplyLoading || borrowLoading}
+                        error={supplyError || borrowError}
                         tokenTransferState={tokenTransferState}
                         filters={filters}
                         sortConfig={sortConfig}

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
-import { evmAddress } from "@aave/react";
 import { Chain } from "@/types/web3";
 import {
   ChainId,
@@ -14,8 +13,6 @@ import {
   UnifiedMarketData,
   AggregatedUserState,
 } from "@/types/aave";
-import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
-import { AggregatedMarketUserBorrows } from "@/components/meta/AggregatedMarketUserBorrows";
 import { formatHealthFactor } from "@/utils/formatters";
 import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
 import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
@@ -31,6 +28,19 @@ interface DashboardContentProps {
   selectedChains: Chain[];
   activeMarkets: Market[];
   aggregatedUserState: AggregatedUserState;
+  supplyData: {
+    balance: string;
+    apy: string;
+    collateral: string;
+  };
+  borrowData: {
+    balance: string;
+    apy: string;
+  };
+  marketSupplyData: Record<string, UserSupplyData>;
+  marketBorrowData: Record<string, UserBorrowData>;
+  loading: boolean;
+  error: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -47,6 +57,12 @@ export default function DashboardContent({
   userAddress,
   activeMarkets,
   aggregatedUserState,
+  supplyData,
+  borrowData,
+  marketSupplyData,
+  marketBorrowData,
+  loading,
+  error,
   tokenTransferState,
   filters,
   sortConfig,
@@ -59,57 +75,31 @@ export default function DashboardContent({
   onCollateralToggle,
 }: DashboardContentProps) {
   return (
-    <AggregatedMarketUserSupplies
+    <DashboardContentInner
+      globalData={aggregatedUserState.globalData}
+      healthFactorData={aggregatedUserState.healthFactorData}
+      eModeStatus={aggregatedUserState.eModeStatus}
+      supplyData={supplyData}
+      marketSupplyData={marketSupplyData}
+      marketBorrowData={marketBorrowData}
+      borrowAPY={borrowData.apy}
       activeMarkets={activeMarkets}
-      userWalletAddress={evmAddress(userAddress)}
-    >
-      {({
-        supplyData,
-        loading: supplyLoading,
-        error: supplyError,
-        marketSupplyData,
-      }) => (
-        <AggregatedMarketUserBorrows
-          activeMarkets={activeMarkets}
-          userWalletAddress={evmAddress(userAddress)}
-        >
-          {({
-            borrowData: borrowAPYData,
-            loading: borrowLoading,
-            error: borrowError,
-            marketBorrowData,
-          }) => {
-            return (
-              <DashboardContentInner
-                globalData={aggregatedUserState.globalData}
-                healthFactorData={aggregatedUserState.healthFactorData}
-                eModeStatus={aggregatedUserState.eModeStatus}
-                supplyData={supplyData}
-                marketSupplyData={marketSupplyData}
-                marketBorrowData={marketBorrowData}
-                borrowAPY={borrowAPYData.apy}
-                activeMarkets={activeMarkets}
-                borrowData={aggregatedUserState.borrowData}
-                marketRiskData={aggregatedUserState.marketRiskData}
-                loading={supplyLoading || borrowLoading}
-                error={supplyError || borrowError}
-                tokenTransferState={tokenTransferState}
-                userAddress={userAddress}
-                filters={filters}
-                sortConfig={sortConfig}
-                onSubsectionChange={onSubsectionChange}
-                onSupply={onSupply}
-                onBorrow={onBorrow}
-                onWithdraw={onWithdraw}
-                refetchMarkets={refetchMarkets}
-                onRepay={onRepay}
-                onCollateralToggle={onCollateralToggle}
-              />
-            );
-          }}
-        </AggregatedMarketUserBorrows>
-      )}
-    </AggregatedMarketUserSupplies>
+      borrowData={aggregatedUserState.borrowData}
+      marketRiskData={aggregatedUserState.marketRiskData}
+      loading={loading}
+      error={error}
+      tokenTransferState={tokenTransferState}
+      userAddress={userAddress}
+      filters={filters}
+      sortConfig={sortConfig}
+      onSubsectionChange={onSubsectionChange}
+      onSupply={onSupply}
+      onBorrow={onBorrow}
+      onWithdraw={onWithdraw}
+      refetchMarkets={refetchMarkets}
+      onRepay={onRepay}
+      onCollateralToggle={onCollateralToggle}
+    />
   );
 }
 
