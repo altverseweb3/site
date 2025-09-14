@@ -1,11 +1,10 @@
 "use client";
-
 import React, { useState } from "react";
-import UserSupplyCard from "@/components/ui/lending/UserSupplyCard";
+import UserBorrowCard from "@/components/ui/lending/UserContent/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
 import {
-  UserSupplyData,
-  UserSupplyPosition,
+  UserBorrowData,
+  UserBorrowPosition,
   Market,
   UnifiedMarketData,
 } from "@/types/aave";
@@ -13,34 +12,34 @@ import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
-interface UserSupplyContentProps {
-  marketSupplyData: Record<string, UserSupplyData>;
+interface UserBorrowContentProps {
+  marketBorrowData: Record<string, UserBorrowData>;
   activeMarkets: Market[];
+  showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-  onCollateralToggle: (market: UnifiedMarketData) => void;
+  onRepay: (market: UnifiedMarketData, max: boolean) => void;
 }
 
-interface EnhancedUserSupplyPosition extends UserSupplyPosition {
+interface EnhancedUserBorrowPosition extends UserBorrowPosition {
   unifiedMarket: UnifiedMarketData;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
-  marketSupplyData,
+const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
+  marketBorrowData,
   activeMarkets,
+  showZeroBalance = false,
   tokenTransferState,
   filters,
   sortConfig,
   onSupply,
   onBorrow,
-  onWithdraw,
-  onCollateralToggle,
+  onRepay,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -53,20 +52,25 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     unifiedMarketMap.set(key, market);
   });
 
-  const enhancedPositions: EnhancedUserSupplyPosition[] = [];
+  const enhancedPositions: EnhancedUserBorrowPosition[] = [];
 
-  Object.values(marketSupplyData).forEach((marketData) => {
-    if (marketData.supplies && marketData.supplies.length > 0) {
-      marketData.supplies.forEach((supply) => {
-        const currencyKey = `${supply.currency.address.toLowerCase()}-${marketData.chainId}`;
+  Object.values(marketBorrowData).forEach((marketData) => {
+    if (marketData.borrows && marketData.borrows.length > 0) {
+      marketData.borrows.forEach((borrow) => {
+        const currencyKey = `${borrow.currency.address.toLowerCase()}-${marketData.chainId}`;
         const unifiedMarket = unifiedMarketMap.get(currencyKey);
 
         if (unifiedMarket) {
+          const debtAmount = parseFloat(borrow.debt.usd) || 0;
+          if (!showZeroBalance && debtAmount === 0) {
+            return;
+          }
+
           enhancedPositions.push({
             marketAddress: marketData.marketAddress,
             marketName: marketData.marketName,
             chainId: marketData.chainId,
-            supply,
+            borrow,
             unifiedMarket,
           });
         }
@@ -85,7 +89,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           .toLowerCase()
           .includes(filterLower) ||
         // Filter by ticker (currency.symbol)
-        position.supply.currency.symbol.toLowerCase().includes(filterLower) ||
+        position.borrow.currency.symbol.toLowerCase().includes(filterLower) ||
         // Also include market name for broader matching
         position.marketName.toLowerCase().includes(filterLower)
       );
@@ -93,51 +97,51 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   }
 
   // Apply sorting
-  let userSupplyPositions: EnhancedUserSupplyPosition[];
+  let userBorrowPositions: EnhancedUserBorrowPosition[];
   if (sortConfig) {
-    userSupplyPositions = [...filteredPositions].sort((a, b) => {
+    userBorrowPositions = [...filteredPositions].sort((a, b) => {
       let aValue: number;
       let bValue: number;
 
       switch (sortConfig.column) {
-        case "supplyApy":
-          aValue = parseFloat(a.supply.apy.value) || 0;
-          bValue = parseFloat(b.supply.apy.value) || 0;
+        case "borrowApy":
+          aValue = parseFloat(a.borrow.apy.value) || 0;
+          bValue = parseFloat(b.borrow.apy.value) || 0;
           break;
-        case "userSuppliedValue":
-          aValue = parseFloat(a.supply.balance.usd) || 0;
-          bValue = parseFloat(b.supply.balance.usd) || 0;
+        case "userBorrowedValue":
+          aValue = parseFloat(a.borrow.debt.usd) || 0;
+          bValue = parseFloat(b.borrow.debt.usd) || 0;
           break;
         default:
-          // Default sort by supplied value (highest first)
-          aValue = parseFloat(a.supply.balance.usd) || 0;
-          bValue = parseFloat(b.supply.balance.usd) || 0;
+          // Default sort by borrowed value (highest first)
+          aValue = parseFloat(a.borrow.debt.usd) || 0;
+          bValue = parseFloat(b.borrow.debt.usd) || 0;
           break;
       }
 
       return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
     });
   } else {
-    // Default sort by balance (highest first)
-    userSupplyPositions = filteredPositions.sort((a, b) => {
-      const balanceA = parseFloat(a.supply.balance.usd) || 0;
-      const balanceB = parseFloat(b.supply.balance.usd) || 0;
+    // Default sort by debt amount (highest first)
+    userBorrowPositions = filteredPositions.sort((a, b) => {
+      const balanceA = parseFloat(a.borrow.debt.usd) || 0;
+      const balanceB = parseFloat(b.borrow.debt.usd) || 0;
       return balanceB - balanceA;
     });
   }
 
-  if (userSupplyPositions.length === 0) {
+  if (userBorrowPositions.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA] text-sm">
-          your supply positions will be displayed here
+          your borrow positions will be displayed here
         </div>
       </div>
     );
   }
 
-  const totalPages = Math.ceil(userSupplyPositions.length / ITEMS_PER_PAGE);
-  const paginatedPositions = userSupplyPositions.slice(
+  const totalPages = Math.ceil(userBorrowPositions.length / ITEMS_PER_PAGE);
+  const paginatedPositions = userBorrowPositions.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
@@ -150,14 +154,13 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     <CardsList
       data={paginatedPositions}
       renderCard={(position) => (
-        <UserSupplyCard
-          key={`${position.marketAddress}-${position.supply.currency.symbol}`}
+        <UserBorrowCard
+          key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
           onSupply={onSupply}
           onBorrow={onBorrow}
-          onWithdraw={onWithdraw}
-          onCollateralToggle={onCollateralToggle}
+          onRepay={onRepay}
           tokenTransferState={tokenTransferState}
         />
       )}
@@ -165,9 +168,9 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
       totalPages={totalPages}
       onPageChange={handlePageChange}
       itemsPerPage={ITEMS_PER_PAGE}
-      totalItems={userSupplyPositions.length}
+      totalItems={userBorrowPositions.length}
     />
   );
 };
 
-export default UserSupplyContent;
+export default UserBorrowContent;

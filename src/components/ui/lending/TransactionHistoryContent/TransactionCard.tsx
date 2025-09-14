@@ -1,6 +1,6 @@
 import { UserTransactionItem } from "@/types/aave";
 import { formatDate } from "@/utils/formatters";
-import TransactionIcon from "@/components/ui/lending/TransactionIcon";
+import TransactionIcon from "@/components/ui/lending/TransactionHistoryContent/TransactionIcon";
 import {
   getReserveInfo,
   getTransactionAmount,

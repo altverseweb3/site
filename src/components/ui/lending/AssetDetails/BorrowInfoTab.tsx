@@ -1,4 +1,4 @@
-import { InfoRow } from "@/components/ui/lending/assetDetails/InfoRow";
+import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
 import { UnifiedMarketData } from "@/types/aave";
 import HorizontalProgressBar from "@/components/ui/HorizontalProgressBar";
 import {

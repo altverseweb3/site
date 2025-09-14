@@ -15,8 +15,8 @@ import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
-import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
-import ToggleCollateralModal from "@/components/ui/lending/ToggleCollateralModal";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
+import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 

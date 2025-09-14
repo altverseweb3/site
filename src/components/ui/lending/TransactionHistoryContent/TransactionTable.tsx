@@ -8,7 +8,7 @@ import {
   formatTransactionUsdValue,
   getTransactionKey,
 } from "@/utils/lending/transactions";
-import TransactionIcon from "@/components/ui/lending/TransactionIcon";
+import TransactionIcon from "@/components/ui/lending/TransactionHistoryContent/TransactionIcon";
 import Image from "next/image";
 
 const TransactionTable: React.FC<{ transactions: UserTransactionItem[] }> = ({

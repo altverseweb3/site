@@ -5,7 +5,7 @@ import {
   formatCurrency,
   formatPercentage,
 } from "@/utils/formatters";
-import { InfoRow } from "@/components/ui/lending/assetDetails/InfoRow";
+import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
 
 export const UserInfoTab: React.FC<{ market: UnifiedMarketData }> = ({
   market,
