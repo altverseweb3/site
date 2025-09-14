@@ -17,52 +17,36 @@ import {
   formatPercentage,
   formatBalance,
 } from "@/utils/formatters";
-import {
-  UnifiedMarketData,
-  UserBorrowPosition,
-  UserSupplyPosition,
-} from "@/types/aave";
-import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
+import { UnifiedMarketData } from "@/types/aave";
+import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
-import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
 
-interface MarketCardProps {
+interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
-  onRepay?: (market: UserBorrowPosition) => void;
-  onWithdraw?: (market: UserSupplyPosition) => void;
-  onDetails?: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
 }
 
-const MarketCard: React.FC<MarketCardProps> = ({
+const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   market,
   onSupply,
   onBorrow,
   tokenTransferState,
 }) => {
-  // Extract data from unified structure
+  // Extract supply data
   const baseSupplyAPY = market.supplyData.apy;
-  const baseBorrowAPY = market.borrowData.apy;
   const totalSupplied = market.supplyData.totalSupplied;
-  const totalBorrowed = market.borrowData.totalBorrowed;
   const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
-  const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
 
-  // Calculate final APYs with incentives
-  const {
-    finalSupplyAPY,
-    finalBorrowAPY,
-    hasSupplyBonuses,
-    hasBorrowBonuses,
-    hasMixedIncentives,
-  } = calculateApyWithIncentives(
-    baseSupplyAPY,
-    baseBorrowAPY,
-    market.incentives,
-  );
+  // Calculate final supply APY with incentives
+  const { finalSupplyAPY, hasSupplyBonuses, hasMixedIncentives } =
+    calculateApyWithIncentives(baseSupplyAPY, 0, market.incentives);
+
+  // Check if market is available for supply
+  const isAvailable = !market.isFrozen && !market.isPaused;
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
@@ -80,13 +64,16 @@ const MarketCard: React.FC<MarketCardProps> = ({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-            {market.underlyingToken.name}
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
+              {market.underlyingToken.name}
+            </CardTitle>
+            {!isAvailable && <AlertTriangle className="w-4 h-4 text-red-400" />}
+          </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
-              src={market.market.icon}
-              alt={market.market.chain.name}
+              src={market.marketInfo.icon}
+              alt={market.marketName}
               width={16}
               height={16}
               className="object-contain rounded-full"
@@ -95,7 +82,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
               }}
             />
             {market.marketName}
-            {(market.isFrozen || market.isPaused) && (
+            {!isAvailable && (
               <span className="ml-1 text-red-400">
                 {market.isFrozen && market.isPaused
                   ? "(Frozen, Paused)"
@@ -109,7 +96,23 @@ const MarketCard: React.FC<MarketCardProps> = ({
       </CardHeader>
 
       <CardContent className="p-4 pt-2 space-y-3">
-        {/* Total Supplied row - always show */}
+        {/* Supply APY */}
+        <div className="flex justify-between items-center">
+          <div className="text-[#A1A1AA] text-sm">supply APY</div>
+          <div className="flex items-center gap-1">
+            {hasSupplyBonuses && (
+              <SquarePlus className="w-5 h-5 text-green-500" />
+            )}
+            {hasMixedIncentives && (
+              <SquareEqual className="w-5 h-5 text-indigo-500" />
+            )}
+            <span className="text-green-500 text-sm font-semibold font-mono">
+              {formatPercentage(finalSupplyAPY)}
+            </span>
+          </div>
+        </div>
+
+        {/* Market Liquidity */}
         <div className="flex justify-between items-center">
           <div className="text-[#A1A1AA] text-sm">total supplied</div>
           <div className="text-right">
@@ -127,52 +130,18 @@ const MarketCard: React.FC<MarketCardProps> = ({
           </div>
         </div>
 
-        {/* Supply APY row - always show */}
+        {/* Can be used as collateral indicator */}
         <div className="flex justify-between items-center">
-          <div className="text-[#A1A1AA] text-sm">supply APY</div>
+          <div className="text-[#A1A1AA] text-sm">collateral</div>
           <div className="flex items-center gap-1">
-            {hasSupplyBonuses && (
-              <SquarePlus className="w-5 h-5 text-green-500" />
-            )}
-            {hasMixedIncentives && (
-              <SquareEqual className="w-5 h-5 text-indigo-500" />
-            )}
-            <span className="text-green-500 text-sm font-semibold font-mono">
-              {formatPercentage(finalSupplyAPY)}
-            </span>
-          </div>
-        </div>
-
-        {/* Total Borrowed row - always show */}
-        <div className="flex justify-between items-center">
-          <div className="text-[#A1A1AA] text-sm">total borrowed</div>
-          <div className="text-right">
-            <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalBorrowed)}{" "}
-              <TruncatedText
-                text={market.underlyingToken.symbol}
-                maxLength={6}
-                className="text-[#FAFAFA] text-sm font-semibold font-mono"
-              />
-            </div>
-            <div className="text-[#A1A1AA] text-xs font-mono">
-              {formatCurrency(totalBorrowedUsd)}
-            </div>
-          </div>
-        </div>
-
-        {/* Borrow APY row - always show */}
-        <div className="flex justify-between items-center">
-          <div className="text-[#A1A1AA] text-sm">borrow APY</div>
-          <div className="flex items-center gap-1">
-            {hasBorrowBonuses && (
-              <SquareMinus className="w-5 h-5 text-amber-500" />
-            )}
-            {hasMixedIncentives && (
-              <SquareEqual className="w-5 h-5 text-indigo-500" />
-            )}
-            <span className="text-red-500 text-sm font-semibold font-mono">
-              {formatPercentage(finalBorrowAPY)}
+            <span
+              className={`text-xs font-medium ${
+                market.supplyInfo.canBeCollateral
+                  ? "text-green-500"
+                  : "text-[#A1A1AA]"
+              }`}
+            >
+              {market.supplyInfo.canBeCollateral ? "enabled" : "disabled"}
             </span>
           </div>
         </div>
@@ -189,6 +158,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           <BrandedButton
             buttonText="details"
             className="w-full text-xs py-2 h-8"
+            disabled={!isAvailable}
           />
         </AssetDetailsModal>
       </CardFooter>
@@ -196,4 +166,4 @@ const MarketCard: React.FC<MarketCardProps> = ({
   );
 };
 
-export default MarketCard;
+export default AvailableSupplyCard;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import AvailableBorrowCard from "@/components/ui/lending/AvailableBorrowCard";
+import AvailableBorrowCard from "@/components/ui/lending/AvailableContent/AvailableBorrowCard";
 import CardsList from "@/components/ui/CardsList";
 import { Market, UnifiedMarketData } from "@/types/aave";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";

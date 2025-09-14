@@ -1,5 +1,5 @@
 import { UnifiedMarketData } from "@/types/aave";
-import { InfoRow } from "@/components/ui/lending/assetDetails/InfoRow";
+import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
 import { formatPercentage } from "@/utils/formatters";
 import { Zap } from "lucide-react";
 

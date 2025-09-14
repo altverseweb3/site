@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import CardsList from "@/components/ui/CardsList";
-import TransactionCard from "@/components/ui/lending/TransactionCard";
-import TransactionTable from "@/components/ui/lending/TransactionTable";
+import TransactionCard from "@/components/ui/lending/TransactionHistoryContent/TransactionCard";
+import TransactionTable from "@/components/ui/lending/TransactionHistoryContent/TransactionTable";
 import { UserTransactionItem } from "@/types/aave";
 import { getTransactionKey } from "@/utils/lending/transactions";
 

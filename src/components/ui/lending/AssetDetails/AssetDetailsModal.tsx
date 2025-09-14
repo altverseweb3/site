@@ -16,19 +16,19 @@ import {
   UserSupplyPosition,
 } from "@/types/aave";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
-import UserInfoTab from "@/components/ui/lending/assetDetails/UserInfoTab";
-import EModeInfoTab from "@/components/ui/lending/assetDetails/EmodeInfoTab";
-import SupplyInfoTab from "@/components/ui/lending/assetDetails/SupplyInfoTab";
-import BorrowInfoTab from "@/components/ui/lending/assetDetails/BorrowInfoTab";
+import UserInfoTab from "@/components/ui/lending/AssetDetails/UserInfoTab";
+import EModeInfoTab from "@/components/ui/lending/AssetDetails/EmodeInfoTab";
+import SupplyInfoTab from "@/components/ui/lending/AssetDetails/SupplyInfoTab";
+import BorrowInfoTab from "@/components/ui/lending/AssetDetails/BorrowInfoTab";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { TokenTransferState } from "@/types/web3";
-import SupplyAssetModal from "@/components/ui/lending/SupplyAssetModal";
+import SupplyAssetModal from "@/components/ui/lending/ActionModals/SupplyAssetModal";
 import { getChainByChainId } from "@/config/chains";
 import useWeb3Store from "@/store/web3Store";
 import { getLendingToken } from "@/utils/lending/tokens";
-import BorrowAssetModal from "@/components/ui/lending/BorrowAssetModal";
-import WithdrawAssetModal from "@/components/ui/lending/WithdrawAssetModal";
-import RepayAssetModal from "@/components/ui/lending/RepayAssetModal";
+import BorrowAssetModal from "@/components/ui/lending/ActionModals/BorrowAssetModal";
+import WithdrawAssetModal from "@/components/ui/lending/ActionModals/WithdrawAssetModal";
+import RepayAssetModal from "@/components/ui/lending/ActionModals/RepayAssetModal";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;

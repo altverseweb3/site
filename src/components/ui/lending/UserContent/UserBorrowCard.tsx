@@ -13,7 +13,7 @@ import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
-import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
 
 interface UserBorrowCardProps {

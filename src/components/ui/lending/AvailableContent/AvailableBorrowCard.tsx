@@ -20,7 +20,7 @@ import {
 import { UnifiedMarketData } from "@/types/aave";
 import { SquareMinus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
-import AssetDetailsModal from "@/components/ui/lending/AssetDetailsModal";
+import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 

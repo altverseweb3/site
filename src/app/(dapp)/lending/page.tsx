@@ -26,13 +26,13 @@ import {
   useTransactionDetails,
 } from "@/store/web3Store";
 import { AggregatedMarketData } from "@/components/meta/AggregatedMarketData";
-import MarketContent from "@/components/ui/lending/MarketContent";
-import DashboardContent from "@/components/ui/lending/DashboardContent";
+import MarketContent from "@/components/ui/lending/MarketContent/MarketContent";
+import DashboardContent from "@/components/ui/lending/DashboardContent/DashboardContent";
 import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { ChainId } from "@/types/aave";
 import { evmAddress, Market } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/meta/AggregatedTransactionHistory";
-import HistoryContent from "@/components/ui/lending/TransactionContent";
+import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";

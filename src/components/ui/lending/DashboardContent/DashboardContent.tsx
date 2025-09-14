@@ -11,12 +11,12 @@ import {
   AggregatedUserState,
 } from "@/types/aave";
 import { formatHealthFactor } from "@/utils/formatters";
-import UserSupplyContent from "@/components/ui/lending/UserSupplyContent";
-import UserBorrowContent from "@/components/ui/lending/UserBorrowContent";
-import AvailableSupplyContent from "@/components/ui/lending/AvailableSupplyContent";
-import AvailableBorrowContent from "@/components/ui/lending/AvailableBorrowContent";
-import RiskDetailsModal from "@/components/ui/lending/RiskDetailsModal";
-import EmodeModal from "@/components/ui/lending/EmodeModal";
+import UserSupplyContent from "@/components/ui/lending/UserContent/UserSupplyContent";
+import UserBorrowContent from "@/components/ui/lending/UserContent/UserBorrowContent";
+import AvailableSupplyContent from "@/components/ui/lending/AvailableContent/AvailableSupplyContent";
+import AvailableBorrowContent from "@/components/ui/lending/AvailableContent/AvailableBorrowContent";
+import RiskDetailsModal from "@/components/ui/lending/DashboardContent/RiskDetailsModal";
+import EmodeModal from "@/components/ui/lending/DashboardContent/EmodeModal";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
