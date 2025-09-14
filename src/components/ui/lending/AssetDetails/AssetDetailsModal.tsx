@@ -29,6 +29,10 @@ import { getLendingToken } from "@/utils/lending/tokens";
 import BorrowAssetModal from "@/components/ui/lending/ActionModals/BorrowAssetModal";
 import WithdrawAssetModal from "@/components/ui/lending/ActionModals/WithdrawAssetModal";
 import RepayAssetModal from "@/components/ui/lending/ActionModals/RepayAssetModal";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -41,6 +45,9 @@ interface AssetDetailsModalProps {
   supplyPosition?: UserSupplyPosition;
   borrowPosition?: UserBorrowPosition;
   buttonsToShow: ctaButtons[];
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";

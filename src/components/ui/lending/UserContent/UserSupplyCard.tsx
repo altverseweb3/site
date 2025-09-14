@@ -19,6 +19,10 @@ import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetails
 import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface UserSupplyCardProps {
   position: UserSupplyPosition;
@@ -29,6 +33,9 @@ interface UserSupplyCardProps {
   onCollateralToggle: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
   isCollateralLoading?: boolean;
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
@@ -40,6 +47,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   onCollateralToggle,
   tokenTransferState,
   isCollateralLoading = false,
+  onHealthFactorPreview,
 }) => {
   const { supply, marketName } = position;
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
@@ -166,6 +174,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
+          onHealthFactorPreview={onHealthFactorPreview}
           tokenTransferState={tokenTransferState}
           supplyPosition={position}
           buttonsToShow={["supply", "withdraw"]}
