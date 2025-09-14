@@ -36,7 +36,7 @@ import {
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
-  userAddress: string | null;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
@@ -271,110 +271,115 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
         </div>
 
         {/* Footer with CTA buttons */}
-        <div className="bg-[#18181B] flex-shrink-0 px-1">
-          <div className="flex gap-3 w-full">
-            {onSupply && buttonsToShow.includes("supply") && (
-              <SupplyAssetModal
-                market={market}
-                onSupply={onSupply}
-                onBorrow={onBorrow}
-                onHealthFactorPreview={onHealthFactorPreview}
-                userAddress={userAddress}
-                tokenTransferState={tokenTransferState}
-                healthFactor={
-                  market.marketInfo.userState?.healthFactor?.toString() || null
-                }
-              >
-                <BrandedButton
-                  iconName="TrendingUp"
-                  buttonText="supply"
-                  onClick={() => {
-                    setSourceChain(lendingChain);
-                    setDestinationChain(lendingChain);
-                    setSourceToken(lendingToken);
-                    setDestinationToken(lendingToken);
-                  }}
-                  className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
-                  iconClassName="h-4 w-4"
-                />
-              </SupplyAssetModal>
-            )}
-            {onBorrow && buttonsToShow.includes("borrow") && (
-              <BorrowAssetModal
-                market={market}
-                userAddress={userAddress}
-                onBorrow={onBorrow}
-                tokenTransferState={tokenTransferState}
-                healthFactor={
-                  market.marketInfo.userState?.healthFactor?.toString() || null
-                }
-                onHealthFactorPreview={onHealthFactorPreview}
-              >
-                <BrandedButton
-                  iconName="TrendingDown"
-                  buttonText="borrow"
-                  onClick={() => {
-                    setSourceChain(lendingChain);
-                    setDestinationChain(lendingChain);
-                    setSourceToken(lendingToken);
-                    setDestinationToken(lendingToken);
-                  }}
-                  className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
-                  iconClassName="h-4 w-4"
-                />
-              </BorrowAssetModal>
-            )}
-            {onWithdraw && buttonsToShow.includes("withdraw") && (
-              <WithdrawAssetModal
-                market={market}
-                userAddress={userAddress}
-                position={supplyPosition}
-                onWithdraw={onWithdraw}
-                tokenTransferState={tokenTransferState}
-                healthFactor={
-                  market.marketInfo.userState?.healthFactor?.toString() || null
-                }
-                onHealthFactorPreview={onHealthFactorPreview}
-              >
-                <BrandedButton
-                  iconName="Coins"
-                  buttonText="withdraw"
-                  onClick={() => {
-                    setSourceChain(lendingChain);
-                    setDestinationChain(lendingChain);
-                    setSourceToken(lendingToken);
-                    setDestinationToken(lendingToken);
-                  }}
-                  className="flex-1 justify-center bg-amber-500/20 hover:bg-amber-500/30 hover:text-amber-300 text-amber-300 border-amber-500/50 hover:border-amber-500 transition-all duration-200 py-3 font-medium"
-                  iconClassName="h-4 w-4"
-                />
-              </WithdrawAssetModal>
-            )}
-            {onRepay && buttonsToShow.includes("repay") && (
-              <RepayAssetModal
-                market={market}
-                userAddress={userAddress}
-                position={borrowPosition}
-                onRepay={onRepay}
-                tokenTransferState={tokenTransferState}
-                onHealthFactorPreview={onHealthFactorPreview}
-              >
-                <BrandedButton
-                  iconName="Coins"
-                  buttonText="repay"
-                  onClick={() => {
-                    setSourceChain(lendingChain);
-                    setDestinationChain(lendingChain);
-                    setSourceToken(lendingToken);
-                    setDestinationToken(lendingToken);
-                  }}
-                  className="flex-1 justify-center bg-sky-500/20 hover:bg-sky-500/30 hover:text-sky-300 text-sky-300 border-sky-500/50 hover:border-sky-500 transition-all duration-200 py-3 font-medium"
-                  iconClassName="h-4 w-4"
-                />
-              </RepayAssetModal>
-            )}
+        {userAddress && (
+          <div className="bg-[#18181B] flex-shrink-0 px-1">
+            <div className="flex gap-3 w-full">
+              {onSupply && buttonsToShow.includes("supply") && (
+                <SupplyAssetModal
+                  market={market}
+                  onSupply={onSupply}
+                  onBorrow={onBorrow}
+                  onHealthFactorPreview={onHealthFactorPreview}
+                  userAddress={userAddress}
+                  tokenTransferState={tokenTransferState}
+                  healthFactor={
+                    market.marketInfo.userState?.healthFactor?.toString() ||
+                    null
+                  }
+                >
+                  <BrandedButton
+                    iconName="TrendingUp"
+                    buttonText="supply"
+                    onClick={() => {
+                      setSourceChain(lendingChain);
+                      setDestinationChain(lendingChain);
+                      setSourceToken(lendingToken);
+                      setDestinationToken(lendingToken);
+                    }}
+                    className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
+                    iconClassName="h-4 w-4"
+                  />
+                </SupplyAssetModal>
+              )}
+              {onBorrow && buttonsToShow.includes("borrow") && (
+                <BorrowAssetModal
+                  market={market}
+                  userAddress={userAddress}
+                  onBorrow={onBorrow}
+                  tokenTransferState={tokenTransferState}
+                  healthFactor={
+                    market.marketInfo.userState?.healthFactor?.toString() ||
+                    null
+                  }
+                  onHealthFactorPreview={onHealthFactorPreview}
+                >
+                  <BrandedButton
+                    iconName="TrendingDown"
+                    buttonText="borrow"
+                    onClick={() => {
+                      setSourceChain(lendingChain);
+                      setDestinationChain(lendingChain);
+                      setSourceToken(lendingToken);
+                      setDestinationToken(lendingToken);
+                    }}
+                    className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
+                    iconClassName="h-4 w-4"
+                  />
+                </BorrowAssetModal>
+              )}
+              {onWithdraw && buttonsToShow.includes("withdraw") && (
+                <WithdrawAssetModal
+                  market={market}
+                  userAddress={userAddress}
+                  position={supplyPosition}
+                  onWithdraw={onWithdraw}
+                  tokenTransferState={tokenTransferState}
+                  healthFactor={
+                    market.marketInfo.userState?.healthFactor?.toString() ||
+                    null
+                  }
+                  onHealthFactorPreview={onHealthFactorPreview}
+                >
+                  <BrandedButton
+                    iconName="Coins"
+                    buttonText="withdraw"
+                    onClick={() => {
+                      setSourceChain(lendingChain);
+                      setDestinationChain(lendingChain);
+                      setSourceToken(lendingToken);
+                      setDestinationToken(lendingToken);
+                    }}
+                    className="flex-1 justify-center bg-amber-500/20 hover:bg-amber-500/30 hover:text-amber-300 text-amber-300 border-amber-500/50 hover:border-amber-500 transition-all duration-200 py-3 font-medium"
+                    iconClassName="h-4 w-4"
+                  />
+                </WithdrawAssetModal>
+              )}
+              {onRepay && buttonsToShow.includes("repay") && (
+                <RepayAssetModal
+                  market={market}
+                  userAddress={userAddress}
+                  position={borrowPosition}
+                  onRepay={onRepay}
+                  tokenTransferState={tokenTransferState}
+                  onHealthFactorPreview={onHealthFactorPreview}
+                >
+                  <BrandedButton
+                    iconName="Coins"
+                    buttonText="repay"
+                    onClick={() => {
+                      setSourceChain(lendingChain);
+                      setDestinationChain(lendingChain);
+                      setSourceToken(lendingToken);
+                      setDestinationToken(lendingToken);
+                    }}
+                    className="flex-1 justify-center bg-sky-500/20 hover:bg-sky-500/30 hover:text-sky-300 text-sky-300 border-sky-500/50 hover:border-sky-500 transition-all duration-200 py-3 font-medium"
+                    iconClassName="h-4 w-4"
+                  />
+                </RepayAssetModal>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

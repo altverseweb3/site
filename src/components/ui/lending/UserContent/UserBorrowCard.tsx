@@ -23,7 +23,7 @@ import {
 interface UserBorrowCardProps {
   position: UserBorrowPosition;
   unifiedMarket: UnifiedMarketData;
-  userAddress: string | null;
+  userAddress: string | undefined;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;

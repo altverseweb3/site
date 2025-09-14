@@ -26,21 +26,31 @@ import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface MarketCardProps {
   market: UnifiedMarketData;
+  userAddress: string | undefined;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
   onDetails?: (market: UnifiedMarketData) => void;
+  onHealthFactorPreview: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
 }
 
 const MarketCard: React.FC<MarketCardProps> = ({
   market,
+  userAddress,
   onSupply,
   onBorrow,
+  onHealthFactorPreview,
   tokenTransferState,
 }) => {
   // Extract data from unified structure
@@ -181,10 +191,12 @@ const MarketCard: React.FC<MarketCardProps> = ({
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
           buttonsToShow={["supply", "borrow"]}
+          onHealthFactorPreview={onHealthFactorPreview}
         >
           <BrandedButton
             buttonText="details"

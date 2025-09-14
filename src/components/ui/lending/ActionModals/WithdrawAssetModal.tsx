@@ -30,7 +30,7 @@ import { evmAddress } from "@aave/react";
 interface WithdrawAssetModalProps {
   market: UnifiedMarketData;
   position?: UserSupplyPosition;
-  userAddress: string | null;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   onHealthFactorPreview?: (

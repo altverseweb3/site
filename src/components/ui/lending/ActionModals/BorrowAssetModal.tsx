@@ -28,7 +28,7 @@ import { evmAddress } from "@aave/react";
 
 interface BorrowAssetModalProps {
   market: UnifiedMarketData;
-  userAddress: string | null;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onBorrow: (market: UnifiedMarketData) => void;
   onHealthFactorPreview?: (

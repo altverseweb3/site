@@ -30,7 +30,7 @@ import {
 
 interface AvailableBorrowCardProps {
   market: UnifiedMarketData;
-  userAddress: string | null;
+  userAddress: string | undefined;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;

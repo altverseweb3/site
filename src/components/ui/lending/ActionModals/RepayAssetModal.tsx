@@ -43,7 +43,7 @@ import { evmAddress } from "@aave/react";
 interface RepayAssetModalProps {
   market: UnifiedMarketData;
   position?: UserBorrowPosition;
-  userAddress: string | null;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
   onHealthFactorPreview?: (

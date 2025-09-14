@@ -13,7 +13,7 @@ import {
 
 interface UserSupplyContentProps {
   markets: UnifiedMarketData[];
-  userAddress: string | null;
+  userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;

@@ -12,7 +12,7 @@ import {
 
 interface UserBorrowContentProps {
   markets: UnifiedMarketData[];
-  userAddress: string | null;
+  userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;

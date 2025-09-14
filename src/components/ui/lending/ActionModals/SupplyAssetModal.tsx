@@ -45,7 +45,7 @@ import { evmAddress } from "@aave/react";
 
 interface SupplyAssetModalProps {
   market: UnifiedMarketData;
-  userAddress: string | null;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
