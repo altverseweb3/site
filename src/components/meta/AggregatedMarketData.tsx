@@ -9,7 +9,15 @@ import {
   EvmAddress,
   Market,
   MarketReservesRequestOrderBy,
+  EModeStatus,
+  BigDecimal,
+  AggregatedUserState,
+  UserSupplyData,
+  UserBorrowData,
 } from "@/types/aave";
+import { formatCurrency, formatPercentage } from "@/utils/formatters";
+import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
+import { AggregatedMarketUserBorrows } from "@/components/meta/AggregatedMarketUserBorrows";
 
 interface MarketData {
   marketAddress: string;
@@ -74,8 +82,237 @@ interface AggregatedMarketDataProps {
     error: boolean;
     hasData: boolean;
     refetchMarkets: () => void;
+    aggregatedUserState: AggregatedUserState;
+    supplyData: {
+      balance: string;
+      apy: string;
+      collateral: string;
+    };
+    borrowData: {
+      balance: string;
+      apy: string;
+    };
+    marketSupplyData: Record<string, UserSupplyData>;
+    marketBorrowData: Record<string, UserBorrowData>;
+    supplyLoading: boolean;
+    borrowLoading: boolean;
+    supplyError: boolean;
+    borrowError: boolean;
   }) => React.ReactNode;
 }
+
+// Calculate aggregated user state from markets' internal userState
+const calculateAggregatedUserState = (
+  activeMarkets: Market[],
+): AggregatedUserState => {
+  const validMarkets = activeMarkets.filter((market) => market.userState);
+
+  if (validMarkets.length === 0) {
+    return {
+      globalData: {
+        netWorth: formatCurrency(0),
+        netAPY: formatPercentage(0),
+      },
+      healthFactorData: {
+        show: false,
+        value: null as string | null,
+      },
+      eModeStatus: "off" as EModeStatus,
+      borrowData: {
+        debt: formatCurrency(0),
+        collateral: formatCurrency(0),
+        borrowPercentUsed: null as string | null,
+        marketData: {} as Record<
+          string,
+          { debt: string; collateral: string; currentLtv: string | null }
+        >,
+      },
+      marketRiskData: {} as Record<
+        string,
+        {
+          healthFactor: string | null;
+          ltv: string | null;
+          currentLiquidationThreshold: string | null;
+          chainId: ChainId;
+          chainName: string;
+          chainIcon: string;
+          marketName: string;
+        }
+      >,
+    };
+  }
+
+  // Calculate total net worth
+  const totalNetWorth = validMarkets.reduce((sum, market) => {
+    const netWorth = parseFloat(market.userState!.netWorth) || 0;
+    return sum + netWorth;
+  }, 0);
+
+  // Calculate weighted net APY for markets with positions
+  const marketsWithPositions = validMarkets.filter((market) => {
+    const netWorth = parseFloat(market.userState!.netWorth) || 0;
+    return netWorth !== 0;
+  });
+
+  let netAPY = 0;
+  if (marketsWithPositions.length > 0) {
+    const weightedAPYNumerator = marketsWithPositions.reduce((sum, market) => {
+      const netWorth = parseFloat(market.userState!.netWorth) || 0;
+      const apy = parseFloat(market.userState!.netAPY.value) || 0;
+      return sum + netWorth * apy;
+    }, 0);
+
+    const totalNetWorthWithPositions = marketsWithPositions.reduce(
+      (sum, market) => {
+        const netWorth = parseFloat(market.userState!.netWorth) || 0;
+        return sum + netWorth;
+      },
+      0,
+    );
+
+    netAPY =
+      totalNetWorthWithPositions > 0
+        ? weightedAPYNumerator / totalNetWorthWithPositions
+        : 0;
+  }
+
+  const globalData = {
+    netWorth: formatCurrency(totalNetWorth),
+    netAPY: formatPercentage(netAPY * 100),
+  };
+
+  // Calculate health factor data
+  const healthFactors = validMarkets
+    .map((market) => market.userState!.healthFactor)
+    .filter((hf): hf is BigDecimal => hf !== null);
+
+  const healthFactorData = {
+    show: healthFactors.length > 0,
+    value:
+      healthFactors.length === 1
+        ? healthFactors[0]
+        : healthFactors.length > 1
+          ? "mixed"
+          : null,
+  };
+
+  // Calculate e-mode status
+  const eModeStatuses = validMarkets.map(
+    (market) => market.userState!.eModeEnabled,
+  );
+  const allEnabled = eModeStatuses.every((enabled) => enabled === true);
+  const allDisabled = eModeStatuses.every((enabled) => enabled === false);
+  const eModeStatus: EModeStatus = allEnabled
+    ? "on"
+    : allDisabled
+      ? "off"
+      : "mixed";
+
+  // Calculate borrow data
+  const totalDebtBase = validMarkets.reduce((sum, market) => {
+    return sum + parseFloat(market.userState!.totalDebtBase);
+  }, 0);
+
+  const totalCollateralBase = validMarkets.reduce((sum, market) => {
+    return sum + parseFloat(market.userState!.totalCollateralBase);
+  }, 0);
+
+  // Calculate per-market debt and collateral data
+  const marketData: Record<
+    string,
+    { debt: string; collateral: string; currentLtv: string | null }
+  > = {};
+  validMarkets.forEach((market) => {
+    const marketKey = `${market.chain.chainId}-${market.address}`;
+    const marketDebt = parseFloat(market.userState!.totalDebtBase);
+    const marketCollateral = parseFloat(market.userState!.totalCollateralBase);
+
+    let currentLtv: string | null = null;
+    if (marketCollateral > 0) {
+      const ltvRatio = (marketDebt * 100) / marketCollateral;
+      currentLtv = formatPercentage(ltvRatio);
+    }
+
+    marketData[marketKey] = {
+      debt: formatCurrency(marketDebt),
+      collateral: formatCurrency(marketCollateral),
+      currentLtv,
+    };
+  });
+
+  // Calculate borrow % used
+  let borrowPercentUsed: string | null = null;
+  if (healthFactors.length > 0) {
+    if (healthFactors.length === 1) {
+      const market = validMarkets.find(
+        (m) => m.userState!.healthFactor !== null,
+      );
+      if (market && market.userState) {
+        const marketDebt = parseFloat(market.userState.totalDebtBase);
+        const marketCollateral = parseFloat(
+          market.userState.totalCollateralBase,
+        );
+        const ltvValue = parseFloat(market.userState.ltv.value);
+
+        if (marketCollateral > 0) {
+          const borrowUsed = (marketDebt * 100) / (marketCollateral * ltvValue);
+          borrowPercentUsed = formatPercentage(borrowUsed);
+        }
+      }
+    } else {
+      borrowPercentUsed = "mixed";
+    }
+  }
+
+  const borrowData = {
+    debt: formatCurrency(totalDebtBase),
+    collateral: formatCurrency(totalCollateralBase),
+    borrowPercentUsed,
+    marketData,
+  };
+
+  // Market-specific risk data
+  const marketRiskData: Record<
+    string,
+    {
+      healthFactor: string | null;
+      ltv: string | null;
+      currentLiquidationThreshold: string | null;
+      chainId: ChainId;
+      chainName: string;
+      chainIcon: string;
+      marketName: string;
+    }
+  > = {};
+
+  validMarkets.forEach((market) => {
+    const marketKey = `${market.chain.chainId}-${market.address}`;
+    marketRiskData[marketKey] = {
+      healthFactor: market.userState!.healthFactor,
+      ltv: market.userState!.ltv
+        ? formatPercentage(parseFloat(market.userState!.ltv.value) * 100)
+        : null,
+      currentLiquidationThreshold: market.userState!.currentLiquidationThreshold
+        ? formatPercentage(
+            parseFloat(market.userState!.currentLiquidationThreshold.value) *
+              100,
+          )
+        : null,
+      chainId: market.chain.chainId as ChainId,
+      chainName: market.chain.name,
+      chainIcon: market.chain.icon,
+      marketName: market.name,
+    };
+  });
+
+  return {
+    globalData,
+    healthFactorData,
+    eModeStatus,
+    borrowData,
+    marketRiskData,
+  };
+};
 
 export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
   chainIds,
@@ -176,12 +413,16 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
     // Check if we have any data
     const hasData = validMarkets.length > 0;
 
+    // Calculate aggregated user state
+    const aggregatedUserState = calculateAggregatedUserState(validMarkets);
+
     return {
       markets: hasData ? validMarkets : null,
       loading: isLoading,
       error: hasError,
       hasData,
       refetchMarkets,
+      aggregatedUserState,
     };
   }, [
     marketDataMap,
@@ -206,8 +447,64 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
         />
       ))}
 
-      {/* Render children with aggregated data */}
-      {children(aggregatedData)}
+      {/* Wrap with supply and borrow data providers */}
+      {aggregatedData.markets && user ? (
+        <AggregatedMarketUserSupplies
+          activeMarkets={aggregatedData.markets}
+          userWalletAddress={user}
+        >
+          {({
+            supplyData,
+            loading: supplyLoading,
+            error: supplyError,
+            marketSupplyData,
+          }) => (
+            <AggregatedMarketUserBorrows
+              activeMarkets={aggregatedData.markets!}
+              userWalletAddress={user}
+            >
+              {({
+                borrowData,
+                loading: borrowLoading,
+                error: borrowError,
+                marketBorrowData,
+              }) =>
+                children({
+                  ...aggregatedData,
+                  supplyData,
+                  borrowData,
+                  marketSupplyData,
+                  marketBorrowData,
+                  supplyLoading,
+                  borrowLoading,
+                  supplyError,
+                  borrowError,
+                })
+              }
+            </AggregatedMarketUserBorrows>
+          )}
+        </AggregatedMarketUserSupplies>
+      ) : (
+        /* Render children with empty supply/borrow data when no user */
+        children({
+          ...aggregatedData,
+          supplyData: {
+            balance: formatCurrency(0),
+            apy: formatPercentage(0),
+            collateral: formatCurrency(0),
+          },
+          borrowData: {
+            balance: formatCurrency(0),
+            apy: formatPercentage(0),
+          },
+          marketSupplyData: {},
+          marketBorrowData: {},
+          supplyLoading: false,
+          borrowLoading: false,
+          supplyError: false,
+          borrowError: false,
+        })
+      )}
     </>
   );
 };

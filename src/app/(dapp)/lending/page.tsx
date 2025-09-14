@@ -238,7 +238,20 @@ export default function LendingPage() {
       chainIds={determineChainsToFetch()}
       user={userWalletAddress ? evmAddress(userWalletAddress) : undefined}
     >
-      {({ markets, loading, refetchMarkets }) => {
+      {({
+        markets,
+        loading,
+        refetchMarkets,
+        aggregatedUserState,
+        supplyData,
+        borrowData,
+        marketSupplyData,
+        marketBorrowData,
+        supplyLoading,
+        borrowLoading,
+        supplyError,
+        borrowError,
+      }) => {
         const filteredAndSortedUnifiedMarkets =
           createFilteredAndSortedUnifiedMarkets(markets);
 
@@ -376,18 +389,26 @@ export default function LendingPage() {
                     {activeTab === "dashboard" && userWalletAddress && (
                       <DashboardContent
                         userAddress={userWalletAddress}
-                        selectedChains={selectedChains}
                         activeMarkets={markets || []}
+                        aggregatedUserState={aggregatedUserState}
+                        supplyData={supplyData}
+                        borrowData={borrowData}
+                        marketSupplyData={marketSupplyData}
+                        marketBorrowData={marketBorrowData}
+                        loading={loading || supplyLoading || borrowLoading}
+                        error={supplyError || borrowError}
                         tokenTransferState={tokenTransferState}
                         filters={filters}
                         sortConfig={sortConfig}
                         onSubsectionChange={setCurrentSubsection}
-                        onSupply={handleSupply}
-                        onBorrow={handleBorrow}
-                        onWithdraw={handleWithdraw}
                         refetchMarkets={refetchMarkets}
-                        onRepay={handleRepay}
-                        onCollateralToggle={handleCollateralToggle}
+                        actions={{
+                          onSupply: handleSupply,
+                          onBorrow: handleBorrow,
+                          onWithdraw: handleWithdraw,
+                          onRepay: handleRepay,
+                          onCollateralToggle: handleCollateralToggle,
+                        }}
                       />
                     )}
                     {activeTab === "history" && (
