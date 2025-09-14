@@ -269,6 +269,9 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 onSupply={onSupply}
                 onBorrow={onBorrow}
                 tokenTransferState={tokenTransferState}
+                healthFactor={
+                  market.marketInfo.userState?.healthFactor?.toString() || null
+                }
               >
                 <BrandedButton
                   iconName="TrendingUp"
@@ -289,6 +292,9 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 market={market}
                 onBorrow={onBorrow}
                 tokenTransferState={tokenTransferState}
+                healthFactor={
+                  market.marketInfo.userState?.healthFactor?.toString() || null
+                }
               >
                 <BrandedButton
                   iconName="TrendingDown"
@@ -310,6 +316,9 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 position={supplyPosition}
                 onWithdraw={onWithdraw}
                 tokenTransferState={tokenTransferState}
+                healthFactor={
+                  market.marketInfo.userState?.healthFactor?.toString() || null
+                }
               >
                 <BrandedButton
                   iconName="Coins"
@@ -331,6 +340,9 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 position={borrowPosition}
                 onRepay={onRepay}
                 tokenTransferState={tokenTransferState}
+                healthFactor={
+                  market.marketInfo.userState?.healthFactor?.toString() || null
+                }
               >
                 <BrandedButton
                   iconName="Coins"

@@ -20,6 +20,7 @@ interface ToggleCollateralModalProps {
   position: UserSupplyPosition;
   onToggleCollateral: () => void;
   isLoading?: boolean;
+  healthFactor?: string | null;
 }
 
 const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
@@ -28,6 +29,7 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
   position,
   onToggleCollateral,
   isLoading = false,
+  healthFactor,
 }) => {
   const { supply, marketName } = position;
   const balanceAmount = supply.balance.amount.value;
@@ -126,6 +128,22 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
                 health factor impact
               </span>
             </div>
+
+            {/* Current Health Factor */}
+            {healthFactor && (
+              <div className="flex justify-between items-center py-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-3 h-3 text-[#A1A1AA]" />
+                  <span className="text-xs text-[#A1A1AA]">
+                    current health factor
+                  </span>
+                </div>
+                <div className="text-xs font-mono font-semibold text-blue-400">
+                  {parseFloat(healthFactor).toFixed(2)}
+                </div>
+              </div>
+            )}
+
             <div className="text-xs text-[#A1A1AA] bg-amber-500/10 border border-amber-500/20 rounded p-2">
               {isCurrentlyCollateral
                 ? "Disabling collateral may reduce your borrowing power and affect your health factor."
