@@ -185,6 +185,9 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         position={position}
         onToggleCollateral={handleModalCollateralToggle}
         isLoading={isCollateralLoading}
+        healthFactor={
+          unifiedMarket.marketInfo.userState?.healthFactor?.toString() || null
+        }
       />
     </Card>
   );

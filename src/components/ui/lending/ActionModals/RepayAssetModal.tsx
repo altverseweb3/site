@@ -40,6 +40,7 @@ interface RepayAssetModalProps {
   children: React.ReactNode;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
+  healthFactor?: string | null;
 }
 
 const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
@@ -48,6 +49,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
   children,
   tokenTransferState,
   onRepay,
+  healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -620,16 +622,31 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                 </div>
               </div>
 
+              {/* Current Health Factor */}
+              {healthFactor && (
+                <div className="flex justify-between items-center py-1">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3 text-blue-400" />
+                    <span className="text-sm text-[#A1A1AA]">
+                      current health factor
+                    </span>
+                  </div>
+                  <div className="text-sm font-mono font-semibold text-blue-400">
+                    {parseFloat(healthFactor).toFixed(2)}
+                  </div>
+                </div>
+              )}
+
               {/* Health Factor Improvement */}
               <div className="flex justify-between items-center py-1">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-3 h-3 text-green-400" />
                   <span className="text-sm text-[#A1A1AA]">
-                    health factor calculation
+                    repaying improves factor
                   </span>
                 </div>
                 <div className="text-sm font-mono font-semibold text-green-400">
-                  %x -&gt; %y
+                  reduces risk
                 </div>
               </div>
             </div>

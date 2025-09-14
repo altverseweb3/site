@@ -25,6 +25,7 @@ interface BorrowAssetModalProps {
   children: React.ReactNode;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
+  healthFactor?: string | null;
 }
 
 const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
@@ -32,6 +33,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   children,
   tokenTransferState,
   onBorrow,
+  healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
@@ -175,6 +177,21 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Current Health Factor */}
+              {healthFactor && (
+                <div className="flex justify-between items-center py-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-3 h-3 text-yellow-400" />
+                    <span className="text-sm text-[#A1A1AA]">
+                      current health factor
+                    </span>
+                  </div>
+                  <div className="text-sm font-mono font-semibold text-blue-400">
+                    {parseFloat(healthFactor).toFixed(2)}
+                  </div>
+                </div>
+              )}
 
               {/* Health Factor Warning */}
               <div className="flex justify-between items-center py-2">
