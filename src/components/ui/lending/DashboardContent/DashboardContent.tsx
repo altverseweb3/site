@@ -19,6 +19,10 @@ import RiskDetailsModal from "@/components/ui/lending/DashboardContent/RiskDetai
 import EmodeModal from "@/components/ui/lending/DashboardContent/EmodeModal";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface DashboardContentProps {
   userAddress: string;
@@ -49,6 +53,9 @@ interface DashboardContentProps {
     onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
     onRepay: (market: UnifiedMarketData, max: boolean) => void;
     onCollateralToggle: (market: UnifiedMarketData) => void;
+    onHealthFactorPreview: (
+      args: HealthFactorPreviewArgs,
+    ) => Promise<HealthFactorPreviewResult>;
   };
 }
 
@@ -324,6 +331,7 @@ export default function DashboardContent({
             onBorrow={actions.onBorrow}
             onWithdraw={actions.onWithdraw}
             onCollateralToggle={actions.onCollateralToggle}
+            onHealthFactorPreview={actions.onHealthFactorPreview}
           />
         ) : (
           <UserBorrowContent
