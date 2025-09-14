@@ -605,7 +605,7 @@ function DashboardContentInner({
 
           {/* Conditional Content */}
           <div className="flex items-center">
-            {(isSupplyMode && showAvailable) || !isSupplyMode ? (
+            {isSupplyMode && showAvailable ? (
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -617,14 +617,14 @@ function DashboardContentInner({
                   show assets with 0 balance
                 </span>
               </label>
-            ) : (
+            ) : !isSupplyMode && showAvailable ? (
               <div className="flex items-center space-x-1 text-sky-500">
                 <Info className="w-5 h-5" />
                 <span className="text-xs pl-1 sm:pl-0">
                   to borrow you need to supply assets to be used as collateral
                 </span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
