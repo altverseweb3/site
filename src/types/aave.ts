@@ -122,6 +122,39 @@ export interface UserBorrowPosition {
   borrow: MarketUserReserveBorrowPosition;
 }
 
+export interface AggregatedUserState {
+  globalData: {
+    netWorth: string;
+    netAPY: string;
+  };
+  healthFactorData: {
+    show: boolean;
+    value: string | null;
+  };
+  eModeStatus: EModeStatus;
+  borrowData: {
+    debt: string;
+    collateral: string;
+    borrowPercentUsed: string | null;
+    marketData: Record<
+      string,
+      { debt: string; collateral: string; currentLtv: string | null }
+    >;
+  };
+  marketRiskData: Record<
+    string,
+    {
+      healthFactor: string | null;
+      ltv: string | null;
+      currentLiquidationThreshold: string | null;
+      chainId: ChainId;
+      chainName: string;
+      chainIcon: string;
+      marketName: string;
+    }
+  >;
+}
+
 export interface UnifiedMarketData extends Reserve {
   marketInfo: Market;
   marketName: string;
