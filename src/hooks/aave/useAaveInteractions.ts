@@ -7,6 +7,7 @@ import {
   useWithdraw,
   useUserEMode,
   useCollateralToggle,
+  useAaveHealthFactorPreview,
   evmAddress,
   signatureFrom,
 } from "@aave/react";
@@ -32,6 +33,8 @@ import {
   EvmAddress,
   BigDecimal,
   ChainId,
+  HealthFactorPreviewRequest,
+  HealthFactorPreviewResponse,
 } from "@/types/aave";
 import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
 import { useCallback, useState } from "react";
@@ -935,5 +938,40 @@ export const useAaveCollateral = () => {
     executeCollateralToggle,
     loading: state.loading || togglingCollateral.loading,
     error: state.error || togglingCollateral.error,
+  };
+};
+
+/**
+ * Hook for health factor preview operations
+ * Handles previewing health factor for different operations (borrow, supply, repay, withdraw)
+ */
+export const useHealthFactorPreview = () => {
+  const [preview, { loading, error }] = useAaveHealthFactorPreview();
+
+  const executePreview = useCallback(
+    async (
+      request: HealthFactorPreviewRequest,
+    ): Promise<HealthFactorPreviewResponse | null> => {
+      try {
+        const result = await preview(request);
+
+        if (result.isErr()) {
+          console.error("Health factor preview failed:", result.error);
+          throw result.error;
+        }
+
+        return result.value;
+      } catch (error) {
+        console.error("Health factor preview operation failed:", error);
+        throw error;
+      }
+    },
+    [preview],
+  );
+
+  return {
+    executePreview,
+    loading,
+    error,
   };
 };
