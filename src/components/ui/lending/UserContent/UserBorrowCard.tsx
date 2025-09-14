@@ -15,23 +15,33 @@ import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface UserBorrowCardProps {
   position: UserBorrowPosition;
   unifiedMarket: UnifiedMarketData;
+  userAddress: string | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   position,
   unifiedMarket,
+  userAddress,
   onSupply,
   onBorrow,
   onRepay,
   tokenTransferState,
+  onHealthFactorPreview,
 }) => {
   const { borrow, marketName } = position;
   const balanceUsd = parseFloat(borrow.debt.usd) || 0;
@@ -105,10 +115,12 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
           market={unifiedMarket}
+          userAddress={userAddress}
           borrowPosition={position}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}
+          onHealthFactorPreview={onHealthFactorPreview}
           tokenTransferState={tokenTransferState}
           buttonsToShow={["borrow", "repay"]}
         >

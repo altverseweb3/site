@@ -23,19 +23,29 @@ import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface AvailableBorrowCardProps {
   market: UnifiedMarketData;
+  userAddress: string | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
+  onHealthFactorPreview: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   market,
+  userAddress,
   onSupply,
   onBorrow,
   tokenTransferState,
+  onHealthFactorPreview,
 }) => {
   // Extract borrow data
   const baseBorrowAPY = market.borrowData.apy;
@@ -171,8 +181,10 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
+          onHealthFactorPreview={onHealthFactorPreview}
           tokenTransferState={tokenTransferState}
           buttonsToShow={["supply", "borrow"]}
         >

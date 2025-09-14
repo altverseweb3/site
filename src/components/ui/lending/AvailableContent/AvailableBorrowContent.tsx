@@ -6,25 +6,35 @@ import CardsList from "@/components/ui/CardsList";
 import { UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface AvailableBorrowContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | null;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
+  onHealthFactorPreview: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
   markets,
+  userAddress,
   tokenTransferState,
   filters,
   sortConfig,
   onSupply,
   onBorrow,
+  onHealthFactorPreview,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -118,9 +128,11 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
         <AvailableBorrowCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
+          onHealthFactorPreview={onHealthFactorPreview}
         />
       )}
       currentPage={currentPage}

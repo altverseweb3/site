@@ -36,6 +36,7 @@ import {
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
+  userAddress: string | null;
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
@@ -55,6 +56,7 @@ type ctaButtons = "supply" | "borrow" | "withdraw" | "repay";
 
 const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   market,
+  userAddress,
   children,
   onSupply,
   onBorrow,
@@ -64,6 +66,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   supplyPosition,
   borrowPosition,
   buttonsToShow,
+  onHealthFactorPreview,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -275,6 +278,8 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 market={market}
                 onSupply={onSupply}
                 onBorrow={onBorrow}
+                onHealthFactorPreview={onHealthFactorPreview}
+                userAddress={userAddress}
                 tokenTransferState={tokenTransferState}
                 healthFactor={
                   market.marketInfo.userState?.healthFactor?.toString() || null
@@ -297,11 +302,13 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             {onBorrow && buttonsToShow.includes("borrow") && (
               <BorrowAssetModal
                 market={market}
+                userAddress={userAddress}
                 onBorrow={onBorrow}
                 tokenTransferState={tokenTransferState}
                 healthFactor={
                   market.marketInfo.userState?.healthFactor?.toString() || null
                 }
+                onHealthFactorPreview={onHealthFactorPreview}
               >
                 <BrandedButton
                   iconName="TrendingDown"
@@ -320,12 +327,14 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             {onWithdraw && buttonsToShow.includes("withdraw") && (
               <WithdrawAssetModal
                 market={market}
+                userAddress={userAddress}
                 position={supplyPosition}
                 onWithdraw={onWithdraw}
                 tokenTransferState={tokenTransferState}
                 healthFactor={
                   market.marketInfo.userState?.healthFactor?.toString() || null
                 }
+                onHealthFactorPreview={onHealthFactorPreview}
               >
                 <BrandedButton
                   iconName="Coins"
@@ -344,12 +353,11 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             {onRepay && buttonsToShow.includes("repay") && (
               <RepayAssetModal
                 market={market}
+                userAddress={userAddress}
                 position={borrowPosition}
                 onRepay={onRepay}
                 tokenTransferState={tokenTransferState}
-                healthFactor={
-                  market.marketInfo.userState?.healthFactor?.toString() || null
-                }
+                onHealthFactorPreview={onHealthFactorPreview}
               >
                 <BrandedButton
                   iconName="Coins"

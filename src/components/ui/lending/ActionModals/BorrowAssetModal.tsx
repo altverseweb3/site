@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,26 +19,94 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
+import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+import { evmAddress } from "@aave/react";
 
 interface BorrowAssetModalProps {
   market: UnifiedMarketData;
+  userAddress: string | null;
   children: React.ReactNode;
   onBorrow: (market: UnifiedMarketData) => void;
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
 
 const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   market,
+  userAddress,
   children,
   tokenTransferState,
   onBorrow,
+  onHealthFactorPreview,
   healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
 
   const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
+
+  // Health factor preview state
+  const [healthFactorPreview, setHealthFactorPreview] =
+    useState<HealthFactorPreviewResult | null>(null);
+  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
+
+  // Update ref when onHealthFactorPreview changes
+  useEffect(() => {
+    onHealthFactorPreviewRef.current = onHealthFactorPreview;
+  }, [onHealthFactorPreview]);
+
+  // Health factor preview effect - call when amount changes
+  useEffect(() => {
+    const amount = tokenTransferState.amount || "0";
+
+    // Only calculate if we have an amount, source token, user address, and the preview function
+    if (
+      !amount ||
+      amount === "0" ||
+      !sourceToken?.address ||
+      !userAddress ||
+      !onHealthFactorPreviewRef.current
+    ) {
+      setHealthFactorPreview(null);
+      return;
+    }
+
+    const calculateHealthFactor = async () => {
+      try {
+        const result = await onHealthFactorPreviewRef.current!({
+          operation: "borrow",
+          market,
+          amount,
+          currency: evmAddress(sourceToken.address),
+          chainId: market.marketInfo.chain.chainId,
+          userAddress: evmAddress(userAddress),
+          useNative: false,
+        });
+        setHealthFactorPreview(result);
+      } catch (error) {
+        console.error("Health factor preview failed:", error);
+        setHealthFactorPreview(null);
+      }
+    };
+
+    // Debounce the calculation
+    const timeoutId = setTimeout(calculateHealthFactor, 300);
+    return () => clearTimeout(timeoutId);
+  }, [
+    tokenTransferState.amount,
+    sourceToken?.address,
+    userAddress,
+    market.marketInfo.chain.chainId,
+    market.marketInfo.address,
+    market,
+  ]);
 
   return (
     <Dialog>
@@ -207,6 +275,19 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Health Factor Risk Display */}
+          {healthFactorPreview?.success &&
+            healthFactorPreview.healthFactorAfter &&
+            (tokenTransferState.amount || "0") !== "0" && (
+              <div className="mt-4">
+                <HealthFactorRiskDisplay
+                  healthFactorBefore={healthFactorPreview.healthFactorBefore}
+                  healthFactorAfter={healthFactorPreview.healthFactorAfter}
+                  liquidationRisk={healthFactorPreview.liquidationRisk}
+                />
+              </div>
+            )}
 
           <BrandedButton
             onClick={async () => {

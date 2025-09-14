@@ -13,6 +13,7 @@ import {
 
 interface UserSupplyContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | null;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -33,6 +34,7 @@ const ITEMS_PER_PAGE = 10;
 
 const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   markets,
+  userAddress,
   tokenTransferState,
   filters,
   sortConfig,
@@ -138,6 +140,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           key={`${position.marketAddress}-${position.supply.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}

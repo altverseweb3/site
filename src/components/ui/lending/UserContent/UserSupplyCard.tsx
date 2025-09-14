@@ -27,6 +27,7 @@ import {
 interface UserSupplyCardProps {
   position: UserSupplyPosition;
   unifiedMarket: UnifiedMarketData;
+  userAddress: string | null;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
@@ -41,6 +42,7 @@ interface UserSupplyCardProps {
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   position,
   unifiedMarket,
+  userAddress,
   onSupply,
   onBorrow,
   onWithdraw,
@@ -171,6 +173,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
           market={unifiedMarket}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}

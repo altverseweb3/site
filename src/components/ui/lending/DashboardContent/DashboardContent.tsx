@@ -290,27 +290,32 @@ export default function DashboardContent({
           isSupplyMode ? (
             <AvailableSupplyContent
               markets={unifiedMarkets}
+              userAddress={userAddress}
               showZeroBalance={showZeroBalance}
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
               onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
+              onHealthFactorPreview={actions.onHealthFactorPreview}
             />
           ) : (
             <AvailableBorrowContent
               markets={unifiedMarkets}
+              userAddress={userAddress}
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
               onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
+              onHealthFactorPreview={actions.onHealthFactorPreview}
             />
           )
         ) : // Show open positions
         isSupplyMode ? (
           <UserSupplyContent
             markets={unifiedMarkets}
+            userAddress={userAddress}
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
@@ -323,6 +328,7 @@ export default function DashboardContent({
         ) : (
           <UserBorrowContent
             markets={unifiedMarkets}
+            userAddress={userAddress}
             showZeroBalance={showZeroBalance}
             tokenTransferState={tokenTransferState}
             filters={filters}
@@ -330,6 +336,7 @@ export default function DashboardContent({
             onSupply={actions.onSupply}
             onBorrow={actions.onBorrow}
             onRepay={actions.onRepay}
+            onHealthFactorPreview={actions.onHealthFactorPreview}
           />
         )}
       </div>

@@ -5,9 +5,14 @@ import CardsList from "@/components/ui/CardsList";
 import { UserBorrowPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface UserBorrowContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | null;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
@@ -15,6 +20,9 @@ interface UserBorrowContentProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
@@ -25,6 +33,7 @@ const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   markets,
+  userAddress,
   showZeroBalance = false,
   tokenTransferState,
   filters,
@@ -32,6 +41,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   onSupply,
   onBorrow,
   onRepay,
+  onHealthFactorPreview,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -134,10 +144,12 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}
           tokenTransferState={tokenTransferState}
+          onHealthFactorPreview={onHealthFactorPreview}
         />
       )}
       currentPage={currentPage}
