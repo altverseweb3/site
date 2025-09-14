@@ -3,11 +3,8 @@
 import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
-import { Chain } from "@/types/web3";
 import {
-  ChainId,
   Market,
-  EModeStatus,
   UserSupplyData,
   UserBorrowData,
   UnifiedMarketData,
@@ -25,7 +22,6 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface DashboardContentProps {
   userAddress: string;
-  selectedChains: Chain[];
   activeMarkets: Market[];
   aggregatedUserState: AggregatedUserState;
   supplyData: {
@@ -45,12 +41,15 @@ interface DashboardContentProps {
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   refetchMarkets?: () => void;
-  onRepay: (market: UnifiedMarketData, max: boolean) => void;
-  onCollateralToggle: (market: UnifiedMarketData) => void;
+  // Action handlers grouped together
+  actions: {
+    onSupply: (market: UnifiedMarketData) => void;
+    onBorrow: (market: UnifiedMarketData) => void;
+    onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
+    onRepay: (market: UnifiedMarketData, max: boolean) => void;
+    onCollateralToggle: (market: UnifiedMarketData) => void;
+  };
 }
 
 export default function DashboardContent({
@@ -67,126 +66,9 @@ export default function DashboardContent({
   filters,
   sortConfig,
   onSubsectionChange,
-  onSupply,
-  onBorrow,
-  onWithdraw,
   refetchMarkets,
-  onRepay,
-  onCollateralToggle,
+  actions,
 }: DashboardContentProps) {
-  return (
-    <DashboardContentInner
-      globalData={aggregatedUserState.globalData}
-      healthFactorData={aggregatedUserState.healthFactorData}
-      eModeStatus={aggregatedUserState.eModeStatus}
-      supplyData={supplyData}
-      marketSupplyData={marketSupplyData}
-      marketBorrowData={marketBorrowData}
-      borrowAPY={borrowData.apy}
-      activeMarkets={activeMarkets}
-      borrowData={aggregatedUserState.borrowData}
-      marketRiskData={aggregatedUserState.marketRiskData}
-      loading={loading}
-      error={error}
-      tokenTransferState={tokenTransferState}
-      userAddress={userAddress}
-      filters={filters}
-      sortConfig={sortConfig}
-      onSubsectionChange={onSubsectionChange}
-      onSupply={onSupply}
-      onBorrow={onBorrow}
-      onWithdraw={onWithdraw}
-      refetchMarkets={refetchMarkets}
-      onRepay={onRepay}
-      onCollateralToggle={onCollateralToggle}
-    />
-  );
-}
-
-interface DashboardContentInnerProps {
-  globalData: {
-    netWorth: string;
-    netAPY: string;
-  };
-  healthFactorData: {
-    show: boolean;
-    value: string | null;
-  };
-  eModeStatus: EModeStatus;
-  supplyData: {
-    balance: string;
-    apy: string;
-    collateral: string;
-  };
-  borrowAPY: string;
-  borrowData: {
-    debt: string;
-    collateral: string;
-    borrowPercentUsed: string | null;
-    marketData: Record<
-      string,
-      {
-        debt: string;
-        collateral: string;
-        currentLtv: string | null;
-      }
-    >;
-  };
-  marketSupplyData: Record<string, UserSupplyData>;
-  marketBorrowData: Record<string, UserBorrowData>;
-  marketRiskData: Record<
-    string,
-    {
-      healthFactor: string | null;
-      ltv: string | null;
-      currentLiquidationThreshold: string | null;
-      chainId: ChainId;
-      chainName: string;
-      chainIcon: string;
-      marketName: string;
-    }
-  >;
-  activeMarkets: Market[];
-  loading: boolean;
-  error: boolean;
-  tokenTransferState: TokenTransferState;
-  userAddress: string;
-  filters?: LendingFilters;
-  sortConfig?: LendingSortConfig | null;
-  onSubsectionChange?: (subsection: string) => void;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-  refetchMarkets?: () => void;
-  onRepay: (market: UnifiedMarketData, max: boolean) => void;
-  onCollateralToggle: (market: UnifiedMarketData) => void;
-}
-
-function DashboardContentInner({
-  globalData,
-  healthFactorData,
-  eModeStatus,
-  supplyData,
-  borrowAPY,
-  borrowData,
-  marketSupplyData,
-  marketBorrowData,
-  marketRiskData,
-  activeMarkets,
-  loading,
-  error,
-  tokenTransferState,
-  userAddress,
-  filters,
-  sortConfig,
-  onSubsectionChange,
-  onSupply,
-  onBorrow,
-  onWithdraw,
-  refetchMarkets,
-  onRepay,
-  onCollateralToggle,
-}: DashboardContentInnerProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
   const [showZeroBalance, setShowZeroBalance] = useState(false);
@@ -207,7 +89,7 @@ function DashboardContentInner({
     }
   }, [isSupplyMode, showAvailable, onSubsectionChange]);
 
-  // Show loading state if any market is still loading
+  // Show loading state
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -216,7 +98,7 @@ function DashboardContentInner({
     );
   }
 
-  // Show error state if any market has error
+  // Show error state
   if (error) {
     return (
       <div className="text-center py-16">
@@ -235,7 +117,7 @@ function DashboardContentInner({
             <h3 className="text-sm font-medium text-white">
               global info (selected chains)
             </h3>
-            {healthFactorData.show && (
+            {aggregatedUserState.healthFactorData.show && (
               <button
                 onClick={() => setIsRiskDetailsModalOpen(true)}
                 className="px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white"
@@ -245,27 +127,31 @@ function DashboardContentInner({
             )}
           </div>
           <div
-            className={`grid ${healthFactorData.show ? "grid-cols-3" : "grid-cols-2"} gap-3`}
+            className={`grid ${aggregatedUserState.healthFactorData.show ? "grid-cols-3" : "grid-cols-2"} gap-3`}
           >
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">net worth</div>
               <div className="text-sm font-semibold text-white">
-                {globalData.netWorth}
+                {aggregatedUserState.globalData.netWorth}
               </div>
             </div>
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">net APY</div>
               <div className="text-sm font-semibold text-green-400">
-                {globalData.netAPY}
+                {aggregatedUserState.globalData.netAPY}
               </div>
             </div>
-            {healthFactorData.show && (
+            {aggregatedUserState.healthFactorData.show && (
               <div className="text-center">
                 <div className="text-xs text-[#A1A1AA] mb-1">health factor</div>
                 <div
-                  className={`text-sm font-semibold ${formatHealthFactor(healthFactorData.value).colorClass}`}
+                  className={`text-sm font-semibold ${formatHealthFactor(aggregatedUserState.healthFactorData.value).colorClass}`}
                 >
-                  {formatHealthFactor(healthFactorData.value).value}
+                  {
+                    formatHealthFactor(
+                      aggregatedUserState.healthFactorData.value,
+                    ).value
+                  }
                 </div>
               </div>
             )}
@@ -284,18 +170,20 @@ function DashboardContentInner({
               onClick={() => setIsEmodeModalOpen(true)}
               className={`px-2 py-0.5 bg-[#27272A] hover:bg-[#3F3F46] border border-[#3F3F46] rounded text-xs text-white ${isSupplyMode ? "invisible" : "visible"}`}
             >
-              e-mode: {eModeStatus}
+              e-mode: {aggregatedUserState.eModeStatus}
             </button>
           </div>
           <div
-            className={`grid ${isSupplyMode || borrowData.borrowPercentUsed ? "grid-cols-3" : "grid-cols-2"} gap-3`}
+            className={`grid ${isSupplyMode || aggregatedUserState.borrowData.borrowPercentUsed ? "grid-cols-3" : "grid-cols-2"} gap-3`}
           >
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">
                 {isSupplyMode ? "balance" : "debt"}
               </div>
               <div className="text-sm font-semibold text-white">
-                {isSupplyMode ? supplyData.balance : borrowData.debt}
+                {isSupplyMode
+                  ? supplyData.balance
+                  : aggregatedUserState.borrowData.debt}
               </div>
             </div>
             <div className="text-center">
@@ -303,10 +191,11 @@ function DashboardContentInner({
               <div
                 className={`text-sm font-semibold ${isSupplyMode ? "text-green-400" : "text-red-400"}`}
               >
-                {isSupplyMode ? supplyData.apy : borrowAPY}
+                {isSupplyMode ? supplyData.apy : borrowData.apy}
               </div>
             </div>
-            {(isSupplyMode || borrowData.borrowPercentUsed) && (
+            {(isSupplyMode ||
+              aggregatedUserState.borrowData.borrowPercentUsed) && (
               <div className="text-center">
                 <div className="text-xs text-[#A1A1AA] mb-1">
                   {isSupplyMode ? "collateral" : "borrow % used"}
@@ -316,7 +205,7 @@ function DashboardContentInner({
                 >
                   {isSupplyMode
                     ? supplyData.collateral
-                    : borrowData.borrowPercentUsed}
+                    : aggregatedUserState.borrowData.borrowPercentUsed}
                 </div>
               </div>
             )}
@@ -410,8 +299,8 @@ function DashboardContentInner({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onSupply={onSupply}
-              onBorrow={onBorrow}
+              onSupply={actions.onSupply}
+              onBorrow={actions.onBorrow}
             />
           ) : (
             <AvailableBorrowContent
@@ -419,8 +308,8 @@ function DashboardContentInner({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onSupply={onSupply}
-              onBorrow={onBorrow}
+              onSupply={actions.onSupply}
+              onBorrow={actions.onBorrow}
             />
           )
         ) : // Show open positions
@@ -431,10 +320,10 @@ function DashboardContentInner({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onSupply={onSupply}
-            onBorrow={onBorrow}
-            onWithdraw={onWithdraw}
-            onCollateralToggle={onCollateralToggle}
+            onSupply={actions.onSupply}
+            onBorrow={actions.onBorrow}
+            onWithdraw={actions.onWithdraw}
+            onCollateralToggle={actions.onCollateralToggle}
           />
         ) : (
           <UserBorrowContent
@@ -444,9 +333,9 @@ function DashboardContentInner({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onSupply={onSupply}
-            onBorrow={onBorrow}
-            onRepay={onRepay}
+            onSupply={actions.onSupply}
+            onBorrow={actions.onBorrow}
+            onRepay={actions.onRepay}
           />
         )}
       </div>
@@ -455,8 +344,8 @@ function DashboardContentInner({
       <RiskDetailsModal
         isOpen={isRiskDetailsModalOpen}
         onClose={() => setIsRiskDetailsModalOpen(false)}
-        marketRiskData={marketRiskData}
-        borrowMarketData={borrowData.marketData}
+        marketRiskData={aggregatedUserState.marketRiskData}
+        borrowMarketData={aggregatedUserState.borrowData.marketData}
       />
 
       {/* E-Mode Modal */}

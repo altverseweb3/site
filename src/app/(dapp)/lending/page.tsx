@@ -389,7 +389,6 @@ export default function LendingPage() {
                     {activeTab === "dashboard" && userWalletAddress && (
                       <DashboardContent
                         userAddress={userWalletAddress}
-                        selectedChains={selectedChains}
                         activeMarkets={markets || []}
                         aggregatedUserState={aggregatedUserState}
                         supplyData={supplyData}
@@ -402,12 +401,14 @@ export default function LendingPage() {
                         filters={filters}
                         sortConfig={sortConfig}
                         onSubsectionChange={setCurrentSubsection}
-                        onSupply={handleSupply}
-                        onBorrow={handleBorrow}
-                        onWithdraw={handleWithdraw}
                         refetchMarkets={refetchMarkets}
-                        onRepay={handleRepay}
-                        onCollateralToggle={handleCollateralToggle}
+                        actions={{
+                          onSupply: handleSupply,
+                          onBorrow: handleBorrow,
+                          onWithdraw: handleWithdraw,
+                          onRepay: handleRepay,
+                          onCollateralToggle: handleCollateralToggle,
+                        }}
                       />
                     )}
                     {activeTab === "history" && (
