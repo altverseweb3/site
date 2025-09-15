@@ -3,13 +3,7 @@
 import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserContent/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import {
-  UserSupplyData,
-  UserSupplyPosition,
-  Market,
-  UnifiedMarketData,
-} from "@/types/aave";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import {
@@ -18,8 +12,7 @@ import {
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface UserSupplyContentProps {
-  marketSupplyData: Record<string, UserSupplyData>;
-  activeMarkets: Market[];
+  markets: UnifiedMarketData[];
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -39,8 +32,7 @@ interface EnhancedUserSupplyPosition extends UserSupplyPosition {
 const ITEMS_PER_PAGE = 10;
 
 const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
-  marketSupplyData,
-  activeMarkets,
+  markets,
   tokenTransferState,
   filters,
   sortConfig,
@@ -52,34 +44,18 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const unifiedMarkets = unifyMarkets(activeMarkets);
-
-  // lookup map for unified markets by currency address and chain
-  const unifiedMarketMap = new Map<string, UnifiedMarketData>();
-  unifiedMarkets.forEach((market) => {
-    const key = `${market.underlyingToken.address.toLowerCase()}-${market.marketInfo.chain.chainId}`;
-    unifiedMarketMap.set(key, market);
-  });
-
   const enhancedPositions: EnhancedUserSupplyPosition[] = [];
 
-  Object.values(marketSupplyData).forEach((marketData) => {
-    if (marketData.supplies && marketData.supplies.length > 0) {
-      marketData.supplies.forEach((supply) => {
-        const currencyKey = `${supply.currency.address.toLowerCase()}-${marketData.chainId}`;
-        const unifiedMarket = unifiedMarketMap.get(currencyKey);
-
-        if (unifiedMarket) {
-          enhancedPositions.push({
-            marketAddress: marketData.marketAddress,
-            marketName: marketData.marketName,
-            chainId: marketData.chainId,
-            supply,
-            unifiedMarket,
-          });
-        }
+  markets.forEach((market) => {
+    market.userSupplyPositions.forEach((supply) => {
+      enhancedPositions.push({
+        marketAddress: market.marketInfo.address,
+        marketName: market.marketName,
+        chainId: market.marketInfo.chain.chainId,
+        supply,
+        unifiedMarket: market,
       });
-    }
+    });
   });
 
   // Apply asset filter

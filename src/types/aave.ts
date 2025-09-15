@@ -175,6 +175,8 @@ export interface UnifiedMarketData extends Reserve {
   usdExchangeRate: number;
   isFrozen: boolean;
   isPaused: boolean;
+  userSupplyPositions: MarketUserReserveSupplyPosition[];
+  userBorrowPositions: MarketUserReserveBorrowPosition[];
 }
 
 export type EModeStatus = "on" | "off" | "mixed";

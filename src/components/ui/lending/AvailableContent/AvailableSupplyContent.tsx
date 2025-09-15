@@ -3,13 +3,12 @@
 import React, { useState } from "react";
 import AvailableSupplyCard from "@/components/ui/lending/AvailableContent/AvailableSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { Market, UnifiedMarketData } from "@/types/aave";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableSupplyContentProps {
-  markets: Market[] | null | undefined;
+  markets: UnifiedMarketData[];
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
@@ -31,8 +30,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const unifiedMarkets = unifyMarkets(markets!);
-  let availableSupplyMarkets = unifiedMarkets.filter((market) => {
+  let availableSupplyMarkets = markets.filter((market) => {
     if (showZeroBalance) return true;
     if (!market.userState) return false;
     const userBalance = parseFloat(market.userState.balance.amount.value) || 0;

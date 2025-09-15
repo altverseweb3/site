@@ -3,13 +3,12 @@
 import React, { useState } from "react";
 import AvailableBorrowCard from "@/components/ui/lending/AvailableContent/AvailableBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import { Market, UnifiedMarketData } from "@/types/aave";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableBorrowContentProps {
-  markets: Market[] | null | undefined;
+  markets: UnifiedMarketData[];
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -29,8 +28,7 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const unifiedMarkets = unifyMarkets(markets!);
-  let availableBorrowMarkets = unifiedMarkets.filter((market) => {
+  let availableBorrowMarkets = markets.filter((market) => {
     // Filter out disabled markets
     return (
       !market.isFrozen &&
