@@ -9,7 +9,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableSupplyContentProps {
   markets: UnifiedMarketData[];
-  userAddress: string | null;
+  userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;

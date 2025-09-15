@@ -312,6 +312,7 @@ export default function LendingPage() {
                   <>
                     {activeTab === "markets" && (
                       <MarketContent
+                        userAddress={userWalletAddress}
                         unifiedMarkets={unifiedMarkets}
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
