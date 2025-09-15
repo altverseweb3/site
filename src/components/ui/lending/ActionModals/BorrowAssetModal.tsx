@@ -19,10 +19,6 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface BorrowAssetModalProps {
@@ -30,9 +26,6 @@ interface BorrowAssetModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   onBorrow: (market: UnifiedMarketData) => void;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
@@ -43,7 +36,6 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   children,
   tokenTransferState,
   onBorrow,
-  onHealthFactorPreview,
   healthFactor,
 }) => {
   const sourceToken = useSourceToken();
@@ -225,7 +217,6 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
             sourceToken={sourceToken || undefined}
             userAddress={userAddress}
             market={market}
-            onHealthFactorPreview={onHealthFactorPreview}
             operation="borrow"
             className="mt-4"
           />

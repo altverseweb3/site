@@ -6,9 +6,10 @@ import { formatHealthFactor } from "@/utils/formatters";
 import { UnifiedMarketData } from "@/types/aave";
 import { Token } from "@/types/web3";
 import { evmAddress } from "@aave/react";
+import { useSourceToken, useSourceChain } from "@/store/web3Store";
 import {
-  HealthFactorPreviewArgs,
   HealthFactorPreviewResult,
+  useHealthFactorPreviewOperations,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 export interface HealthFactorRiskDisplayProps {
@@ -23,9 +24,6 @@ export interface HealthFactorRiskDisplayProps {
   sourceToken?: Token;
   userAddress?: string;
   market?: UnifiedMarketData;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
   operation?: "borrow" | "supply" | "repay" | "withdraw";
 }
 
@@ -41,20 +39,24 @@ export default function HealthFactorRiskDisplay({
   sourceToken,
   userAddress,
   market,
-  onHealthFactorPreview,
   operation = "borrow",
 }: HealthFactorRiskDisplayProps) {
+  // Get dependencies for the hook
+  const storeSourceChain = useSourceChain();
+  const storeSourceToken = useSourceToken();
+
+  // Use the health factor preview operations hook
+  const { previewHealthFactor } = useHealthFactorPreviewOperations({
+    sourceChain: storeSourceChain,
+    sourceToken: storeSourceToken,
+    userWalletAddress: userAddress || null,
+  });
+
   // Internal state for health factor preview
   const [healthFactorPreview, setHealthFactorPreview] =
     useState<HealthFactorPreviewResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
   const lastCalculatedAmountRef = useRef<string>("");
-
-  // Update ref when onHealthFactorPreview changes
-  useEffect(() => {
-    onHealthFactorPreviewRef.current = onHealthFactorPreview;
-  }, [onHealthFactorPreview]);
 
   // Stable references for dependencies
   const marketAddress = market?.marketInfo?.address;
@@ -64,13 +66,7 @@ export default function HealthFactorRiskDisplay({
   // Health factor preview effect - call when amount changes
   useEffect(() => {
     // Only calculate if we have new props for calculation
-    if (
-      amount !== undefined &&
-      sourceToken &&
-      userAddress &&
-      market &&
-      onHealthFactorPreviewRef.current
-    ) {
+    if (amount !== undefined && sourceToken && userAddress && market) {
       // Only calculate if we have an amount and it's not zero
       if (!amount || amount === "0") {
         setHealthFactorPreview(null);
@@ -89,13 +85,11 @@ export default function HealthFactorRiskDisplay({
           setIsCalculating(true);
           lastCalculatedAmountRef.current = amount;
 
-          const result = await onHealthFactorPreviewRef.current!({
+          const result = await previewHealthFactor({
             operation,
             market,
             amount,
             currency: evmAddress(sourceToken.address),
-            chainId: market.marketInfo.chain.chainId,
-            userAddress: evmAddress(userAddress),
             useNative: false,
           });
 
@@ -142,13 +136,7 @@ export default function HealthFactorRiskDisplay({
   }
 
   // Don't render if using new props but we have an amount and preview calculation failed (not just in progress)
-  if (
-    amount !== undefined &&
-    sourceToken &&
-    userAddress &&
-    market &&
-    onHealthFactorPreview
-  ) {
+  if (amount !== undefined && sourceToken && userAddress && market) {
     // Only block rendering if we have an amount but the calculation explicitly failed
     if (
       amount &&

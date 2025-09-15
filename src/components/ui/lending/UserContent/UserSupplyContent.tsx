@@ -6,10 +6,6 @@ import CardsList from "@/components/ui/CardsList";
 import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface UserSupplyContentProps {
   markets: UnifiedMarketData[];
@@ -21,9 +17,6 @@ interface UserSupplyContentProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   onCollateralToggle: (market: UnifiedMarketData) => void;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
@@ -42,7 +35,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   onBorrow,
   onWithdraw,
   onCollateralToggle,
-  onHealthFactorPreview,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -146,7 +138,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           onWithdraw={onWithdraw}
           onCollateralToggle={onCollateralToggle}
           tokenTransferState={tokenTransferState}
-          onHealthFactorPreview={onHealthFactorPreview}
         />
       )}
       currentPage={currentPage}

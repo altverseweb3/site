@@ -33,10 +33,7 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
+
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface RepayAssetModalProps {
@@ -45,9 +42,6 @@ interface RepayAssetModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
 }
 
@@ -58,7 +52,6 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
   children,
   tokenTransferState,
   onRepay,
-  onHealthFactorPreview,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -643,7 +636,6 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
             sourceToken={destinationToken || undefined}
             userAddress={userAddress}
             market={market}
-            onHealthFactorPreview={onHealthFactorPreview}
             operation="repay"
             className="mt-4"
           />

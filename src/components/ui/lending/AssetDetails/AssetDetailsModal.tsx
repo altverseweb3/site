@@ -29,10 +29,6 @@ import { getLendingToken } from "@/utils/lending/tokens";
 import BorrowAssetModal from "@/components/ui/lending/ActionModals/BorrowAssetModal";
 import WithdrawAssetModal from "@/components/ui/lending/ActionModals/WithdrawAssetModal";
 import RepayAssetModal from "@/components/ui/lending/ActionModals/RepayAssetModal";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface AssetDetailsModalProps {
   market: UnifiedMarketData;
@@ -46,9 +42,6 @@ interface AssetDetailsModalProps {
   supplyPosition?: UserSupplyPosition;
   borrowPosition?: UserBorrowPosition;
   buttonsToShow: ctaButtons[];
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";
@@ -66,7 +59,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   supplyPosition,
   borrowPosition,
   buttonsToShow,
-  onHealthFactorPreview,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -279,7 +271,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                   market={market}
                   onSupply={onSupply}
                   onBorrow={onBorrow}
-                  onHealthFactorPreview={onHealthFactorPreview}
                   userAddress={userAddress}
                   tokenTransferState={tokenTransferState}
                   healthFactor={
@@ -311,7 +302,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                     market.marketInfo.userState?.healthFactor?.toString() ||
                     null
                   }
-                  onHealthFactorPreview={onHealthFactorPreview}
                 >
                   <BrandedButton
                     iconName="TrendingDown"
@@ -338,7 +328,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                     market.marketInfo.userState?.healthFactor?.toString() ||
                     null
                   }
-                  onHealthFactorPreview={onHealthFactorPreview}
                 >
                   <BrandedButton
                     iconName="Coins"
@@ -361,7 +350,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                   position={borrowPosition}
                   onRepay={onRepay}
                   tokenTransferState={tokenTransferState}
-                  onHealthFactorPreview={onHealthFactorPreview}
                 >
                   <BrandedButton
                     iconName="Coins"

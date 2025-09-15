@@ -22,10 +22,6 @@ import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
@@ -33,9 +29,6 @@ interface AvailableSupplyCardProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
-  onHealthFactorPreview: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
@@ -44,7 +37,6 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   onSupply,
   onBorrow,
   tokenTransferState,
-  onHealthFactorPreview,
 }) => {
   // Extract supply data
   const baseSupplyAPY = market.supplyData.apy;
@@ -163,7 +155,6 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
-          onHealthFactorPreview={onHealthFactorPreview}
           tokenTransferState={tokenTransferState}
           buttonsToShow={["supply", "borrow"]}
         >

@@ -18,10 +18,6 @@ import RiskDetailsModal from "@/components/ui/lending/DashboardContent/RiskDetai
 import EmodeModal from "@/components/ui/lending/ActionModals/EmodeModal";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 interface DashboardContentProps {
   userAddress: string;
@@ -42,9 +38,6 @@ interface DashboardContentProps {
     onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
     onRepay: (market: UnifiedMarketData, max: boolean) => void;
     onCollateralToggle: (market: UnifiedMarketData) => void;
-    onHealthFactorPreview: (
-      args: HealthFactorPreviewArgs,
-    ) => Promise<HealthFactorPreviewResult>;
   };
 }
 
@@ -297,7 +290,6 @@ export default function DashboardContent({
               sortConfig={sortConfig}
               onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
-              onHealthFactorPreview={actions.onHealthFactorPreview}
             />
           ) : (
             <AvailableBorrowContent
@@ -308,7 +300,6 @@ export default function DashboardContent({
               sortConfig={sortConfig}
               onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
-              onHealthFactorPreview={actions.onHealthFactorPreview}
             />
           )
         ) : // Show open positions
@@ -323,7 +314,6 @@ export default function DashboardContent({
             onBorrow={actions.onBorrow}
             onWithdraw={actions.onWithdraw}
             onCollateralToggle={actions.onCollateralToggle}
-            onHealthFactorPreview={actions.onHealthFactorPreview}
           />
         ) : (
           <UserBorrowContent
@@ -336,7 +326,6 @@ export default function DashboardContent({
             onSupply={actions.onSupply}
             onBorrow={actions.onBorrow}
             onRepay={actions.onRepay}
-            onHealthFactorPreview={actions.onHealthFactorPreview}
           />
         )}
       </div>

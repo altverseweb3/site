@@ -36,10 +36,7 @@ import ProgressTracker, {
   StepState,
 } from "@/components/ui/ProgressTracker";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
+
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface SupplyAssetModalProps {
@@ -50,9 +47,6 @@ interface SupplyAssetModalProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
@@ -64,7 +58,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   tokenTransferState,
   onSupply,
   healthFactor,
-  onHealthFactorPreview,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -609,7 +602,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
             sourceToken={destinationToken || undefined}
             userAddress={userAddress}
             market={market}
-            onHealthFactorPreview={onHealthFactorPreview}
             operation="supply"
             className="mt-4"
           />

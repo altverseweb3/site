@@ -12,7 +12,6 @@ import {
 } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import { HealthFactorPreviewArgs, HealthFactorPreviewResult } from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,9 +25,6 @@ interface MarketContentProps {
   filters: LendingFilters;
   sortConfig: LendingSortConfig | null;
   userAddress: string | undefined;
-  onHealthFactorPreview: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
@@ -39,7 +35,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
   onBorrow,
   filters,
   sortConfig,
-  onHealthFactorPreview,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -135,7 +130,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
           onWithdraw={(market: UserSupplyPosition) => {
             console.log(market); // TODO: update me
           }}
-          onHealthFactorPreview={onHealthFactorPreview}
           tokenTransferState={tokenTransferState}
         />
       )}

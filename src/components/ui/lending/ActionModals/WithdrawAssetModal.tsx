@@ -20,10 +20,7 @@ import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
-import {
-  HealthFactorPreviewArgs,
-  HealthFactorPreviewResult,
-} from "@/hooks/lending/useHealthFactorPreviewOperations";
+
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface WithdrawAssetModalProps {
@@ -32,9 +29,6 @@ interface WithdrawAssetModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-  onHealthFactorPreview?: (
-    args: HealthFactorPreviewArgs,
-  ) => Promise<HealthFactorPreviewResult>;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
@@ -46,7 +40,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   children,
   tokenTransferState,
   onWithdraw,
-  onHealthFactorPreview,
   healthFactor,
 }) => {
   const sourceToken = useSourceToken();
@@ -257,7 +250,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
             sourceToken={sourceToken || undefined}
             userAddress={userAddress}
             market={market}
-            onHealthFactorPreview={onHealthFactorPreview}
             operation="withdraw"
             className="mt-4"
           />
