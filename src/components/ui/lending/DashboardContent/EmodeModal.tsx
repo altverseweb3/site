@@ -17,26 +17,26 @@ import {
 } from "@/components/ui/Select";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { useEmodeOperations } from "@/hooks/lending/useEmodeOperations";
-import { Market, UserBorrowData } from "@/types/aave";
+import { UnifiedMarketData, UserBorrowData } from "@/types/aave";
 import Image from "next/image";
 import { formatPercentage } from "@/utils/formatters";
 
 interface EmodeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeMarkets: Market[];
+  unifiedMarkets: UnifiedMarketData[];
+  marketBorrowData: Record<string, UserBorrowData>;
   userAddress: string;
   refetchMarkets?: () => void;
-  marketBorrowData: Record<string, UserBorrowData>;
 }
 
 export default function EmodeModal({
   isOpen,
   onClose,
-  activeMarkets,
+  unifiedMarkets,
+  marketBorrowData,
   userAddress,
   refetchMarkets,
-  marketBorrowData,
 }: EmodeModalProps) {
   const [selectedMarketKey, setSelectedMarketKey] = useState<string>("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
@@ -54,7 +54,7 @@ export default function EmodeModal({
     getCurrentEmodeCategory,
   } = useEmodeOperations({
     userAddress,
-    activeMarkets,
+    unifiedMarkets,
     marketBorrowData,
     refetchMarkets,
   });
@@ -184,8 +184,12 @@ export default function EmodeModal({
                   {selectedMarketData ? (
                     <div className="flex items-center gap-2">
                       <Image
-                        src={selectedMarketData.market.chain.icon}
-                        alt={selectedMarketData.market.chain.name}
+                        src={
+                          selectedMarketData.unifiedMarket.marketInfo.chain.icon
+                        }
+                        alt={
+                          selectedMarketData.unifiedMarket.marketInfo.chain.name
+                        }
                         width={22}
                         height={22}
                         className="object-contain"
@@ -209,8 +213,8 @@ export default function EmodeModal({
                   >
                     <div className="flex items-center gap-2">
                       <Image
-                        src={option.market.chain.icon}
-                        alt={option.market.chain.name}
+                        src={option.unifiedMarket.marketInfo.chain.icon}
+                        alt={option.unifiedMarket.marketInfo.chain.name}
                         width={22}
                         height={22}
                         className="object-contain"

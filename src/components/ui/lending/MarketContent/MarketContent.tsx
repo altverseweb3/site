@@ -5,7 +5,9 @@ import MarketCard from "@/components/ui/lending/MarketContent/MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import {
   UnifiedMarketData,
+  UserBorrowData,
   UserBorrowPosition,
+  UserSupplyData,
   UserSupplyPosition,
 } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
@@ -14,6 +16,8 @@ const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
   unifiedMarkets: UnifiedMarketData[] | null | undefined;
+  marketBorrowData?: Record<string, UserBorrowData>;
+  marketSupplyData?: Record<string, UserSupplyData>;
   tokenTransferState: TokenTransferState;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;

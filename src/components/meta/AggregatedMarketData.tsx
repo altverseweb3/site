@@ -14,10 +14,12 @@ import {
   AggregatedUserState,
   UserSupplyData,
   UserBorrowData,
+  UnifiedMarketData,
 } from "@/types/aave";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
 import { AggregatedMarketUserBorrows } from "@/components/meta/AggregatedMarketUserBorrows";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface MarketData {
   marketAddress: string;
@@ -78,6 +80,7 @@ interface AggregatedMarketDataProps {
   suppliesOrderBy?: MarketReservesRequestOrderBy;
   children: (props: {
     markets: Market[] | null;
+    unifiedMarkets: UnifiedMarketData[] | null;
     loading: boolean;
     error: boolean;
     hasData: boolean;
@@ -418,6 +421,7 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
 
     return {
       markets: hasData ? validMarkets : null,
+      unifiedMarkets: null, // Will be populated later with user data
       loading: isLoading,
       error: hasError,
       hasData,
@@ -468,9 +472,19 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
                 loading: borrowLoading,
                 error: borrowError,
                 marketBorrowData,
-              }) =>
-                children({
+              }) => {
+                // Create unified markets with user data
+                const unifiedMarkets = aggregatedData.markets
+                  ? unifyMarkets(
+                      aggregatedData.markets,
+                      marketSupplyData,
+                      marketBorrowData,
+                    )
+                  : null;
+
+                return children({
                   ...aggregatedData,
+                  unifiedMarkets,
                   supplyData,
                   borrowData,
                   marketSupplyData,
@@ -479,31 +493,39 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
                   borrowLoading,
                   supplyError,
                   borrowError,
-                })
-              }
+                });
+              }}
             </AggregatedMarketUserBorrows>
           )}
         </AggregatedMarketUserSupplies>
       ) : (
         /* Render children with empty supply/borrow data when no user */
-        children({
-          ...aggregatedData,
-          supplyData: {
-            balance: formatCurrency(0),
-            apy: formatPercentage(0),
-            collateral: formatCurrency(0),
-          },
-          borrowData: {
-            balance: formatCurrency(0),
-            apy: formatPercentage(0),
-          },
-          marketSupplyData: {},
-          marketBorrowData: {},
-          supplyLoading: false,
-          borrowLoading: false,
-          supplyError: false,
-          borrowError: false,
-        })
+        (() => {
+          // Create unified markets without user data
+          const unifiedMarkets = aggregatedData.markets
+            ? unifyMarkets(aggregatedData.markets)
+            : null;
+
+          return children({
+            ...aggregatedData,
+            unifiedMarkets,
+            supplyData: {
+              balance: formatCurrency(0),
+              apy: formatPercentage(0),
+              collateral: formatCurrency(0),
+            },
+            borrowData: {
+              balance: formatCurrency(0),
+              apy: formatPercentage(0),
+            },
+            marketSupplyData: {},
+            marketBorrowData: {},
+            supplyLoading: false,
+            borrowLoading: false,
+            supplyError: false,
+            borrowError: false,
+          });
+        })()
       )}
     </>
   );
