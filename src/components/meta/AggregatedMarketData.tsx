@@ -86,15 +86,6 @@ interface AggregatedMarketDataProps {
     hasData: boolean;
     refetchMarkets: () => void;
     aggregatedUserState: AggregatedUserState;
-    supplyData: {
-      balance: string;
-      apy: string;
-      collateral: string;
-    };
-    borrowData: {
-      balance: string;
-      apy: string;
-    };
     marketSupplyData: Record<string, UserSupplyData>;
     marketBorrowData: Record<string, UserBorrowData>;
     supplyLoading: boolean;
@@ -107,6 +98,15 @@ interface AggregatedMarketDataProps {
 // Calculate aggregated user state from markets' internal userState
 const calculateAggregatedUserState = (
   activeMarkets: Market[],
+  supplyData?: {
+    balance: string;
+    apy: string;
+    collateral: string;
+  },
+  borrowData?: {
+    balance: string;
+    apy: string;
+  },
 ): AggregatedUserState => {
   const validMarkets = activeMarkets.filter((market) => market.userState);
 
@@ -121,8 +121,14 @@ const calculateAggregatedUserState = (
         value: null as string | null,
       },
       eModeStatus: "off" as EModeStatus,
-      borrowData: {
+      globalSupplyData: supplyData || {
+        balance: formatCurrency(0),
+        apy: formatPercentage(0),
+        collateral: formatCurrency(0),
+      },
+      globalBorrowData: {
         debt: formatCurrency(0),
+        apy: borrowData?.apy || formatPercentage(0),
         collateral: formatCurrency(0),
         borrowPercentUsed: null as string | null,
         marketData: {} as Record<
@@ -267,8 +273,9 @@ const calculateAggregatedUserState = (
     }
   }
 
-  const borrowData = {
+  const globalBorrowData = {
     debt: formatCurrency(totalDebtBase),
+    apy: borrowData?.apy || formatPercentage(0),
     collateral: formatCurrency(totalCollateralBase),
     borrowPercentUsed,
     marketData,
@@ -312,7 +319,12 @@ const calculateAggregatedUserState = (
     globalData,
     healthFactorData,
     eModeStatus,
-    borrowData,
+    globalSupplyData: supplyData || {
+      balance: formatCurrency(0),
+      apy: formatPercentage(0),
+      collateral: formatCurrency(0),
+    },
+    globalBorrowData,
     marketRiskData,
   };
 };
@@ -416,7 +428,7 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
     // Check if we have any data
     const hasData = validMarkets.length > 0;
 
-    // Calculate aggregated user state
+    // Calculate aggregated user state (will be populated with actual supply/borrow data in the children render function)
     const aggregatedUserState = calculateAggregatedUserState(validMarkets);
 
     return {
@@ -482,11 +494,17 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
                     )
                   : null;
 
+                // Calculate aggregated user state with actual supply and borrow data
+                const aggregatedUserState = calculateAggregatedUserState(
+                  aggregatedData.markets || [],
+                  supplyData,
+                  borrowData,
+                );
+
                 return children({
                   ...aggregatedData,
                   unifiedMarkets,
-                  supplyData,
-                  borrowData,
+                  aggregatedUserState,
                   marketSupplyData,
                   marketBorrowData,
                   supplyLoading,
@@ -509,15 +527,6 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
           return children({
             ...aggregatedData,
             unifiedMarkets,
-            supplyData: {
-              balance: formatCurrency(0),
-              apy: formatPercentage(0),
-              collateral: formatCurrency(0),
-            },
-            borrowData: {
-              balance: formatCurrency(0),
-              apy: formatPercentage(0),
-            },
             marketSupplyData: {},
             marketBorrowData: {},
             supplyLoading: false,

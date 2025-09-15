@@ -195,8 +195,6 @@ export default function LendingPage() {
         loading,
         refetchMarkets,
         aggregatedUserState,
-        supplyData,
-        borrowData,
         supplyLoading,
         borrowLoading,
         supplyError,
@@ -338,8 +336,6 @@ export default function LendingPage() {
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         aggregatedUserState={aggregatedUserState}
-                        supplyData={supplyData}
-                        borrowData={borrowData}
                         loading={loading || supplyLoading || borrowLoading}
                         error={supplyError || borrowError}
                         tokenTransferState={tokenTransferState}

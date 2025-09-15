@@ -136,8 +136,14 @@ export interface AggregatedUserState {
     value: string | null;
   };
   eModeStatus: EModeStatus;
-  borrowData: {
+  globalSupplyData: {
+    balance: string;
+    apy: string;
+    collateral: string;
+  };
+  globalBorrowData: {
     debt: string;
+    apy: string;
     collateral: string;
     borrowPercentUsed: string | null;
     marketData: Record<

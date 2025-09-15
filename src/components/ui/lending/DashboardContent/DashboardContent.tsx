@@ -15,7 +15,7 @@ import UserBorrowContent from "@/components/ui/lending/UserContent/UserBorrowCon
 import AvailableSupplyContent from "@/components/ui/lending/AvailableContent/AvailableSupplyContent";
 import AvailableBorrowContent from "@/components/ui/lending/AvailableContent/AvailableBorrowContent";
 import RiskDetailsModal from "@/components/ui/lending/DashboardContent/RiskDetailsModal";
-import EmodeModal from "@/components/ui/lending/DashboardContent/EmodeModal";
+import EmodeModal from "@/components/ui/lending/ActionModals/EmodeModal";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import {
@@ -29,15 +29,6 @@ interface DashboardContentProps {
   marketBorrowData: Record<string, UserBorrowData>;
   marketSupplyData?: Record<string, UserSupplyData>;
   aggregatedUserState: AggregatedUserState;
-  supplyData: {
-    balance: string;
-    apy: string;
-    collateral: string;
-  };
-  borrowData: {
-    balance: string;
-    apy: string;
-  };
   loading: boolean;
   error: boolean;
   tokenTransferState: TokenTransferState;
@@ -62,8 +53,6 @@ export default function DashboardContent({
   unifiedMarkets,
   marketBorrowData,
   aggregatedUserState,
-  supplyData,
-  borrowData,
   loading,
   error,
   tokenTransferState,
@@ -178,7 +167,7 @@ export default function DashboardContent({
             </button>
           </div>
           <div
-            className={`grid ${isSupplyMode || aggregatedUserState.borrowData.borrowPercentUsed ? "grid-cols-3" : "grid-cols-2"} gap-3`}
+            className={`grid ${isSupplyMode || aggregatedUserState.globalBorrowData.borrowPercentUsed ? "grid-cols-3" : "grid-cols-2"} gap-3`}
           >
             <div className="text-center">
               <div className="text-xs text-[#A1A1AA] mb-1">
@@ -186,8 +175,8 @@ export default function DashboardContent({
               </div>
               <div className="text-sm font-semibold text-white">
                 {isSupplyMode
-                  ? supplyData.balance
-                  : aggregatedUserState.borrowData.debt}
+                  ? aggregatedUserState.globalSupplyData.balance
+                  : aggregatedUserState.globalBorrowData.debt}
               </div>
             </div>
             <div className="text-center">
@@ -195,11 +184,13 @@ export default function DashboardContent({
               <div
                 className={`text-sm font-semibold ${isSupplyMode ? "text-green-400" : "text-red-400"}`}
               >
-                {isSupplyMode ? supplyData.apy : borrowData.apy}
+                {isSupplyMode
+                  ? aggregatedUserState.globalSupplyData.apy
+                  : aggregatedUserState.globalBorrowData.apy}
               </div>
             </div>
             {(isSupplyMode ||
-              aggregatedUserState.borrowData.borrowPercentUsed) && (
+              aggregatedUserState.globalBorrowData.borrowPercentUsed) && (
               <div className="text-center">
                 <div className="text-xs text-[#A1A1AA] mb-1">
                   {isSupplyMode ? "collateral" : "borrow % used"}
@@ -208,8 +199,8 @@ export default function DashboardContent({
                   className={`text-sm font-semibold ${isSupplyMode ? "text-white" : "text-orange-400"}`}
                 >
                   {isSupplyMode
-                    ? supplyData.collateral
-                    : aggregatedUserState.borrowData.borrowPercentUsed}
+                    ? aggregatedUserState.globalSupplyData.collateral
+                    : aggregatedUserState.globalBorrowData.borrowPercentUsed}
                 </div>
               </div>
             )}
@@ -348,7 +339,7 @@ export default function DashboardContent({
         isOpen={isRiskDetailsModalOpen}
         onClose={() => setIsRiskDetailsModalOpen(false)}
         marketRiskData={aggregatedUserState.marketRiskData}
-        borrowMarketData={aggregatedUserState.borrowData.marketData}
+        borrowMarketData={aggregatedUserState.globalBorrowData.marketData}
       />
 
       {/* E-Mode Modal */}
