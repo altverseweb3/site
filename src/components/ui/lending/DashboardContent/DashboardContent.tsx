@@ -23,6 +23,7 @@ import {
   HealthFactorPreviewArgs,
   HealthFactorPreviewResult,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
+import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface DashboardContentProps {
   userAddress: string;
@@ -46,7 +47,6 @@ interface DashboardContentProps {
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
-  // Action handlers grouped together
   actions: {
     onSupply: (market: UnifiedMarketData) => void;
     onBorrow: (market: UnifiedMarketData) => void;
@@ -81,6 +81,13 @@ export default function DashboardContent({
   const [showZeroBalance, setShowZeroBalance] = useState(false);
   const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
   const [isEmodeModalOpen, setIsEmodeModalOpen] = useState(false);
+
+  // Create unified markets with all data
+  const unifiedMarkets = unifyMarkets(
+    activeMarkets,
+    marketSupplyData,
+    marketBorrowData,
+  );
 
   // Notify parent of subsection changes
   useEffect(() => {
@@ -301,7 +308,7 @@ export default function DashboardContent({
           // Show available positions
           isSupplyMode ? (
             <AvailableSupplyContent
-              markets={activeMarkets}
+              markets={unifiedMarkets}
               showZeroBalance={showZeroBalance}
               tokenTransferState={tokenTransferState}
               filters={filters}
@@ -311,7 +318,7 @@ export default function DashboardContent({
             />
           ) : (
             <AvailableBorrowContent
-              markets={activeMarkets}
+              markets={unifiedMarkets}
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
@@ -322,8 +329,7 @@ export default function DashboardContent({
         ) : // Show open positions
         isSupplyMode ? (
           <UserSupplyContent
-            marketSupplyData={marketSupplyData}
-            activeMarkets={activeMarkets}
+            markets={unifiedMarkets}
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
@@ -335,9 +341,8 @@ export default function DashboardContent({
           />
         ) : (
           <UserBorrowContent
-            marketBorrowData={marketBorrowData}
+            markets={unifiedMarkets}
             showZeroBalance={showZeroBalance}
-            activeMarkets={activeMarkets}
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}

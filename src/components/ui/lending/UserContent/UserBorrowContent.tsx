@@ -2,19 +2,12 @@
 import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserContent/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import {
-  UserBorrowData,
-  UserBorrowPosition,
-  Market,
-  UnifiedMarketData,
-} from "@/types/aave";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
+import { UserBorrowPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserBorrowContentProps {
-  marketBorrowData: Record<string, UserBorrowData>;
-  activeMarkets: Market[];
+  markets: UnifiedMarketData[];
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
@@ -31,8 +24,7 @@ interface EnhancedUserBorrowPosition extends UserBorrowPosition {
 const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
-  marketBorrowData,
-  activeMarkets,
+  markets,
   showZeroBalance = false,
   tokenTransferState,
   filters,
@@ -43,39 +35,23 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const unifiedMarkets = unifyMarkets(activeMarkets);
-
-  // lookup map for unified markets by currency address and chain
-  const unifiedMarketMap = new Map<string, UnifiedMarketData>();
-  unifiedMarkets.forEach((market) => {
-    const key = `${market.underlyingToken.address.toLowerCase()}-${market.marketInfo.chain.chainId}`;
-    unifiedMarketMap.set(key, market);
-  });
-
   const enhancedPositions: EnhancedUserBorrowPosition[] = [];
 
-  Object.values(marketBorrowData).forEach((marketData) => {
-    if (marketData.borrows && marketData.borrows.length > 0) {
-      marketData.borrows.forEach((borrow) => {
-        const currencyKey = `${borrow.currency.address.toLowerCase()}-${marketData.chainId}`;
-        const unifiedMarket = unifiedMarketMap.get(currencyKey);
+  markets.forEach((market) => {
+    market.userBorrowPositions.forEach((borrow) => {
+      const debtAmount = parseFloat(borrow.debt.usd) || 0;
+      if (!showZeroBalance && debtAmount === 0) {
+        return;
+      }
 
-        if (unifiedMarket) {
-          const debtAmount = parseFloat(borrow.debt.usd) || 0;
-          if (!showZeroBalance && debtAmount === 0) {
-            return;
-          }
-
-          enhancedPositions.push({
-            marketAddress: marketData.marketAddress,
-            marketName: marketData.marketName,
-            chainId: marketData.chainId,
-            borrow,
-            unifiedMarket,
-          });
-        }
+      enhancedPositions.push({
+        marketAddress: market.marketInfo.address,
+        marketName: market.marketName,
+        chainId: market.marketInfo.chain.chainId,
+        borrow,
+        unifiedMarket: market,
       });
-    }
+    });
   });
 
   // Apply asset filter
