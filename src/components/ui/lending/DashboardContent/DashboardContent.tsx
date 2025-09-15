@@ -22,7 +22,6 @@ import {
   HealthFactorPreviewArgs,
   HealthFactorPreviewResult,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface DashboardContentProps {
   userAddress: string;
@@ -79,13 +78,6 @@ export default function DashboardContent({
   const [showZeroBalance, setShowZeroBalance] = useState(false);
   const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
   const [isEmodeModalOpen, setIsEmodeModalOpen] = useState(false);
-
-  // Create unified markets with all data
-  const unifiedMarkets = unifyMarkets(
-    activeMarkets,
-    marketSupplyData,
-    marketBorrowData,
-  );
 
   // Notify parent of subsection changes
   useEffect(() => {
