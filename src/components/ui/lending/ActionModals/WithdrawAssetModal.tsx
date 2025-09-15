@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ import {
   HealthFactorPreviewResult,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
-import { evmAddress } from "@aave/react";
 
 interface WithdrawAssetModalProps {
   market: UnifiedMarketData;
@@ -67,11 +66,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   // Track if user clicked the max button
   const [maxButtonClicked, setMaxButtonClicked] = useState(false);
 
-  // Health factor preview state
-  const [healthFactorPreview, setHealthFactorPreview] =
-    useState<HealthFactorPreviewResult | null>(null);
-  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
-
   // Reset max button state if user manually changes amount
   useEffect(() => {
     if (
@@ -84,59 +78,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
     tokenTransferState.amount,
     maxWithdrawableTokensString,
     maxButtonClicked,
-  ]);
-
-  // Update ref when onHealthFactorPreview changes
-  useEffect(() => {
-    onHealthFactorPreviewRef.current = onHealthFactorPreview;
-  }, [onHealthFactorPreview]);
-
-  // Health factor preview effect - call when amount changes
-  useEffect(() => {
-    const amount = tokenTransferState.amount || "0";
-
-    // Only calculate if we have an amount, source token, user address, and the preview function
-    if (
-      !amount ||
-      amount === "0" ||
-      !sourceToken?.address ||
-      !userAddress ||
-      !onHealthFactorPreviewRef.current
-    ) {
-      setHealthFactorPreview(null);
-      return;
-    }
-
-    const calculateHealthFactor = async () => {
-      try {
-        const result = await onHealthFactorPreviewRef.current!({
-          operation: "withdraw",
-          market,
-          amount,
-          currency: evmAddress(sourceToken.address),
-          chainId: market.marketInfo.chain.chainId,
-          userAddress: evmAddress(userAddress),
-          useNative: false,
-          max: maxButtonClicked,
-        });
-        setHealthFactorPreview(result);
-      } catch (error) {
-        console.error("Health factor preview failed:", error);
-        setHealthFactorPreview(null);
-      }
-    };
-
-    // Debounce the calculation
-    const timeoutId = setTimeout(calculateHealthFactor, 300);
-    return () => clearTimeout(timeoutId);
-  }, [
-    tokenTransferState.amount,
-    sourceToken?.address,
-    userAddress,
-    market.marketInfo.chain.chainId,
-    market.marketInfo.address,
-    maxButtonClicked,
-    market,
   ]);
 
   return (
@@ -311,17 +252,15 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
           </div>
 
           {/* Health Factor Risk Display */}
-          {healthFactorPreview?.success &&
-            healthFactorPreview.healthFactorAfter &&
-            (tokenTransferState.amount || "0") !== "0" && (
-              <div className="mt-4">
-                <HealthFactorRiskDisplay
-                  healthFactorBefore={healthFactorPreview.healthFactorBefore}
-                  healthFactorAfter={healthFactorPreview.healthFactorAfter}
-                  liquidationRisk={healthFactorPreview.liquidationRisk}
-                />
-              </div>
-            )}
+          <HealthFactorRiskDisplay
+            amount={tokenTransferState.amount}
+            sourceToken={sourceToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            onHealthFactorPreview={onHealthFactorPreview}
+            operation="withdraw"
+            className="mt-4"
+          />
 
           <BrandedButton
             onClick={async () => {

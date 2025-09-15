@@ -38,7 +38,6 @@ import {
   HealthFactorPreviewResult,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
-import { evmAddress } from "@aave/react";
 
 interface RepayAssetModalProps {
   market: UnifiedMarketData;
@@ -90,11 +89,6 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
 
   // Ref to track previous tracking state
   const previousTrackingState = useRef(tokenTransferState.isTracking);
-
-  // Health factor preview state
-  const [healthFactorPreview, setHealthFactorPreview] =
-    useState<HealthFactorPreviewResult | null>(null);
-  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
 
   const maxRepayableTokens =
     parseFloat(position?.borrow.debt.amount.value) || 0;
@@ -226,63 +220,6 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
       setStateUpdateStep("none");
     }
   }, [isDirectRepay, isSwapThenRepayFlow]);
-
-  // Update ref when onHealthFactorPreview changes
-  useEffect(() => {
-    onHealthFactorPreviewRef.current = onHealthFactorPreview;
-  }, [onHealthFactorPreview]);
-
-  // Health factor preview effect - call when amount changes
-  useEffect(() => {
-    const effectiveAmount = isDirectRepay
-      ? tokenTransferState.amount || "0"
-      : tokenTransferState.receiveAmount || "0";
-
-    // Only calculate if we have an amount, destination token, user address, and the preview function
-    if (
-      !effectiveAmount ||
-      effectiveAmount === "0" ||
-      !destinationToken?.address ||
-      !userAddress ||
-      !onHealthFactorPreviewRef.current
-    ) {
-      setHealthFactorPreview(null);
-      return;
-    }
-
-    const calculateHealthFactor = async () => {
-      try {
-        const result = await onHealthFactorPreviewRef.current!({
-          operation: "repay",
-          market,
-          amount: effectiveAmount,
-          currency: evmAddress(destinationToken.address),
-          chainId: market.marketInfo.chain.chainId,
-          userAddress: evmAddress(userAddress),
-          useNative: false,
-          max: maxButtonClicked,
-        });
-        setHealthFactorPreview(result);
-      } catch (error) {
-        console.error("Health factor preview failed:", error);
-        setHealthFactorPreview(null);
-      }
-    };
-
-    // Debounce the calculation
-    const timeoutId = setTimeout(calculateHealthFactor, 300);
-    return () => clearTimeout(timeoutId);
-  }, [
-    isDirectRepay,
-    tokenTransferState.amount,
-    tokenTransferState.receiveAmount,
-    destinationToken?.address,
-    userAddress,
-    market.marketInfo.chain.chainId,
-    market.marketInfo.address,
-    maxButtonClicked,
-    market,
-  ]);
 
   // Reset max button state if user manually changes amount
   useEffect(() => {
@@ -697,19 +634,19 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
           </div>
 
           {/* Health Factor Risk Display */}
-          {healthFactorPreview?.success &&
-            ((isDirectRepay
-              ? tokenTransferState.amount
-              : tokenTransferState.receiveAmount) || "0") !== "0" && (
-              <div className="mt-4">
-                <HealthFactorRiskDisplay
-                  healthFactorBefore={healthFactorPreview.healthFactorBefore}
-                  healthFactorAfter={healthFactorPreview.healthFactorAfter}
-                  liquidationRisk={healthFactorPreview.liquidationRisk}
-                />
-              </div>
-            )}
-
+          <HealthFactorRiskDisplay
+            amount={
+              isDirectRepay
+                ? tokenTransferState.amount
+                : tokenTransferState.receiveAmount
+            }
+            sourceToken={destinationToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            onHealthFactorPreview={onHealthFactorPreview}
+            operation="repay"
+            className="mt-4"
+          />
           <BrandedButton
             onClick={async () => {
               console.log("RepayAssetModal: Button clicked", {

@@ -41,7 +41,6 @@ import {
   HealthFactorPreviewResult,
 } from "@/hooks/lending/useHealthFactorPreviewOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
-import { evmAddress } from "@aave/react";
 
 interface SupplyAssetModalProps {
   market: UnifiedMarketData;
@@ -95,11 +94,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
 
   // Ref to track previous tracking state
   const previousTrackingState = useRef(tokenTransferState.isTracking);
-
-  // Health factor preview state
-  const [healthFactorPreview, setHealthFactorPreview] =
-    useState<HealthFactorPreviewResult | null>(null);
-  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
 
   // Debug logging for token transfer state
   useEffect(() => {
@@ -226,61 +220,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
       setStateUpdateStep("none");
     }
   }, [isDirectSupply, isSwapThenSupplyFlow]);
-
-  // Update ref when onHealthFactorPreview changes
-  useEffect(() => {
-    onHealthFactorPreviewRef.current = onHealthFactorPreview;
-  }, [onHealthFactorPreview]);
-
-  // Health factor preview effect - call when amount changes
-  useEffect(() => {
-    const effectiveAmount = isDirectSupply
-      ? tokenTransferState.amount || "0"
-      : tokenTransferState.receiveAmount || "0";
-
-    // Only calculate if we have an amount, destination token, user address, and the preview function
-    if (
-      !effectiveAmount ||
-      effectiveAmount === "0" ||
-      !destinationToken?.address ||
-      !userAddress ||
-      !onHealthFactorPreviewRef.current
-    ) {
-      setHealthFactorPreview(null);
-      return;
-    }
-
-    const calculateHealthFactor = async () => {
-      try {
-        const result = await onHealthFactorPreviewRef.current!({
-          operation: "supply",
-          market,
-          amount: effectiveAmount,
-          currency: evmAddress(destinationToken.address),
-          chainId: market.marketInfo.chain.chainId,
-          userAddress: evmAddress(userAddress),
-          useNative: false,
-        });
-        setHealthFactorPreview(result);
-      } catch (error) {
-        console.error("Health factor preview failed:", error);
-        setHealthFactorPreview(null);
-      }
-    };
-
-    // Debounce the calculation
-    const timeoutId = setTimeout(calculateHealthFactor, 300);
-    return () => clearTimeout(timeoutId);
-  }, [
-    isDirectSupply,
-    tokenTransferState.amount,
-    tokenTransferState.receiveAmount,
-    destinationToken?.address,
-    userAddress,
-    market.marketInfo.chain.chainId,
-    market.marketInfo.address,
-    market,
-  ]);
 
   // Create progress steps for swap-then-supply flow using proper tracking state
   const getSwapSupplySteps = (): Step[] => {
@@ -661,20 +600,19 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
           </div>
 
           {/* Health Factor Risk Display */}
-          {healthFactorPreview?.success &&
-            healthFactorPreview.healthFactorAfter &&
-            ((isDirectSupply
-              ? tokenTransferState.amount
-              : tokenTransferState.receiveAmount) || "0") !== "0" && (
-              //  !isLoadingHealthFactor && (
-              <div className="mt-4">
-                <HealthFactorRiskDisplay
-                  healthFactorBefore={healthFactorPreview.healthFactorBefore}
-                  healthFactorAfter={healthFactorPreview.healthFactorAfter}
-                  liquidationRisk={healthFactorPreview.liquidationRisk}
-                />
-              </div>
-            )}
+          <HealthFactorRiskDisplay
+            amount={
+              isDirectSupply
+                ? tokenTransferState.amount
+                : tokenTransferState.receiveAmount
+            }
+            sourceToken={destinationToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            onHealthFactorPreview={onHealthFactorPreview}
+            operation="supply"
+            className="mt-4"
+          />
 
           <BrandedButton
             onClick={async () => {

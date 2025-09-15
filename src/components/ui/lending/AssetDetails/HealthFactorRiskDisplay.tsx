@@ -1,22 +1,174 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
 import { formatHealthFactor } from "@/utils/formatters";
+import { UnifiedMarketData } from "@/types/aave";
+import { Token } from "@/types/web3";
+import { evmAddress } from "@aave/react";
+import {
+  HealthFactorPreviewArgs,
+  HealthFactorPreviewResult,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 export interface HealthFactorRiskDisplayProps {
+  // Legacy props for backward compatibility
   healthFactorBefore?: string;
   healthFactorAfter?: string;
   liquidationRisk?: "ok" | "warning" | "danger";
   className?: string;
+
+  // New props for internal calculation
+  amount?: string;
+  sourceToken?: Token;
+  userAddress?: string;
+  market?: UnifiedMarketData;
+  onHealthFactorPreview?: (
+    args: HealthFactorPreviewArgs,
+  ) => Promise<HealthFactorPreviewResult>;
+  operation?: "borrow" | "supply" | "repay" | "withdraw";
 }
 
 export default function HealthFactorRiskDisplay({
-  healthFactorBefore,
-  healthFactorAfter,
-  liquidationRisk = "ok",
+  // Legacy props
+  healthFactorBefore: legacyHealthFactorBefore,
+  healthFactorAfter: legacyHealthFactorAfter,
+  liquidationRisk: legacyLiquidationRisk = "ok",
   className = "",
+
+  // New props for internal calculation
+  amount,
+  sourceToken,
+  userAddress,
+  market,
+  onHealthFactorPreview,
+  operation = "borrow",
 }: HealthFactorRiskDisplayProps) {
+  // Internal state for health factor preview
+  const [healthFactorPreview, setHealthFactorPreview] =
+    useState<HealthFactorPreviewResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const onHealthFactorPreviewRef = useRef(onHealthFactorPreview);
+  const lastCalculatedAmountRef = useRef<string>("");
+
+  // Update ref when onHealthFactorPreview changes
+  useEffect(() => {
+    onHealthFactorPreviewRef.current = onHealthFactorPreview;
+  }, [onHealthFactorPreview]);
+
+  // Stable references for dependencies
+  const marketAddress = market?.marketInfo?.address;
+  const marketChainId = market?.marketInfo?.chain?.chainId;
+  const sourceTokenAddress = sourceToken?.address;
+
+  // Health factor preview effect - call when amount changes
+  useEffect(() => {
+    // Only calculate if we have new props for calculation
+    if (
+      amount !== undefined &&
+      sourceToken &&
+      userAddress &&
+      market &&
+      onHealthFactorPreviewRef.current
+    ) {
+      // Only calculate if we have an amount and it's not zero
+      if (!amount || amount === "0") {
+        setHealthFactorPreview(null);
+        setIsCalculating(false);
+        lastCalculatedAmountRef.current = "";
+        return;
+      }
+
+      // Skip calculation if we're already calculating or if amount hasn't changed
+      if (isCalculating || lastCalculatedAmountRef.current === amount) {
+        return;
+      }
+
+      const calculateHealthFactor = async () => {
+        try {
+          setIsCalculating(true);
+          lastCalculatedAmountRef.current = amount;
+
+          const result = await onHealthFactorPreviewRef.current!({
+            operation,
+            market,
+            amount,
+            currency: evmAddress(sourceToken.address),
+            chainId: market.marketInfo.chain.chainId,
+            userAddress: evmAddress(userAddress),
+            useNative: false,
+          });
+
+          setHealthFactorPreview(result);
+        } catch (error) {
+          console.error("Health factor preview failed:", error);
+          setHealthFactorPreview(null);
+        } finally {
+          setIsCalculating(false);
+        }
+      };
+
+      // Debounce the calculation
+      const timeoutId = setTimeout(calculateHealthFactor, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Clear preview if we don't have required props
+      setHealthFactorPreview(null);
+      setIsCalculating(false);
+      lastCalculatedAmountRef.current = "";
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    amount,
+    sourceTokenAddress,
+    userAddress,
+    marketChainId,
+    marketAddress,
+    operation,
+    isCalculating,
+  ]);
+
+  // Determine which values to use - calculated or legacy props
+  const healthFactorBefore =
+    healthFactorPreview?.healthFactorBefore || legacyHealthFactorBefore;
+  const healthFactorAfter =
+    healthFactorPreview?.healthFactorAfter || legacyHealthFactorAfter;
+  const liquidationRisk =
+    healthFactorPreview?.liquidationRisk || legacyLiquidationRisk;
+
+  // Don't render if we don't have health factor data
+  if (!healthFactorBefore && !healthFactorAfter) {
+    return null;
+  }
+
+  // Don't render if using new props but we have an amount and preview calculation failed (not just in progress)
+  if (
+    amount !== undefined &&
+    sourceToken &&
+    userAddress &&
+    market &&
+    onHealthFactorPreview
+  ) {
+    // Only block rendering if we have an amount but the calculation explicitly failed
+    if (
+      amount &&
+      amount !== "0" &&
+      healthFactorPreview !== null &&
+      (!healthFactorPreview.success || !healthFactorPreview.healthFactorAfter)
+    ) {
+      return null;
+    }
+
+    // If we don't have an amount, don't render
+    if (!amount || amount === "0") {
+      return null;
+    }
+
+    // If we have an amount but no preview yet (still loading), don't render yet
+    if (amount && amount !== "0" && healthFactorPreview === null) {
+      return null;
+    }
+  }
   const getRiskIcon = (risk: "ok" | "warning" | "danger") => {
     switch (risk) {
       case "ok":
