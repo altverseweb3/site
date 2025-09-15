@@ -28,9 +28,8 @@ import {
 import { AggregatedMarketData } from "@/components/meta/AggregatedMarketData";
 import MarketContent from "@/components/ui/lending/MarketContent/MarketContent";
 import DashboardContent from "@/components/ui/lending/DashboardContent/DashboardContent";
-import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 import { ChainId } from "@/types/aave";
-import { evmAddress, Market } from "@aave/react";
+import { evmAddress } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/meta/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
@@ -81,63 +80,6 @@ export default function LendingPage() {
     if (selectedChains.length === 0 && supportedChains.length > 0)
       return supportedChains.map((chain) => chain.chainId as ChainId);
     return selectedChains.map((chain) => chain.chainId as ChainId);
-  };
-
-  // Create filtered and sorted unified markets function
-  const createFilteredAndSortedUnifiedMarkets = (markets: Market[] | null) => {
-    if (!markets) return null;
-
-    // First unify the markets
-    const unifiedMarkets = unifyMarkets(markets);
-    let filtered = unifiedMarkets;
-
-    // Filter by asset
-    if (filters.assetFilter) {
-      const filterLower = filters.assetFilter.toLowerCase();
-      filtered = unifiedMarkets.filter((market) => {
-        return (
-          market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
-          market.underlyingToken.name.toLowerCase().includes(filterLower) ||
-          market.marketName.toLowerCase().includes(filterLower)
-        );
-      });
-    }
-
-    // Sort unified markets
-    if (sortConfig) {
-      filtered = [...filtered].sort((a, b) => {
-        let aValue: number;
-        let bValue: number;
-
-        switch (sortConfig.column) {
-          case "supplyApy":
-            aValue = a.supplyData.apy;
-            bValue = b.supplyData.apy;
-            break;
-          case "borrowApy":
-            aValue = a.borrowData.apy;
-            bValue = b.borrowData.apy;
-            break;
-          case "suppliedMarketCap":
-            aValue = a.supplyData.totalSuppliedUsd;
-            bValue = b.supplyData.totalSuppliedUsd;
-            break;
-          case "borrowedMarketCap":
-            aValue = a.borrowData.totalBorrowedUsd;
-            bValue = b.borrowData.totalBorrowedUsd;
-            break;
-          default:
-            aValue = 0;
-            bValue = 0;
-        }
-
-        return sortConfig.direction === "asc"
-          ? aValue - bValue
-          : bValue - aValue;
-      });
-    }
-
-    return filtered;
   };
 
   const tokenTransferState = useTokenTransfer({
@@ -260,9 +202,6 @@ export default function LendingPage() {
         supplyError,
         borrowError,
       }) => {
-        const filteredAndSortedUnifiedMarkets =
-          createFilteredAndSortedUnifiedMarkets(markets);
-
         return (
           <div className="container mx-auto px-2 md:py-8">
             <div className="max-w-6xl mx-auto">
@@ -378,22 +317,18 @@ export default function LendingPage() {
                   <div className="text-center py-16">
                     <div className="text-[#A1A1AA]">loading markets...</div>
                   </div>
-                ) : activeTab === "markets" &&
-                  (!filteredAndSortedUnifiedMarkets ||
-                    filteredAndSortedUnifiedMarkets.length === 0) ? (
-                  <div className="text-center py-16">
-                    <div className="text-[#A1A1AA]">no markets found</div>
-                  </div>
                 ) : (
                   <>
                     {activeTab === "markets" && (
                       <MarketContent
-                        unifiedMarkets={filteredAndSortedUnifiedMarkets}
+                        unifiedMarkets={unifiedMarkets}
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         tokenTransferState={tokenTransferState}
                         onSupply={handleSupply}
                         onBorrow={handleBorrow}
+                        filters={filters}
+                        sortConfig={sortConfig}
                       />
                     )}
                     {activeTab === "dashboard" && userWalletAddress && (
