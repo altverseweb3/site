@@ -247,13 +247,14 @@ export default function LendingPage() {
     >
       {({
         markets,
+        unifiedMarkets,
+        marketBorrowData,
+        marketSupplyData,
         loading,
         refetchMarkets,
         aggregatedUserState,
         supplyData,
         borrowData,
-        marketSupplyData,
-        marketBorrowData,
         supplyLoading,
         borrowLoading,
         supplyError,
@@ -388,6 +389,8 @@ export default function LendingPage() {
                     {activeTab === "markets" && (
                       <MarketContent
                         unifiedMarkets={filteredAndSortedUnifiedMarkets}
+                        marketBorrowData={marketBorrowData}
+                        marketSupplyData={marketSupplyData}
                         tokenTransferState={tokenTransferState}
                         onSupply={handleSupply}
                         onBorrow={handleBorrow}
@@ -396,12 +399,12 @@ export default function LendingPage() {
                     {activeTab === "dashboard" && userWalletAddress && (
                       <DashboardContent
                         userAddress={userWalletAddress}
-                        activeMarkets={markets || []}
+                        unifiedMarkets={unifiedMarkets || []}
+                        marketBorrowData={marketBorrowData}
+                        marketSupplyData={marketSupplyData}
                         aggregatedUserState={aggregatedUserState}
                         supplyData={supplyData}
                         borrowData={borrowData}
-                        marketSupplyData={marketSupplyData}
-                        marketBorrowData={marketBorrowData}
                         loading={loading || supplyLoading || borrowLoading}
                         error={supplyError || borrowError}
                         tokenTransferState={tokenTransferState}

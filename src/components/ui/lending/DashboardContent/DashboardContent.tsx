@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import {
-  Market,
-  UserSupplyData,
-  UserBorrowData,
   UnifiedMarketData,
   AggregatedUserState,
+  UserBorrowData,
+  UserSupplyData,
 } from "@/types/aave";
 import { formatHealthFactor } from "@/utils/formatters";
 import UserSupplyContent from "@/components/ui/lending/UserContent/UserSupplyContent";
@@ -27,7 +26,9 @@ import { unifyMarkets } from "@/utils/lending/unifyMarkets";
 
 interface DashboardContentProps {
   userAddress: string;
-  activeMarkets: Market[];
+  unifiedMarkets: UnifiedMarketData[];
+  marketBorrowData: Record<string, UserBorrowData>;
+  marketSupplyData?: Record<string, UserSupplyData>;
   aggregatedUserState: AggregatedUserState;
   supplyData: {
     balance: string;
@@ -38,8 +39,6 @@ interface DashboardContentProps {
     balance: string;
     apy: string;
   };
-  marketSupplyData: Record<string, UserSupplyData>;
-  marketBorrowData: Record<string, UserBorrowData>;
   loading: boolean;
   error: boolean;
   tokenTransferState: TokenTransferState;
@@ -61,12 +60,11 @@ interface DashboardContentProps {
 
 export default function DashboardContent({
   userAddress,
-  activeMarkets,
+  unifiedMarkets,
+  marketBorrowData,
   aggregatedUserState,
   supplyData,
   borrowData,
-  marketSupplyData,
-  marketBorrowData,
   loading,
   error,
   tokenTransferState,
@@ -365,10 +363,10 @@ export default function DashboardContent({
       <EmodeModal
         isOpen={isEmodeModalOpen}
         onClose={() => setIsEmodeModalOpen(false)}
-        activeMarkets={activeMarkets}
+        unifiedMarkets={unifiedMarkets}
+        marketBorrowData={marketBorrowData}
         userAddress={userAddress}
         refetchMarkets={refetchMarkets}
-        marketBorrowData={marketBorrowData}
       />
     </div>
   );
