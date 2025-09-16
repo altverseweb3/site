@@ -183,6 +183,7 @@ export interface UnifiedMarketData extends Reserve {
   isPaused: boolean;
   userSupplyPositions: MarketUserReserveSupplyPosition[];
   userBorrowPositions: MarketUserReserveBorrowPosition[];
+  emodeCategory: EmodeMarketCategory | null;
 }
 
 export type EModeStatus = "on" | "off" | "mixed";

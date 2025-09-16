@@ -73,16 +73,6 @@ export interface EmodeOperationHook {
     category: EmodeMarketCategory;
     isCurrentlyEnabled: boolean;
   }>;
-  getCurrentEmodeCategory: (
-    selectedMarketData:
-      | {
-          key: string;
-          label: string;
-          unifiedMarket: UnifiedMarketData;
-          categories: EmodeMarketCategory[];
-        }
-      | undefined,
-  ) => number | undefined;
 }
 
 export const useEmodeOperations = (
@@ -125,25 +115,6 @@ export const useEmodeOperations = (
         return true;
       });
   }, [unifiedMarkets]);
-
-  // Get current emode category for a selected market
-  const getCurrentEmodeCategory = useCallback(
-    (
-      selectedMarketData:
-        | {
-            key: string;
-            label: string;
-            unifiedMarket: UnifiedMarketData;
-            categories: EmodeMarketCategory[];
-          }
-        | undefined,
-    ) => {
-      return selectedMarketData?.unifiedMarket.marketInfo.borrowReserves?.find(
-        (reserve) => reserve.userState?.emode?.categoryId !== undefined,
-      )?.userState?.emode?.categoryId;
-    },
-    [],
-  );
 
   // Get category options for selected market
   const getCategoryOptions = useCallback(
@@ -318,6 +289,5 @@ export const useEmodeOperations = (
     hasIncompatiblePositions,
     getMarketsWithEmode,
     getCategoryOptions,
-    getCurrentEmodeCategory,
   };
 };
