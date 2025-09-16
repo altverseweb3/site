@@ -7,9 +7,14 @@ import {
 
 // Helper function to get the active emode data for a market
 const getActiveEmodeData = (market: Market) => {
-  return market.borrowReserves?.find(
+  const eModeCategory = market.borrowReserves?.find(
     (reserve) => reserve.userState?.emode !== undefined,
   )?.userState?.emode;
+  if (eModeCategory !== null && market.eModeCategories) {
+    return market.eModeCategories.find(
+      (category) => category.id === eModeCategory?.categoryId,
+    );
+  }
 };
 
 export const unifyMarkets = (

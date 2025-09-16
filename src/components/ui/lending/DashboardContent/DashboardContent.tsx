@@ -23,7 +23,7 @@ interface DashboardContentProps {
   userAddress: string;
   unifiedReserves: UnifiedReserveData[];
   marketBorrowData: Record<string, UserBorrowData>;
-  marketSupplyData?: Record<string, UserSupplyData>;
+  marketSupplyData: Record<string, UserSupplyData>;
   aggregatedUserState: AggregatedUserState;
   loading: boolean;
   error: boolean;
@@ -45,6 +45,7 @@ export default function DashboardContent({
   userAddress,
   unifiedReserves,
   marketBorrowData,
+  marketSupplyData,
   aggregatedUserState,
   loading,
   error,
@@ -344,6 +345,7 @@ export default function DashboardContent({
         onClose={() => setIsEmodeModalOpen(false)}
         unifiedReserves={unifiedReserves}
         marketBorrowData={marketBorrowData}
+        marketSupplyData={marketSupplyData}
         userAddress={userAddress}
         refetchMarkets={refetchMarkets}
       />
