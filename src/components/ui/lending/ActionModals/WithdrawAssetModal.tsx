@@ -12,7 +12,7 @@ import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { TrendingUp, AlertTriangle, Percent, Shield } from "lucide-react";
+import { TrendingUp, Percent } from "lucide-react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
 import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
@@ -40,7 +40,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   children,
   tokenTransferState,
   onWithdraw,
-  healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
@@ -211,36 +210,6 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
                   )}
                 </div>
               </div>
-
-              {/* Current Health Factor */}
-              {healthFactor && (
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-3 h-3 text-[#A1A1AA]" />
-                    <span className="text-sm text-[#A1A1AA]">
-                      current health factor
-                    </span>
-                  </div>
-                  <div className="text-sm font-mono font-semibold text-blue-400">
-                    {parseFloat(healthFactor).toFixed(2)}
-                  </div>
-                </div>
-              )}
-
-              {/* Health Factor Warning (if applicable) */}
-              {position?.supply.isCollateral && (
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-3 h-3 text-yellow-400" />
-                    <span className="text-sm text-[#A1A1AA]">
-                      monitor health factor
-                    </span>
-                  </div>
-                  <div className="text-sm font-mono font-semibold text-yellow-400">
-                    affects collateral
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
