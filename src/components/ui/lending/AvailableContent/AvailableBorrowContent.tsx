@@ -13,7 +13,6 @@ interface AvailableBorrowContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-  onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
 }
 
@@ -25,7 +24,6 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
-  onSupply,
   onBorrow,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,7 +119,6 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           reserve={market}
           userAddress={userAddress}
-          onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
         />

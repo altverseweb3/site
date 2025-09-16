@@ -36,6 +36,7 @@ import ProgressTracker, {
   StepState,
 } from "@/components/ui/ProgressTracker";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
 
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
@@ -43,7 +44,6 @@ interface SupplyAssetModalProps {
   market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
@@ -56,7 +56,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
-  onSupply,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -75,6 +74,15 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
     destinationToken &&
     sourceToken.address === destinationToken.address &&
     sourceToken.chainId === destinationToken.chainId;
+
+  const { handleSupply } = useSupplyOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userAddress || null,
+    tokenTransferState: {
+      amount: tokenTransferState.amount || "",
+    },
+  });
 
   // Swap state management - using proper tracking lifecycle
   const [swapInitiated, setSwapInitiated] = useState(false);
@@ -600,13 +608,13 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
 
               if (isDirectSupply && !isSwapThenSupplyFlow) {
                 console.log("SupplyAssetModal: Direct supply");
-                onSupply(market);
+                handleSupply(market);
               } else if (
                 swapCompleted ||
                 (isDirectSupply && isSwapThenSupplyFlow)
               ) {
                 console.log("SupplyAssetModal: Supply after swap completion");
-                onSupply(market);
+                handleSupply(market);
                 // Clear the swap-then-supply flag after supply action
                 setIsSwapThenSupplyFlow(false);
               } else if (!swapInitiated) {

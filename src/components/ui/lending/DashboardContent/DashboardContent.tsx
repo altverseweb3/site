@@ -33,7 +33,6 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
   actions: {
-    onSupply: (market: UnifiedReserveData) => void;
     onBorrow: (market: UnifiedReserveData) => void;
     onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
     onRepay: (market: UnifiedReserveData, max: boolean) => void;
@@ -289,7 +288,6 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
             />
           ) : (
@@ -299,7 +297,6 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onSupply={actions.onSupply}
               onBorrow={actions.onBorrow}
             />
           )
@@ -311,7 +308,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onSupply={actions.onSupply}
             onBorrow={actions.onBorrow}
             onWithdraw={actions.onWithdraw}
             onCollateralToggle={actions.onCollateralToggle}
@@ -323,7 +319,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onSupply={actions.onSupply}
             onBorrow={actions.onBorrow}
             onRepay={actions.onRepay}
           />

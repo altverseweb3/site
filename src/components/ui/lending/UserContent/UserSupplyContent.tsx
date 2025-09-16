@@ -13,7 +13,6 @@ interface UserSupplyContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-  onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
   onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
   onCollateralToggle: (market: UnifiedReserveData) => void;
@@ -27,7 +26,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
-  onSupply,
   onBorrow,
   onWithdraw,
   onCollateralToggle,
@@ -114,7 +112,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           key={`${reserve.market.address}-${reserve.underlyingToken.address}`}
           unifiedReserve={reserve}
           userAddress={userAddress}
-          onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
           onCollateralToggle={onCollateralToggle}

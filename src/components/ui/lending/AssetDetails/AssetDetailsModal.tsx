@@ -28,7 +28,6 @@ interface AssetDetailsModalProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
   onRepay?: (market: UnifiedReserveData, max: boolean) => void;
   onWithdraw?: (market: UnifiedReserveData, max: boolean) => void;
@@ -41,7 +40,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   reserve,
   userAddress,
   children,
-  onSupply,
   onBorrow,
   onWithdraw,
   onRepay,
@@ -263,7 +261,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             <div className="flex gap-3 w-full">
               <SupplyAssetModal
                 market={reserve}
-                onSupply={onSupply}
                 onBorrow={onBorrow}
                 userAddress={userAddress}
                 tokenTransferState={tokenTransferState}
