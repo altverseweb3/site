@@ -12,7 +12,7 @@ import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { TrendingDown, AlertTriangle, Percent } from "lucide-react";
+import { TrendingDown, Percent } from "lucide-react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
 import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
@@ -36,7 +36,6 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   children,
   tokenTransferState,
   onBorrow,
-  healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
@@ -178,34 +177,6 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
                       market.incentives,
                     ).finalBorrowAPY,
                   )}
-                </div>
-              </div>
-
-              {/* Current Health Factor */}
-              {healthFactor && (
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-3 h-3 text-yellow-400" />
-                    <span className="text-sm text-[#A1A1AA]">
-                      current health factor
-                    </span>
-                  </div>
-                  <div className="text-sm font-mono font-semibold text-blue-400">
-                    {parseFloat(healthFactor).toFixed(2)}
-                  </div>
-                </div>
-              )}
-
-              {/* Health Factor Warning */}
-              <div className="flex justify-between items-center py-2">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3 text-yellow-400" />
-                  <span className="text-sm text-[#A1A1AA]">
-                    requires collateral
-                  </span>
-                </div>
-                <div className="text-sm font-mono font-semibold text-yellow-400">
-                  check health factor
                 </div>
               </div>
             </div>

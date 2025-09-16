@@ -57,7 +57,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   children,
   tokenTransferState,
   onSupply,
-  healthFactor,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -574,21 +573,6 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
                   {market.supplyInfo.canBeCollateral ? "yes" : "no"}
                 </div>
               </div>
-
-              {/* Current Health Factor */}
-              {healthFactor && (
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-3 h-3 text-[#A1A1AA]" />
-                    <span className="text-sm text-[#A1A1AA]">
-                      current health factor
-                    </span>
-                  </div>
-                  <div className="text-sm font-mono font-semibold text-blue-400">
-                    {parseFloat(healthFactor).toFixed(2)}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
