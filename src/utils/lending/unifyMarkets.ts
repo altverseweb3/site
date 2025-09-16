@@ -5,6 +5,13 @@ import {
   UserBorrowData,
 } from "@/types/aave";
 
+// Helper function to get the active emode data for a market
+const getActiveEmodeData = (market: Market) => {
+  return market.borrowReserves?.find(
+    (reserve) => reserve.userState?.emode !== undefined,
+  )?.userState?.emode;
+};
+
 export const unifyMarkets = (
   markets: Market[],
   marketSupplyData?: Record<string, UserSupplyData>,
@@ -13,6 +20,9 @@ export const unifyMarkets = (
   return markets.flatMap((market) => {
     // Create a map of assets by their underlying token address
     const assetMap = new Map();
+
+    // Get the active emode data for this market
+    const activeEmodeData = getActiveEmodeData(market);
 
     // Find user data for this market
     const userSupplyForMarket = marketSupplyData
@@ -63,6 +73,7 @@ export const unifyMarkets = (
         incentives: reserve.incentives || [],
         userSupplyPositions,
         userBorrowPositions: [],
+        emodeCategory: activeEmodeData || null,
       });
     });
 
@@ -112,6 +123,7 @@ export const unifyMarkets = (
           incentives: reserve.incentives || [],
           userSupplyPositions: [],
           userBorrowPositions,
+          emodeCategory: activeEmodeData || null,
         });
       }
     });

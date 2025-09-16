@@ -51,7 +51,6 @@ export default function EmodeModal({
     hasIncompatiblePositions,
     getMarketsWithEmode,
     getCategoryOptions,
-    getCurrentEmodeCategory,
   } = useEmodeOperations({
     userAddress,
     unifiedMarkets,
@@ -87,7 +86,8 @@ export default function EmodeModal({
   }, [isOpen, marketsWithEmode, selectedMarketKey]);
 
   // Get current emode category and category options using the hook
-  const currentEmodeCategory = getCurrentEmodeCategory(selectedMarketData);
+  const currentEmodeCategory =
+    selectedMarketData?.unifiedMarket?.emodeCategory?.id;
   const categoryOptions = getCategoryOptions(selectedMarketData);
 
   const selectedCategory = categoryOptions.find(
