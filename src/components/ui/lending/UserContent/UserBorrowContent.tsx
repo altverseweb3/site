@@ -8,6 +8,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserBorrowContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
@@ -25,6 +26,7 @@ const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   markets,
+  userAddress,
   showZeroBalance = false,
   tokenTransferState,
   filters,
@@ -134,6 +136,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
           unifiedMarket={position.unifiedMarket}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}

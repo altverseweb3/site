@@ -25,6 +25,7 @@ import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyCardProps {
   market: UnifiedMarketData;
+  userAddress: string | undefined;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
@@ -32,6 +33,7 @@ interface AvailableSupplyCardProps {
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   market,
+  userAddress,
   onSupply,
   onBorrow,
   tokenTransferState,
@@ -150,6 +152,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}

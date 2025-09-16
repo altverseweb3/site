@@ -1,22 +1,168 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
 import { formatHealthFactor } from "@/utils/formatters";
+import { UnifiedMarketData } from "@/types/aave";
+import { Token } from "@/types/web3";
+import { evmAddress } from "@aave/react";
+import { useSourceToken, useSourceChain } from "@/store/web3Store";
+import {
+  HealthFactorPreviewResult,
+  useHealthFactorPreviewOperations,
+} from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 export interface HealthFactorRiskDisplayProps {
-  healthFactorBefore?: string;
-  healthFactorAfter?: string;
-  liquidationRisk?: "ok" | "warning" | "danger";
+  amount?: string;
+  sourceToken?: Token;
+  userAddress?: string;
+  market?: UnifiedMarketData;
+  operation?: "borrow" | "supply" | "repay" | "withdraw";
   className?: string;
 }
 
 export default function HealthFactorRiskDisplay({
-  healthFactorBefore,
-  healthFactorAfter,
-  liquidationRisk = "ok",
+  amount,
+  sourceToken,
+  userAddress,
+  market,
+  operation = "borrow",
   className = "",
 }: HealthFactorRiskDisplayProps) {
+  // Get dependencies for the hook
+  const storeSourceChain = useSourceChain();
+  const storeSourceToken = useSourceToken();
+
+  // Use the health factor preview operations hook
+  const { previewHealthFactor } = useHealthFactorPreviewOperations({
+    sourceChain: storeSourceChain,
+    sourceToken: storeSourceToken,
+    userWalletAddress: userAddress || null,
+  });
+
+  // Internal state for health factor preview
+  const [healthFactorPreview, setHealthFactorPreview] =
+    useState<HealthFactorPreviewResult | null>(null);
+  const lastCalculatedAmountRef = useRef<string>("");
+  const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previewHealthFactorRef = useRef(previewHealthFactor);
+  const marketRef = useRef(market);
+  const sourceTokenRef = useRef(sourceToken);
+
+  // Update refs when values change
+  previewHealthFactorRef.current = previewHealthFactor;
+  marketRef.current = market;
+  sourceTokenRef.current = sourceToken;
+
+  // Stable references for dependencies
+  const marketAddress = market?.marketInfo?.address;
+  const marketChainId = market?.marketInfo?.chain?.chainId;
+  const sourceTokenAddress = sourceToken?.address;
+
+  useEffect(() => {
+    // Clear any existing timeout
+    if (calculationTimeoutRef.current) {
+      clearTimeout(calculationTimeoutRef.current);
+      calculationTimeoutRef.current = null;
+    }
+
+    // Clear state if we don't have required primitive props
+    if (
+      amount === undefined ||
+      !sourceTokenAddress ||
+      !userAddress ||
+      !marketAddress ||
+      !marketChainId
+    ) {
+      setHealthFactorPreview(null);
+      lastCalculatedAmountRef.current = "";
+      return;
+    }
+
+    // Only calculate if we have an amount and it's not zero
+    if (!amount || amount === "0") {
+      setHealthFactorPreview(null);
+      lastCalculatedAmountRef.current = "";
+      return;
+    }
+
+    // Skip calculation if amount hasn't changed
+    if (lastCalculatedAmountRef.current === amount) {
+      return;
+    }
+
+    const calculateHealthFactor = async () => {
+      const currentMarket = marketRef.current;
+      const currentSourceToken = sourceTokenRef.current;
+      const currentPreviewHealthFactor = previewHealthFactorRef.current;
+
+      if (!currentMarket || !currentSourceToken) {
+        return;
+      }
+
+      try {
+        lastCalculatedAmountRef.current = amount;
+
+        const result = await currentPreviewHealthFactor({
+          operation,
+          market: currentMarket,
+          amount,
+          currency: evmAddress(currentSourceToken.address),
+          useNative: false,
+        });
+
+        setHealthFactorPreview(result);
+      } catch (error) {
+        console.error("Health factor preview failed:", error);
+        setHealthFactorPreview(null);
+      }
+    };
+
+    // Debounce the calculation
+    calculationTimeoutRef.current = setTimeout(calculateHealthFactor, 300);
+
+    return () => {
+      if (calculationTimeoutRef.current) {
+        clearTimeout(calculationTimeoutRef.current);
+        calculationTimeoutRef.current = null;
+      }
+    };
+  }, [
+    amount,
+    sourceTokenAddress,
+    userAddress,
+    marketChainId,
+    marketAddress,
+    operation,
+  ]);
+
+  const healthFactorBefore = healthFactorPreview?.healthFactorBefore;
+  const healthFactorAfter = healthFactorPreview?.healthFactorAfter;
+  const liquidationRisk = healthFactorPreview?.liquidationRisk || "ok";
+
+  // Don't render if we don't have health factor data
+  if (!healthFactorBefore && !healthFactorAfter) {
+    return null;
+  }
+
+  if (amount !== undefined && sourceToken && userAddress && market) {
+    if (
+      amount &&
+      amount !== "0" &&
+      healthFactorPreview !== null &&
+      (!healthFactorPreview.success || !healthFactorPreview.healthFactorAfter)
+    ) {
+      return null;
+    }
+
+    if (!amount || amount === "0") {
+      return null;
+    }
+
+    if (amount && amount !== "0" && healthFactorPreview === null) {
+      return null;
+    }
+  }
   const getRiskIcon = (risk: "ok" | "warning" | "danger") => {
     switch (risk) {
       case "ok":

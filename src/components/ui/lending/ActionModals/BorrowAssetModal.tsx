@@ -19,9 +19,11 @@ import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface BorrowAssetModalProps {
   market: UnifiedMarketData;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onBorrow: (market: UnifiedMarketData) => void;
   tokenTransferState: TokenTransferState;
@@ -30,6 +32,7 @@ interface BorrowAssetModalProps {
 
 const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   market,
+  userAddress,
   children,
   tokenTransferState,
   onBorrow,
@@ -207,6 +210,16 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Health Factor Risk Display */}
+          <HealthFactorRiskDisplay
+            amount={tokenTransferState.amount}
+            sourceToken={sourceToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            operation="borrow"
+            className="mt-4"
+          />
 
           <BrandedButton
             onClick={async () => {

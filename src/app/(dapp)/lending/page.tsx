@@ -40,7 +40,6 @@ import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
 import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
-import { useHealthFactorPreviewOperations } from "@/hooks/lending/useHealthFactorPreviewOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -137,12 +136,6 @@ export default function LendingPage() {
   const { handleCollateralToggle } = useCollateralToggleOperations({
     userWalletAddress: userWalletAddress || null,
     targetChain: sourceChain,
-  });
-
-  const { previewHealthFactor } = useHealthFactorPreviewOperations({
-    sourceChain,
-    sourceToken,
-    userWalletAddress: userWalletAddress || null,
   });
 
   useEffect(() => {
@@ -319,6 +312,7 @@ export default function LendingPage() {
                   <>
                     {activeTab === "markets" && (
                       <MarketContent
+                        userAddress={userWalletAddress}
                         unifiedMarkets={unifiedMarkets}
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
@@ -349,7 +343,6 @@ export default function LendingPage() {
                           onWithdraw: handleWithdraw,
                           onRepay: handleRepay,
                           onCollateralToggle: handleCollateralToggle,
-                          onHealthFactorPreview: previewHealthFactor,
                         }}
                       />
                     )}

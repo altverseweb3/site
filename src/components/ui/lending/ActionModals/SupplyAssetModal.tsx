@@ -37,8 +37,11 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 
+import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+
 interface SupplyAssetModalProps {
   market: UnifiedMarketData;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
@@ -50,6 +53,7 @@ interface SupplyAssetModalProps {
 
 const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   market,
+  userAddress,
   children,
   tokenTransferState,
   onSupply,
@@ -587,6 +591,21 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
               )}
             </div>
           </div>
+
+          {/* Health Factor Risk Display */}
+          <HealthFactorRiskDisplay
+            amount={
+              isDirectSupply
+                ? tokenTransferState.amount
+                : tokenTransferState.receiveAmount
+            }
+            sourceToken={destinationToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            operation="supply"
+            className="mt-4"
+          />
+
           <BrandedButton
             onClick={async () => {
               console.log("SupplyAssetModal: Button clicked", {

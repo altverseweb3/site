@@ -24,10 +24,12 @@ interface MarketContentProps {
   onBorrow: (market: UnifiedMarketData) => void;
   filters: LendingFilters;
   sortConfig: LendingSortConfig | null;
+  userAddress: string | undefined;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
   unifiedMarkets,
+  userAddress,
   tokenTransferState,
   onSupply,
   onBorrow,
@@ -119,6 +121,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
         <MarketCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={(market: UserBorrowPosition) => {

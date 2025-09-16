@@ -21,9 +21,12 @@ import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
 
+import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+
 interface WithdrawAssetModalProps {
   market: UnifiedMarketData;
   position?: UserSupplyPosition;
+  userAddress: string | undefined;
   children: React.ReactNode;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
@@ -33,6 +36,7 @@ interface WithdrawAssetModalProps {
 const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   market,
   position,
+  userAddress,
   children,
   tokenTransferState,
   onWithdraw,
@@ -239,6 +243,17 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
               )}
             </div>
           </div>
+
+          {/* Health Factor Risk Display */}
+          <HealthFactorRiskDisplay
+            amount={tokenTransferState.amount}
+            sourceToken={sourceToken || undefined}
+            userAddress={userAddress}
+            market={market}
+            operation="withdraw"
+            className="mt-4"
+          />
+
           <BrandedButton
             onClick={async () => {
               onWithdraw(market, maxButtonClicked);

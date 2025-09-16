@@ -9,6 +9,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableSupplyContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
@@ -21,6 +22,7 @@ const ITEMS_PER_PAGE = 10;
 
 const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
   markets,
+  userAddress,
   showZeroBalance = false,
   tokenTransferState,
   filters,
@@ -117,6 +119,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
         <AvailableSupplyCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}

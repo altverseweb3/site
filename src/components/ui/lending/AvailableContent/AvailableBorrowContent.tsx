@@ -9,6 +9,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableBorrowContentProps {
   markets: UnifiedMarketData[];
+  userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -20,6 +21,7 @@ const ITEMS_PER_PAGE = 10;
 
 const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
   markets,
+  userAddress,
   tokenTransferState,
   filters,
   sortConfig,
@@ -118,6 +120,7 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
         <AvailableBorrowCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
+          userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}

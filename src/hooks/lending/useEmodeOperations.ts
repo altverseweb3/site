@@ -14,8 +14,8 @@ import {
 import { getChainByChainId } from "@/config/chains";
 
 export interface EmodeOperationDependencies {
-  userAddress: string | null;
   unifiedMarkets: UnifiedMarketData[];
+  userAddress: string | undefined;
   marketBorrowData: Record<string, UserBorrowData>;
   refetchMarkets?: () => void;
 }
