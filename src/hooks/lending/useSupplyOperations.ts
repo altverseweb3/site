@@ -7,7 +7,7 @@ import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveSupply, useAavePermit } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress } from "@/utils/formatters";
-import { UnifiedMarketData, ChainId } from "@/types/aave";
+import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 
@@ -29,7 +29,7 @@ export interface SupplyOperationResult {
 }
 
 export interface SupplyOperationHook {
-  handleSupply: (market: UnifiedMarketData) => Promise<void>;
+  handleSupply: (market: UnifiedReserveData) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -57,7 +57,7 @@ export const useSupplyOperations = (
   const { switchToChain } = useChainSwitch(marketChain);
 
   const handleSupply = useCallback(
-    async (market: UnifiedMarketData): Promise<void> => {
+    async (market: UnifiedReserveData): Promise<void> => {
       try {
         // Validate required dependencies
         if (!sourceToken || !tokenTransferState.amount || !userWalletAddress) {

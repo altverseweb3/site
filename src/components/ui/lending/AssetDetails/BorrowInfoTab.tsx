@@ -1,5 +1,5 @@
 import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import HorizontalProgressBar from "@/components/ui/HorizontalProgressBar";
 import {
   formatCurrency,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export const BorrowInfoTab: React.FC<{
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   finalAPY: number;
   hasBorrowBonuses: boolean;
   hasMixedIncentives: boolean;

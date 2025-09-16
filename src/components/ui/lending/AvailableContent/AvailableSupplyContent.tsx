@@ -3,19 +3,19 @@
 import React, { useState } from "react";
 import AvailableSupplyCard from "@/components/ui/lending/AvailableContent/AvailableSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface AvailableSupplyContentProps {
-  markets: UnifiedMarketData[];
+  markets: UnifiedReserveData[];
   userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
 }
 
 const ITEMS_PER_PAGE = 10;

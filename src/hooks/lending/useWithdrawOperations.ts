@@ -6,7 +6,7 @@ import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveWithdraw } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress } from "@/utils/formatters";
-import { UnifiedMarketData, ChainId } from "@/types/aave";
+import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 
@@ -28,7 +28,7 @@ export interface WithdrawOperationResult {
 }
 
 export interface WithdrawOperationHook {
-  handleWithdraw: (market: UnifiedMarketData, max: boolean) => Promise<void>;
+  handleWithdraw: (market: UnifiedReserveData, max: boolean) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -55,7 +55,7 @@ export const useWithdrawOperations = (
   const { switchToChain } = useChainSwitch(marketChain);
 
   const handleWithdraw = useCallback(
-    async (market: UnifiedMarketData, max: boolean): Promise<void> => {
+    async (market: UnifiedReserveData, max: boolean): Promise<void> => {
       try {
         // Validate required dependencies
         if (!sourceToken || !tokenWithdrawState.amount || !userWalletAddress) {

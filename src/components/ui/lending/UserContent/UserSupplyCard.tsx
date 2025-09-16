@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
+import { UserSupplyPosition, UnifiedReserveData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
@@ -22,19 +22,19 @@ import { TokenTransferState } from "@/types/web3";
 
 interface UserSupplyCardProps {
   position: UserSupplyPosition;
-  unifiedMarket: UnifiedMarketData;
+  unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-  onCollateralToggle: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
+  onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
+  onCollateralToggle: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
   isCollateralLoading?: boolean;
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   position,
-  unifiedMarket,
+  unifiedReserve,
   userAddress,
   onSupply,
   onBorrow,
@@ -56,7 +56,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   };
 
   const handleModalCollateralToggle = () => {
-    onCollateralToggle(unifiedMarket);
+    onCollateralToggle(unifiedReserve);
     setIsCollateralModalOpen(false);
   };
 
@@ -164,7 +164,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
 
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
-          market={unifiedMarket}
+          market={unifiedReserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
@@ -189,7 +189,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         onToggleCollateral={handleModalCollateralToggle}
         isLoading={isCollateralLoading}
         healthFactor={
-          unifiedMarket.marketInfo.userState?.healthFactor?.toString() || null
+          unifiedReserve.marketInfo.userState?.healthFactor?.toString() || null
         }
       />
     </Card>

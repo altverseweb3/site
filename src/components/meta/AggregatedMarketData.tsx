@@ -14,7 +14,7 @@ import {
   AggregatedUserState,
   UserSupplyData,
   UserBorrowData,
-  UnifiedMarketData,
+  UnifiedReserveData,
 } from "@/types/aave";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { AggregatedMarketUserSupplies } from "@/components/meta/AggregatedMarketUserSupplies";
@@ -80,7 +80,7 @@ interface AggregatedMarketDataProps {
   suppliesOrderBy?: MarketReservesRequestOrderBy;
   children: (props: {
     markets: Market[] | null;
-    unifiedMarkets: UnifiedMarketData[] | null;
+    unifiedReserves: UnifiedReserveData[] | null;
     loading: boolean;
     error: boolean;
     hasData: boolean;
@@ -433,7 +433,7 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
 
     return {
       markets: hasData ? validMarkets : null,
-      unifiedMarkets: null, // Will be populated later with user data
+      unifiedReserves: null, // Will be populated later with user data
       loading: isLoading,
       error: hasError,
       hasData,
@@ -486,7 +486,7 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
                 marketBorrowData,
               }) => {
                 // Create unified markets with user data
-                const unifiedMarkets = aggregatedData.markets
+                const unifiedReserves = aggregatedData.markets
                   ? unifyMarkets(
                       aggregatedData.markets,
                       marketSupplyData,
@@ -503,7 +503,7 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
 
                 return children({
                   ...aggregatedData,
-                  unifiedMarkets,
+                  unifiedReserves,
                   aggregatedUserState,
                   marketSupplyData,
                   marketBorrowData,
@@ -520,13 +520,13 @@ export const AggregatedMarketData: React.FC<AggregatedMarketDataProps> = ({
         /* Render children with empty supply/borrow data when no user */
         (() => {
           // Create unified markets without user data
-          const unifiedMarkets = aggregatedData.markets
+          const unifiedReserves = aggregatedData.markets
             ? unifyMarkets(aggregatedData.markets)
             : null;
 
           return children({
             ...aggregatedData,
-            unifiedMarkets,
+            unifiedReserves,
             marketSupplyData: {},
             marketBorrowData: {},
             supplyLoading: false,

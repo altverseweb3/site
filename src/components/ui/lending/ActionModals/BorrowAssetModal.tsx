@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -22,10 +22,10 @@ import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface BorrowAssetModalProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }

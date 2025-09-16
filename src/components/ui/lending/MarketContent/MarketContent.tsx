@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import MarketCard from "@/components/ui/lending/MarketContent/MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   UserBorrowData,
   UserBorrowPosition,
   UserSupplyData,
@@ -16,19 +16,19 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
-  unifiedMarkets: UnifiedMarketData[] | null | undefined;
+  unifiedReserves: UnifiedReserveData[] | null | undefined;
   marketBorrowData?: Record<string, UserBorrowData>;
   marketSupplyData?: Record<string, UserSupplyData>;
   tokenTransferState: TokenTransferState;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
   filters: LendingFilters;
   sortConfig: LendingSortConfig | null;
   userAddress: string | undefined;
 }
 
 const MarketContent: React.FC<MarketContentProps> = ({
-  unifiedMarkets,
+  unifiedReserves,
   userAddress,
   tokenTransferState,
   onSupply,
@@ -40,14 +40,14 @@ const MarketContent: React.FC<MarketContentProps> = ({
 
   // Apply filtering and sorting to unified markets
   const filteredAndSortedMarkets = useMemo(() => {
-    if (!unifiedMarkets) return null;
+    if (!unifiedReserves) return null;
 
-    let filtered = unifiedMarkets;
+    let filtered = unifiedReserves;
 
     // Filter by asset
     if (filters.assetFilter) {
       const filterLower = filters.assetFilter.toLowerCase();
-      filtered = unifiedMarkets.filter((market) => {
+      filtered = unifiedReserves.filter((market) => {
         return (
           market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
           market.underlyingToken.name.toLowerCase().includes(filterLower) ||
@@ -91,7 +91,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
     }
 
     return filtered;
-  }, [unifiedMarkets, filters, sortConfig]);
+  }, [unifiedReserves, filters, sortConfig]);
 
   if (!filteredAndSortedMarkets || filteredAndSortedMarkets.length === 0) {
     return (

@@ -2,24 +2,24 @@
 import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserContent/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserBorrowPosition, UnifiedMarketData } from "@/types/aave";
+import { UserBorrowPosition, UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserBorrowContentProps {
-  markets: UnifiedMarketData[];
+  markets: UnifiedReserveData[];
   userAddress: string | undefined;
   showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
+  onRepay: (market: UnifiedReserveData, max: boolean) => void;
 }
 
 interface EnhancedUserBorrowPosition extends UserBorrowPosition {
-  unifiedMarket: UnifiedMarketData;
+  unifiedReserve: UnifiedReserveData;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -51,7 +51,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
         marketName: market.marketName,
         chainId: market.marketInfo.chain.chainId,
         borrow,
-        unifiedMarket: market,
+        unifiedReserve: market,
       });
     });
   });
@@ -63,7 +63,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
     filteredPositions = enhancedPositions.filter((position) => {
       return (
         // Filter by title (underlyingToken.name)
-        position.unifiedMarket.underlyingToken.name
+        position.unifiedReserve.underlyingToken.name
           .toLowerCase()
           .includes(filterLower) ||
         // Filter by ticker (currency.symbol)
@@ -135,7 +135,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
         <UserBorrowCard
           key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
           position={position}
-          unifiedMarket={position.unifiedMarket}
+          unifiedReserve={position.unifiedReserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}

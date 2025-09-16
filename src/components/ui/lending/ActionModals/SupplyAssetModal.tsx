@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   UserBorrowPosition,
   UserSupplyPosition,
 } from "@/types/aave";
@@ -40,11 +40,11 @@ import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface SupplyAssetModalProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
   tokenTransferState: TokenTransferState;

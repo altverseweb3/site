@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useHealthFactorPreview } from "@/hooks/aave/useAaveInteractions";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   ChainId,
   EvmAddress,
   HealthFactorPreviewRequest,
@@ -15,7 +15,7 @@ import { Chain, Token } from "@/types/web3";
 
 export interface HealthFactorPreviewArgs {
   operation: HealthFactorPreviewOperation;
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   amount: string;
   currency: EvmAddress;
   chainId: ChainId;

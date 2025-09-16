@@ -165,7 +165,7 @@ export interface AggregatedUserState {
   >;
 }
 
-export interface UnifiedMarketData extends Reserve {
+export interface UnifiedReserveData extends Reserve {
   marketInfo: Market;
   marketName: string;
   supplyData: {

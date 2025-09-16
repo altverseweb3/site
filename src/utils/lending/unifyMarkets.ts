@@ -1,22 +1,27 @@
 import {
   Market,
-  UnifiedMarketData,
+  UnifiedReserveData,
   UserSupplyData,
   UserBorrowData,
 } from "@/types/aave";
 
 // Helper function to get the active emode data for a market
 const getActiveEmodeData = (market: Market) => {
-  return market.borrowReserves?.find(
+  const eModeCategory = market.borrowReserves?.find(
     (reserve) => reserve.userState?.emode !== undefined,
   )?.userState?.emode;
+  if (eModeCategory !== null && market.eModeCategories) {
+    return market.eModeCategories.find(
+      (category) => category.id === eModeCategory?.categoryId,
+    );
+  }
 };
 
 export const unifyMarkets = (
   markets: Market[],
   marketSupplyData?: Record<string, UserSupplyData>,
   marketBorrowData?: Record<string, UserBorrowData>,
-): UnifiedMarketData[] => {
+): UnifiedReserveData[] => {
   return markets.flatMap((market) => {
     // Create a map of assets by their underlying token address
     const assetMap = new Map();

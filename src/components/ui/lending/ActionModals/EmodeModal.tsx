@@ -17,15 +17,22 @@ import {
 } from "@/components/ui/Select";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { useEmodeOperations } from "@/hooks/lending/useEmodeOperations";
-import { UnifiedMarketData, UserBorrowData } from "@/types/aave";
+import {
+  UnifiedReserveData,
+  UserBorrowData,
+  UserSupplyData,
+} from "@/types/aave";
 import Image from "next/image";
-import { formatPercentage } from "@/utils/formatters";
+import { formatPercentage, formatHealthFactor } from "@/utils/formatters";
+import { calculateNewHealthFactor } from "@/utils/lending/emode";
+import { ArrowRight } from "lucide-react";
 
 interface EmodeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  unifiedMarkets: UnifiedMarketData[];
+  unifiedReserves: UnifiedReserveData[];
   marketBorrowData: Record<string, UserBorrowData>;
+  marketSupplyData: Record<string, UserSupplyData>;
   userAddress: string;
   refetchMarkets?: () => void;
 }
@@ -33,8 +40,9 @@ interface EmodeModalProps {
 export default function EmodeModal({
   isOpen,
   onClose,
-  unifiedMarkets,
+  unifiedReserves,
   marketBorrowData,
+  marketSupplyData,
   userAddress,
   refetchMarkets,
 }: EmodeModalProps) {
@@ -53,7 +61,7 @@ export default function EmodeModal({
     getCategoryOptions,
   } = useEmodeOperations({
     userAddress,
-    unifiedMarkets,
+    unifiedReserves,
     marketBorrowData,
     refetchMarkets,
   });
@@ -87,7 +95,7 @@ export default function EmodeModal({
 
   // Get current emode category and category options using the hook
   const currentEmodeCategory =
-    selectedMarketData?.unifiedMarket?.emodeCategory?.id;
+    selectedMarketData?.unifiedReserve?.emodeCategory?.id;
   const categoryOptions = getCategoryOptions(selectedMarketData);
 
   const selectedCategory = categoryOptions.find(
@@ -113,6 +121,25 @@ export default function EmodeModal({
     selectedMarketData && selectedCategory
       ? hasIncompatiblePositions(selectedMarketData, selectedCategory)
       : false;
+
+  // Calculate current and new health factors
+  const currentHealthFactor = selectedMarketData?.unifiedReserve?.marketInfo
+    ?.userState?.healthFactor
+    ? parseFloat(
+        selectedMarketData.unifiedReserve.marketInfo.userState.healthFactor,
+      )
+    : null;
+
+  const newHealthFactor =
+    selectedMarketData && selectedCategory
+      ? calculateNewHealthFactor(
+          selectedMarketData.unifiedReserve,
+          marketSupplyData,
+          selectedCategory.isCurrentlyEnabled
+            ? null
+            : selectedCategory.category,
+        )
+      : null;
 
   const getButtonText = () => {
     if (isProcessing) return "processing...";
@@ -185,10 +212,12 @@ export default function EmodeModal({
                     <div className="flex items-center gap-2">
                       <Image
                         src={
-                          selectedMarketData.unifiedMarket.marketInfo.chain.icon
+                          selectedMarketData.unifiedReserve.marketInfo.chain
+                            .icon
                         }
                         alt={
-                          selectedMarketData.unifiedMarket.marketInfo.chain.name
+                          selectedMarketData.unifiedReserve.marketInfo.chain
+                            .name
                         }
                         width={22}
                         height={22}
@@ -213,8 +242,8 @@ export default function EmodeModal({
                   >
                     <div className="flex items-center gap-2">
                       <Image
-                        src={option.unifiedMarket.marketInfo.chain.icon}
-                        alt={option.unifiedMarket.marketInfo.chain.name}
+                        src={option.unifiedReserve.marketInfo.chain.icon}
+                        alt={option.unifiedReserve.marketInfo.chain.name}
                         width={22}
                         height={22}
                         className="object-contain"
@@ -309,6 +338,63 @@ export default function EmodeModal({
               </Select>
             </div>
           )}
+
+          {/* Health Factor Impact Display */}
+          {selectedMarketData &&
+            selectedCategory &&
+            newHealthFactor !== null && (
+              <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[#FAFAFA] font-medium text-sm">
+                    health factor impact
+                  </h3>
+                </div>
+
+                {/* Health Factor Values */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {/* Before Value */}
+                    <div className="text-center">
+                      <div className="text-[#A1A1AA] text-xs mb-1">current</div>
+                      <div
+                        className={`text-sm font-mono font-semibold ${formatHealthFactor(currentHealthFactor).colorClass}`}
+                      >
+                        {formatHealthFactor(currentHealthFactor).value}
+                      </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <ArrowRight className="w-4 h-4 text-[#A1A1AA]" />
+
+                    {/* After Value */}
+                    <div className="text-center">
+                      <div className="text-[#A1A1AA] text-xs mb-1">
+                        {selectedCategory.isCurrentlyEnabled
+                          ? "after disabling"
+                          : "after enabling"}
+                      </div>
+                      <div
+                        className={`text-sm font-mono font-semibold ${formatHealthFactor(newHealthFactor).colorClass}`}
+                      >
+                        {formatHealthFactor(newHealthFactor).value}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Message */}
+                {currentHealthFactor &&
+                  newHealthFactor < currentHealthFactor && (
+                    <div className="text-[#A1A1AA] text-xs leading-relaxed">
+                      <span className="text-amber-400">
+                        caution: health factor will decrease with this change.
+                        consider the risks before proceeding.
+                      </span>
+                    </div>
+                  )}
+              </div>
+            )}
 
           {/* Assets Table */}
           {selectedCategory && (

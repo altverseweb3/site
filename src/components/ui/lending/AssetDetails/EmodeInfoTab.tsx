@@ -1,9 +1,9 @@
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
 import { formatPercentage } from "@/utils/formatters";
 import { Zap } from "lucide-react";
 
-export const EModeInfoTab: React.FC<{ market: UnifiedMarketData }> = ({
+export const EModeInfoTab: React.FC<{ market: UnifiedReserveData }> = ({
   market,
 }) => {
   const eModeInfo = market.eModeInfo;

@@ -18,7 +18,7 @@ import {
   formatBalance,
 } from "@/utils/formatters";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   UserBorrowPosition,
   UserSupplyPosition,
 } from "@/types/aave";
@@ -28,13 +28,13 @@ import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetails
 import { TokenTransferState } from "@/types/web3";
 
 interface MarketCardProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   userAddress: string | undefined;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
-  onDetails?: (market: UnifiedMarketData) => void;
+  onDetails?: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
 }
 

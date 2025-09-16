@@ -17,17 +17,17 @@ import {
   formatPercentage,
   formatBalance,
 } from "@/utils/formatters";
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyCardProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   userAddress: string | undefined;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
 }
 
