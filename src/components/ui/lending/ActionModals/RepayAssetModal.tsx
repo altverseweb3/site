@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -35,23 +35,21 @@ import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
 
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
 
 interface RepayAssetModalProps {
-  market: UnifiedReserveData;
-  position?: UserBorrowPosition;
+  reserve: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onRepay: (market: UnifiedReserveData, max: boolean) => void;
+
   tokenTransferState: TokenTransferState;
 }
 
 const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
-  market,
-  position,
+  reserve,
   userAddress,
   children,
   tokenTransferState,
-  onRepay,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -71,6 +69,15 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
     sourceToken.address === destinationToken.address &&
     sourceToken.chainId === destinationToken.chainId;
 
+  const { handleRepay } = useRepayOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userAddress || null,
+    tokenRepayState: { amount: tokenTransferState.amount || "" },
+  });
+
+  const [position] = reserve.userBorrowPositions;
+
   // Swap state management - using proper tracking lifecycle
   const [swapInitiated, setSwapInitiated] = useState(false);
   const [swapCompleted, setSwapCompleted] = useState(false);
@@ -83,10 +90,9 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
   // Ref to track previous tracking state
   const previousTrackingState = useRef(tokenTransferState.isTracking);
 
-  const maxRepayableTokens =
-    parseFloat(position?.borrow.debt.amount.value) || 0;
-  const maxRepayableUsd = parseFloat(position?.borrow.debt.usd.value) || 0;
-  const maxRepayableTokensString = position?.borrow.debt.amount.value || "0";
+  const maxRepayableTokens = parseFloat(position.debt.amount.value) || 0;
+  const maxRepayableUsd = parseFloat(position.debt.usd.value) || 0;
+  const maxRepayableTokensString = position.debt.amount.value || "0";
 
   // Debug logging for token transfer state
   useEffect(() => {
@@ -319,7 +325,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
       <DialogContent className="max-w-m max-h-[80vh] overflow-hidden bg-[#18181B] border border-[#27272A] text-white flex flex-col">
         <DialogHeader className="border-b border-[#27272A] pb-4 flex-shrink-0 text-left">
           <h2 className="text-lg font-semibold">
-            repay {market.underlyingToken.symbol}
+            repay {reserve.underlyingToken.symbol}
           </h2>
         </DialogHeader>
 
@@ -362,7 +368,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
               <div className="flex flex-col items-end">
                 <div className="text-sm font-mono font-semibold text-sky-300">
                   <SubscriptNumber value={maxRepayableTokensString} />{" "}
-                  {market.underlyingToken.symbol}
+                  {reserve.underlyingToken.symbol}
                 </div>
                 <div className="text-xs font-mono text-[#71717A]">
                   {formatCurrency(maxRepayableUsd)}
@@ -426,7 +432,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                           {(() => {
                             const usdAmount = calculateTokenPrice(
                               tokenTransferState.amount || "0",
-                              market.usdExchangeRate.toString(),
+                              reserve.usdExchangeRate.toString(),
                             );
                             return (
                               usdAmount > 0 && (
@@ -542,7 +548,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                               (() => {
                                 const usdAmount = calculateTokenPrice(
                                   tokenTransferState.receiveAmount || "0",
-                                  market.usdExchangeRate.toString() || "0",
+                                  reserve.usdExchangeRate.toString() || "0",
                                 );
                                 return (
                                   usdAmount > 0 && (
@@ -617,8 +623,8 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                   {formatPercentage(
                     calculateApyWithIncentives(
                       0,
-                      market.borrowData.apy,
-                      market.incentives,
+                      reserve.borrowData.apy,
+                      reserve.incentives,
                     ).finalBorrowAPY,
                   )}
                 </div>
@@ -635,7 +641,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
             }
             sourceToken={destinationToken || undefined}
             userAddress={userAddress}
-            market={market}
+            market={reserve}
             operation="repay"
             className="mt-4"
           />
@@ -651,7 +657,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
               if (isDirectRepay && !isSwapThenRepayFlow) {
                 console.log("RepayAssetModal: Direct repay");
                 // Use the max button state instead of comparing amounts
-                onRepay(market, maxButtonClicked);
+                handleRepay(reserve, maxButtonClicked);
               } else if (
                 swapCompleted ||
                 (isDirectRepay && isSwapThenRepayFlow)
@@ -661,7 +667,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
                 console.log("RepayAssetModal: Swap repay calculation", {
                   maxButtonClicked,
                 });
-                onRepay(market, maxButtonClicked);
+                handleRepay(reserve, maxButtonClicked);
                 // Clear the swap-then-repay flag after repay action
                 setIsSwapThenRepayFlow(false);
               } else if (!swapInitiated) {

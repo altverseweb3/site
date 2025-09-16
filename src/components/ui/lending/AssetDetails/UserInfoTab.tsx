@@ -18,8 +18,6 @@ import { TokenTransferState } from "@/types/web3";
 interface UserInfoTabProps {
   market: UnifiedReserveData;
   userAddress?: string;
-
-  onRepay?: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState?: TokenTransferState;
 }
 
@@ -27,7 +25,6 @@ export const UserInfoTab: React.FC<UserInfoTabProps> = ({
   market,
   userAddress,
 
-  onRepay,
   tokenTransferState,
 }) => {
   const userState = market.userState;
@@ -126,11 +123,10 @@ export const UserInfoTab: React.FC<UserInfoTabProps> = ({
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                   your borrow position
                 </h3>
-                {onRepay && tokenTransferState && (
+                {tokenTransferState && (
                   <RepayAssetModal
-                    market={market}
+                    reserve={market}
                     userAddress={userAddress}
-                    onRepay={onRepay}
                     tokenTransferState={tokenTransferState}
                   >
                     <BrandedButton

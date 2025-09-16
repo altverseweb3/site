@@ -35,7 +35,6 @@ import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/Tr
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
 import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
@@ -98,13 +97,6 @@ export default function LendingPage() {
     onError: (error) => {
       console.error("lending swap error:", error);
     },
-  });
-
-  const { handleRepay } = useRepayOperations({
-    sourceChain,
-    sourceToken,
-    userWalletAddress: userWalletAddress || null,
-    tokenRepayState: { amount: tokenTransferState.amount || "" },
   });
 
   const { handleCollateralToggle } = useCollateralToggleOperations({
@@ -310,7 +302,6 @@ export default function LendingPage() {
                         onSubsectionChange={setCurrentSubsection}
                         refetchMarkets={refetchMarkets}
                         actions={{
-                          onRepay: handleRepay,
                           onCollateralToggle: handleCollateralToggle,
                         }}
                       />

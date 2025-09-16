@@ -20,7 +20,6 @@ interface UserBorrowCardProps {
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
 
-  onRepay: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
 
@@ -28,7 +27,6 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   unifiedReserve,
   userAddress,
 
-  onRepay,
   tokenTransferState,
 }) => {
   const [borrow] = unifiedReserve.userBorrowPositions;
@@ -104,7 +102,6 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
         <AssetDetailsModal
           reserve={unifiedReserve}
           userAddress={userAddress}
-          onRepay={onRepay}
           tokenTransferState={tokenTransferState}
         >
           <BrandedButton

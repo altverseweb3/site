@@ -6,7 +6,6 @@ import CardsList from "@/components/ui/CardsList";
 import {
   UnifiedReserveData,
   UserBorrowData,
-  UserBorrowPosition,
   UserSupplyData,
 } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
@@ -118,9 +117,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
           market={market}
           userAddress={userAddress}
-          onRepay={(market: UserBorrowPosition) => {
-            console.log(market); // TODO: update me
-          }}
           tokenTransferState={tokenTransferState}
         />
       )}
