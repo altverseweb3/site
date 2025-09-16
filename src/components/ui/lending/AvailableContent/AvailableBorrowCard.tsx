@@ -27,14 +27,12 @@ import { TokenTransferState } from "@/types/web3";
 interface AvailableBorrowCardProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
-  onBorrow: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   reserve,
   userAddress,
-  onBorrow,
   tokenTransferState,
 }) => {
   // Extract borrow data
@@ -172,7 +170,6 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
         <AssetDetailsModal
           reserve={reserve}
           userAddress={userAddress}
-          onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
         >
           <BrandedButton

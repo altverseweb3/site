@@ -20,12 +20,12 @@ import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 
 interface BorrowAssetModalProps {
   market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onBorrow: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
@@ -35,12 +35,18 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
-  onBorrow,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
 
   const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
+
+  const { handleBorrow } = useBorrowOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userAddress || null,
+    tokenBorrowState: { amount: tokenTransferState.amount || "" },
+  });
 
   return (
     <Dialog>
@@ -197,7 +203,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
               console.log(
                 "BorrowAssetModal: Button clicked - executing borrow",
               );
-              onBorrow(market);
+              handleBorrow(market);
             }}
             disabled={
               !tokenTransferState.amount ||

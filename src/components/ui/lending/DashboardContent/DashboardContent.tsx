@@ -33,7 +33,6 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
   actions: {
-    onBorrow: (market: UnifiedReserveData) => void;
     onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
     onRepay: (market: UnifiedReserveData, max: boolean) => void;
     onCollateralToggle: (market: UnifiedReserveData) => void;
@@ -288,7 +287,6 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onBorrow={actions.onBorrow}
             />
           ) : (
             <AvailableBorrowContent
@@ -297,7 +295,6 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
-              onBorrow={actions.onBorrow}
             />
           )
         ) : // Show open positions
@@ -308,7 +305,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onBorrow={actions.onBorrow}
             onWithdraw={actions.onWithdraw}
             onCollateralToggle={actions.onCollateralToggle}
           />
@@ -319,7 +315,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onBorrow={actions.onBorrow}
             onRepay={actions.onRepay}
           />
         )}

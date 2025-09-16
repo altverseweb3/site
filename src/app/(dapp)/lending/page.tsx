@@ -35,7 +35,6 @@ import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/Tr
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import { useRepayOperations } from "@/hooks/lending/useRepayOperations";
 import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
@@ -100,13 +99,6 @@ export default function LendingPage() {
     onError: (error) => {
       console.error("lending swap error:", error);
     },
-  });
-
-  const { handleBorrow } = useBorrowOperations({
-    sourceChain,
-    sourceToken,
-    userWalletAddress: userWalletAddress || null,
-    tokenBorrowState: { amount: tokenTransferState.amount || "" },
   });
 
   const { handleWithdraw } = useWithdrawOperations({
@@ -307,7 +299,6 @@ export default function LendingPage() {
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         tokenTransferState={tokenTransferState}
-                        onBorrow={handleBorrow}
                         filters={filters}
                         sortConfig={sortConfig}
                       />
@@ -327,7 +318,6 @@ export default function LendingPage() {
                         onSubsectionChange={setCurrentSubsection}
                         refetchMarkets={refetchMarkets}
                         actions={{
-                          onBorrow: handleBorrow,
                           onWithdraw: handleWithdraw,
                           onRepay: handleRepay,
                           onCollateralToggle: handleCollateralToggle,

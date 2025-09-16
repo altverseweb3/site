@@ -44,7 +44,6 @@ interface SupplyAssetModalProps {
   market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onBorrow: (market: UnifiedReserveData) => void;
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
   tokenTransferState: TokenTransferState;
