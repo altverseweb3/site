@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
+import { EnhancedUserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
@@ -21,7 +21,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 
 interface UserSupplyCardProps {
-  position: UserSupplyPosition;
+  position: EnhancedUserSupplyPosition;
   unifiedMarket: UnifiedMarketData;
   userAddress: string | undefined;
   onSupply: (market: UnifiedMarketData) => void;
@@ -186,11 +186,9 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         isOpen={isCollateralModalOpen}
         onClose={() => setIsCollateralModalOpen(false)}
         position={position}
+        userAddress={userAddress}
         onToggleCollateral={handleModalCollateralToggle}
         isLoading={isCollateralLoading}
-        healthFactor={
-          unifiedMarket.marketInfo.userState?.healthFactor?.toString() || null
-        }
       />
     </Card>
   );

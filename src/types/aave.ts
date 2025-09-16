@@ -92,6 +92,10 @@ export interface UserSupplyPosition {
   supply: MarketUserReserveSupplyPosition;
 }
 
+export interface EnhancedUserSupplyPosition extends UserSupplyPosition {
+  unifiedMarket: UnifiedMarketData;
+}
+
 export interface UserSupplyData {
   marketAddress: string;
   marketName: string;
@@ -124,6 +128,9 @@ export interface UserBorrowPosition {
   marketName: string;
   chainId: ChainId;
   borrow: MarketUserReserveBorrowPosition;
+}
+export interface EnhancedUserBorrowPosition extends UserBorrowPosition {
+  unifiedMarket: UnifiedMarketData;
 }
 
 export interface AggregatedUserState {

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserContent/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserBorrowPosition, UnifiedMarketData } from "@/types/aave";
+import { EnhancedUserBorrowPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
@@ -16,10 +16,6 @@ interface UserBorrowContentProps {
   onSupply: (market: UnifiedMarketData) => void;
   onBorrow: (market: UnifiedMarketData) => void;
   onRepay: (market: UnifiedMarketData, max: boolean) => void;
-}
-
-interface EnhancedUserBorrowPosition extends UserBorrowPosition {
-  unifiedMarket: UnifiedMarketData;
 }
 
 const ITEMS_PER_PAGE = 10;

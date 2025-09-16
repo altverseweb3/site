@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserContent/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
+import { EnhancedUserSupplyPosition, UnifiedMarketData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
@@ -17,10 +17,6 @@ interface UserSupplyContentProps {
   onBorrow: (market: UnifiedMarketData) => void;
   onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
   onCollateralToggle: (market: UnifiedMarketData) => void;
-}
-
-interface EnhancedUserSupplyPosition extends UserSupplyPosition {
-  unifiedMarket: UnifiedMarketData;
 }
 
 const ITEMS_PER_PAGE = 10;
