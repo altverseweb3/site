@@ -8,7 +8,6 @@ import {
   UserBorrowData,
   UserBorrowPosition,
   UserSupplyData,
-  UserSupplyPosition,
 } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
@@ -120,9 +119,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
           market={market}
           userAddress={userAddress}
           onRepay={(market: UserBorrowPosition) => {
-            console.log(market); // TODO: update me
-          }}
-          onWithdraw={(market: UserSupplyPosition) => {
             console.log(market); // TODO: update me
           }}
           tokenTransferState={tokenTransferState}

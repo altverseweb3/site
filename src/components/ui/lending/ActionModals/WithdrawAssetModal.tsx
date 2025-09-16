@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { UnifiedReserveData, UserSupplyPosition } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -20,40 +20,42 @@ import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import WalletConnectButton from "@/components/ui/WalletConnectButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
-
+import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface WithdrawAssetModalProps {
   market: UnifiedReserveData;
-  position?: UserSupplyPosition;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }
 
 const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   market,
-  position,
   userAddress,
   children,
   tokenTransferState,
-  onWithdraw,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
 
   const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
-
+  const [position] = market.userSupplyPositions;
   const maxWithdrawableTokens = position
-    ? parseFloat(position.supply.balance.amount.value) || 0
+    ? parseFloat(position.balance.amount.value) || 0
     : 0;
   const maxWithdrawableUsd = position
-    ? parseFloat(position.supply.balance.usd) || 0
+    ? parseFloat(position.balance.usd) || 0
     : 0;
-  const maxWithdrawableTokensString =
-    position?.supply.balance.amount.value || "0";
+  const maxWithdrawableTokensString = position?.balance.amount.value || "0";
+
+  const { handleWithdraw } = useWithdrawOperations({
+    sourceChain,
+    sourceToken,
+    userWalletAddress: userAddress || null,
+    tokenWithdrawState: { amount: tokenTransferState.amount || "" },
+  });
 
   // Track if user clicked the max button
   const [maxButtonClicked, setMaxButtonClicked] = useState(false);
@@ -114,9 +116,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
               <div className="mt-2 flex items-center gap-2">
                 <button
                   onClick={() => {
-                    tokenTransferState.setAmount(
-                      position.supply.balance.amount.value,
-                    );
+                    tokenTransferState.setAmount(position.balance.amount.value);
                     setMaxButtonClicked(true);
                   }}
                   className="px-1 py-0.5 rounded-md bg-green-500 bg-opacity-25 text-green-500 text-xs cursor-pointer"
@@ -225,7 +225,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
 
           <BrandedButton
             onClick={async () => {
-              onWithdraw(market, maxButtonClicked);
+              handleWithdraw(market, maxButtonClicked);
             }}
             disabled={
               !tokenTransferState.amount ||
