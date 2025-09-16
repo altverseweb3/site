@@ -182,12 +182,11 @@ const MarketCard: React.FC<MarketCardProps> = ({
 
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
-          market={market}
+          reserve={market}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
-          buttonsToShow={["supply", "borrow"]}
         >
           <BrandedButton
             buttonText="details"

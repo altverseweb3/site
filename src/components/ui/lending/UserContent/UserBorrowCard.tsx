@@ -12,12 +12,11 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
 
 interface UserBorrowCardProps {
-  position: UserBorrowPosition;
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
   onSupply: (market: UnifiedReserveData) => void;
@@ -27,7 +26,6 @@ interface UserBorrowCardProps {
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
-  position,
   unifiedReserve,
   userAddress,
   onSupply,
@@ -35,7 +33,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   onRepay,
   tokenTransferState,
 }) => {
-  const { borrow, marketName } = position;
+  const [borrow] = unifiedReserve.userBorrowPositions;
   const balanceUsd = parseFloat(borrow.debt.usd) || 0;
   const apy = parseFloat(borrow.apy.value) || 0;
 
@@ -63,7 +61,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
               src={borrow.market.icon}
-              alt={marketName}
+              alt={borrow.market.name}
               width={16}
               height={16}
               className="object-contain rounded-full"
@@ -71,7 +69,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {marketName}
+            {borrow.market.name}
           </CardDescription>
         </div>
       </CardHeader>
@@ -106,14 +104,12 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
 
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
-          market={unifiedReserve}
+          reserve={unifiedReserve}
           userAddress={userAddress}
-          borrowPosition={position}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onRepay={onRepay}
           tokenTransferState={tokenTransferState}
-          buttonsToShow={["borrow", "repay"]}
         >
           <BrandedButton
             buttonText="details"

@@ -10,11 +10,7 @@ import {
 } from "@/components/ui/StyledDialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import Image from "next/image";
-import {
-  UnifiedReserveData,
-  UserBorrowPosition,
-  UserSupplyPosition,
-} from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import UserInfoTab from "@/components/ui/lending/AssetDetails/UserInfoTab";
 import EModeInfoTab from "@/components/ui/lending/AssetDetails/EmodeInfoTab";
@@ -27,11 +23,9 @@ import { getChainByChainId } from "@/config/chains";
 import useWeb3Store from "@/store/web3Store";
 import { getLendingToken } from "@/utils/lending/tokens";
 import BorrowAssetModal from "@/components/ui/lending/ActionModals/BorrowAssetModal";
-import WithdrawAssetModal from "@/components/ui/lending/ActionModals/WithdrawAssetModal";
-import RepayAssetModal from "@/components/ui/lending/ActionModals/RepayAssetModal";
 
 interface AssetDetailsModalProps {
-  market: UnifiedReserveData;
+  reserve: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
   onSupply: (market: UnifiedReserveData) => void;
@@ -39,16 +33,12 @@ interface AssetDetailsModalProps {
   onRepay?: (market: UnifiedReserveData, max: boolean) => void;
   onWithdraw?: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
-  supplyPosition?: UserSupplyPosition;
-  borrowPosition?: UserBorrowPosition;
-  buttonsToShow: ctaButtons[];
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";
-type ctaButtons = "supply" | "borrow" | "withdraw" | "repay";
 
 const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
-  market,
+  reserve,
   userAddress,
   children,
   onSupply,
@@ -56,9 +46,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   onWithdraw,
   onRepay,
   tokenTransferState,
-  supplyPosition,
-  borrowPosition,
-  buttonsToShow,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -67,13 +54,13 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
     finalSupplyAPY,
     hasSupplyBonuses,
     hasMixedIncentives: supplyMixed,
-  } = calculateApyWithIncentives(market.supplyData.apy, 0, market.incentives);
+  } = calculateApyWithIncentives(reserve.supplyData.apy, 0, reserve.incentives);
 
   const {
     finalBorrowAPY,
     hasBorrowBonuses,
     hasMixedIncentives: borrowMixed,
-  } = calculateApyWithIncentives(0, market.borrowData.apy, market.incentives);
+  } = calculateApyWithIncentives(0, reserve.borrowData.apy, reserve.incentives);
 
   const handleTabChange = (value: TabType) => {
     if (value) setActiveTab(value);
@@ -82,7 +69,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   const tokensByCompositeKey = useWeb3Store(
     (state) => state.tokensByCompositeKey,
   );
-  const lendingToken = getLendingToken(market, tokensByCompositeKey);
+  const lendingToken = getLendingToken(reserve, tokensByCompositeKey);
   const lendingChain = getChainByChainId(lendingToken.chainId);
 
   const setSourceToken = useWeb3Store((state) => state.setSourceToken);
@@ -104,8 +91,8 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
                 <Image
-                  src={market.underlyingToken.imageUrl}
-                  alt={market.underlyingToken.symbol}
+                  src={reserve.underlyingToken.imageUrl}
+                  alt={reserve.underlyingToken.symbol}
                   width={48}
                   height={48}
                   className="object-contain"
@@ -116,15 +103,15 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <DialogTitle className="text-lg font-semibold text-[#FAFAFA] flex items-center gap-2">
-                  {market.underlyingToken.name}
+                  {reserve.underlyingToken.name}
                   <span className="text-[#A1A1AA] text-sm font-normal">
-                    ({market.underlyingToken.symbol})
+                    ({reserve.underlyingToken.symbol})
                   </span>
                 </DialogTitle>
                 <div className="text-[#A1A1AA] text-sm flex items-center gap-2 mt-1">
                   <Image
-                    src={market.marketInfo.icon}
-                    alt={market.marketName}
+                    src={reserve.marketInfo.icon}
+                    alt={reserve.marketName}
                     width={16}
                     height={16}
                     className="object-contain rounded-full"
@@ -132,7 +119,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                       e.currentTarget.src = "/images/markets/default.svg";
                     }}
                   />
-                  {market.marketName}
+                  {reserve.marketName}
                 </div>
               </div>
             </div>
@@ -188,7 +175,15 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
             {/* Tab Content */}
             <div className="min-h-[300px]">
               {/* User Info - Always available */}
-              {activeTab === "user" && <UserInfoTab market={market} />}
+              {activeTab === "user" && (
+                <UserInfoTab
+                  market={reserve}
+                  userAddress={userAddress}
+                  onWithdraw={onWithdraw}
+                  onRepay={onRepay}
+                  tokenTransferState={tokenTransferState}
+                />
+              )}
 
               {/* Mobile: Combined asset info (only shows on mobile screens) */}
               {activeTab === "asset" && (
@@ -200,7 +195,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                       supply Information
                     </h3>
                     <SupplyInfoTab
-                      market={market}
+                      market={reserve}
                       finalAPY={finalSupplyAPY}
                       hasSupplyBonuses={hasSupplyBonuses}
                       hasMixedIncentives={supplyMixed}
@@ -214,7 +209,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                       borrow information
                     </h3>
                     <BorrowInfoTab
-                      market={market}
+                      market={reserve}
                       finalAPY={finalBorrowAPY}
                       hasBorrowBonuses={hasBorrowBonuses}
                       hasMixedIncentives={borrowMixed}
@@ -227,7 +222,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       e-mode information
                     </h3>
-                    <EModeInfoTab market={market} />
+                    <EModeInfoTab market={reserve} />
                   </div>
                 </div>
               )}
@@ -236,7 +231,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
               {activeTab === "supply" && (
                 <div className="hidden md:block">
                   <SupplyInfoTab
-                    market={market}
+                    market={reserve}
                     finalAPY={finalSupplyAPY}
                     hasSupplyBonuses={hasSupplyBonuses}
                     hasMixedIncentives={supplyMixed}
@@ -246,7 +241,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
               {activeTab === "borrow" && (
                 <div className="hidden md:block">
                   <BorrowInfoTab
-                    market={market}
+                    market={reserve}
                     finalAPY={finalBorrowAPY}
                     hasBorrowBonuses={hasBorrowBonuses}
                     hasMixedIncentives={borrowMixed}
@@ -255,7 +250,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
               )}
               {activeTab === "emode" && (
                 <div className="hidden md:block">
-                  <EModeInfoTab market={market} />
+                  <EModeInfoTab market={reserve} />
                 </div>
               )}
             </div>
@@ -266,105 +261,51 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
         {userAddress && (
           <div className="bg-[#18181B] flex-shrink-0 px-1">
             <div className="flex gap-3 w-full">
-              {onSupply && buttonsToShow.includes("supply") && (
-                <SupplyAssetModal
-                  market={market}
-                  onSupply={onSupply}
-                  onBorrow={onBorrow}
-                  userAddress={userAddress}
-                  tokenTransferState={tokenTransferState}
-                  healthFactor={
-                    market.marketInfo.userState?.healthFactor?.toString() ||
-                    null
-                  }
-                >
-                  <BrandedButton
-                    iconName="TrendingUp"
-                    buttonText="supply"
-                    onClick={() => {
-                      setSourceChain(lendingChain);
-                      setDestinationChain(lendingChain);
-                      setSourceToken(lendingToken);
-                      setDestinationToken(lendingToken);
-                    }}
-                    className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
-                    iconClassName="h-4 w-4"
-                  />
-                </SupplyAssetModal>
-              )}
-              {onBorrow && buttonsToShow.includes("borrow") && (
-                <BorrowAssetModal
-                  market={market}
-                  userAddress={userAddress}
-                  onBorrow={onBorrow}
-                  tokenTransferState={tokenTransferState}
-                  healthFactor={
-                    market.marketInfo.userState?.healthFactor?.toString() ||
-                    null
-                  }
-                >
-                  <BrandedButton
-                    iconName="TrendingDown"
-                    buttonText="borrow"
-                    onClick={() => {
-                      setSourceChain(lendingChain);
-                      setDestinationChain(lendingChain);
-                      setSourceToken(lendingToken);
-                      setDestinationToken(lendingToken);
-                    }}
-                    className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
-                    iconClassName="h-4 w-4"
-                  />
-                </BorrowAssetModal>
-              )}
-              {onWithdraw && buttonsToShow.includes("withdraw") && (
-                <WithdrawAssetModal
-                  market={market}
-                  userAddress={userAddress}
-                  position={supplyPosition}
-                  onWithdraw={onWithdraw}
-                  tokenTransferState={tokenTransferState}
-                  healthFactor={
-                    market.marketInfo.userState?.healthFactor?.toString() ||
-                    null
-                  }
-                >
-                  <BrandedButton
-                    iconName="Coins"
-                    buttonText="withdraw"
-                    onClick={() => {
-                      setSourceChain(lendingChain);
-                      setDestinationChain(lendingChain);
-                      setSourceToken(lendingToken);
-                      setDestinationToken(lendingToken);
-                    }}
-                    className="flex-1 justify-center bg-amber-500/20 hover:bg-amber-500/30 hover:text-amber-300 text-amber-300 border-amber-500/50 hover:border-amber-500 transition-all duration-200 py-3 font-medium"
-                    iconClassName="h-4 w-4"
-                  />
-                </WithdrawAssetModal>
-              )}
-              {onRepay && buttonsToShow.includes("repay") && (
-                <RepayAssetModal
-                  market={market}
-                  userAddress={userAddress}
-                  position={borrowPosition}
-                  onRepay={onRepay}
-                  tokenTransferState={tokenTransferState}
-                >
-                  <BrandedButton
-                    iconName="Coins"
-                    buttonText="repay"
-                    onClick={() => {
-                      setSourceChain(lendingChain);
-                      setDestinationChain(lendingChain);
-                      setSourceToken(lendingToken);
-                      setDestinationToken(lendingToken);
-                    }}
-                    className="flex-1 justify-center bg-sky-500/20 hover:bg-sky-500/30 hover:text-sky-300 text-sky-300 border-sky-500/50 hover:border-sky-500 transition-all duration-200 py-3 font-medium"
-                    iconClassName="h-4 w-4"
-                  />
-                </RepayAssetModal>
-              )}
+              <SupplyAssetModal
+                market={reserve}
+                onSupply={onSupply}
+                onBorrow={onBorrow}
+                userAddress={userAddress}
+                tokenTransferState={tokenTransferState}
+                healthFactor={
+                  reserve.marketInfo.userState?.healthFactor?.toString() || null
+                }
+              >
+                <BrandedButton
+                  iconName="TrendingUp"
+                  buttonText="supply"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-green-500/20 hover:bg-green-500/30 hover:text-green-200 text-green-300 border-green-700/50 hover:border-green-600 transition-all duration-200 py-3 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </SupplyAssetModal>
+              <BorrowAssetModal
+                market={reserve}
+                userAddress={userAddress}
+                onBorrow={onBorrow}
+                tokenTransferState={tokenTransferState}
+                healthFactor={
+                  reserve.marketInfo.userState?.healthFactor?.toString() || null
+                }
+              >
+                <BrandedButton
+                  iconName="TrendingDown"
+                  buttonText="borrow"
+                  onClick={() => {
+                    setSourceChain(lendingChain);
+                    setDestinationChain(lendingChain);
+                    setSourceToken(lendingToken);
+                    setDestinationToken(lendingToken);
+                  }}
+                  className="flex-1 justify-center bg-red-500/20 hover:bg-red-500/30 hover:text-red-400 text-red-400 border-red-500/50 hover:border-red-500 transition-all duration-200 font-medium"
+                  iconClassName="h-4 w-4"
+                />
+              </BorrowAssetModal>
             </div>
           </div>
         )}

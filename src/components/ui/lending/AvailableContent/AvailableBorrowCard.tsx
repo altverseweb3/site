@@ -25,7 +25,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 
 interface AvailableBorrowCardProps {
-  market: UnifiedReserveData;
+  reserve: UnifiedReserveData;
   userAddress: string | undefined;
   onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
@@ -33,18 +33,18 @@ interface AvailableBorrowCardProps {
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
-  market,
+  reserve,
   userAddress,
   onSupply,
   onBorrow,
   tokenTransferState,
 }) => {
   // Extract borrow data
-  const baseBorrowAPY = market.borrowData.apy;
-  const totalSupplied = market.supplyData.totalSupplied;
-  const totalBorrowed = market.borrowData.totalBorrowed;
-  const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
-  const totalBorrowedUsd = market.borrowData.totalBorrowedUsd;
+  const baseBorrowAPY = reserve.borrowData.apy;
+  const totalSupplied = reserve.supplyData.totalSupplied;
+  const totalBorrowed = reserve.borrowData.totalBorrowed;
+  const totalSuppliedUsd = reserve.supplyData.totalSuppliedUsd;
+  const totalBorrowedUsd = reserve.borrowData.totalBorrowedUsd;
 
   // Calculate available liquidity for borrowing
   const availableUsd = totalSuppliedUsd - totalBorrowedUsd;
@@ -54,13 +54,13 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
 
   // Calculate final borrow APY with incentives
   const { finalBorrowAPY, hasBorrowBonuses, hasMixedIncentives } =
-    calculateApyWithIncentives(0, baseBorrowAPY, market.incentives);
+    calculateApyWithIncentives(0, baseBorrowAPY, reserve.incentives);
 
   // Check if market is available for borrowing
   const isAvailable =
-    !market.isFrozen &&
-    !market.isPaused &&
-    market.borrowInfo?.borrowingState === "ENABLED";
+    !reserve.isFrozen &&
+    !reserve.isPaused &&
+    reserve.borrowInfo?.borrowingState === "ENABLED";
   const hasLiquidity = availableUsd > 0;
 
   return (
@@ -68,8 +68,8 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
       <CardHeader className="flex flex-row items-start p-4 pb-2 space-y-0">
         <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center mr-3 flex-shrink-0">
           <Image
-            src={market.underlyingToken.imageUrl}
-            alt={market.underlyingToken.symbol}
+            src={reserve.underlyingToken.imageUrl}
+            alt={reserve.underlyingToken.symbol}
             width={32}
             height={32}
             className="object-contain"
@@ -81,7 +81,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {market.underlyingToken.name}
+              {reserve.underlyingToken.name}
             </CardTitle>
             {(!isAvailable || !hasLiquidity) && (
               <Tooltip.Provider>
@@ -96,14 +96,14 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
                     >
                       {!hasLiquidity
                         ? "No Liquidity"
-                        : market.isFrozen && market.isPaused
+                        : reserve.isFrozen && reserve.isPaused
                           ? "Frozen, Paused"
-                          : market.isFrozen
+                          : reserve.isFrozen
                             ? "Frozen"
-                            : market.isPaused
+                            : reserve.isPaused
                               ? "Paused"
-                              : !market.borrowInfo?.borrowingState ||
-                                  market.borrowInfo?.borrowingState ===
+                              : !reserve.borrowInfo?.borrowingState ||
+                                  reserve.borrowInfo?.borrowingState ===
                                     "DISABLED"
                                 ? "Borrow Disabled"
                                 : "Not Available"}
@@ -116,8 +116,8 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
-              src={market.marketInfo.icon}
-              alt={market.marketName}
+              src={reserve.marketInfo.icon}
+              alt={reserve.marketName}
               width={16}
               height={16}
               className="object-contain rounded-full"
@@ -125,7 +125,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {market.marketName}
+            {reserve.marketName}
           </CardDescription>
         </div>
       </CardHeader>
@@ -156,7 +156,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
             >
               {formatBalance(availableTokens)}{" "}
               <TruncatedText
-                text={market.underlyingToken.symbol}
+                text={reserve.underlyingToken.symbol}
                 maxLength={6}
                 className={`text-sm font-semibold font-mono ${hasLiquidity ? "text-[#FAFAFA]" : "text-red-400"}`}
               />
@@ -172,12 +172,11 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
 
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
-          market={market}
+          reserve={reserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
-          buttonsToShow={["supply", "borrow"]}
         >
           <BrandedButton
             buttonText="details"

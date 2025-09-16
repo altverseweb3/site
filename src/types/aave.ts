@@ -91,7 +91,6 @@ export interface UserSupplyPosition {
   chainId: ChainId;
   supply: MarketUserReserveSupplyPosition;
 }
-
 export interface UserSupplyData {
   marketAddress: string;
   marketName: string;

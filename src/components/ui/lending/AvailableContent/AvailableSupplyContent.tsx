@@ -118,7 +118,7 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
       renderCard={(market) => (
         <AvailableSupplyCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
-          market={market}
+          reserve={market}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}

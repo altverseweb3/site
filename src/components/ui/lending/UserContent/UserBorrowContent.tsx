@@ -2,14 +2,13 @@
 import React, { useState } from "react";
 import UserBorrowCard from "@/components/ui/lending/UserContent/UserBorrowCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserBorrowPosition, UnifiedReserveData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserBorrowContentProps {
   markets: UnifiedReserveData[];
   userAddress: string | undefined;
-  showZeroBalance?: boolean;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
@@ -18,16 +17,11 @@ interface UserBorrowContentProps {
   onRepay: (market: UnifiedReserveData, max: boolean) => void;
 }
 
-interface EnhancedUserBorrowPosition extends UserBorrowPosition {
-  unifiedReserve: UnifiedReserveData;
-}
-
 const ITEMS_PER_PAGE = 10;
 
 const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
   markets,
   userAddress,
-  showZeroBalance = false,
   tokenTransferState,
   filters,
   sortConfig,
@@ -37,63 +31,44 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const enhancedPositions: EnhancedUserBorrowPosition[] = [];
-
-  markets.forEach((market) => {
-    market.userBorrowPositions.forEach((borrow) => {
-      const debtAmount = parseFloat(borrow.debt.usd) || 0;
-      if (!showZeroBalance && debtAmount === 0) {
-        return;
-      }
-
-      enhancedPositions.push({
-        marketAddress: market.marketInfo.address,
-        marketName: market.marketName,
-        chainId: market.marketInfo.chain.chainId,
-        borrow,
-        unifiedReserve: market,
-      });
-    });
-  });
-
   // Apply asset filter
-  let filteredPositions = enhancedPositions;
+  let filteredReserves = markets.filter(
+    (market) => market.userBorrowPositions.length > 0,
+  );
   if (filters?.assetFilter) {
     const filterLower = filters.assetFilter.toLowerCase();
-    filteredPositions = enhancedPositions.filter((position) => {
+    filteredReserves = markets.filter((market) => {
       return (
         // Filter by title (underlyingToken.name)
-        position.unifiedReserve.underlyingToken.name
-          .toLowerCase()
-          .includes(filterLower) ||
+        market.underlyingToken.name.toLowerCase().includes(filterLower) ||
         // Filter by ticker (currency.symbol)
-        position.borrow.currency.symbol.toLowerCase().includes(filterLower) ||
+        market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
         // Also include market name for broader matching
-        position.marketName.toLowerCase().includes(filterLower)
+        market.marketName.toLowerCase().includes(filterLower)
       );
     });
   }
 
   // Apply sorting
-  let userBorrowPositions: EnhancedUserBorrowPosition[];
+  let userBorrowReserves: UnifiedReserveData[];
   if (sortConfig) {
-    userBorrowPositions = [...filteredPositions].sort((a, b) => {
+    userBorrowReserves = [...filteredReserves].sort((a, b) => {
       let aValue: number;
       let bValue: number;
 
       switch (sortConfig.column) {
         case "borrowApy":
-          aValue = parseFloat(a.borrow.apy.value) || 0;
-          bValue = parseFloat(b.borrow.apy.value) || 0;
+          aValue = parseFloat(a.borrowInfo?.apy.value) || 0;
+          bValue = parseFloat(b.borrowInfo?.apy.value) || 0;
           break;
         case "userBorrowedValue":
-          aValue = parseFloat(a.borrow.debt.usd) || 0;
-          bValue = parseFloat(b.borrow.debt.usd) || 0;
+          aValue = parseFloat(a.userBorrowPositions[0].debt.usd) || 0;
+          bValue = parseFloat(b.userBorrowPositions[0].debt.usd) || 0;
           break;
         default:
           // Default sort by borrowed value (highest first)
-          aValue = parseFloat(a.borrow.debt.usd) || 0;
-          bValue = parseFloat(b.borrow.debt.usd) || 0;
+          aValue = parseFloat(a.userBorrowPositions[0].debt.usd) || 0;
+          bValue = parseFloat(b.userBorrowPositions[0].debt.usd) || 0;
           break;
       }
 
@@ -101,14 +76,14 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
     });
   } else {
     // Default sort by debt amount (highest first)
-    userBorrowPositions = filteredPositions.sort((a, b) => {
-      const balanceA = parseFloat(a.borrow.debt.usd) || 0;
-      const balanceB = parseFloat(b.borrow.debt.usd) || 0;
+    userBorrowReserves = filteredReserves.sort((a, b) => {
+      const balanceA = parseFloat(a.userBorrowPositions[0].debt.usd) || 0;
+      const balanceB = parseFloat(b.userBorrowPositions[0].debt.usd) || 0;
       return balanceB - balanceA;
     });
   }
 
-  if (userBorrowPositions.length === 0) {
+  if (userBorrowReserves.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA] text-sm">
@@ -118,8 +93,8 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
     );
   }
 
-  const totalPages = Math.ceil(userBorrowPositions.length / ITEMS_PER_PAGE);
-  const paginatedPositions = userBorrowPositions.slice(
+  const totalPages = Math.ceil(userBorrowReserves.length / ITEMS_PER_PAGE);
+  const paginatedReserves = userBorrowReserves.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
@@ -130,12 +105,11 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
 
   return (
     <CardsList
-      data={paginatedPositions}
-      renderCard={(position) => (
+      data={paginatedReserves}
+      renderCard={(reserve) => (
         <UserBorrowCard
-          key={`${position.marketAddress}-${position.borrow.currency.symbol}`}
-          position={position}
-          unifiedReserve={position.unifiedReserve}
+          key={`${reserve.market.address}-${reserve.underlyingToken.address}`}
+          unifiedReserve={reserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
@@ -147,7 +121,7 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
       totalPages={totalPages}
       onPageChange={handlePageChange}
       itemsPerPage={ITEMS_PER_PAGE}
-      totalItems={userBorrowPositions.length}
+      totalItems={userBorrowReserves.length}
     />
   );
 };
