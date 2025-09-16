@@ -6,7 +6,7 @@ import { evmAddress } from "@aave/react";
 import { useAaveCollateral } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress } from "@/utils/formatters";
-import { UnifiedMarketData, ChainId } from "@/types/aave";
+import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 
@@ -22,7 +22,7 @@ export interface CollateralToggleOperationResult {
 }
 
 export interface CollateralToggleOperationHook {
-  handleCollateralToggle: (market: UnifiedMarketData) => Promise<void>;
+  handleCollateralToggle: (market: UnifiedReserveData) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -48,7 +48,7 @@ export const useCollateralToggleOperations = (
   const { switchToChain } = useChainSwitch(marketChain);
 
   const handleCollateralToggle = useCallback(
-    async (market: UnifiedMarketData): Promise<void> => {
+    async (market: UnifiedReserveData): Promise<void> => {
       try {
         // Validate required dependencies
         if (!userWalletAddress) {

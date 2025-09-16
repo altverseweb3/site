@@ -1,4 +1,4 @@
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 import { getCompositeKey } from "../tokens/tokenMethods";
@@ -7,7 +7,7 @@ import { getCompositeKey } from "../tokens/tokenMethods";
     Returns either an existing token from the tokensByCompositeKey map or a new token object.
 */
 export const getLendingToken = (
-  market: UnifiedMarketData,
+  market: UnifiedReserveData,
   tokensByCompositeKey: Record<string, Token>,
 ): Token => {
   const lowercaseTokenAddress = market.underlyingToken.address.toLowerCase();

@@ -7,14 +7,14 @@ import { useAaveEMode } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress } from "@/utils/formatters";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   EmodeMarketCategory,
   UserBorrowData,
 } from "@/types/aave";
 import { getChainByChainId } from "@/config/chains";
 
 export interface EmodeOperationDependencies {
-  unifiedMarkets: UnifiedMarketData[];
+  unifiedReserves: UnifiedReserveData[];
   userAddress: string | undefined;
   marketBorrowData: Record<string, UserBorrowData>;
   refetchMarkets?: () => void;
@@ -31,7 +31,7 @@ export interface EmodeOperationHook {
     selectedMarketData: {
       key: string;
       label: string;
-      unifiedMarket: UnifiedMarketData;
+      unifiedReserve: UnifiedReserveData;
       categories: EmodeMarketCategory[];
     },
     selectedCategory: {
@@ -46,7 +46,7 @@ export interface EmodeOperationHook {
     selectedMarketData: {
       key: string;
       label: string;
-      unifiedMarket: UnifiedMarketData;
+      unifiedReserve: UnifiedReserveData;
       categories: EmodeMarketCategory[];
     },
     selectedCategory: {
@@ -57,7 +57,7 @@ export interface EmodeOperationHook {
   getMarketsWithEmode: () => Array<{
     key: string;
     label: string;
-    unifiedMarket: UnifiedMarketData;
+    unifiedReserve: UnifiedReserveData;
     categories: EmodeMarketCategory[];
   }>;
   getCategoryOptions: (
@@ -65,7 +65,7 @@ export interface EmodeOperationHook {
       | {
           key: string;
           label: string;
-          unifiedMarket: UnifiedMarketData;
+          unifiedReserve: UnifiedReserveData;
           categories: EmodeMarketCategory[];
         }
       | undefined,
@@ -78,7 +78,7 @@ export interface EmodeOperationHook {
 export const useEmodeOperations = (
   dependencies: EmodeOperationDependencies,
 ): EmodeOperationHook => {
-  const { userAddress, unifiedMarkets, marketBorrowData, refetchMarkets } =
+  const { userAddress, unifiedReserves, marketBorrowData, refetchMarkets } =
     dependencies;
 
   const {
@@ -95,7 +95,7 @@ export const useEmodeOperations = (
   const getMarketsWithEmode = useCallback(() => {
     const seenKeys = new Set();
 
-    return unifiedMarkets
+    return unifiedReserves
       .filter(
         (market) =>
           market.marketInfo.eModeCategories &&
@@ -104,7 +104,7 @@ export const useEmodeOperations = (
       .map((market) => ({
         key: `${market.marketInfo.chain.chainId}-${market.marketInfo.address}`,
         label: `${market.marketInfo.chain.name} - ${market.marketName}`,
-        unifiedMarket: market,
+        unifiedReserve: market,
         categories: market.marketInfo.eModeCategories || [],
       }))
       .filter((market) => {
@@ -114,7 +114,7 @@ export const useEmodeOperations = (
         seenKeys.add(market.key);
         return true;
       });
-  }, [unifiedMarkets]);
+  }, [unifiedReserves]);
 
   // Get category options for selected market
   const getCategoryOptions = useCallback(
@@ -123,7 +123,7 @@ export const useEmodeOperations = (
         | {
             key: string;
             label: string;
-            unifiedMarket: UnifiedMarketData;
+            unifiedReserve: UnifiedReserveData;
             categories: EmodeMarketCategory[];
           }
         | undefined,
@@ -134,10 +134,10 @@ export const useEmodeOperations = (
         // Check if this specific category is currently enabled by looking at borrow reserves
         let isCurrentlyEnabled = false;
 
-        if (selectedMarketData.unifiedMarket.marketInfo.borrowReserves) {
+        if (selectedMarketData.unifiedReserve.marketInfo.borrowReserves) {
           // Check if any borrow reserve has this category enabled in userState.emode
           isCurrentlyEnabled =
-            selectedMarketData.unifiedMarket.marketInfo.borrowReserves.some(
+            selectedMarketData.unifiedReserve.marketInfo.borrowReserves.some(
               (reserve) => {
                 return reserve.userState?.emode?.categoryId === category.id;
               },
@@ -159,7 +159,7 @@ export const useEmodeOperations = (
       selectedMarketData: {
         key: string;
         label: string;
-        unifiedMarket: UnifiedMarketData;
+        unifiedReserve: UnifiedReserveData;
         categories: EmodeMarketCategory[];
       },
       selectedCategory: {
@@ -207,7 +207,7 @@ export const useEmodeOperations = (
       selectedMarketData: {
         key: string;
         label: string;
-        unifiedMarket: UnifiedMarketData;
+        unifiedReserve: UnifiedReserveData;
         categories: EmodeMarketCategory[];
       },
       selectedCategory: {
@@ -221,7 +221,7 @@ export const useEmodeOperations = (
       try {
         // Get the required chain for the selected market
         const requiredChain = getChainByChainId(
-          selectedMarketData.unifiedMarket.marketInfo.chain.chainId,
+          selectedMarketData.unifiedReserve.marketInfo.chain.chainId,
         );
 
         // Switch to the required chain
@@ -241,11 +241,11 @@ export const useEmodeOperations = (
         // Execute the e-mode operation
         const result = await executeEMode({
           market: evmAddress(
-            selectedMarketData.unifiedMarket.marketInfo.address,
+            selectedMarketData.unifiedReserve.marketInfo.address,
           ),
           user: evmAddress(userAddress),
           categoryId: categoryIdToSet,
-          chainId: selectedMarketData.unifiedMarket.marketInfo.chain.chainId,
+          chainId: selectedMarketData.unifiedReserve.marketInfo.chain.chainId,
         });
 
         // Handle the result

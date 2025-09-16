@@ -12,23 +12,23 @@ import {
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
+import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
 
 interface UserBorrowCardProps {
   position: UserBorrowPosition;
-  unifiedMarket: UnifiedMarketData;
+  unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
+  onRepay: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   position,
-  unifiedMarket,
+  unifiedReserve,
   userAddress,
   onSupply,
   onBorrow,
@@ -106,7 +106,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
 
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
-          market={unifiedMarket}
+          market={unifiedReserve}
           userAddress={userAddress}
           borrowPosition={position}
           onSupply={onSupply}

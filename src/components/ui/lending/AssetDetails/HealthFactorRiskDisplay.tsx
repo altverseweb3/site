@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
 import { formatHealthFactor } from "@/utils/formatters";
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { Token } from "@/types/web3";
 import { evmAddress } from "@aave/react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
@@ -16,7 +16,7 @@ export interface HealthFactorRiskDisplayProps {
   amount?: string;
   sourceToken?: Token;
   userAddress?: string;
-  market?: UnifiedMarketData;
+  market?: UnifiedReserveData;
   operation?: "borrow" | "supply" | "repay" | "withdraw";
   className?: string;
 }

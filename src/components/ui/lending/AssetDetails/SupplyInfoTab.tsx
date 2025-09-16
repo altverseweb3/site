@@ -1,4 +1,4 @@
-import { UnifiedMarketData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { InfoRow } from "@/components/ui/lending/AssetDetails/InfoRow";
 import HorizontalProgressBar from "@/components/ui/HorizontalProgressBar";
 import {
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const SupplyInfoTab: React.FC<{
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   finalAPY: number;
   hasSupplyBonuses: boolean;
   hasMixedIncentives: boolean;

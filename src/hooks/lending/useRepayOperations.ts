@@ -7,7 +7,7 @@ import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveRepay, useAavePermit } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress } from "@/utils/formatters";
-import { UnifiedMarketData, ChainId } from "@/types/aave";
+import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
 
@@ -29,7 +29,7 @@ export interface RepayOperationResult {
 }
 
 export interface RepayOperationHook {
-  handleRepay: (market: UnifiedMarketData, max: boolean) => Promise<void>;
+  handleRepay: (market: UnifiedReserveData, max: boolean) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -57,7 +57,7 @@ export const useRepayOperations = (
   const { switchToChain } = useChainSwitch(marketChain);
 
   const handleRepay = useCallback(
-    async (market: UnifiedMarketData, max: boolean): Promise<void> => {
+    async (market: UnifiedReserveData, max: boolean): Promise<void> => {
       try {
         // Validate required dependencies
         if (!sourceToken || !tokenRepayState.amount || !userWalletAddress) {

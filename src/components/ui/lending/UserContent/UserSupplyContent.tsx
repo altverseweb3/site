@@ -3,24 +3,24 @@
 import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserContent/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserSupplyPosition, UnifiedMarketData } from "@/types/aave";
+import { UserSupplyPosition, UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface UserSupplyContentProps {
-  markets: UnifiedMarketData[];
+  markets: UnifiedReserveData[];
   userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-  onCollateralToggle: (market: UnifiedMarketData) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
+  onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
+  onCollateralToggle: (market: UnifiedReserveData) => void;
 }
 
 interface EnhancedUserSupplyPosition extends UserSupplyPosition {
-  unifiedMarket: UnifiedMarketData;
+  unifiedReserve: UnifiedReserveData;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -47,7 +47,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
         marketName: market.marketName,
         chainId: market.marketInfo.chain.chainId,
         supply,
-        unifiedMarket: market,
+        unifiedReserve: market,
       });
     });
   });
@@ -59,7 +59,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     filteredPositions = enhancedPositions.filter((position) => {
       return (
         // Filter by title (underlyingToken.name)
-        position.unifiedMarket.underlyingToken.name
+        position.unifiedReserve.underlyingToken.name
           .toLowerCase()
           .includes(filterLower) ||
         // Filter by ticker (currency.symbol)
@@ -131,7 +131,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
         <UserSupplyCard
           key={`${position.marketAddress}-${position.supply.currency.symbol}`}
           position={position}
-          unifiedMarket={position.unifiedMarket}
+          unifiedReserve={position.unifiedReserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}

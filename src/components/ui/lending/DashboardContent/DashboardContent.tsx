@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   AggregatedUserState,
   UserBorrowData,
   UserSupplyData,
@@ -21,7 +21,7 @@ import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 interface DashboardContentProps {
   userAddress: string;
-  unifiedMarkets: UnifiedMarketData[];
+  unifiedReserves: UnifiedReserveData[];
   marketBorrowData: Record<string, UserBorrowData>;
   marketSupplyData?: Record<string, UserSupplyData>;
   aggregatedUserState: AggregatedUserState;
@@ -33,17 +33,17 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
   actions: {
-    onSupply: (market: UnifiedMarketData) => void;
-    onBorrow: (market: UnifiedMarketData) => void;
-    onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
-    onRepay: (market: UnifiedMarketData, max: boolean) => void;
-    onCollateralToggle: (market: UnifiedMarketData) => void;
+    onSupply: (market: UnifiedReserveData) => void;
+    onBorrow: (market: UnifiedReserveData) => void;
+    onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
+    onRepay: (market: UnifiedReserveData, max: boolean) => void;
+    onCollateralToggle: (market: UnifiedReserveData) => void;
   };
 }
 
 export default function DashboardContent({
   userAddress,
-  unifiedMarkets,
+  unifiedReserves,
   marketBorrowData,
   aggregatedUserState,
   loading,
@@ -282,7 +282,7 @@ export default function DashboardContent({
           // Show available positions
           isSupplyMode ? (
             <AvailableSupplyContent
-              markets={unifiedMarkets}
+              markets={unifiedReserves}
               userAddress={userAddress}
               showZeroBalance={showZeroBalance}
               tokenTransferState={tokenTransferState}
@@ -293,7 +293,7 @@ export default function DashboardContent({
             />
           ) : (
             <AvailableBorrowContent
-              markets={unifiedMarkets}
+              markets={unifiedReserves}
               userAddress={userAddress}
               tokenTransferState={tokenTransferState}
               filters={filters}
@@ -305,7 +305,7 @@ export default function DashboardContent({
         ) : // Show open positions
         isSupplyMode ? (
           <UserSupplyContent
-            markets={unifiedMarkets}
+            markets={unifiedReserves}
             userAddress={userAddress}
             tokenTransferState={tokenTransferState}
             filters={filters}
@@ -317,7 +317,7 @@ export default function DashboardContent({
           />
         ) : (
           <UserBorrowContent
-            markets={unifiedMarkets}
+            markets={unifiedReserves}
             userAddress={userAddress}
             showZeroBalance={showZeroBalance}
             tokenTransferState={tokenTransferState}
@@ -342,7 +342,7 @@ export default function DashboardContent({
       <EmodeModal
         isOpen={isEmodeModalOpen}
         onClose={() => setIsEmodeModalOpen(false)}
-        unifiedMarkets={unifiedMarkets}
+        unifiedReserves={unifiedReserves}
         marketBorrowData={marketBorrowData}
         userAddress={userAddress}
         refetchMarkets={refetchMarkets}

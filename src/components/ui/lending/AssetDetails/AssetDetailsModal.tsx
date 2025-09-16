@@ -11,7 +11,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import Image from "next/image";
 import {
-  UnifiedMarketData,
+  UnifiedReserveData,
   UserBorrowPosition,
   UserSupplyPosition,
 } from "@/types/aave";
@@ -31,13 +31,13 @@ import WithdrawAssetModal from "@/components/ui/lending/ActionModals/WithdrawAss
 import RepayAssetModal from "@/components/ui/lending/ActionModals/RepayAssetModal";
 
 interface AssetDetailsModalProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onSupply: (market: UnifiedMarketData) => void;
-  onBorrow: (market: UnifiedMarketData) => void;
-  onRepay?: (market: UnifiedMarketData, max: boolean) => void;
-  onWithdraw?: (market: UnifiedMarketData, max: boolean) => void;
+  onSupply: (market: UnifiedReserveData) => void;
+  onBorrow: (market: UnifiedReserveData) => void;
+  onRepay?: (market: UnifiedReserveData, max: boolean) => void;
+  onWithdraw?: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
   supplyPosition?: UserSupplyPosition;
   borrowPosition?: UserBorrowPosition;

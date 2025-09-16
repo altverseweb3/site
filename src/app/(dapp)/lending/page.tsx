@@ -182,7 +182,7 @@ export default function LendingPage() {
     >
       {({
         markets,
-        unifiedMarkets,
+        unifiedReserves,
         marketBorrowData,
         marketSupplyData,
         loading,
@@ -313,7 +313,7 @@ export default function LendingPage() {
                     {activeTab === "markets" && (
                       <MarketContent
                         userAddress={userWalletAddress}
-                        unifiedMarkets={unifiedMarkets}
+                        unifiedReserves={unifiedReserves}
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         tokenTransferState={tokenTransferState}
@@ -326,7 +326,7 @@ export default function LendingPage() {
                     {activeTab === "dashboard" && userWalletAddress && (
                       <DashboardContent
                         userAddress={userWalletAddress}
-                        unifiedMarkets={unifiedMarkets || []}
+                        unifiedReserves={unifiedReserves || []}
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         aggregatedUserState={aggregatedUserState}

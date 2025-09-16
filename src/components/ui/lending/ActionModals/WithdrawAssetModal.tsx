@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { UnifiedMarketData, UserSupplyPosition } from "@/types/aave";
+import { UnifiedReserveData, UserSupplyPosition } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -24,11 +24,11 @@ import SubscriptNumber from "@/components/ui/SubscriptNumber";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface WithdrawAssetModalProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   position?: UserSupplyPosition;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onWithdraw: (market: UnifiedMarketData, max: boolean) => void;
+  onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }

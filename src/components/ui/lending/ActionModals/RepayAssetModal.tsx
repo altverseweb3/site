@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import { UnifiedMarketData, UserBorrowPosition } from "@/types/aave";
+import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -37,11 +37,11 @@ import SubscriptNumber from "@/components/ui/SubscriptNumber";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface RepayAssetModalProps {
-  market: UnifiedMarketData;
+  market: UnifiedReserveData;
   position?: UserBorrowPosition;
   userAddress: string | undefined;
   children: React.ReactNode;
-  onRepay: (market: UnifiedMarketData, max: boolean) => void;
+  onRepay: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
 
