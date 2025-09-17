@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
-import { History } from "lucide-react";
+import { History, RefreshCw } from "lucide-react";
 import SortDropdown from "@/components/ui/lending/SortDropdown";
 import AssetFilter from "@/components/ui/AssetFilter";
 import { Chain } from "@/types/web3";
@@ -212,9 +212,9 @@ export default function LendingPage() {
                     />
                   </div>
 
-                  {/* Right Side: Sort Dropdown and Asset Filter */}
+                  {/* Right Side: Sort Dropdown, Asset Filter, and Refresh Button */}
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center xl:shrink-0">
-                    {/* Sort Dropdown and Asset Filter - side by side */}
+                    {/* Sort Dropdown, Asset Filter, and Refresh Button - side by side */}
                     <div className="flex gap-4 w-full sm:w-auto">
                       <div className="flex-1 sm:flex-none">
                         <SortDropdown
@@ -237,6 +237,16 @@ export default function LendingPage() {
                           mobilePlaceholder="filter by asset"
                           className="w-full sm:w-60"
                         />
+                      </div>
+                      <div className="flex-none">
+                        <Button
+                          onClick={refetchMarkets}
+                          variant="outline"
+                          size="sm"
+                          className="bg-[#18181B] border-[#27272A] text-[#FAFAFA] hover:bg-[#1C1C1F] hover:border-[#3F3F46] h-8 px-3"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
