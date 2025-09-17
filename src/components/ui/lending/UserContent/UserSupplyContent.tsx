@@ -13,8 +13,6 @@ interface UserSupplyContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
-
-  onCollateralToggle: (market: UnifiedReserveData) => void;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -25,8 +23,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
-
-  onCollateralToggle,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -110,7 +106,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           key={`${reserve.market.address}-${reserve.underlyingToken.address}`}
           unifiedReserve={reserve}
           userAddress={userAddress}
-          onCollateralToggle={onCollateralToggle}
           tokenTransferState={tokenTransferState}
         />
       )}

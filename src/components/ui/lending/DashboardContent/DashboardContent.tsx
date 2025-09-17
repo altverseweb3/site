@@ -32,9 +32,6 @@ interface DashboardContentProps {
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
-  actions: {
-    onCollateralToggle: (market: UnifiedReserveData) => void;
-  };
 }
 
 export default function DashboardContent({
@@ -50,7 +47,6 @@ export default function DashboardContent({
   sortConfig,
   onSubsectionChange,
   refetchMarkets,
-  actions,
 }: DashboardContentProps) {
   const [isSupplyMode, setIsSupplyMode] = useState(true);
   const [showAvailable, setShowAvailable] = useState(true);
@@ -303,7 +299,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onCollateralToggle={actions.onCollateralToggle}
           />
         ) : (
           <UserBorrowContent
