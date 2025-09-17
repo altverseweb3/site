@@ -33,7 +33,6 @@ import { evmAddress } from "@aave/react";
 import { AggregatedTransactionHistory } from "@/components/meta/AggregatedTransactionHistory";
 import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
-import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
@@ -323,13 +322,6 @@ export default function LendingPage() {
                     )}
                   </>
                 )}
-                <Button
-                  onClick={() => {
-                    console.log(tokenTransferState);
-                  }}
-                >
-                  HELLO MATE
-                </Button>
               </div>
             </div>
           </div>
