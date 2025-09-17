@@ -19,12 +19,12 @@ import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetails
 import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
+import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
+import { getChainByChainId } from "@/config/chains";
 
 interface UserSupplyCardProps {
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
-
-  onCollateralToggle: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
   isCollateralLoading?: boolean;
 }
@@ -32,8 +32,6 @@ interface UserSupplyCardProps {
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   unifiedReserve,
   userAddress,
-
-  onCollateralToggle,
   tokenTransferState,
   isCollateralLoading = false,
 }) => {
@@ -43,14 +41,19 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
 
   // State for collateral toggle modal
   const [isCollateralModalOpen, setIsCollateralModalOpen] = useState(false);
+  const reserveChain = getChainByChainId(supply.market.chain.chainId);
+  const { handleCollateralToggle } = useCollateralToggleOperations({
+    userWalletAddress: userAddress || null,
+    targetChain: reserveChain,
+  });
 
-  const handleCollateralToggle = () => {
+  const handleToggleClick = () => {
     // Open the collateral toggle modal
     setIsCollateralModalOpen(true);
   };
 
-  const handleModalCollateralToggle = () => {
-    onCollateralToggle(unifiedReserve);
+  const handleToggleAction = () => {
+    handleCollateralToggle(unifiedReserve);
     setIsCollateralModalOpen(false);
   };
 
@@ -148,9 +151,12 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           <div className="flex items-center gap-1">
             <Switch
               checked={supply.isCollateral}
-              onCheckedChange={handleCollateralToggle}
+              onCheckedChange={handleToggleClick}
               className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-[#3F3F46]"
-              disabled={isCollateralLoading}
+              disabled={
+                isCollateralLoading ||
+                (!supply.canBeCollateral && !supply.isCollateral)
+              }
             />
           </div>
         </div>
@@ -176,7 +182,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         onClose={() => setIsCollateralModalOpen(false)}
         reserve={unifiedReserve}
         userAddress={userAddress}
-        onToggleCollateral={handleModalCollateralToggle}
+        onToggleCollateral={handleToggleAction}
         isLoading={isCollateralLoading}
       />
     </Card>

@@ -35,7 +35,6 @@ import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/Tr
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { Button } from "@/components/ui/Button";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
@@ -97,11 +96,6 @@ export default function LendingPage() {
     onError: (error) => {
       console.error("lending swap error:", error);
     },
-  });
-
-  const { handleCollateralToggle } = useCollateralToggleOperations({
-    userWalletAddress: userWalletAddress || null,
-    targetChain: sourceChain,
   });
 
   useEffect(() => {
@@ -301,9 +295,6 @@ export default function LendingPage() {
                         sortConfig={sortConfig}
                         onSubsectionChange={setCurrentSubsection}
                         refetchMarkets={refetchMarkets}
-                        actions={{
-                          onCollateralToggle: handleCollateralToggle,
-                        }}
                       />
                     )}
                     {activeTab === "history" && (

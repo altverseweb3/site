@@ -59,8 +59,8 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
     onToggleCollateral();
   };
 
-  // Don't render modal if asset can't be used as collateral
-  if (!canBeCollateral) {
+  // Don't render modal if asset can't be used as collateral AND it's currently disabled
+  if (!canBeCollateral && !isCurrentlyCollateral) {
     return null;
   }
 
