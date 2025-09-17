@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import UserSupplyCard from "@/components/ui/lending/UserContent/UserSupplyCard";
 import CardsList from "@/components/ui/CardsList";
-import { UserSupplyPosition, UnifiedReserveData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 
@@ -17,10 +17,6 @@ interface UserSupplyContentProps {
   onBorrow: (market: UnifiedReserveData) => void;
   onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
   onCollateralToggle: (market: UnifiedReserveData) => void;
-}
-
-interface EnhancedUserSupplyPosition extends UserSupplyPosition {
-  unifiedReserve: UnifiedReserveData;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -38,58 +34,44 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const enhancedPositions: EnhancedUserSupplyPosition[] = [];
-
-  markets.forEach((market) => {
-    market.userSupplyPositions.forEach((supply) => {
-      enhancedPositions.push({
-        marketAddress: market.marketInfo.address,
-        marketName: market.marketName,
-        chainId: market.marketInfo.chain.chainId,
-        supply,
-        unifiedReserve: market,
-      });
-    });
-  });
-
   // Apply asset filter
-  let filteredPositions = enhancedPositions;
+  let filteredReserves = markets.filter(
+    (market) => market.userSupplyPositions.length > 0,
+  );
   if (filters?.assetFilter) {
     const filterLower = filters.assetFilter.toLowerCase();
-    filteredPositions = enhancedPositions.filter((position) => {
+    filteredReserves = markets.filter((market) => {
       return (
         // Filter by title (underlyingToken.name)
-        position.unifiedReserve.underlyingToken.name
-          .toLowerCase()
-          .includes(filterLower) ||
+        market.underlyingToken.name.toLowerCase().includes(filterLower) ||
         // Filter by ticker (currency.symbol)
-        position.supply.currency.symbol.toLowerCase().includes(filterLower) ||
+        market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
         // Also include market name for broader matching
-        position.marketName.toLowerCase().includes(filterLower)
+        market.marketName.toLowerCase().includes(filterLower)
       );
     });
   }
 
   // Apply sorting
-  let userSupplyPositions: EnhancedUserSupplyPosition[];
+  let userSupplyReserves: UnifiedReserveData[];
   if (sortConfig) {
-    userSupplyPositions = [...filteredPositions].sort((a, b) => {
+    userSupplyReserves = [...filteredReserves].sort((a, b) => {
       let aValue: number;
       let bValue: number;
 
       switch (sortConfig.column) {
         case "supplyApy":
-          aValue = parseFloat(a.supply.apy.value) || 0;
-          bValue = parseFloat(b.supply.apy.value) || 0;
+          aValue = parseFloat(a.supplyInfo.apy.value) || 0;
+          bValue = parseFloat(b.supplyInfo.apy.value) || 0;
           break;
         case "userSuppliedValue":
-          aValue = parseFloat(a.supply.balance.usd) || 0;
-          bValue = parseFloat(b.supply.balance.usd) || 0;
+          aValue = parseFloat(a.userSupplyPositions[0]?.balance.usd) || 0;
+          bValue = parseFloat(b.userSupplyPositions[0]?.balance.usd) || 0;
           break;
         default:
           // Default sort by supplied value (highest first)
-          aValue = parseFloat(a.supply.balance.usd) || 0;
-          bValue = parseFloat(b.supply.balance.usd) || 0;
+          aValue = parseFloat(a.userSupplyPositions[0]?.balance.usd) || 0;
+          bValue = parseFloat(b.userSupplyPositions[0]?.balance.usd) || 0;
           break;
       }
 
@@ -97,14 +79,14 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     });
   } else {
     // Default sort by balance (highest first)
-    userSupplyPositions = filteredPositions.sort((a, b) => {
-      const balanceA = parseFloat(a.supply.balance.usd) || 0;
-      const balanceB = parseFloat(b.supply.balance.usd) || 0;
+    userSupplyReserves = filteredReserves.sort((a, b) => {
+      const balanceA = parseFloat(a.userSupplyPositions[0]?.balance.usd) || 0;
+      const balanceB = parseFloat(b.userSupplyPositions[0]?.balance.usd) || 0;
       return balanceB - balanceA;
     });
   }
 
-  if (userSupplyPositions.length === 0) {
+  if (userSupplyReserves.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-[#A1A1AA] text-sm">
@@ -114,8 +96,8 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
     );
   }
 
-  const totalPages = Math.ceil(userSupplyPositions.length / ITEMS_PER_PAGE);
-  const paginatedPositions = userSupplyPositions.slice(
+  const totalPages = Math.ceil(userSupplyReserves.length / ITEMS_PER_PAGE);
+  const paginatedReserves = userSupplyReserves.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
@@ -126,12 +108,11 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
 
   return (
     <CardsList
-      data={paginatedPositions}
-      renderCard={(position) => (
+      data={paginatedReserves}
+      renderCard={(reserve) => (
         <UserSupplyCard
-          key={`${position.marketAddress}-${position.supply.currency.symbol}`}
-          position={position}
-          unifiedReserve={position.unifiedReserve}
+          key={`${reserve.market.address}-${reserve.underlyingToken.address}`}
+          unifiedReserve={reserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
@@ -144,7 +125,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
       totalPages={totalPages}
       onPageChange={handlePageChange}
       itemsPerPage={ITEMS_PER_PAGE}
-      totalItems={userSupplyPositions.length}
+      totalItems={userSupplyReserves.length}
     />
   );
 };

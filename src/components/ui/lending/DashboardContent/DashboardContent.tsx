@@ -320,7 +320,6 @@ export default function DashboardContent({
           <UserBorrowContent
             markets={unifiedReserves}
             userAddress={userAddress}
-            showZeroBalance={showZeroBalance}
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}

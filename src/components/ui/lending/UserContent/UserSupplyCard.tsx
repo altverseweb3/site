@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/Switch";
 import BrandedButton from "@/components/ui/BrandedButton";
 import Image from "next/image";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
-import { UserSupplyPosition, UnifiedReserveData } from "@/types/aave";
+import { UnifiedReserveData } from "@/types/aave";
 import { Shield, ShieldOff } from "lucide-react";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import ToggleCollateralModal from "@/components/ui/lending/ActionModals/ToggleCollateralModal";
@@ -21,7 +21,6 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 
 interface UserSupplyCardProps {
-  position: UserSupplyPosition;
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
   onSupply: (market: UnifiedReserveData) => void;
@@ -33,7 +32,6 @@ interface UserSupplyCardProps {
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
-  position,
   unifiedReserve,
   userAddress,
   onSupply,
@@ -43,7 +41,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   tokenTransferState,
   isCollateralLoading = false,
 }) => {
-  const { supply, marketName } = position;
+  const [supply] = unifiedReserve.userSupplyPositions;
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
   const apy = parseFloat(supply.apy.value) || 0;
 
@@ -108,7 +106,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
               src={supply.market.icon}
-              alt={marketName}
+              alt={supply.market.name}
               width={16}
               height={16}
               className="object-contain rounded-full"
@@ -116,7 +114,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {marketName}
+            {supply.market.name}
           </CardDescription>
         </div>
       </CardHeader>
@@ -164,14 +162,12 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
 
       <CardFooter className="flex gap-2 p-4 pt-0">
         <AssetDetailsModal
-          market={unifiedReserve}
+          reserve={unifiedReserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           onWithdraw={onWithdraw}
           tokenTransferState={tokenTransferState}
-          supplyPosition={position}
-          buttonsToShow={["supply", "withdraw"]}
         >
           <BrandedButton
             buttonText="details"
@@ -185,12 +181,10 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
       <ToggleCollateralModal
         isOpen={isCollateralModalOpen}
         onClose={() => setIsCollateralModalOpen(false)}
-        position={position}
+        reserve={unifiedReserve}
+        userAddress={userAddress}
         onToggleCollateral={handleModalCollateralToggle}
         isLoading={isCollateralLoading}
-        healthFactor={
-          unifiedReserve.marketInfo.userState?.healthFactor?.toString() || null
-        }
       />
     </Card>
   );

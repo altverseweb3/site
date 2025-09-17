@@ -9,33 +9,51 @@ import {
 } from "@/components/ui/StyledDialog";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { formatCurrency } from "@/utils/formatters";
-import { UserSupplyPosition } from "@/types/aave";
-import { Shield, ShieldOff, TrendingUp } from "lucide-react";
+import { UnifiedReserveData } from "@/types/aave";
+import { getChainByChainId } from "@/config/chains";
+import { Shield, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
+import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface ToggleCollateralModalProps {
   isOpen: boolean;
   onClose: () => void;
-  position: UserSupplyPosition;
+  reserve: UnifiedReserveData;
   onToggleCollateral: () => void;
   isLoading?: boolean;
-  healthFactor?: string | null;
+  userAddress?: string;
 }
 
 const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
   isOpen,
   onClose,
-  position,
+  reserve,
   onToggleCollateral,
   isLoading = false,
-  healthFactor,
+  userAddress,
 }) => {
-  const { supply, marketName } = position;
+  const [supply] = reserve.userSupplyPositions;
   const balanceAmount = supply.balance.amount.value;
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
   const isCurrentlyCollateral = supply.isCollateral;
   const canBeCollateral = supply.canBeCollateral;
+
+  const marketChain = getChainByChainId(supply.market.chain.chainId);
+
+  // Convert currency to token format
+  const sourceToken = {
+    id: supply.currency.name,
+    ticker: supply.currency.symbol,
+    chainId: supply.market.chain.chainId,
+    stringChainId: marketChain.id,
+    decimals: supply.currency.decimals,
+    address: supply.currency.address,
+    symbol: supply.currency.symbol,
+    name: supply.currency.name || supply.currency.symbol,
+    imageUrl: supply.currency.imageUrl,
+    icon: supply.currency.imageUrl,
+  };
 
   const handleToggle = async () => {
     onToggleCollateral();
@@ -85,7 +103,7 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
                     src={
                       supply.market.chain.icon || "/images/chains/default.svg"
                     }
-                    alt={marketName}
+                    alt={reserve.market.name}
                     width={12}
                     height={12}
                     className="rounded-full"
@@ -99,7 +117,9 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
                 <div className="text-sm font-medium text-white">
                   {supply.currency.symbol}
                 </div>
-                <div className="text-xs text-[#A1A1AA]">{marketName}</div>
+                <div className="text-xs text-[#A1A1AA]">
+                  {reserve.market.name}
+                </div>
               </div>
             </div>
 
@@ -120,36 +140,15 @@ const ToggleCollateralModal: React.FC<ToggleCollateralModalProps> = ({
             </div>
           </div>
 
-          {/* Health Factor Impact */}
-          <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-[#A1A1AA]" />
-              <span className="text-sm font-medium text-white">
-                health factor impact
-              </span>
-            </div>
-
-            {/* Current Health Factor */}
-            {healthFactor && (
-              <div className="flex justify-between items-center py-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-3 h-3 text-[#A1A1AA]" />
-                  <span className="text-xs text-[#A1A1AA]">
-                    current health factor
-                  </span>
-                </div>
-                <div className="text-xs font-mono font-semibold text-blue-400">
-                  {parseFloat(healthFactor).toFixed(2)}
-                </div>
-              </div>
-            )}
-
-            <div className="text-xs text-[#A1A1AA] bg-amber-500/10 border border-amber-500/20 rounded p-2">
-              {isCurrentlyCollateral
-                ? "Disabling collateral may reduce your borrowing power and affect your health factor."
-                : "Enabling collateral will increase your borrowing power and improve your health factor."}
-            </div>
-          </div>
+          {/* Health Factor Risk Display */}
+          <HealthFactorRiskDisplay
+            amount={balanceAmount}
+            sourceToken={sourceToken}
+            userAddress={userAddress}
+            market={reserve}
+            operation={isCurrentlyCollateral ? "withdraw" : "supply"}
+            className="mt-4"
+          />
 
           {/* Action Explanation */}
           <div className="text-xs text-[#A1A1AA] text-center px-2">

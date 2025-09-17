@@ -24,7 +24,7 @@ import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetails
 import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyCardProps {
-  market: UnifiedReserveData;
+  reserve: UnifiedReserveData;
   userAddress: string | undefined;
   onSupply: (market: UnifiedReserveData) => void;
   onBorrow: (market: UnifiedReserveData) => void;
@@ -32,31 +32,31 @@ interface AvailableSupplyCardProps {
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
-  market,
+  reserve,
   userAddress,
   onSupply,
   onBorrow,
   tokenTransferState,
 }) => {
   // Extract supply data
-  const baseSupplyAPY = market.supplyData.apy;
-  const totalSupplied = market.supplyData.totalSupplied;
-  const totalSuppliedUsd = market.supplyData.totalSuppliedUsd;
+  const baseSupplyAPY = reserve.supplyData.apy;
+  const totalSupplied = reserve.supplyData.totalSupplied;
+  const totalSuppliedUsd = reserve.supplyData.totalSuppliedUsd;
 
   // Calculate final supply APY with incentives
   const { finalSupplyAPY, hasSupplyBonuses, hasMixedIncentives } =
-    calculateApyWithIncentives(baseSupplyAPY, 0, market.incentives);
+    calculateApyWithIncentives(baseSupplyAPY, 0, reserve.incentives);
 
   // Check if market is available for supply
-  const isAvailable = !market.isFrozen && !market.isPaused;
+  const isAvailable = !reserve.isFrozen && !reserve.isPaused;
 
   return (
     <Card className="text-white border border-[#27272A] bg-[#18181B] rounded-lg shadow-none hover:bg-[#1C1C1F] transition-colors">
       <CardHeader className="flex flex-row items-start p-4 pb-2 space-y-0">
         <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center mr-3 flex-shrink-0">
           <Image
-            src={market.underlyingToken.imageUrl}
-            alt={market.underlyingToken.symbol}
+            src={reserve.underlyingToken.imageUrl}
+            alt={reserve.underlyingToken.symbol}
             width={32}
             height={32}
             className="object-contain"
@@ -68,14 +68,14 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {market.underlyingToken.name}
+              {reserve.underlyingToken.name}
             </CardTitle>
             {!isAvailable && <AlertTriangle className="w-4 h-4 text-red-400" />}
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
-              src={market.marketInfo.icon}
-              alt={market.marketName}
+              src={reserve.marketInfo.icon}
+              alt={reserve.marketName}
               width={16}
               height={16}
               className="object-contain rounded-full"
@@ -83,12 +83,12 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {market.marketName}
+            {reserve.marketName}
             {!isAvailable && (
               <span className="ml-1 text-red-400">
-                {market.isFrozen && market.isPaused
+                {reserve.isFrozen && reserve.isPaused
                   ? "(Frozen, Paused)"
-                  : market.isFrozen
+                  : reserve.isFrozen
                     ? "(Frozen)"
                     : "(Paused)"}
               </span>
@@ -121,7 +121,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
               {formatBalance(totalSupplied)}{" "}
               <TruncatedText
-                text={market.underlyingToken.symbol}
+                text={reserve.underlyingToken.symbol}
                 maxLength={6}
                 className="text-[#FAFAFA] text-sm font-semibold font-mono"
               />
@@ -138,12 +138,12 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           <div className="flex items-center gap-1">
             <span
               className={`text-xs font-medium ${
-                market.supplyInfo.canBeCollateral
+                reserve.supplyInfo.canBeCollateral
                   ? "text-green-500"
                   : "text-[#A1A1AA]"
               }`}
             >
-              {market.supplyInfo.canBeCollateral ? "enabled" : "disabled"}
+              {reserve.supplyInfo.canBeCollateral ? "enabled" : "disabled"}
             </span>
           </div>
         </div>
@@ -151,12 +151,11 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
 
       <CardFooter className="flex justify-center p-4 pt-0">
         <AssetDetailsModal
-          market={market}
+          reserve={reserve}
           userAddress={userAddress}
           onSupply={onSupply}
           onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
-          buttonsToShow={["supply", "borrow"]}
         >
           <BrandedButton
             buttonText="details"
