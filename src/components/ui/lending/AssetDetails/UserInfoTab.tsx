@@ -18,7 +18,7 @@ import { TokenTransferState } from "@/types/web3";
 interface UserInfoTabProps {
   market: UnifiedReserveData;
   userAddress?: string;
-  onWithdraw?: (market: UnifiedReserveData, max: boolean) => void;
+
   onRepay?: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState?: TokenTransferState;
 }
@@ -26,7 +26,7 @@ interface UserInfoTabProps {
 export const UserInfoTab: React.FC<UserInfoTabProps> = ({
   market,
   userAddress,
-  onWithdraw,
+
   onRepay,
   tokenTransferState,
 }) => {
@@ -72,11 +72,10 @@ export const UserInfoTab: React.FC<UserInfoTabProps> = ({
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   your supply position
                 </h3>
-                {onWithdraw && tokenTransferState && (
+                {tokenTransferState && (
                   <WithdrawAssetModal
                     market={market}
                     userAddress={userAddress}
-                    onWithdraw={onWithdraw}
                     tokenTransferState={tokenTransferState}
                     healthFactor={
                       market.marketInfo.userState?.healthFactor?.toString() ||

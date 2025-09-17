@@ -7,11 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
-import {
-  UnifiedReserveData,
-  UserBorrowPosition,
-  UserSupplyPosition,
-} from "@/types/aave";
+import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
@@ -45,7 +41,6 @@ interface SupplyAssetModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   onRepay?: (market: UserBorrowPosition) => void;
-  onWithdraw?: (market: UserSupplyPosition) => void;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
 }

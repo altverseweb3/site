@@ -24,7 +24,6 @@ interface UserSupplyCardProps {
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
 
-  onWithdraw: (market: UnifiedReserveData, max: boolean) => void;
   onCollateralToggle: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
   isCollateralLoading?: boolean;
@@ -34,7 +33,6 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   unifiedReserve,
   userAddress,
 
-  onWithdraw,
   onCollateralToggle,
   tokenTransferState,
   isCollateralLoading = false,
@@ -162,7 +160,6 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         <AssetDetailsModal
           reserve={unifiedReserve}
           userAddress={userAddress}
-          onWithdraw={onWithdraw}
           tokenTransferState={tokenTransferState}
         >
           <BrandedButton

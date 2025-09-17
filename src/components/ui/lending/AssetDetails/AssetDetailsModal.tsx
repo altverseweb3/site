@@ -29,7 +29,7 @@ interface AssetDetailsModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   onRepay?: (market: UnifiedReserveData, max: boolean) => void;
-  onWithdraw?: (market: UnifiedReserveData, max: boolean) => void;
+
   tokenTransferState: TokenTransferState;
 }
 
@@ -39,7 +39,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   reserve,
   userAddress,
   children,
-  onWithdraw,
+
   onRepay,
   tokenTransferState,
 }) => {
@@ -175,7 +175,6 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 <UserInfoTab
                   market={reserve}
                   userAddress={userAddress}
-                  onWithdraw={onWithdraw}
                   onRepay={onRepay}
                   tokenTransferState={tokenTransferState}
                 />

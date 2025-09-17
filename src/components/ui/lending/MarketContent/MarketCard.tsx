@@ -17,11 +17,7 @@ import {
   formatPercentage,
   formatBalance,
 } from "@/utils/formatters";
-import {
-  UnifiedReserveData,
-  UserBorrowPosition,
-  UserSupplyPosition,
-} from "@/types/aave";
+import { UnifiedReserveData, UserBorrowPosition } from "@/types/aave";
 import { SquarePlus, SquareMinus, SquareEqual } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
@@ -32,7 +28,6 @@ interface MarketCardProps {
   userAddress: string | undefined;
 
   onRepay?: (market: UserBorrowPosition) => void;
-  onWithdraw?: (market: UserSupplyPosition) => void;
   onDetails?: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
 }
