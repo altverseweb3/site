@@ -26,14 +26,13 @@ import { TokenTransferState } from "@/types/web3";
 interface AvailableSupplyCardProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
-  onBorrow: (market: UnifiedReserveData) => void;
   tokenTransferState: TokenTransferState;
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   reserve,
   userAddress,
-  onBorrow,
+
   tokenTransferState,
 }) => {
   // Extract supply data
@@ -151,7 +150,6 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
         <AssetDetailsModal
           reserve={reserve}
           userAddress={userAddress}
-          onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
         >
           <BrandedButton

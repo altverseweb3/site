@@ -30,7 +30,7 @@ import { TokenTransferState } from "@/types/web3";
 interface MarketCardProps {
   market: UnifiedReserveData;
   userAddress: string | undefined;
-  onBorrow: (market: UnifiedReserveData) => void;
+
   onRepay?: (market: UserBorrowPosition) => void;
   onWithdraw?: (market: UserSupplyPosition) => void;
   onDetails?: (market: UnifiedReserveData) => void;
@@ -40,7 +40,7 @@ interface MarketCardProps {
 const MarketCard: React.FC<MarketCardProps> = ({
   market,
   userAddress,
-  onBorrow,
+
   tokenTransferState,
 }) => {
   // Extract data from unified structure
@@ -182,7 +182,6 @@ const MarketCard: React.FC<MarketCardProps> = ({
         <AssetDetailsModal
           reserve={market}
           userAddress={userAddress}
-          onBorrow={onBorrow}
           tokenTransferState={tokenTransferState}
         >
           <BrandedButton

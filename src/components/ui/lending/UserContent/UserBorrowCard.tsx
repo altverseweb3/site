@@ -19,7 +19,7 @@ import { TokenTransferState } from "@/types/web3";
 interface UserBorrowCardProps {
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
-  onBorrow: (market: UnifiedReserveData) => void;
+
   onRepay: (market: UnifiedReserveData, max: boolean) => void;
   tokenTransferState: TokenTransferState;
 }
@@ -27,7 +27,7 @@ interface UserBorrowCardProps {
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   unifiedReserve,
   userAddress,
-  onBorrow,
+
   onRepay,
   tokenTransferState,
 }) => {
@@ -104,7 +104,6 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
         <AssetDetailsModal
           reserve={unifiedReserve}
           userAddress={userAddress}
-          onBorrow={onBorrow}
           onRepay={onRepay}
           tokenTransferState={tokenTransferState}
         >
