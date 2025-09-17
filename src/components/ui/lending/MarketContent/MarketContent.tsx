@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import MarketCard from "@/components/ui/lending/MarketContent/MarketCard";
 import CardsList from "@/components/ui/CardsList";
 import {
@@ -10,8 +10,6 @@ import {
 } from "@/types/aave";
 import { TokenTransferState } from "@/types/web3";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
-
-const ITEMS_PER_PAGE = 10;
 
 interface MarketContentProps {
   unifiedReserves: UnifiedReserveData[] | null | undefined;
@@ -32,8 +30,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
   filters,
   sortConfig,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-
   // Apply filtering and sorting to unified markets
   const filteredAndSortedMarkets = useMemo(() => {
     if (!unifiedReserves) return null;
@@ -97,22 +93,10 @@ const MarketContent: React.FC<MarketContentProps> = ({
     );
   }
 
-  const totalPages = Math.ceil(
-    filteredAndSortedMarkets.length / ITEMS_PER_PAGE,
-  );
-  const paginatedMarkets = filteredAndSortedMarkets.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <CardsList
       className="bg-[#1F1F23]"
-      data={paginatedMarkets}
+      data={filteredAndSortedMarkets}
       renderCard={(market) => (
         <MarketCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
@@ -122,11 +106,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      onPageChange={handlePageChange}
-      itemsPerPage={ITEMS_PER_PAGE}
-      totalItems={filteredAndSortedMarkets.length}
+      baseRows={2}
     />
   );
 };
