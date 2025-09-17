@@ -33,7 +33,6 @@ interface DashboardContentProps {
   onSubsectionChange?: (subsection: string) => void;
   refetchMarkets?: () => void;
   actions: {
-    onRepay: (market: UnifiedReserveData, max: boolean) => void;
     onCollateralToggle: (market: UnifiedReserveData) => void;
   };
 }
@@ -313,7 +312,6 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
-            onRepay={actions.onRepay}
           />
         )}
       </div>
