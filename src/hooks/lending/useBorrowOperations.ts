@@ -19,6 +19,7 @@ export interface BorrowOperationDependencies {
   sourceToken: Token | null;
   userWalletAddress: string | null;
   tokenBorrowState: TokenBorrowState;
+  refetchMarkets: () => void;
 }
 
 export interface BorrowOperationResult {
@@ -108,6 +109,7 @@ export const useBorrowOperations = (
               result.transactionHash!,
             )}`,
           });
+          dependencies.refetchMarkets();
         } else {
           console.error("Borrow failed:", result.error);
           toast.error("Borrow failed", {
@@ -132,6 +134,7 @@ export const useBorrowOperations = (
       sourceChain,
       executeBorrow,
       switchToChain,
+      dependencies,
     ],
   );
 

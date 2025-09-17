@@ -29,6 +29,7 @@ interface AssetDetailsModalProps {
   userAddress: string | undefined;
   children: React.ReactNode;
   tokenTransferState: TokenTransferState;
+  refetchMarkets: () => void;
 }
 
 type TabType = "user" | "supply" | "borrow" | "emode" | "asset";
@@ -37,8 +38,8 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
   reserve,
   userAddress,
   children,
-
   tokenTransferState,
+  refetchMarkets,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("user");
 
@@ -173,6 +174,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                   market={reserve}
                   userAddress={userAddress}
                   tokenTransferState={tokenTransferState}
+                  refetchMarkets={refetchMarkets}
                 />
               )}
 
@@ -259,6 +261,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 healthFactor={
                   reserve.marketInfo.userState?.healthFactor?.toString() || null
                 }
+                refetchMarkets={refetchMarkets}
               >
                 <BrandedButton
                   iconName="TrendingUp"
@@ -280,6 +283,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 healthFactor={
                   reserve.marketInfo.userState?.healthFactor?.toString() || null
                 }
+                refetchMarkets={refetchMarkets}
               >
                 <BrandedButton
                   iconName="TrendingDown"

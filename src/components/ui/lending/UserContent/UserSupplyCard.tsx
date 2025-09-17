@@ -27,6 +27,7 @@ interface UserSupplyCardProps {
   userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
   isCollateralLoading?: boolean;
+  refetchMarkets: () => void;
 }
 
 const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
@@ -34,6 +35,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   userAddress,
   tokenTransferState,
   isCollateralLoading = false,
+  refetchMarkets,
 }) => {
   const [supply] = unifiedReserve.userSupplyPositions;
   const balanceUsd = parseFloat(supply.balance.usd) || 0;
@@ -45,6 +47,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
   const { handleCollateralToggle } = useCollateralToggleOperations({
     userWalletAddress: userAddress || null,
     targetChain: reserveChain,
+    refetchMarkets: refetchMarkets,
   });
 
   const handleToggleClick = () => {
@@ -167,6 +170,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
           reserve={unifiedReserve}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         >
           <BrandedButton
             buttonText="details"

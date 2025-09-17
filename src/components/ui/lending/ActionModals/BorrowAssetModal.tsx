@@ -28,6 +28,7 @@ interface BorrowAssetModalProps {
   children: React.ReactNode;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
+  refetchMarkets: () => void;
 }
 
 const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
@@ -35,6 +36,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
+  refetchMarkets,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
@@ -46,6 +48,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
     sourceToken,
     userWalletAddress: userAddress || null,
     tokenBorrowState: { amount: tokenTransferState.amount || "" },
+    refetchMarkets,
   });
 
   return (

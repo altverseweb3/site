@@ -27,13 +27,14 @@ interface AvailableSupplyCardProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
+  refetchMarkets: () => void;
 }
 
 const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
   reserve,
   userAddress,
-
   tokenTransferState,
+  refetchMarkets,
 }) => {
   // Extract supply data
   const baseSupplyAPY = reserve.supplyData.apy;
@@ -151,6 +152,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           reserve={reserve}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         >
           <BrandedButton
             buttonText="details"

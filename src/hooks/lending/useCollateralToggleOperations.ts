@@ -13,6 +13,7 @@ import { getChainByChainId } from "@/config/chains";
 export interface CollateralToggleOperationDependencies {
   userWalletAddress: string | null;
   targetChain: Chain | null;
+  refetchMarkets: () => void;
 }
 
 export interface CollateralToggleOperationResult {
@@ -102,6 +103,7 @@ export const useCollateralToggleOperations = (
               result.transactionHash!,
             )}`,
           });
+          dependencies.refetchMarkets();
         } else {
           console.error("Collateral toggle failed:", result.error);
           toast.error("Collateral toggle failed", {
@@ -119,7 +121,13 @@ export const useCollateralToggleOperations = (
         });
       }
     },
-    [userWalletAddress, targetChain, executeCollateralToggle, switchToChain],
+    [
+      userWalletAddress,
+      targetChain,
+      executeCollateralToggle,
+      switchToChain,
+      dependencies,
+    ],
   );
 
   return {

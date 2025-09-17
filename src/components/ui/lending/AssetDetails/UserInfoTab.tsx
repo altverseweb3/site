@@ -19,12 +19,13 @@ interface UserInfoTabProps {
   market: UnifiedReserveData;
   userAddress?: string;
   tokenTransferState?: TokenTransferState;
+  refetchMarkets: () => void;
 }
 
 export const UserInfoTab: React.FC<UserInfoTabProps> = ({
   market,
   userAddress,
-
+  refetchMarkets,
   tokenTransferState,
 }) => {
   const userState = market.userState;
@@ -78,6 +79,7 @@ export const UserInfoTab: React.FC<UserInfoTabProps> = ({
                       market.marketInfo.userState?.healthFactor?.toString() ||
                       null
                     }
+                    refetchMarkets={refetchMarkets}
                   >
                     <BrandedButton
                       iconName="Coins"
@@ -128,6 +130,7 @@ export const UserInfoTab: React.FC<UserInfoTabProps> = ({
                     reserve={market}
                     userAddress={userAddress}
                     tokenTransferState={tokenTransferState}
+                    refetchMarkets={refetchMarkets}
                   >
                     <BrandedButton
                       iconName="Coins"

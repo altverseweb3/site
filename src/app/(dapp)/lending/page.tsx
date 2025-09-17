@@ -277,6 +277,7 @@ export default function LendingPage() {
                         marketBorrowData={marketBorrowData}
                         marketSupplyData={marketSupplyData}
                         tokenTransferState={tokenTransferState}
+                        refetchMarkets={refetchMarkets}
                         filters={filters}
                         sortConfig={sortConfig}
                       />

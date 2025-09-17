@@ -13,6 +13,7 @@ interface UserSupplyContentProps {
   tokenTransferState: TokenTransferState;
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
+  refetchMarkets: () => void;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -23,6 +24,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
   tokenTransferState,
   filters,
   sortConfig,
+  refetchMarkets,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -107,6 +109,7 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           unifiedReserve={reserve}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         />
       )}
       currentPage={currentPage}
