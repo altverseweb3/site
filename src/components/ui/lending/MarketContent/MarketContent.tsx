@@ -18,6 +18,7 @@ interface MarketContentProps {
   marketBorrowData?: Record<string, UserBorrowData>;
   marketSupplyData?: Record<string, UserSupplyData>;
   tokenTransferState: TokenTransferState;
+  refetchMarkets: () => void;
   filters: LendingFilters;
   sortConfig: LendingSortConfig | null;
   userAddress: string | undefined;
@@ -27,7 +28,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
   unifiedReserves,
   userAddress,
   tokenTransferState,
-
+  refetchMarkets,
   filters,
   sortConfig,
 }) => {
@@ -118,6 +119,7 @@ const MarketContent: React.FC<MarketContentProps> = ({
           market={market}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         />
       )}
       currentPage={currentPage}

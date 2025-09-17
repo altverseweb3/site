@@ -28,12 +28,14 @@ interface AvailableBorrowCardProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
   tokenTransferState: TokenTransferState;
+  refetchMarkets: () => void;
 }
 
 const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   reserve,
   userAddress,
   tokenTransferState,
+  refetchMarkets,
 }) => {
   // Extract borrow data
   const baseBorrowAPY = reserve.borrowData.apy;
@@ -171,6 +173,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
           reserve={reserve}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         >
           <BrandedButton
             buttonText="details"

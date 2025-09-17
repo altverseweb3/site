@@ -42,6 +42,7 @@ interface SupplyAssetModalProps {
   children: React.ReactNode;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
+  refetchMarkets: () => void;
 }
 
 const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
@@ -49,6 +50,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
+  refetchMarkets,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -75,6 +77,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
     tokenTransferState: {
       amount: tokenTransferState.amount || "",
     },
+    refetchMarkets,
   });
 
   // Swap state management - using proper tracking lifecycle

@@ -29,6 +29,7 @@ interface WithdrawAssetModalProps {
   children: React.ReactNode;
   tokenTransferState: TokenTransferState;
   healthFactor?: string | null;
+  refetchMarkets: () => void;
 }
 
 const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
@@ -36,6 +37,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
+  refetchMarkets,
 }) => {
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
@@ -55,6 +57,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
     sourceToken,
     userWalletAddress: userAddress || null,
     tokenWithdrawState: { amount: tokenTransferState.amount || "" },
+    refetchMarkets,
   });
 
   // Track if user clicked the max button

@@ -26,14 +26,14 @@ import { TokenTransferState } from "@/types/web3";
 interface MarketCardProps {
   market: UnifiedReserveData;
   userAddress: string | undefined;
-
-  onDetails?: (market: UnifiedReserveData) => void;
+  refetchMarkets: () => void;
   tokenTransferState: TokenTransferState;
 }
 
 const MarketCard: React.FC<MarketCardProps> = ({
   market,
   userAddress,
+  refetchMarkets,
   tokenTransferState,
 }) => {
   // Extract data from unified structure
@@ -176,6 +176,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           reserve={market}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         >
           <BrandedButton
             buttonText="details"

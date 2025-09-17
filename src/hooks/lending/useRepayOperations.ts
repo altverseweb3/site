@@ -20,6 +20,7 @@ export interface RepayOperationDependencies {
   sourceToken: Token | null;
   userWalletAddress: string | null;
   tokenRepayState: TokenRepayState;
+  refetchMarkets: () => void;
 }
 
 export interface RepayOperationResult {
@@ -165,6 +166,7 @@ export const useRepayOperations = (
               result.transactionHash!,
             )}`,
           });
+          dependencies.refetchMarkets();
         } else {
           console.error("Repay failed:", result.error);
           toast.error("Repay failed", {
@@ -190,6 +192,7 @@ export const useRepayOperations = (
       executeRepay,
       signPermit,
       switchToChain,
+      dependencies,
     ],
   );
 

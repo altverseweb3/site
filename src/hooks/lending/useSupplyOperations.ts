@@ -20,6 +20,7 @@ export interface SupplyOperationDependencies {
   sourceToken: Token | null;
   userWalletAddress: string | null;
   tokenTransferState: TokenTransferState;
+  refetchMarkets: () => void;
 }
 
 export interface SupplyOperationResult {
@@ -161,6 +162,7 @@ export const useSupplyOperations = (
               result.transactionHash!,
             )}`,
           });
+          dependencies.refetchMarkets();
         } else {
           console.error("Supply failed:", result.error);
           toast.error("Supply failed", {
@@ -186,6 +188,7 @@ export const useSupplyOperations = (
       executeSupply,
       signPermit,
       switchToChain,
+      dependencies,
     ],
   );
 

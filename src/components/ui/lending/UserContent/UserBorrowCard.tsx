@@ -19,14 +19,14 @@ import { TokenTransferState } from "@/types/web3";
 interface UserBorrowCardProps {
   unifiedReserve: UnifiedReserveData;
   userAddress: string | undefined;
-
+  refetchMarkets: () => void;
   tokenTransferState: TokenTransferState;
 }
 
 const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
   unifiedReserve,
   userAddress,
-
+  refetchMarkets,
   tokenTransferState,
 }) => {
   const [borrow] = unifiedReserve.userBorrowPositions;
@@ -103,6 +103,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
           reserve={unifiedReserve}
           userAddress={userAddress}
           tokenTransferState={tokenTransferState}
+          refetchMarkets={refetchMarkets}
         >
           <BrandedButton
             buttonText="details"

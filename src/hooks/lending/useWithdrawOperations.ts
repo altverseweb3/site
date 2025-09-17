@@ -19,6 +19,7 @@ export interface WithdrawOperationDependencies {
   sourceToken: Token | null;
   userWalletAddress: string | null;
   tokenWithdrawState: TokenWithdrawState;
+  refetchMarkets: () => void;
 }
 
 export interface WithdrawOperationResult {
@@ -111,6 +112,7 @@ export const useWithdrawOperations = (
               result.transactionHash!,
             )}`,
           });
+          dependencies.refetchMarkets();
         } else {
           console.error("Withdraw failed:", result.error);
           toast.error("Withdraw failed", {
@@ -135,6 +137,7 @@ export const useWithdrawOperations = (
       sourceChain,
       executeWithdraw,
       switchToChain,
+      dependencies,
     ],
   );
 

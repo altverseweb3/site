@@ -31,7 +31,7 @@ interface DashboardContentProps {
   filters?: LendingFilters;
   sortConfig?: LendingSortConfig | null;
   onSubsectionChange?: (subsection: string) => void;
-  refetchMarkets?: () => void;
+  refetchMarkets: () => void;
 }
 
 export default function DashboardContent({
@@ -281,6 +281,7 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
+              refetchMarkets={refetchMarkets}
             />
           ) : (
             <AvailableBorrowContent
@@ -289,6 +290,7 @@ export default function DashboardContent({
               tokenTransferState={tokenTransferState}
               filters={filters}
               sortConfig={sortConfig}
+              refetchMarkets={refetchMarkets}
             />
           )
         ) : // Show open positions
@@ -299,6 +301,7 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
+            refetchMarkets={refetchMarkets}
           />
         ) : (
           <UserBorrowContent
@@ -307,6 +310,7 @@ export default function DashboardContent({
             tokenTransferState={tokenTransferState}
             filters={filters}
             sortConfig={sortConfig}
+            refetchMarkets={refetchMarkets}
           />
         )}
       </div>

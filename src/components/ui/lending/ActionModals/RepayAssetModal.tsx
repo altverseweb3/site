@@ -41,7 +41,7 @@ interface RepayAssetModalProps {
   reserve: UnifiedReserveData;
   userAddress: string | undefined;
   children: React.ReactNode;
-
+  refetchMarkets: () => void;
   tokenTransferState: TokenTransferState;
 }
 
@@ -50,6 +50,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
   userAddress,
   children,
   tokenTransferState,
+  refetchMarkets,
 }) => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
@@ -74,6 +75,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
     sourceToken,
     userWalletAddress: userAddress || null,
     tokenRepayState: { amount: tokenTransferState.amount || "" },
+    refetchMarkets,
   });
 
   const [position] = reserve.userBorrowPositions;
