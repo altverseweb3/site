@@ -183,6 +183,7 @@ export interface UnifiedReserveData extends Reserve {
   userSupplyPositions: MarketUserReserveSupplyPosition[];
   userBorrowPositions: MarketUserReserveBorrowPosition[];
   emodeCategory: EmodeMarketCategory | null;
+  emodeBorrowDisabled: boolean;
 }
 
 export type EModeStatus = "on" | "off" | "mixed";
