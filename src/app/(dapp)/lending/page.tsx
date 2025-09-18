@@ -34,6 +34,7 @@ import { AggregatedTransactionHistory } from "@/components/meta/AggregatedTransa
 import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/TransactionContent";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
+import { Button } from "@/components/ui/Button";
 
 type LendingTabType = "markets" | "dashboard" | "staking" | "history";
 
