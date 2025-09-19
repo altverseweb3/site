@@ -140,21 +140,24 @@ export const BorrowInfoTab: React.FC<{
       <div className="bg-[#1F1F23] border border-[#27272A] rounded-lg p-4">
         <h3 className="text-sm font-medium text-white mb-3">borrow status</h3>
         <div className="flex flex-wrap gap-2">
-          {borrowInfo.borrowingState === "ENABLED" && (
-            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
-              enabled
-            </span>
-          )}
           {borrowInfo.borrowingState === "DISABLED" && (
             <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
               disabled
             </span>
           )}
-          {borrowInfo.borrowingState === "USER_EMODE_DISABLED_BORROW" && (
-            <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-500/30">
+          {(borrowInfo.borrowingState === "USER_EMODE_DISABLED_BORROW" ||
+            market.emodeBorrowDisabled) && (
+            <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full border border-purple-500/30">
               e-mode disabled
             </span>
           )}
+          {borrowInfo.borrowingState !== "DISABLED" &&
+            borrowInfo.borrowingState !== "USER_EMODE_DISABLED_BORROW" &&
+            !market.emodeBorrowDisabled && (
+              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
+                enabled
+              </span>
+            )}
           {market.isFrozen && (
             <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
               frozen
