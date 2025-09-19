@@ -114,7 +114,6 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ data, loading }) => {
             />
           )}
           gridCols="grid-cols-1"
-          baseRows={5}
         />
       </div>
     </div>

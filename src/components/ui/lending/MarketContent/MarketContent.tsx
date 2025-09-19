@@ -106,7 +106,6 @@ const MarketContent: React.FC<MarketContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      baseRows={2}
     />
   );
 };

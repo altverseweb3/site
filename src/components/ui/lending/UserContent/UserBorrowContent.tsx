@@ -101,7 +101,6 @@ const UserBorrowContent: React.FC<UserBorrowContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      baseRows={2}
     />
   );
 };

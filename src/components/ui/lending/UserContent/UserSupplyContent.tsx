@@ -102,7 +102,6 @@ const UserSupplyContent: React.FC<UserSupplyContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      baseRows={2}
     />
   );
 };

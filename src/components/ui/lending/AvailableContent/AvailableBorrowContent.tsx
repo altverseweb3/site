@@ -114,7 +114,6 @@ const AvailableBorrowContent: React.FC<AvailableBorrowContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      baseRows={2}
     />
   );
 };

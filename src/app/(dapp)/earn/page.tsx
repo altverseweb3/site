@@ -399,7 +399,6 @@ export default function EarnPage() {
                       onDetails={handleDetails}
                     />
                   )}
-                  baseRows={2}
                 />
               </div>
 

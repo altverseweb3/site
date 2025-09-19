@@ -114,7 +114,6 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      baseRows={2}
     />
   );
 };
