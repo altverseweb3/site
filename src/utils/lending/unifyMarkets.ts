@@ -8,9 +8,10 @@ import {
 // Helper function to get the active emode data for a market
 const getActiveEmodeData = (market: Market) => {
   const eModeCategory = market.borrowReserves?.find(
-    (reserve) => reserve.userState?.emode !== undefined,
+    (reserve) => reserve.userState?.emode !== null,
   )?.userState?.emode;
-  if (eModeCategory !== null && market.eModeCategories) {
+  console.log("eModeCategory:", eModeCategory);
+  if (eModeCategory !== undefined && market.eModeCategories) {
     return market.eModeCategories.find(
       (category) => category.id === eModeCategory?.categoryId,
     );
@@ -58,6 +59,18 @@ export const unifyMarkets = (
             reserve.underlyingToken.address.toLowerCase(),
         ) || [];
 
+      // Determine if borrow is disabled due to emode
+      const emodeBorrowDisabled = activeEmodeData
+        ? !activeEmodeData.reserves.some(
+            (emodeReserve) =>
+              emodeReserve.underlyingToken.address.toLowerCase() ===
+                reserve.underlyingToken.address.toLowerCase() &&
+              emodeReserve.underlyingToken.chainId ===
+                reserve.underlyingToken.chainId &&
+              emodeReserve.canBeBorrowed,
+          )
+        : false;
+
       assetMap.set(key, {
         ...reserve,
         marketInfo: market,
@@ -79,6 +92,7 @@ export const unifyMarkets = (
         userSupplyPositions,
         userBorrowPositions: [],
         emodeCategory: activeEmodeData || null,
+        emodeBorrowDisabled,
       });
     });
 
@@ -101,10 +115,23 @@ export const unifyMarkets = (
         totalBorrowedUsd: reserve.borrowInfo?.total?.usd || 0,
       };
 
+      // Determine if borrow is disabled due to emode
+      const emodeBorrowDisabled = activeEmodeData
+        ? !activeEmodeData.reserves.some(
+            (emodeReserve) =>
+              emodeReserve.underlyingToken.address.toLowerCase() ===
+                reserve.underlyingToken.address.toLowerCase() &&
+              emodeReserve.underlyingToken.chainId ===
+                reserve.underlyingToken.chainId &&
+              emodeReserve.canBeBorrowed,
+          )
+        : false;
+
       if (existing) {
         // Merge with existing supply data
         existing.borrowData = borrowData;
         existing.userBorrowPositions = userBorrowPositions;
+        existing.emodeBorrowDisabled = emodeBorrowDisabled;
         // Merge incentives arrays
         existing.incentives = [
           ...existing.incentives,
@@ -129,6 +156,7 @@ export const unifyMarkets = (
           userSupplyPositions: [],
           userBorrowPositions,
           emodeCategory: activeEmodeData || null,
+          emodeBorrowDisabled,
         });
       }
     });
