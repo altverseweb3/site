@@ -58,6 +58,7 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
   const isAvailable =
     !reserve.isFrozen &&
     !reserve.isPaused &&
+    !reserve.emodeBorrowDisabled &&
     reserve.borrowInfo?.borrowingState === "ENABLED";
   const hasLiquidity = availableUsd > 0;
 
@@ -78,38 +79,26 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {reserve.underlyingToken.name}
-            </CardTitle>
+            <Tooltip.Provider>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none flex-1 min-w-0 truncate cursor-help">
+                    {reserve.underlyingToken.name}
+                  </CardTitle>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
+                    sideOffset={5}
+                  >
+                    {reserve.underlyingToken.name}
+                    <Tooltip.Arrow className="fill-[#27272A]" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
             {(!isAvailable || !hasLiquidity) && (
-              <Tooltip.Provider>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
-                      sideOffset={5}
-                    >
-                      {!hasLiquidity
-                        ? "No Liquidity"
-                        : reserve.isFrozen && reserve.isPaused
-                          ? "Frozen, Paused"
-                          : reserve.isFrozen
-                            ? "Frozen"
-                            : reserve.isPaused
-                              ? "Paused"
-                              : !reserve.borrowInfo?.borrowingState ||
-                                  reserve.borrowInfo?.borrowingState ===
-                                    "DISABLED"
-                                ? "Borrow Disabled"
-                                : "Not Available"}
-                      <Tooltip.Arrow className="fill-[#27272A]" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </Tooltip.Provider>
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
             )}
           </div>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
@@ -124,6 +113,24 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
               }}
             />
             {reserve.marketName}
+            {(!isAvailable || !hasLiquidity) && (
+              <span className="ml-1 text-red-400">
+                {!hasLiquidity
+                  ? "(No Liquidity)"
+                  : reserve.isFrozen && reserve.isPaused
+                    ? "(Frozen, Paused)"
+                    : reserve.isFrozen
+                      ? "(Frozen)"
+                      : reserve.isPaused
+                        ? "(Paused)"
+                        : reserve.emodeBorrowDisabled
+                          ? "(Emode)"
+                          : !reserve.borrowInfo?.borrowingState ||
+                              reserve.borrowInfo?.borrowingState === "DISABLED"
+                            ? "(Borrow Disabled)"
+                            : "(Not Available)"}
+              </span>
+            )}
           </CardDescription>
         </div>
       </CardHeader>
@@ -178,7 +185,6 @@ const AvailableBorrowCard: React.FC<AvailableBorrowCardProps> = ({
           <BrandedButton
             buttonText="details"
             className="w-full text-xs py-2 h-8"
-            disabled={!isAvailable || !hasLiquidity}
           />
         </AssetDetailsModal>
       </CardFooter>
