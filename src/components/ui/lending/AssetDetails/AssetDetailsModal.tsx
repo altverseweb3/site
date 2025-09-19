@@ -60,6 +60,16 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
     if (value) setActiveTab(value);
   };
 
+  // Calculate CTA button disable conditions
+  const isSupplyDisabled = reserve.isFrozen || reserve.isPaused;
+
+  const isBorrowDisabled =
+    reserve.borrowInfo?.borrowingState === "DISABLED" ||
+    reserve.borrowInfo?.borrowingState === "USER_EMODE_DISABLED_BORROW" ||
+    reserve.emodeBorrowDisabled ||
+    reserve.isFrozen ||
+    reserve.isPaused;
+
   const tokensByCompositeKey = useWeb3Store(
     (state) => state.tokensByCompositeKey,
   );
@@ -266,6 +276,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 <BrandedButton
                   iconName="TrendingUp"
                   buttonText="supply"
+                  disabled={isSupplyDisabled}
                   onClick={() => {
                     setSourceChain(lendingChain);
                     setDestinationChain(lendingChain);
@@ -288,6 +299,7 @@ const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 <BrandedButton
                   iconName="TrendingDown"
                   buttonText="borrow"
+                  disabled={isBorrowDisabled}
                   onClick={() => {
                     setSourceChain(lendingChain);
                     setDestinationChain(lendingChain);
