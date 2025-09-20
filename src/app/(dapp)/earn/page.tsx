@@ -390,7 +390,7 @@ export default function EarnPage() {
               {/* Mobile Cards View */}
               <div className="block 2xl:hidden">
                 <CardsList<EarnTableRow | DashboardTableRow>
-                  data={paginatedData}
+                  data={currentData}
                   renderCard={(row) => (
                     <EarnCard
                       key={row.id}
@@ -399,11 +399,6 @@ export default function EarnPage() {
                       onDetails={handleDetails}
                     />
                   )}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  itemsPerPage={ITEMS_PER_PAGE}
-                  totalItems={currentData.length}
                 />
               </div>
 

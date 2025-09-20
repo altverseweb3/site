@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import AvailableSupplyCard from "@/components/ui/lending/AvailableContent/AvailableSupplyCard";
 import CardsList from "@/components/ui/CardsList";
 import { UnifiedReserveData } from "@/types/aave";
@@ -17,8 +17,6 @@ interface AvailableSupplyContentProps {
   refetchMarkets: () => void;
 }
 
-const ITEMS_PER_PAGE = 10;
-
 const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
   markets,
   userAddress,
@@ -28,59 +26,63 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
   sortConfig,
   refetchMarkets,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  let availableSupplyMarkets = markets.filter((market) => {
-    if (showZeroBalance) return true;
-    if (!market.userState) return false;
-    const userBalance = parseFloat(market.userState.balance.amount.value) || 0;
-    return userBalance > 0;
-  });
-
-  // Apply asset filter
-  if (filters?.assetFilter) {
-    const filterLower = filters.assetFilter.toLowerCase();
-    availableSupplyMarkets = availableSupplyMarkets.filter((market) => {
-      return (
-        market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
-        market.underlyingToken.name.toLowerCase().includes(filterLower) ||
-        market.marketName.toLowerCase().includes(filterLower)
-      );
+  // Apply filtering and sorting with useMemo for performance
+  const availableSupplyMarkets = useMemo(() => {
+    let filtered = markets.filter((market) => {
+      if (showZeroBalance) return true;
+      if (!market.userState) return false;
+      const userBalance =
+        parseFloat(market.userState.balance.amount.value) || 0;
+      return userBalance > 0;
     });
-  }
 
-  // Apply sorting
-  if (sortConfig) {
-    availableSupplyMarkets = [...availableSupplyMarkets].sort((a, b) => {
-      let aValue: number;
-      let bValue: number;
+    // Apply asset filter
+    if (filters?.assetFilter) {
+      const filterLower = filters.assetFilter.toLowerCase();
+      filtered = filtered.filter((market) => {
+        return (
+          market.underlyingToken.symbol.toLowerCase().includes(filterLower) ||
+          market.underlyingToken.name.toLowerCase().includes(filterLower) ||
+          market.marketName.toLowerCase().includes(filterLower)
+        );
+      });
+    }
 
-      switch (sortConfig.column) {
-        case "supplyApy":
-          aValue = a.supplyData.apy;
-          bValue = b.supplyData.apy;
-          break;
-        case "suppliedMarketCap":
-          aValue = a.supplyData.totalSuppliedUsd;
-          bValue = b.supplyData.totalSuppliedUsd;
-          break;
-        default:
-          // Default sort by supply APY (descending)
-          aValue = a.supplyData.apy;
-          bValue = b.supplyData.apy;
-          break;
-      }
+    // Apply sorting
+    if (sortConfig) {
+      return [...filtered].sort((a, b) => {
+        let aValue: number;
+        let bValue: number;
 
-      return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
-    });
-  } else {
-    // Default sort by supply APY (descending)
-    availableSupplyMarkets = [...availableSupplyMarkets].sort((a, b) => {
-      const aSupplyAPY = a.supplyData.apy || 0;
-      const bSupplyAPY = b.supplyData.apy || 0;
-      return bSupplyAPY - aSupplyAPY;
-    });
-  }
+        switch (sortConfig.column) {
+          case "supplyApy":
+            aValue = a.supplyData.apy;
+            bValue = b.supplyData.apy;
+            break;
+          case "suppliedMarketCap":
+            aValue = a.supplyData.totalSuppliedUsd;
+            bValue = b.supplyData.totalSuppliedUsd;
+            break;
+          default:
+            // Default sort by supply APY (descending)
+            aValue = a.supplyData.apy;
+            bValue = b.supplyData.apy;
+            break;
+        }
+
+        return sortConfig.direction === "asc"
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    } else {
+      // Default sort by supply APY (descending)
+      return [...filtered].sort((a, b) => {
+        const aSupplyAPY = a.supplyData.apy || 0;
+        const bSupplyAPY = b.supplyData.apy || 0;
+        return bSupplyAPY - aSupplyAPY;
+      });
+    }
+  }, [markets, showZeroBalance, filters, sortConfig]);
 
   if (!markets || markets.length === 0) {
     return (
@@ -100,19 +102,9 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
     );
   }
 
-  const totalPages = Math.ceil(availableSupplyMarkets.length / ITEMS_PER_PAGE);
-  const paginatedMarkets = availableSupplyMarkets.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <CardsList
-      data={paginatedMarkets}
+      data={availableSupplyMarkets}
       renderCard={(market) => (
         <AvailableSupplyCard
           key={`${market.marketInfo.address}-${market.underlyingToken.address}`}
@@ -122,11 +114,6 @@ const AvailableSupplyContent: React.FC<AvailableSupplyContentProps> = ({
           refetchMarkets={refetchMarkets}
         />
       )}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      onPageChange={handlePageChange}
-      itemsPerPage={ITEMS_PER_PAGE}
-      totalItems={availableSupplyMarkets.length}
     />
   );
 };

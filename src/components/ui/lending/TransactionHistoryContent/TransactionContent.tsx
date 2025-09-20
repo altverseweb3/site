@@ -106,7 +106,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ data, loading }) => {
       {/* Mobile Card View */}
       <div className="block md:hidden">
         <CardsList
-          data={paginatedData}
+          data={data}
           renderCard={(transaction) => (
             <TransactionCard
               key={getTransactionKey(transaction)}
@@ -114,11 +114,6 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ data, loading }) => {
             />
           )}
           gridCols="grid-cols-1"
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          itemsPerPage={ITEMS_PER_PAGE}
-          totalItems={data.length}
         />
       </div>
     </div>
