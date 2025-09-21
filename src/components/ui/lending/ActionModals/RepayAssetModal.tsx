@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/StyledDialog";
 import { UnifiedReserveData } from "@/types/aave";
@@ -326,9 +327,9 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-m max-h-[80vh] overflow-hidden bg-[#18181B] border border-[#27272A] text-white flex flex-col">
         <DialogHeader className="border-b border-[#27272A] pb-4 flex-shrink-0 text-left">
-          <h2 className="text-lg font-semibold">
+          <DialogTitle className="text-lg font-semibold">
             repay {reserve.underlyingToken.symbol}
-          </h2>
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
