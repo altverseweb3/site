@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveWithdraw } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { truncateAddress } from "@/utils/formatters";
+import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
@@ -78,10 +78,10 @@ export const useWithdrawOperations = (
         // Switch to correct chain FIRST before any operations
         try {
           await switchToChain(sourceChain);
-        } catch {
-          toast.error(
-            "Chain switch failed, please try manually switching chains.",
-          );
+        } catch (chainSwitchError) {
+          toast.error("Chain switch failed", {
+            description: parseDepositError(chainSwitchError),
+          });
           return;
         }
 
@@ -117,16 +117,15 @@ export const useWithdrawOperations = (
           console.error("Withdraw failed:", result.error);
           toast.error("Withdraw failed", {
             id: withdrawToastId,
-            description: result.error || "An unknown error occurred",
+            description: parseDepositError(
+              result.error || "An unknown error occurred",
+            ),
           });
         }
       } catch (error) {
         console.error("Withdraw operation failed:", error);
         toast.error("Withdraw operation failed", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          description: parseDepositError(error),
         });
       }
     },

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { evmAddress } from "@aave/react";
 import { useAaveEMode } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { truncateAddress } from "@/utils/formatters";
+import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import {
   UnifiedReserveData,
   EmodeMarketCategory,
@@ -266,16 +266,15 @@ export const useEmodeOperations = (
         } else {
           console.error("e-mode operation failed:", result.error);
           toast.error("e-mode operation failed", {
-            description: result.error || "An unknown error occurred",
+            description: parseDepositError(
+              result.error || "An unknown error occurred",
+            ),
           });
         }
       } catch (error) {
         console.error("e-mode operation error:", error);
         toast.error("e-mode operation failed", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          description: parseDepositError(error),
         });
       }
     },
