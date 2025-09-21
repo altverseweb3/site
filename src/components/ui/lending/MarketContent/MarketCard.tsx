@@ -74,7 +74,11 @@ const MarketCard: React.FC<MarketCardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-            {market.underlyingToken.name}
+            <TruncatedText
+              text={market.underlyingToken.name}
+              maxLength={25}
+              className="text-sm font-semibold text-[#FAFAFA] leading-none"
+            />
           </CardTitle>
           <CardDescription className="text-[#A1A1AA] text-xs mt-1 flex items-center gap-1">
             <Image
@@ -107,7 +111,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           <div className="text-[#A1A1AA] text-sm">total supplied</div>
           <div className="text-right">
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalSupplied)}{" "}
+              {formatBalance(totalSupplied, 3)}{" "}
               <TruncatedText
                 text={market.underlyingToken.symbol}
                 maxLength={6}
@@ -141,7 +145,7 @@ const MarketCard: React.FC<MarketCardProps> = ({
           <div className="text-[#A1A1AA] text-sm">total borrowed</div>
           <div className="text-right">
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalBorrowed)}{" "}
+              {formatBalance(totalBorrowed, 3)}{" "}
               <TruncatedText
                 text={market.underlyingToken.symbol}
                 maxLength={6}
