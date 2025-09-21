@@ -21,6 +21,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 import { useCollateralToggleOperations } from "@/hooks/lending/useCollateralToggleOperations";
 import { getChainByChainId } from "@/config/chains";
+import TruncatedText from "@/components/ui/TruncatedText";
 
 interface UserSupplyCardProps {
   unifiedReserve: UnifiedReserveData;
@@ -78,7 +79,7 @@ const UserSupplyCard: React.FC<UserSupplyCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
-              {supply.currency.name}
+              <TruncatedText text={supply.currency.name} maxLength={28} />
             </CardTitle>
             <div className="flex items-center gap-2">
               <Tooltip.Provider>

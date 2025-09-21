@@ -21,7 +21,6 @@ import { UnifiedReserveData } from "@/types/aave";
 import { SquarePlus, SquareEqual, AlertTriangle } from "lucide-react";
 import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
-import * as Tooltip from "@radix-ui/react-tooltip";
 import { TokenTransferState } from "@/types/web3";
 
 interface AvailableSupplyCardProps {
@@ -66,24 +65,12 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none flex-1 min-w-0 truncate cursor-help">
-                    {reserve.underlyingToken.name}
-                  </CardTitle>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                    className="bg-[#18181B] border border-[#27272A] text-white text-xs px-2 py-1 rounded shadow-lg"
-                    sideOffset={5}
-                  >
-                    {reserve.underlyingToken.name}
-                    <Tooltip.Arrow className="fill-[#27272A]" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
+            <CardTitle className="text-sm font-semibold text-[#FAFAFA] leading-none">
+              <TruncatedText
+                text={reserve.underlyingToken.name}
+                maxLength={19}
+              />
+            </CardTitle>
             {!isAvailable && (
               <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
             )}
@@ -99,7 +86,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {reserve.marketName}
+            <TruncatedText text={reserve.marketName} maxLength={25} />
             {!isAvailable && (
               <span className="ml-1 text-red-400">
                 {reserve.isFrozen && reserve.isPaused
@@ -135,7 +122,7 @@ const AvailableSupplyCard: React.FC<AvailableSupplyCardProps> = ({
           <div className="text-[#A1A1AA] text-sm">total supplied</div>
           <div className="text-right">
             <div className="text-[#FAFAFA] text-sm font-semibold font-mono">
-              {formatBalance(totalSupplied)}{" "}
+              {formatBalance(totalSupplied, 3)}{" "}
               <TruncatedText
                 text={reserve.underlyingToken.symbol}
                 maxLength={6}
