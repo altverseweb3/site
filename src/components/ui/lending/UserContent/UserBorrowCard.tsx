@@ -15,6 +15,7 @@ import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { UnifiedReserveData } from "@/types/aave";
 import AssetDetailsModal from "@/components/ui/lending/AssetDetails/AssetDetailsModal";
 import { TokenTransferState } from "@/types/web3";
+import TruncatedText from "@/components/ui/TruncatedText";
 
 interface UserBorrowCardProps {
   unifiedReserve: UnifiedReserveData;
@@ -65,7 +66,7 @@ const UserBorrowCard: React.FC<UserBorrowCardProps> = ({
                 e.currentTarget.src = "/images/markets/default.svg";
               }}
             />
-            {borrow.market.name}
+            <TruncatedText text={borrow.market.name} maxLength={25} />
           </CardDescription>
         </div>
       </CardHeader>
