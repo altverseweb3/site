@@ -1,4 +1,6 @@
 "use client";
+
+import useUIStore from "@/store/uiStore";
 import { useState, useEffect, useMemo } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { History, RefreshCw } from "lucide-react";
@@ -35,11 +37,11 @@ import HistoryContent from "@/components/ui/lending/TransactionHistoryContent/Tr
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import { Button } from "@/components/ui/Button";
-
-type LendingTabType = "markets" | "dashboard" | "staking" | "history";
+import { LendingTabType } from "@/store/uiStore";
 
 export default function LendingPage() {
-  const [activeTab, setActiveTab] = useState<LendingTabType>("markets");
+  const { lending, setLendingActiveMainTab } = useUIStore();
+  const activeTab = lending.activeMainTab;
   const [filters, setFilters] = useState<LendingFilters>({
     assetFilter: "",
   });
@@ -106,7 +108,7 @@ export default function LendingPage() {
   const handleTabChange = (value: LendingTabType) => {
     // Only update if a valid value is provided (prevents deselection)
     if (value) {
-      setActiveTab(value);
+      setLendingActiveMainTab(value);
       // Reset sort when switching tabs
       setSortConfig(null);
       setSortDropdownValue("");
