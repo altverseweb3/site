@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { evmAddress } from "@aave/react";
 import { useAaveCollateral } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { truncateAddress } from "@/utils/formatters";
+import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
@@ -74,7 +74,7 @@ export const useCollateralToggleOperations = (
         } catch (chainSwitchError) {
           console.error("Chain switch failed:", chainSwitchError);
           toast.error("Chain switch failed", {
-            description: "Please try manually switching chains",
+            description: parseDepositError(chainSwitchError),
           });
           return;
         }
@@ -108,16 +108,15 @@ export const useCollateralToggleOperations = (
           console.error("Collateral toggle failed:", result.error);
           toast.error("Collateral toggle failed", {
             id: collateralToastId,
-            description: result.error || "An unknown error occurred",
+            description: parseDepositError(
+              result.error || "An unknown error occurred",
+            ),
           });
         }
       } catch (error) {
         console.error("Collateral toggle operation failed:", error);
         toast.error("Collateral toggle operation failed", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          description: parseDepositError(error),
         });
       }
     },

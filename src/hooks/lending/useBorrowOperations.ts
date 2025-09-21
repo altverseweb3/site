@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveBorrow } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { truncateAddress } from "@/utils/formatters";
+import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
@@ -114,16 +114,15 @@ export const useBorrowOperations = (
           console.error("Borrow failed:", result.error);
           toast.error("Borrow failed", {
             id: borrowToastId,
-            description: result.error || "An unknown error occurred",
+            description: parseDepositError(
+              result.error || "An unknown error occurred",
+            ),
           });
         }
       } catch (error) {
         console.error("Borrow operation failed:", error);
         toast.error("Borrow operation failed", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          description: parseDepositError(error),
         });
       }
     },

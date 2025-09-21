@@ -21,11 +21,7 @@ import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/hooks/etherFi/useEtherFiInteract";
 import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
-import {
-  useChainSwitch,
-  useTokenTransfer,
-  parseDepositError,
-} from "@/utils/swap/walletMethods";
+import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { getChainById, chains } from "@/config/chains";
 import useWeb3Store, {
@@ -54,7 +50,7 @@ import ProgressTracker, {
   StepState,
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
-import { formatPercentage } from "@/utils/formatters";
+import { formatPercentage, parseDepositError } from "@/utils/formatters";
 
 interface DepositModalProps {
   isOpen: boolean;

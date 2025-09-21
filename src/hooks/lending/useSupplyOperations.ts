@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveSupply, useAavePermit } from "@/hooks/aave/useAaveInteractions";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
-import { truncateAddress } from "@/utils/formatters";
+import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
@@ -167,16 +167,15 @@ export const useSupplyOperations = (
           console.error("Supply failed:", result.error);
           toast.error("Supply failed", {
             id: supplyToastId,
-            description: result.error || "An unknown error occurred",
+            description: parseDepositError(
+              result.error || "An unknown error occurred",
+            ),
           });
         }
       } catch (error) {
         console.error("Supply operation failed:", error);
         toast.error("Supply operation failed", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          description: parseDepositError(error),
         });
       }
     },
