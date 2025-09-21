@@ -1,12 +1,14 @@
 # Altverse: The Unified Crypto Interface
 
-#### Core Features:
+#### Core Features (all cross-chain/omni-chain):
 - Swapping & Bridging across the EVM, Solana, and Sui ecosystems
-- (Automated) Farming/Vaulting with optimal yields **with assets sourced from any chain**
-- Lending/Borrowing at optimal rates
-- Unified dashboard of activity
-- Omni-chain APIs/smart contracts
-- Fiat on-ramp/off-ramp
+- Automated Farming/Vaulting with optimal yields **with assets sourced from any chain**
+- Lending/Borrowing at optimal rates **with assets sourced from any chain**
+- Fiat on-ramp/off-ramp (coming soon)
+- Cross-chain, on-chain stocks/options (coming soon)
+- Omni-chain smart wallet (coming soon)
+- Unified dashboard of activity (coming soon)
+- Omni-chain APIs/smart contracts (coming soon)
 
 ---
 
@@ -22,36 +24,10 @@ Our platform does more than just aggregate protocols - we abstract away complexi
 
 ---
 
-## Quick links
-- [Website](https://altverse.finance)
-- [Token Fetcher Repository](https://github.com/altverseweb3/token-fetcher)
-- [Backend Repository](https://github.com/altverseweb3/backend)
-
 ## `site`
 This repository is the frontend component for our project. The Altverse frontend enables users to connect up to 3 different wallets simultaneously across a selection of EVM, Solana and Sui wallets, providing an interface for users from all different chains to swap and stake tokens across Web3 seamlessly.
 
-## Tech stack
-### Frontend
-- [**NextJS**](https://nextjs.org/): core web development framework
-- [**Tailwind CSS**](https://tailwindcss.com/): for tailwind utility classes to style components consistently and quickly without additional boilerplate
-- [**Zustand**](https://zustand.docs.pmnd.rs/getting-started/introduction): for lightweight and fast storage across components and site refreshes
-- [**Shadcn**](https://ui.shadcn.com/): reusable UI component library
-- [**AWS Lambda**](https://github.com/altverseweb3/backend/blob/main/lambda/lambda_function.py): to support our frontend with a serverless API
-
-### Web3
-- [**Reown**](https://reown.com/): wallet kit to support a scalable selection of wallets across networks (currently used for Solana and EVM)
-- [**Suiet**](https://kit.suiet.app/): wallet provider for the Sui network
-- [**Mayan SDK**](https://www.npmjs.com/package/@mayanfinance/swap-sdk): cross-chain SDK to facilitate cross-chain & cross-environment swaps
-- [**CoinGecko API**](https://www.coingecko.com/en/api): token list information and token metadata
-- [**Alchemy API**](https://www.alchemy.com/docs/): for user token balances, allowances, and price feeds
-- [**BlockVision API**](https://blockvision.org/): for user token balances, allowances, and price feeds
-
-### DevOps
-- [**Vercel**](https://vercel.com): for swift automatic site deployments
-- [**Husky**](https://typicode.github.io/husky/): to add `pre-commit` and `pre-push` git hooks to format and lint our repository
-- [**GitHub Actions**](https://github.com/altverseweb3/token-fetcher/blob/master/.github/workflows/main.yml): to enable token metadata refreshes and site redeployments automatically
-
-## How to run locally
+#### How to Run Site Locally:
 ```bash
 # Install dependencies
 npm install
@@ -61,51 +37,9 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) to view Altverse in your browser.
 
-## Repository Structure
+---
 
-Below is a simplified explanation of our repository structure:
-```
-site/
-├── public/ # contains all our images and token metadata
-│   ├── images/
-│   ├── protocols/
-│   ├── tokens/
-│   └── wallets/
-├── src/
-│   ├── api/    # api for our backend
-│   ├── app/    # landing page
-│   │   ├── (dapp)/     # contains pages inside the dapp
-│   │   │   ├── borrow/
-│   │   │   │   └── page.tsx
-│   │   │   ├── layout.tsx
-│   │   │   └── swap/
-│   │   │       └── page.tsx
-│   │   ├── favicon.ico
-│   │   ├── ...
-│   ├── components/
-│   │   ├── layout/ # core visual components used across the site
-│   │   │   ├── MainNav.tsx
-│   │   │   ├── SiteFooter.tsx
-│   │   │   ├── ...
-│   │   └── ui/     # reusable visual components
-│   │       ├── Accordion.tsx
-│   │       ├── AlertDialog.tsx
-│   │       ├── ...
-│   ├── config/     # site configuration (e.g. what chains we support)
-│   │   ├── chains.ts
-│   │   └── tabs.ts
-│   ├── lib/
-│   │   └── utils.ts
-│   ├── store/      # Zustand storage contexts
-│   │   ├── uiStore.ts
-│   │   └── web3Store.ts
-│   ├── types/      # reusable type definitions
-│   │   ├── ui.ts
-│   │   ├── web3.ts
-│   │   └── window.d.ts
-│   └── utils/      # reusable helper/wrapper functions
-│       ├── chainMethods.ts
-│       ├── mayanSwapMethods.ts
-│       ├── ...
-```
-
+## Quick Links
+- [Website](https://altverse.finance)
+- [Token Fetcher Repository](https://github.com/altverseweb3/token-fetcher)
+- [Backend Repository](https://github.com/altverseweb3/backend)
