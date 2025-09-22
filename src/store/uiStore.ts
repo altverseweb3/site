@@ -4,6 +4,16 @@ import { Tab } from "@/types/ui";
 
 type Theme = "light" | "dark";
 
+//lending
+export type LendingTabType = "markets" | "dashboard" | "staking" | "history";
+
+interface LendingState {
+  activeMainTab: LendingTabType;
+  dashboardSupplyMode: boolean;
+  dashboardShowAvailable: boolean;
+  dashboardShowZeroBalance: boolean;
+}
+
 interface UIStoreState {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
@@ -14,6 +24,12 @@ interface UIStoreState {
   setSourceTokenSelectOpen: (open: boolean) => void;
   destinationTokenSelectOpen: boolean;
   setDestinationTokenSelectOpen: (open: boolean) => void;
+  // lending
+  lending: LendingState;
+  setLendingActiveMainTab: (tab: LendingTabType) => void;
+  setLendingDashboardSupplyMode: (isSupply: boolean) => void;
+  setLendingDashboardShowAvailable: (showAvailable: boolean) => void;
+  setLendingDashboardShowZeroBalance: (showZeroBalance: boolean) => void;
 }
 
 // Safely update DOM theme
@@ -53,6 +69,32 @@ const useUIStore = create<UIStoreState>()(
       setDestinationTokenSelectOpen: (open) => {
         return set({ destinationTokenSelectOpen: open });
       },
+      // lending
+      lending: {
+        activeMainTab: "markets",
+        dashboardSupplyMode: true,
+        dashboardShowAvailable: true,
+        dashboardShowZeroBalance: false,
+      },
+      setLendingActiveMainTab: (tab) =>
+        set((state) => ({
+          lending: { ...state.lending, activeMainTab: tab },
+        })),
+      setLendingDashboardSupplyMode: (isSupply) =>
+        set((state) => ({
+          lending: { ...state.lending, dashboardSupplyMode: isSupply },
+        })),
+      setLendingDashboardShowAvailable: (showAvailable) =>
+        set((state) => ({
+          lending: { ...state.lending, dashboardShowAvailable: showAvailable },
+        })),
+      setLendingDashboardShowZeroBalance: (showZeroBalance) =>
+        set((state) => ({
+          lending: {
+            ...state.lending,
+            dashboardShowZeroBalance: showZeroBalance,
+          },
+        })),
     }),
     {
       name: "altverse-storage-ui",

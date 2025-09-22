@@ -1,5 +1,6 @@
 "use client";
 
+import useUIStore from "@/store/uiStore";
 import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Info } from "lucide-react";
@@ -48,9 +49,16 @@ export default function DashboardContent({
   onSubsectionChange,
   refetchMarkets,
 }: DashboardContentProps) {
-  const [isSupplyMode, setIsSupplyMode] = useState(true);
-  const [showAvailable, setShowAvailable] = useState(true);
-  const [showZeroBalance, setShowZeroBalance] = useState(false);
+  const {
+    lending,
+    setLendingDashboardSupplyMode,
+    setLendingDashboardShowAvailable,
+    setLendingDashboardShowZeroBalance,
+  } = useUIStore();
+
+  const isSupplyMode = lending.dashboardSupplyMode;
+  const showAvailable = lending.dashboardShowAvailable;
+  const showZeroBalance = lending.dashboardShowZeroBalance;
   const [isRiskDetailsModalOpen, setIsRiskDetailsModalOpen] = useState(false);
   const [isEmodeModalOpen, setIsEmodeModalOpen] = useState(false);
 
@@ -201,7 +209,9 @@ export default function DashboardContent({
             <ToggleGroup
               type="single"
               value={isSupplyMode ? "supply" : "borrow"}
-              onValueChange={(value) => setIsSupplyMode(value === "supply")}
+              onValueChange={(value) =>
+                setLendingDashboardSupplyMode(value === "supply")
+              }
             >
               <ToggleGroupItem
                 value="supply"
@@ -226,7 +236,9 @@ export default function DashboardContent({
                     ? "supplied"
                     : "borrowed"
               }
-              onValueChange={(value) => setShowAvailable(value === "available")}
+              onValueChange={(value) =>
+                setLendingDashboardShowAvailable(value === "available")
+              }
             >
               <ToggleGroupItem
                 value="available"
@@ -250,7 +262,9 @@ export default function DashboardContent({
                 <input
                   type="checkbox"
                   checked={showZeroBalance}
-                  onChange={(e) => setShowZeroBalance(e.target.checked)}
+                  onChange={(e) =>
+                    setLendingDashboardShowZeroBalance(e.target.checked)
+                  }
                   className="w-4 h-4 bg-[#27272A] border border-[#3F3F46] rounded text-amber-500"
                 />
                 <span className="text-xs text-[#A1A1AA]">
