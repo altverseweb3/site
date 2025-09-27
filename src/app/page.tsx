@@ -1,8 +1,8 @@
 "use client";
 
-import { ReactNode } from "react"; // Import useState
+import { ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { BentoCard, BentoGrid } from "@/components/ui/BentoGrid";
 import { LandingBackground } from "@/components/ui/landing/LandingBackground";
 import ShimmerButton from "@/components/ui/ShimmerButton";

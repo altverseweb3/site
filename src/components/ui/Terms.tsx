@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/StyledDialog";
 import BrandedButton from "@/components/ui/BrandedButton";
 
-interface ToSProps {
+interface TermsProps {
   children: React.ReactNode;
 }
 
-const ToS: React.FC<ToSProps> = ({ children }) => {
+const Terms: React.FC<TermsProps> = ({ children }) => {
   const [open, setOpen] = React.useState(false);
 
   const handleClose = () => {
@@ -149,4 +149,4 @@ const ToS: React.FC<ToSProps> = ({ children }) => {
   );
 };
 
-export default ToS;
+export default Terms;
