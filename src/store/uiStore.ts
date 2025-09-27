@@ -24,6 +24,9 @@ interface UIStoreState {
   setSourceTokenSelectOpen: (open: boolean) => void;
   destinationTokenSelectOpen: boolean;
   setDestinationTokenSelectOpen: (open: boolean) => void;
+  // terms acceptance
+  hasAcceptedTerms: boolean;
+  setHasAcceptedTerms: (accepted: boolean) => void;
   // lending
   lending: LendingState;
   setLendingActiveMainTab: (tab: LendingTabType) => void;
@@ -69,6 +72,9 @@ const useUIStore = create<UIStoreState>()(
       setDestinationTokenSelectOpen: (open) => {
         return set({ destinationTokenSelectOpen: open });
       },
+      // terms acceptance
+      hasAcceptedTerms: false,
+      setHasAcceptedTerms: (accepted) => set({ hasAcceptedTerms: accepted }),
       // lending
       lending: {
         activeMainTab: "markets",
