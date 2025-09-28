@@ -43,7 +43,7 @@ import {
   VaultConversionRate,
 } from "@/utils/etherFi/vaultShares";
 import TokenInputGroup from "@/components/ui/TokenInputGroup";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import ProgressTracker, {
   Step,
   createStep,
@@ -853,7 +853,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
                     if (chain) {
                       return (
                         <div className="pt-2 flex justify-end">
-                          <WalletConnectButton
+                          <ConnectWalletButton
                             size="sm"
                             className="w-auto"
                             walletType={chain.walletType}

@@ -23,7 +23,7 @@ import {
   formatCurrency,
   formatPercentage,
 } from "@/utils/formatters";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import { useEtherFiFetch } from "@/hooks/etherFi/useEtherFiFetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
 
@@ -323,7 +323,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
                 earn more
               </Button>
             ) : (
-              <WalletConnectButton
+              <ConnectWalletButton
                 walletType={WalletType.REOWN_EVM}
                 size="md"
                 className="border rounded-lg font-semibold bg-amber-500/25 border-[#61410B] !text-sm !px-4 !h-10 !py-0 !justify-center"

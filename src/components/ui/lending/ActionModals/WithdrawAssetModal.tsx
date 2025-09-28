@@ -19,7 +19,7 @@ import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
@@ -136,7 +136,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
 
           {!sourceWalletConnected && (
             <div className="mt-4 flex justify-end">
-              <WalletConnectButton
+              <ConnectWalletButton
                 walletType={sourceChain.walletType}
                 className="w-auto"
               />

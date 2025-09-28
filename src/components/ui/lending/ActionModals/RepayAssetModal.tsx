@@ -32,7 +32,7 @@ import ProgressTracker, {
   createStep,
   StepState,
 } from "@/components/ui/ProgressTracker";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
 
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
@@ -345,7 +345,7 @@ const RepayAssetModal: React.FC<RepayAssetModalProps> = ({
           />
           {!sourceWalletConnected && (
             <div className="mt-4 flex justify-end">
-              <WalletConnectButton
+              <ConnectWalletButton
                 walletType={sourceChain.walletType}
                 className="w-auto"
               />
