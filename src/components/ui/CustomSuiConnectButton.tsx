@@ -16,7 +16,7 @@ export const CustomSuiConnectButton = ({
   const buttonRef = useRef<HTMLDivElement>(null);
   const { connected, disconnect } = useWallet();
 
-  // Size classes to match WalletConnectButton exactly
+  // Size classes to match ConnectWalletButton exactly
   const sizeClasses = {
     sm: "text-xs px-2 py-1",
     md: "text-sm px-3 py-2",
@@ -63,7 +63,7 @@ export const CustomSuiConnectButton = ({
       >
         <ConnectButton />
       </div>
-      {/* Visible custom button - now matches WalletConnectButton styling exactly */}
+      {/* Visible custom button - now matches ConnectWalletButton styling exactly */}
       <button
         className={cn(
           sizeClasses[size],

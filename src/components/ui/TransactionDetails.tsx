@@ -15,7 +15,7 @@ import useWeb3Store, {
 } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { GasDrop } from "@/components/ui/GasDrop";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
   relayerFeeUsd?: number;
@@ -644,7 +644,7 @@ export function TransactionDetails({
             </div>
             {/* Align the button to the right */}
             <div className="flex justify-end mt-2">
-              <WalletConnectButton
+              <ConnectWalletButton
                 className="w-auto"
                 walletType={destinationChain?.walletType}
                 size="sm"

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { walletOptions } from "@/config/wallets";
 import { CustomSuiConnectButton } from "@/components/ui/CustomSuiConnectButton";
 
-interface WalletConnectButtonProps {
+interface ConnectWalletButtonProps {
   walletType: WalletType;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
@@ -19,7 +19,7 @@ interface WalletConnectButtonProps {
   children?: React.ReactNode;
 }
 
-export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
+export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   walletType,
   onSuccess,
   onError,
@@ -150,4 +150,4 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
   );
 };
 
-export default WalletConnectButton;
+export default ConnectWalletButton;

@@ -10,7 +10,7 @@ import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletFilterType } from "@/types/web3";
 import { toast } from "sonner";
 import { walletOptions } from "@/config/wallets";
-import { WalletConnectButton } from "@/components/ui/WalletConnectButton";
+import { ConnectWalletButton } from "@/components/ui/ConnectWalletButton";
 
 interface WalletFilterProps {
   selectedWallet: WalletFilterType;
@@ -218,7 +218,7 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
           if (isConnected) return null; // Don't show connect button if already connected
 
           return (
-            <WalletConnectButton
+            <ConnectWalletButton
               key={option.value}
               walletType={option.walletType}
               onSuccess={() => {
