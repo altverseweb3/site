@@ -18,6 +18,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import useWeb3Store from "@/store/web3Store";
+import Disclaimer from "@/components/ui/Disclaimer";
 
 type WalletOption = {
   id: WalletType;
@@ -262,7 +263,7 @@ export const ConnectWalletModal = ({
     }
   };
 
-  return (
+  const modalContent = (
     <Dialog open={modalOpen} onOpenChange={handleOpenChange}>
       {trigger ? (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -346,6 +347,12 @@ export const ConnectWalletModal = ({
         </div>
       </DialogContent>
     </Dialog>
+  );
+
+  return (
+    <Disclaimer onAccept={() => {}} onDeny={() => setModalOpen(false)}>
+      {modalContent}
+    </Disclaimer>
   );
 };
 
