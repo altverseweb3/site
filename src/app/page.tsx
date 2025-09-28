@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, ReactNode } from "react"; // Import useState
+import { ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { BentoCard, BentoGrid } from "@/components/ui/BentoGrid";
 import { LandingBackground } from "@/components/ui/landing/LandingBackground";
 import ShimmerButton from "@/components/ui/ShimmerButton";
@@ -12,16 +12,6 @@ import Tiles from "@/components/ui/landing/Tiles";
 import Spider from "@/components/ui/landing/Spider";
 import BlurIn from "@/components/ui/BlurIn";
 import EarnCard from "@/components/ui/landing/EarnCard";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/AlertDialog";
 
 interface Feature {
   name: string;
@@ -77,7 +67,6 @@ const iconMap: IconMap = {
 };
 
 export default function Home() {
-  const [isAlertOpen, setIsAlertOpen] = useState(false); // State for dialog visibility
   const router = useRouter();
 
   const handleContinue = () => {
@@ -117,7 +106,7 @@ export default function Home() {
                 shimmerSize="0.12em"
                 shimmerDuration="2.5s"
                 background="black"
-                onClick={() => setIsAlertOpen(true)} // Set state on click
+                onClick={() => handleContinue()}
               >
                 <span className="whitespace-pre-wrap px-8 text-center text-base font-semibold leading-none tracking-tight text-white">
                   Get Started
@@ -140,33 +129,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent className="w-[calc(100%-1rem)] sm:w-full sm:max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="mb-2 text-xl">
-              Important Disclaimer
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-base">
-              Altverse is currently in beta and has not undergone a full
-              security audit. By proceeding, you acknowledge that you understand
-              the risks involved with using experimental blockchain technology
-              and will interact with the platform at your own risk.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-2 flex flex-col-reverse gap-1 sm:flex-row sm:justify-end sm:space-x-2 sm:gap-0">
-            <AlertDialogCancel className="border-[1px] rounded-lg leading-zero text-lg">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg leading-zero text-lg"
-              onClick={handleContinue}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
