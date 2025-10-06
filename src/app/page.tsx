@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { recordEntrance } from "@/utils/metrics/metricsRecorder";
 import { BentoCard, BentoGrid } from "@/components/ui/BentoGrid";
 import { LandingBackground } from "@/components/ui/landing/LandingBackground";
 import ShimmerButton from "@/components/ui/ShimmerButton";
@@ -70,6 +71,12 @@ export default function Home() {
   const router = useRouter();
 
   const handleContinue = () => {
+    // Record entrance metric in background (non-blocking)
+    recordEntrance().catch((error) => {
+      console.error("Failed to record entrance metric:", error);
+    });
+
+    // Navigate immediately
     router.push("/swap");
   };
 

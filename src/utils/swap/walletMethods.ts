@@ -29,8 +29,8 @@ import {
   TokenTransferState,
   ExtendedQuote,
 } from "@/types/web3";
-import { recordSwap } from "@/utils/swap/swapRecorder";
-import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
+import { recordSwap } from "@/utils/metrics/metricsRecorder";
+import { SwapMetricsRequest } from "@/utils/metrics/metricsRecorder";
 import {
   REFERRER_EVM,
   REFERRER_SOL,
@@ -1285,14 +1285,15 @@ export function useTokenTransfer(
       }
 
       setSwapId(result);
-      const swapMetricsRequest: SwapMetricsRequest = {
+      const swapMetricsRequest: Omit<SwapMetricsRequest, "metricType"> = {
         swapperAddress: requiredWallet!.address,
         txHash: result,
         swapType: options.type,
         amount: amount,
         tokenIn: options.sourceToken?.address,
         tokenOut: options.destinationToken?.address,
-        network: options.sourceChain.name,
+        sourceNetwork: options.sourceChain.name,
+        destinationNetwork: options.destinationChain.name,
       };
       // Send swap metrics to the backend
       try {
