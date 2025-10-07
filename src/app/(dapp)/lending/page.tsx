@@ -63,7 +63,7 @@ export default function LendingPage() {
       (aaveChain) => aaveChain.chainId,
     );
     return chainList.filter((chain) =>
-      aaveSupportedChainIds.includes(chain.chainId),
+      aaveSupportedChainIds.includes(chain.chainId as ChainId),
     );
   }, [aaveChains]);
 
