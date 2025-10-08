@@ -48,7 +48,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
   const sourceChain = getChainById("ethereum");
 
-  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
+  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
 
   const { switchToChain } = useChainSwitch(sourceChain);
   const { getUserVaultBalance } = useEtherFiFetch();
@@ -324,7 +324,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
               </Button>
             ) : (
               <ConnectWalletButton
-                walletType={WalletType.REOWN_EVM}
+                walletType={WalletType.EVM}
                 size="md"
                 className="border rounded-lg font-semibold bg-amber-500/25 border-[#61410B] !text-sm !px-4 !h-10 !py-0 !justify-center"
                 onSuccess={handleWalletConnectSuccess}

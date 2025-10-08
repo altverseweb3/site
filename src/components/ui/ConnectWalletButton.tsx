@@ -46,9 +46,9 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
 
   const getWalletStyles = () => {
     switch (walletType) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         return "bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30";
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         return "bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30";
       default:
         return "bg-blue-500/20 text-blue-500 hover:text-blue-400 hover:bg-blue-500/30";
