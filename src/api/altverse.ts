@@ -66,7 +66,13 @@ export interface SuiBalanceResult {
   lockedBalance: object;
 }
 
-export interface SwapMetricsRequest {
+// Base interface for all metrics requests
+export interface BaseMetricsRequest {
+  metricType: "swap" | "entrance" | "earn" | "lending";
+}
+
+export interface SwapMetricsRequest extends BaseMetricsRequest {
+  metricType: "swap";
   swapperAddress: string; // Required: Address performing the swap
   txHash?: string; // Optional: Transaction hash
   swapType?: string; // Optional: Type of swap ("vanilla", "earn/etherFi", "earn/aave", "earn/pendle", "lend/aave")
@@ -74,8 +80,44 @@ export interface SwapMetricsRequest {
   amount?: string; // Optional: Swap amount
   tokenIn?: string; // Optional: Input token address
   tokenOut?: string; // Optional: Output token address
-  network?: string; // Optional: Network name
+  sourceNetwork?: string; // Optional: Source network name
+  destinationNetwork?: string; // Optional: Destination network name
 }
+
+export interface EntranceMetricsRequest extends BaseMetricsRequest {
+  metricType: "entrance";
+  userAddress?: string; // Optional: User address if available
+}
+
+export interface EarnMetricsRequest extends BaseMetricsRequest {
+  metricType: "earn";
+  protocol: string; // Required: Protocol name (e.g., "etherFi", "aave", "pendle")
+  action: string; // Required: Action type ("deposit", "withdraw")
+  userAddress: string; // Required: User address
+  vaultId?: string; // Optional: Vault ID
+  asset: string; // Required: Asset symbol
+  amount?: string; // Optional: Amount
+  chain: string; // Required: Chain name
+  txHash?: string; // Optional: Transaction hash
+}
+
+export interface LendingMetricsRequest extends BaseMetricsRequest {
+  metricType: "lending";
+  protocol: string; // Required: Protocol name (e.g., "aave")
+  action: string; // Required: Action type ("supply", "borrow", "withdraw", "repay")
+  userAddress: string; // Required: User address
+  marketId?: string; // Optional: Market ID
+  asset: string; // Required: Asset symbol
+  amount: string; // Required: Amount
+  chain: string; // Required: Chain name
+  txHash?: string; // Optional: Transaction hash
+}
+
+export type MetricsRequest =
+  | SwapMetricsRequest
+  | EntranceMetricsRequest
+  | EarnMetricsRequest
+  | LendingMetricsRequest;
 
 // Endpoint-specific response types
 export interface AllowanceResponse {
@@ -86,7 +128,7 @@ export interface PricesResponse {
   data: TokenPriceResult[];
 }
 
-export interface SwapMetricsResponse {
+export interface MetricsResponse {
   success: boolean;
   message: string;
 }
@@ -163,12 +205,12 @@ export class AltverseAPI {
   }
 
   /**
-   * Record swap metrics
+   * Record unified metrics
    */
-  public async recordSwap(
-    request: SwapMetricsRequest,
-  ): Promise<ApiResponse<SwapMetricsResponse>> {
-    return this.request<SwapMetricsResponse>("POST", "swap-metrics", request);
+  public async recordMetric(
+    request: MetricsRequest,
+  ): Promise<ApiResponse<MetricsResponse>> {
+    return this.request<MetricsResponse>("POST", "metrics", request);
   }
 
   /**
@@ -177,11 +219,7 @@ export class AltverseAPI {
   private async request<T>(
     method: "GET" | "POST",
     endpoint: string,
-    body?:
-      | BaseRequest
-      | PricesRequest
-      | SuiBalancesRequest
-      | SwapMetricsRequest,
+    body?: BaseRequest | PricesRequest | SuiBalancesRequest | MetricsRequest,
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}/${endpoint}`;

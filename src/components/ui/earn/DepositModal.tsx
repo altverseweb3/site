@@ -51,6 +51,7 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
 import { formatPercentage, parseDepositError } from "@/utils/formatters";
+import { recordEarn } from "@/utils/metrics/metricsRecorder";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -186,6 +187,23 @@ const DepositModal: React.FC<DepositModalProps> = ({
               vaultShares: "0",
               completedAt: new Date(),
             });
+
+            // Record earn metrics
+            try {
+              await recordEarn({
+                protocol: "etherFi",
+                action: "deposit",
+                userAddress: requiredWallet!.address,
+                vaultId: vaultId.toString(),
+                asset: assetSymbol,
+                amount: depositAmount,
+                chain: "ethereum",
+                txHash: depositResult.hash,
+              });
+            } catch (error) {
+              console.error("Failed to record earn metrics:", error);
+            }
+
             return true;
           } else {
             console.error(
@@ -217,6 +235,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       startDepositStep,
       depositTokens,
       completeDepositStep,
+      requiredWallet,
       failDepositStep,
     ],
   );
@@ -270,6 +289,23 @@ const DepositModal: React.FC<DepositModalProps> = ({
             vaultShares: "0",
             completedAt: new Date(),
           });
+
+          // Record earn metrics
+          try {
+            await recordEarn({
+              protocol: "etherFi",
+              action: "deposit",
+              userAddress: requiredWallet!.address,
+              vaultId: vaultId.toString(),
+              asset: assetSymbol,
+              amount: depositAmount,
+              chain: "ethereum",
+              txHash: result.hash,
+            });
+          } catch (error) {
+            console.error("Failed to record earn metrics:", error);
+          }
+
           return true;
         } else {
           console.error("❌ Deposit failed:", result.message);
@@ -288,9 +324,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
     },
     [
       getEvmSigner,
-      handleApprovalAndRetry,
       depositTokens,
+      handleApprovalAndRetry,
       completeDepositStep,
+      requiredWallet,
       failDepositStep,
     ],
   );

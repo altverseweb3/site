@@ -10,6 +10,7 @@ import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { recordLending } from "@/utils/metrics/metricsRecorder";
 
 export interface TokenTransferState {
   amount: string;
@@ -162,6 +163,23 @@ export const useSupplyOperations = (
               result.transactionHash!,
             )}`,
           });
+
+          // Record lending metrics
+          try {
+            await recordLending({
+              protocol: "aave",
+              action: "supply",
+              userAddress: userWalletAddress,
+              marketId: market.marketInfo.name,
+              asset: sourceToken.ticker,
+              amount: tokenTransferState.amount,
+              chain: market.marketInfo.chain.name,
+              txHash: result.transactionHash,
+            });
+          } catch (error) {
+            console.error("Failed to record lending metrics:", error);
+          }
+
           dependencies.refetchMarkets();
         } else {
           console.error("Supply failed:", result.error);
