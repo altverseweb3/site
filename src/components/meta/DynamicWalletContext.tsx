@@ -1,10 +1,15 @@
 "use client";
 
-import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import {
+  DynamicContextProvider,
+  FilterChain,
+} from "@dynamic-labs/sdk-react-core";
 
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import { SuiWalletConnectors } from "@dynamic-labs/sui";
+import { SolanaIcon, EthereumIcon, SuiIcon } from "@dynamic-labs/iconic";
+
 import Terms from "@/components/ui/Terms";
 
 export default function DynamicWalletContext({
@@ -41,6 +46,29 @@ export default function DynamicWalletContext({
       theme="dark"
       settings={{
         environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID!,
+        overrides: {
+          views: [
+            {
+              type: "wallet-list",
+              tabs: {
+                items: [
+                  {
+                    label: { icon: <EthereumIcon /> },
+                    walletsFilter: FilterChain("EVM"),
+                  },
+                  {
+                    label: { icon: <SolanaIcon /> },
+                    walletsFilter: FilterChain("SOL"),
+                  },
+                  {
+                    label: { icon: <SuiIcon /> },
+                    walletsFilter: FilterChain("SUI"),
+                  },
+                ],
+              },
+            },
+          ],
+        },
         walletConnectors: [
           EthereumWalletConnectors,
           SolanaWalletConnectors,
