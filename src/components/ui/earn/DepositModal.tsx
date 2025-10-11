@@ -71,7 +71,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const destinationChain = useDestinationChain();
   const transactionDetails = useTransactionDetails();
   const setReceiveAddress = useSetReceiveAddress();
-  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
+  const evmWallet = useWalletByType(WalletType.EVM);
 
   const isDirectDeposit = useMemo(() => {
     if (!sourceToken || !vault) {
@@ -102,11 +102,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const tokensByChainId = useWeb3Store((state) => state.tokensByChainId);
 
   // Wallet connection states
-  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
-  const isSolanaWalletConnected = useIsWalletTypeConnected(
-    WalletType.REOWN_SOL,
-  );
+  const isWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUI);
+  const isSolanaWalletConnected = useIsWalletTypeConnected(WalletType.SOLANA);
   const requiredWallet = useWeb3Store((state) =>
     state.getWalletBySourceChain(),
   );
@@ -136,11 +134,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
       if (!chain) return false;
 
       switch (chain.walletType) {
-        case WalletType.REOWN_EVM:
+        case WalletType.EVM:
           return isWalletConnected;
-        case WalletType.SUIET_SUI:
+        case WalletType.SUI:
           return isSuiWalletConnected;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           return isSolanaWalletConnected;
         default:
           return false;

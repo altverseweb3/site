@@ -85,7 +85,7 @@ const SuiWalletSync = () => {
     if (connected && address) {
       const store = useWeb3Store.getState();
       store.addWallet({
-        type: WalletType.SUIET_SUI,
+        type: WalletType.SUI,
         name: name || "Sui Wallet",
         address: address,
         chainId: 1, // Default to Sui mainnet
@@ -98,7 +98,7 @@ const SuiWalletSync = () => {
     const checkDisconnectState = () => {
       const store = useWeb3Store.getState();
       const suiWalletInStore = store.connectedWallets.some(
-        (wallet) => wallet.type === WalletType.SUIET_SUI,
+        (wallet) => wallet.type === WalletType.SUI,
       );
 
       // If Sui wallet is connected in provider but not in our store, disconnect it

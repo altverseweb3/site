@@ -67,11 +67,11 @@ export function TransactionDetails({
    */
   const getPlaceholderText = useCallback((walletType?: WalletType): string => {
     switch (walletType) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         return "Connect Ethereum wallet";
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         return "Connect Solana wallet";
-      case WalletType.SUIET_SUI:
+      case WalletType.SUI:
         return "Connect Sui wallet";
       default:
         return "Connect wallet";
@@ -90,12 +90,12 @@ export function TransactionDetails({
       if (address === placeholder) return address;
 
       switch (walletType) {
-        case WalletType.REOWN_EVM:
-        case WalletType.SUIET_SUI:
+        case WalletType.EVM:
+        case WalletType.SUI:
           // EVM and Sui addresses: 0x + first 4 + ... + last 4
           if (address.length <= 10) return address;
           return `${address.slice(0, 6)}...${address.slice(-4)}`;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           // Solana addresses: first 4 + ... + last 4
           if (address.length <= 8) return address;
           return `${address.slice(0, 4)}...${address.slice(-4)}`;
@@ -166,11 +166,11 @@ export function TransactionDetails({
       const isSuiAddress = /^0x[a-fA-F0-9]{64}$/.test(address);
 
       switch (walletType) {
-        case WalletType.REOWN_EVM:
+        case WalletType.EVM:
           return isEthereumAddress;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           return isSolanaAddress;
-        case WalletType.SUIET_SUI:
+        case WalletType.SUI:
           return isSuiAddress;
         default:
           return false;
@@ -200,15 +200,15 @@ export function TransactionDetails({
     if (!walletType) return "Invalid wallet type";
 
     switch (walletType) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         return /^0x[a-fA-F0-9]{40}$/.test(address)
           ? null
           : "Invalid Ethereum address format";
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
           ? null
           : "Invalid Solana address format";
-      case WalletType.SUIET_SUI:
+      case WalletType.SUI:
         return /^0x[a-fA-F0-9]{64}$/.test(address)
           ? null
           : "Invalid Sui address format";

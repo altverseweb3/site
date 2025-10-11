@@ -12,9 +12,9 @@ export interface WalletInfo {
 }
 
 export enum WalletType {
-  REOWN_EVM = "REOWN_EVM",
-  REOWN_SOL = "REOWN_SOL",
-  SUIET_SUI = "SUIET_SUI",
+  EVM = "EVM",
+  SOLANA = "SOLANA",
+  SUI = "SUI",
 }
 
 export type MayanChainName =
