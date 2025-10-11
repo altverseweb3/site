@@ -5,7 +5,6 @@ import { useState } from "react";
 import { ChevronDownIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import Image from "next/image";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletFilterType } from "@/types/web3";
 import { toast } from "sonner";
@@ -35,35 +34,25 @@ const WalletIcons: React.FC<{
     lg: "w-6 h-6",
   };
 
-  const iconSize = {
-    sm: 16,
-    md: 20,
-    lg: 24,
-  };
-
   // handle all case with multiple icons
   if (selectedOption.icons) {
     return (
       <div className="flex items-center gap-1">
         <div className="flex -space-x-1">
-          {selectedOption.icons.map((iconPath, index) => {
-            const walletName = ["MetaMask", "Phantom", "Suiet"][index];
+          {selectedOption.icons.map((icon, index) => {
+            const walletName = ["Ethereum", "Solana", "Sui"][index];
             return (
               <div
-                key={iconPath}
+                key={index}
                 className={cn(
                   "relative rounded-full border border-[#27272A] overflow-hidden bg-[#18181B] group cursor-pointer",
                   sizeClasses[size],
                 )}
                 title={showTooltip ? walletName : undefined}
               >
-                <Image
-                  src={iconPath}
-                  alt={walletName}
-                  width={iconSize[size]}
-                  height={iconSize[size]}
-                  className="object-contain p-0.5"
-                />
+                <div className="flex items-center justify-center w-full h-full p-0.5">
+                  {icon}
+                </div>
                 {showTooltip && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
                     {walletName}
@@ -88,13 +77,9 @@ const WalletIcons: React.FC<{
           )}
           title={showTooltip ? selectedOption.label : undefined}
         >
-          <Image
-            src={selectedOption.icon}
-            alt={selectedOption.label}
-            width={iconSize[size]}
-            height={iconSize[size]}
-            className="object-contain p-0.5"
-          />
+          <div className="flex items-center justify-center w-full h-full p-0.5">
+            {selectedOption.icon}
+          </div>
           {showTooltip && (
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
               {selectedOption.label}

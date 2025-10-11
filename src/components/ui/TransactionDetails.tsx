@@ -16,6 +16,7 @@ import useWeb3Store, {
 import { WalletType } from "@/types/web3";
 import { GasDrop } from "@/components/ui/GasDrop";
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
+import { useDestinationWallet } from "@/hooks/dynamic/useUserWallets";
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
   relayerFeeUsd?: number;
@@ -38,9 +39,7 @@ export function TransactionDetails({
   const setSlippageValue = useSetSlippageValue();
   const setReceiveAddress = useSetReceiveAddress();
   const destinationChain = useDestinationChain();
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletByType(destinationChain.walletType),
-  );
+  const requiredWallet = useDestinationWallet();
 
   // ─── Local state ─────────────────────────────────────────────────────────────
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(isOpen || false);
@@ -643,13 +642,15 @@ export function TransactionDetails({
               )}
             </div>
             {/* Align the button to the right */}
-            <div className="flex justify-end mt-2">
-              <ConnectWalletButton
-                className="w-auto"
-                walletType={destinationChain?.walletType}
-                size="sm"
-              />
-            </div>
+            {!requiredWallet && (
+              <div className="flex justify-end mt-2">
+                <ConnectWalletButton
+                  className="w-auto"
+                  walletType={destinationChain?.walletType}
+                  size="sm"
+                />
+              </div>
+            )}
           </div>
 
           {/* ─── Gas Drop ─────────────────────────── */}
