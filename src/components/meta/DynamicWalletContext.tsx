@@ -80,7 +80,7 @@ export default function DynamicWalletContext({
         shadowDOMEnabled: false,
         enableVisitTrackingOnConnectOnly: true,
         cssOverrides: `
-          .connect-button {
+          .connect-button:not(.custom-wallet-button) {
             font-family: inherit !important;
             font-weight: 500 !important;
             font-size: 0.875rem !important;
@@ -99,18 +99,18 @@ export default function DynamicWalletContext({
             flex-wrap: nowrap !important;
             gap: 0.5rem !important;
           }
-          .connect-button:hover {
+          .connect-button:not(.custom-wallet-button):hover {
             background: rgba(245, 158, 11, 0.5) !important;
             color: rgb(251, 191, 36) !important;
           }
-          .connect-button .typography-button__content {
+          .connect-button:not(.custom-wallet-button) .typography-button__content {
             display: inline-flex !important;
             align-items: center !important;
             flex-wrap: nowrap !important;
             white-space: nowrap !important;
             gap: 0.5rem !important;
           }
-          .connect-button .typography {
+          .connect-button:not(.custom-wallet-button) .typography {
             font-family: inherit !important;
             font-weight: inherit !important;
             font-size: inherit !important;
@@ -119,7 +119,7 @@ export default function DynamicWalletContext({
             white-space: nowrap !important;
             display: inline !important;
           }
-          .connect-button svg {
+          .connect-button:not(.custom-wallet-button) svg {
             flex-shrink: 0 !important;
             display: inline-block !important;
           }

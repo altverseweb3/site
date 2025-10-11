@@ -74,7 +74,7 @@ const SwapComponent: React.FC = () => {
       amount={amount}
       onAmountChange={handleAmountChange}
       isButtonDisabled={isButtonDisabled}
-      hasActiveWallet={!!isConnectedRequiredWallet}
+      hasActiveWallet={isConnectedRequiredWallet}
       onTransfer={handleSwapClick}
       swapAmounts={swapAmounts}
       transferType="swap"
