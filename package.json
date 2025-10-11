@@ -14,6 +14,11 @@
   "dependencies": {
     "@aave/react": "^0.4.0",
     "@bgd-labs/aave-address-book": "^4.22.3",
+    "@dynamic-labs/ethereum": "^4.37.1",
+    "@dynamic-labs/ethers-v6": "^4.37.1",
+    "@dynamic-labs/sdk-react-core": "^4.37.1",
+    "@dynamic-labs/solana": "^4.37.1",
+    "@dynamic-labs/sui": "^4.37.1",
     "@mayanfinance/swap-sdk": "^11.2.0",
     "@mysten/sui": "1.16.2",
     "@radix-ui/react-accordion": "^1.2.7",
@@ -52,6 +57,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.4",
+    "viem": "^2.38.0",
     "zustand": "^5.0.3"
   },
   "overrides": {
