@@ -19,7 +19,7 @@ import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
-import WalletConnectButton from "@/components/ui/WalletConnectButton";
+import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
 
@@ -111,7 +111,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
 
           {!sourceWalletConnected && (
             <div className="mt-4 flex justify-end">
-              <WalletConnectButton
+              <ConnectWalletButton
                 walletType={sourceChain.walletType}
                 className="w-auto"
               />

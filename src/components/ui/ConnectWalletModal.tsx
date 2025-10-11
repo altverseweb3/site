@@ -18,6 +18,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import useWeb3Store from "@/store/web3Store";
+import Disclaimer from "@/components/ui/Disclaimer";
 
 type WalletOption = {
   id: WalletType;
@@ -74,7 +75,7 @@ const CustomSuiConnectButton = ({ className }: { className?: string }) => {
       <Button
         variant="outline"
         className={cn(
-          "w-full flex items-center justify-between px-3 py-6 rounded-md bg-[#18181B] border transition-colors text-[#FAFAFA] hover:bg-[#27272A]",
+          "w-full flex items-center justify-between px-4 py-6 rounded-lg bg-neutral-800 border transition-colors text-[#FAFAFA] hover:bg-zinc-700 shadow-sm hover:shadow-md",
           isConnected ? "border-amber-600" : "border-[#27272A]",
           className,
         )}
@@ -92,15 +93,13 @@ const CustomSuiConnectButton = ({ className }: { className?: string }) => {
             </span>
           )}
         </div>
-        <div className="flex items-center">
-          <Image
-            src="/wallets/sui.svg"
-            alt="sui wallet icon"
-            width={24}
-            height={24}
-            className="object-contain mx-1"
-          />
-        </div>
+        <Image
+          src="/wallets/sui.svg"
+          alt="sui wallet icon"
+          width={24}
+          height={24}
+          className="object-contain mx-1"
+        />
       </Button>
     </div>
   );
@@ -264,7 +263,7 @@ export const ConnectWalletModal = ({
     }
   };
 
-  return (
+  const modalContent = (
     <Dialog open={modalOpen} onOpenChange={handleOpenChange}>
       {trigger ? (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -275,17 +274,18 @@ export const ConnectWalletModal = ({
         </DialogTrigger>
       )}
       <DialogContent
-        className="sm:w-1/2 w-2/3 rounded-lg bg-[#18181B] border-[#27272A] border 
-  [&>button]:!focus:ring-0 [&>button]:!focus:ring-offset-0 [&>button]:!focus:outline-none
-  [&_svg.lucide-x]:text-amber-500 [&_svg.lucide-x]:w-[1.5rem] [&_svg.lucide-x]:h-[1.5rem] 
-  [&_svg.lucide-x]:bg-[#442E0B] [&_svg.lucide-x]:rounded-[3px] 
-  [&_svg.lucide-x]:border-[#61410B] [&_svg.lucide-x]:border-[0.5px]"
+        className="w-[90%] sm:w-[80%] md:w-1/2 max-w-md rounded-xl bg-[#18181B] border border-[#27272A] p-6 sm:p-8 space-y-4
+        [&>button]:!focus:ring-0 [&>button]:!focus:ring-offset-0 [&>button]:!focus:outline-none
+        [&_svg.lucide-x]:text-amber-500 [&_svg.lucide-x]:w-[1.5rem] [&_svg.lucide-x]:h-[1.5rem]
+        [&_svg.lucide-x]:bg-[#442E0B] [&_svg.lucide-x]:rounded-[3px]
+        [&_svg.lucide-x]:border-[#61410B] [&_svg.lucide-x]:border-[0.5px]"
       >
-        {" "}
-        <DialogHeader>
-          <DialogTitle className="text-[#FAFAFA]">select wallet</DialogTitle>
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-[#FAFAFA] text-xl font-semibold">
+            select wallet
+          </DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {walletOptions.map((wallet) => {
             const isConnected = isWalletTypeConnected(wallet.id);
             const isHovered = hoveredWallet === wallet.id;
@@ -296,12 +296,12 @@ export const ConnectWalletModal = ({
                 key={wallet.id}
                 variant="outline"
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-6 rounded-md bg-[#18181B] border border-[#27272A] transition-colors",
+                  "w-full flex items-center justify-between px-4 py-6 rounded-lg bg-neutral-800 border border-[#27272A] transition-colors shadow-sm hover:shadow-md",
                   wallet.disabled
                     ? "text-[#52525b]"
                     : isConnected
-                      ? "text-[#FAFAFA] hover:bg-[#27272A] border-amber-600"
-                      : "text-[#FAFAFA] hover:bg-[#27272A]",
+                      ? "text-[#FAFAFA] hover:bg-neutral-700 border-amber-600"
+                      : "text-[#FAFAFA] hover:bg-neutral-700",
                 )}
                 onClick={() => handleWalletSelect(wallet)}
                 disabled={
@@ -325,9 +325,7 @@ export const ConnectWalletModal = ({
                 </div>
 
                 <div
-                  className={`h-8 w-auto relative flex items-center justify-center rounded-md ${
-                    wallet.background
-                  }`}
+                  className={`h-8 w-auto relative flex items-center justify-center rounded-md ${wallet.background}`}
                 >
                   <div className="flex items-center">
                     {wallet.icons.map((icon, index) => (
@@ -349,6 +347,12 @@ export const ConnectWalletModal = ({
         </div>
       </DialogContent>
     </Dialog>
+  );
+
+  return (
+    <Disclaimer onAccept={() => {}} onDeny={() => setModalOpen(false)}>
+      {modalContent}
+    </Disclaimer>
   );
 };
 
