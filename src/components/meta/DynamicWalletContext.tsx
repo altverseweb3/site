@@ -50,6 +50,7 @@ export default function DynamicWalletContext({
         appLogoUrl: "/tokens/branded/ALT.svg",
         customTermsOfServices: <Terms>terms of service</Terms>,
         shadowDOMEnabled: false,
+        enableVisitTrackingOnConnectOnly: true,
         cssOverrides: `
           .connect-button {
             font-family: inherit !important;

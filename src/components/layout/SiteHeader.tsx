@@ -4,7 +4,6 @@ import { MainNav } from "@/components/layout/MainNav";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
-import useWeb3Store from "@/store/web3Store";
 import {
   Sheet,
   SheetContent,
@@ -16,18 +15,17 @@ import { Menu, History, Wallet } from "lucide-react";
 import Link from "next/link";
 import { SwapHistorySheet } from "@/components/ui/SwapHistorySheet";
 import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 
 export function SiteHeader(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
+  const isConnectedRequiredWallet = useConnectedRequiredWallet();
 
   // Get wallet button text based on connection status
   const getWalletButtonText = (): string => {
-    if (!requiredWallet) return "connect wallet";
+    if (!isConnectedRequiredWallet) return "connect wallet";
     return "wallet connected";
   };
 
