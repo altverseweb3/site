@@ -1,11 +1,9 @@
 import React from "react";
 import { Wallet } from "lucide-react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { WalletType } from "@/types/web3";
 import { walletOptions } from "@/config/wallets";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
-
+import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
 interface ConnectWalletButtonProps {
   walletType: WalletType;
   onSuccess?: () => void;
@@ -17,7 +15,6 @@ interface ConnectWalletButtonProps {
 
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   walletType,
-  onSuccess,
   className,
   size = "sm",
   showIcon = true,
@@ -39,15 +36,15 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   };
 
   const iconSizes = {
-    sm: { width: 12, height: 12, iconClass: "h-3 w-3" },
-    md: { width: 16, height: 16, iconClass: "h-4 w-4" },
-    lg: { width: 20, height: 20, iconClass: "h-5 w-5" },
+    sm: "h-3 w-3",
+    md: "h-4 w-4",
+    lg: "h-5 w-5",
   };
 
   const getWalletStyles = () => {
     switch (walletType) {
       case WalletType.EVM:
-        return "bg-amber-500/20 text-amber-500 hover:text-amber-400 hover:bg-amber-500/30";
+        return "bg-[#6379F8]/20 text-[#6379F8] hover:text-[#6379F8] hover:[#6379F8]/30";
       case WalletType.SOLANA:
         return "bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30";
       default:
@@ -56,33 +53,31 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   };
 
   const trigger = (
-    <button
+    <div
       className={cn(
         sizeClasses[size],
-        "rounded transition-colors flex items-center justify-between w-full",
+        "rounded transition-colors flex items-center justify-between w-full hover:cursor-pointer",
         getWalletStyles(),
         className,
       )}
     >
       <div className="flex items-center gap-2">
-        <Wallet className={iconSizes[size].iconClass} />
+        <Wallet className={iconSizes[size]} />
         <span className="pr-2">
           {children || `connect ${walletOption.label.toLowerCase()}`}
         </span>
       </div>
       {showIcon && walletOption.icon && (
-        <Image
-          src={walletOption.icon}
-          alt={walletOption.label}
-          width={iconSizes[size].width}
-          height={iconSizes[size].height}
-          className="object-contain"
-        />
+        <div className={iconSizes[size]}>{walletOption.icon}</div>
       )}
-    </button>
+    </div>
   );
 
-  return <ConnectWalletModal trigger={trigger} onSuccess={onSuccess} />;
+  return (
+    <DynamicConnectButton buttonClassName="custom-wallet-button !bg-transparent !border-0 !p-0 !m-0 hover:!bg-transparent">
+      {trigger}
+    </DynamicConnectButton>
+  );
 };
 
 export default ConnectWalletButton;

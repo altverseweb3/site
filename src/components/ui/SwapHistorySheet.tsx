@@ -88,11 +88,11 @@ const getWalletTypeFromChain = (chainId: string): WalletTypeMapping => {
   const walletType = chain?.walletType;
   let wallet: WalletFilterType = "all";
   if (walletType === WalletType.EVM) {
-    wallet = "metamask";
+    wallet = "evm";
   } else if (walletType === WalletType.SOLANA) {
-    wallet = "phantom";
+    wallet = "solana";
   } else if (walletType === WalletType.SUI) {
-    wallet = "suiet";
+    wallet = "sui";
   }
   return { wallet, walletType: walletType || WalletType.EVM };
 };
@@ -135,9 +135,9 @@ const getFilteredTransactions = (
   } else {
     const walletTypeMap: WalletTypeMap = {
       all: undefined,
-      metamask: WalletType.EVM,
-      phantom: WalletType.SOLANA,
-      suiet: WalletType.SUI,
+      evm: WalletType.EVM,
+      solana: WalletType.SOLANA,
+      sui: WalletType.SUI,
     };
 
     const walletType = walletTypeMap[selectedWallet];
@@ -221,9 +221,9 @@ export function SwapHistorySheet({
 
     const walletTypeMap: WalletTypeMap = {
       all: undefined,
-      metamask: WalletType.EVM,
-      phantom: WalletType.SOLANA,
-      suiet: WalletType.SUI,
+      evm: WalletType.EVM,
+      solana: WalletType.SOLANA,
+      sui: WalletType.SUI,
     };
 
     const walletType = walletTypeMap[selectedWallet];

@@ -482,13 +482,13 @@ export interface SwapQueryResult {
 
 export type ChainType = "EVM" | "SOL" | "SUI";
 
-export type WalletFilterType = "all" | "metamask" | "phantom" | "suiet";
+export type WalletFilterType = "all" | "evm" | "solana" | "sui";
 
 export interface WalletOption {
   value: WalletFilterType;
   label: string;
-  icon?: string;
-  icons?: string[]; // For "all" option
+  icon?: string | React.ReactNode;
+  icons?: (string | React.ReactNode)[]; // For "all" option
   walletType?: WalletType; // Map to actual wallet type
 }
 
