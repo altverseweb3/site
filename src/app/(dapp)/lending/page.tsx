@@ -69,8 +69,8 @@ export default function LendingPage() {
 
   const setActiveSwapSection = useSetActiveSwapSection();
   const loadTokens = useWeb3Store((state) => state.loadTokens);
-  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-  const userWalletAddress = useWalletByType(WalletType.REOWN_EVM)?.address;
+  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const userWalletAddress = useWalletByType(WalletType.EVM)?.address;
 
   const determineChainsToFetch = (): ChainId[] => {
     if (selectedChains.length === 0 && supportedChains.length > 0)

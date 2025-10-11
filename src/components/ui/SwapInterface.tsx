@@ -75,7 +75,7 @@ export function SwapInterface({
       let currentChainId: number | undefined;
 
       // Check which wallet type we're using
-      if (requiredWallet.type === WalletType.REOWN_EVM) {
+      if (requiredWallet.type === WalletType.EVM) {
         // For EVM wallets, get chain ID from the EVM network
         if (evmNetwork.chainId !== undefined) {
           currentChainId =
@@ -106,7 +106,7 @@ export function SwapInterface({
   useEffect(() => {
     if (
       isEvmConnected &&
-      requiredWallet?.type === WalletType.REOWN_EVM &&
+      requiredWallet?.type === WalletType.EVM &&
       evmNetwork.chainId !== undefined
     ) {
       const numericChainId =
@@ -116,7 +116,7 @@ export function SwapInterface({
 
       if (requiredWallet.chainId !== numericChainId) {
         const store = useWeb3Store.getState();
-        store.updateWalletChainId(WalletType.REOWN_EVM, numericChainId);
+        store.updateWalletChainId(WalletType.EVM, numericChainId);
       }
     }
   }, [evmNetwork.chainId, isEvmConnected, requiredWallet]);
@@ -155,7 +155,7 @@ export function SwapInterface({
       }
 
       // Special handling for Sui - no chain switching yet
-      if (requiredWallet?.type === WalletType.SUIET_SUI) {
+      if (requiredWallet?.type === WalletType.SUI) {
         // For Sui, we just check if we're connected
         if (!suiConnected) {
           toast.error("Sui wallet not connected", {

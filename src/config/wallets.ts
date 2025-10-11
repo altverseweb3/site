@@ -14,18 +14,18 @@ export const walletOptions: WalletOption[] = [
     value: "metamask",
     label: "metamask",
     icon: "/wallets/metamask.svg",
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   {
     value: "phantom",
     label: "phantom",
     icon: "/wallets/phantom.svg",
-    walletType: WalletType.REOWN_SOL,
+    walletType: WalletType.SOLANA,
   },
   {
     value: "suiet",
     label: "suiet",
     icon: "/wallets/sui.svg",
-    walletType: WalletType.SUIET_SUI,
+    walletType: WalletType.SUI,
   },
 ];
