@@ -26,7 +26,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
   });
   const [loading, setLoading] = useState(false);
   const [userPositionsLoading, setUserPositionsLoading] = useState(false);
-  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
+  const evmWallet = useWalletByType(WalletType.EVM);
 
   // Effect 1: Fetch vault data (independent of wallet connection)
   useEffect(() => {

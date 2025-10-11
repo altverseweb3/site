@@ -31,7 +31,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: false,
     gasDrop: 0.05,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   arbitrum: {
     id: "arbitrum",
@@ -67,7 +67,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   optimism: {
     id: "optimism",
@@ -106,7 +106,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   base: {
     id: "base",
@@ -137,7 +137,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   unichain: {
     id: "unichain",
@@ -177,7 +177,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: true,
     gasDrop: 0.01,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   polygon: {
     id: "polygon",
@@ -203,7 +203,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: false,
     gasDrop: 0.2,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   "binance-smart-chain": {
     id: "binance-smart-chain",
@@ -234,7 +234,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: false,
     gasDrop: 0.02,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   avalanche: {
     id: "avalanche",
@@ -268,7 +268,7 @@ export const chains: Record<string, Chain> = {
     decimals: 18,
     l2: false,
     gasDrop: 0.1,
-    walletType: WalletType.REOWN_EVM,
+    walletType: WalletType.EVM,
   },
   sui: {
     id: "sui",
@@ -297,7 +297,7 @@ export const chains: Record<string, Chain> = {
     decimals: 9,
     l2: false,
     gasDrop: 0.01,
-    walletType: WalletType.SUIET_SUI,
+    walletType: WalletType.SUI,
   },
   solana: {
     id: "solana",
@@ -328,7 +328,7 @@ export const chains: Record<string, Chain> = {
     decimals: 9,
     gasDrop: 0.01,
     l2: false,
-    walletType: WalletType.REOWN_SOL,
+    walletType: WalletType.SOLANA,
   },
 };
 
