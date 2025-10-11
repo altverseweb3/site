@@ -56,7 +56,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     <div
       className={cn(
         sizeClasses[size],
-        "rounded transition-colors flex items-center justify-between w-full hover:cursor-pointer",
+        "rounded transition-colors flex items-center justify-between hover:cursor-pointer w-full",
         getWalletStyles(),
         className,
       )}

@@ -123,6 +123,42 @@ export default function DynamicWalletContext({
             flex-shrink: 0 !important;
             display: inline-block !important;
           }
+
+          /* Custom wallet button styles */
+          .custom-wallet-button {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .custom-wallet-button:hover {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: none !important;
+          }
+          .custom-wallet-button .typography-button__content {
+            display: inline-flex !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+            white-space: nowrap !important;
+          }
+          .custom-wallet-button .typography {
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
+            color: inherit !important;
+            white-space: nowrap !important;
+            display: inline !important;
+          }
+          .custom-wallet-button:hover .typography {
+            color: inherit !important;
+          }
+          .custom-wallet-button svg {
+            flex-shrink: 0 !important;
+            display: inline-block !important;
+          }
         `,
         events: {
           onAuthFlowOpen: handleAuthFlowOpen,
