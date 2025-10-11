@@ -1039,13 +1039,13 @@ export const useExtractUserWallets = (
 
   connectedWallets.forEach((wallet) => {
     switch (wallet.type) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         userWallets.evm = wallet.address;
         break;
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         userWallets.solana = wallet.address;
         break;
-      case WalletType.SUIET_SUI:
+      case WalletType.SUI:
         userWallets.sui = wallet.address;
         break;
       default:

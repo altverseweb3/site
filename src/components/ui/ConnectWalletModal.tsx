@@ -33,7 +33,7 @@ const CustomSuiConnectButton = ({ className }: { className?: string }) => {
   const buttonRef = useRef<HTMLDivElement>(null);
   const { connected, disconnect } = useWallet(); // Access Sui wallet state directly
   const isConnected = useWeb3Store((state) =>
-    state.isWalletTypeConnected(WalletType.SUIET_SUI),
+    state.isWalletTypeConnected(WalletType.SUI),
   );
 
   const handleCustomClick = () => {
@@ -184,7 +184,7 @@ export const ConnectWalletModal = ({
 
   const walletOptions: WalletOption[] = [
     {
-      id: WalletType.REOWN_EVM,
+      id: WalletType.EVM,
       name: "evm wallets",
       icons: ["/wallets/metamask.svg"],
       disabled: false,
@@ -195,7 +195,7 @@ export const ConnectWalletModal = ({
       },
     },
     {
-      id: WalletType.REOWN_SOL,
+      id: WalletType.SOLANA,
       name: "solana wallets",
       icons: ["/wallets/phantom.svg"],
       disabled: false,
