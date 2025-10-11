@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   useUserWallets as useDynamicUserWallets,
   Wallet,
@@ -22,13 +23,32 @@ export const useDestinationWallet = (): Wallet | null => {
 
 export const useWalletByType = (walletType: WalletType): Wallet | null => {
   const userWallets = useDynamicUserWallets();
-  if (walletType === WalletType.EVM)
-    return userWallets.find((wallet) => wallet.chain === "EVM") || null;
-  if (walletType === WalletType.SOLANA)
-    return userWallets.find((wallet) => wallet.chain === "SOL") || null;
-  if (walletType === WalletType.SUI)
-    return userWallets.find((wallet) => wallet.chain === "SUI") || null;
-  return null;
+  const [connectedWallet, setConnectedWallet] = useState<Wallet | null>(null);
+
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      let targetWallet: Wallet | undefined;
+
+      if (walletType === WalletType.EVM) {
+        targetWallet = userWallets.find((wallet) => wallet.chain === "EVM");
+      } else if (walletType === WalletType.SOLANA) {
+        targetWallet = userWallets.find((wallet) => wallet.chain === "SOL");
+      } else if (walletType === WalletType.SUI) {
+        targetWallet = userWallets.find((wallet) => wallet.chain === "SUI");
+      }
+
+      if (targetWallet) {
+        const isConnected = await targetWallet.isConnected();
+        setConnectedWallet(isConnected ? targetWallet : null);
+      } else {
+        setConnectedWallet(null);
+      }
+    };
+
+    checkWalletConnection();
+  }, [userWallets, walletType]);
+
+  return connectedWallet;
 };
 
 export const useIsWalletTypeConnected = (walletType: WalletType): boolean => {
