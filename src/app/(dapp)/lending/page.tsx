@@ -14,7 +14,6 @@ import useWeb3Store, {
   useSelectedAaveChains,
   useSetSelectedAaveChains,
 } from "@/store/web3Store";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import { WalletType, SwapStatus } from "@/types/web3";
 import {
@@ -38,6 +37,7 @@ import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import { Button } from "@/components/ui/Button";
 import { LendingTabType } from "@/store/uiStore";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
 export default function LendingPage() {
   const { lending, setLendingActiveMainTab } = useUIStore();
@@ -136,6 +136,8 @@ export default function LendingPage() {
   const showWalletConnectionRequired =
     !isEvmWalletConnected &&
     (activeTab === "dashboard" || activeTab === "history");
+
+  const handleWalletClick = useHandleWalletClick();
 
   return (
     <AggregatedMarketData
@@ -266,14 +268,11 @@ export default function LendingPage() {
                       will only be held and managed on EVM wallets as they will
                       opened and managed on ethereum or other EVM chains.
                     </p>
-                    <ConnectWalletModal
-                      trigger={
-                        <BrandedButton
-                          iconName="Wallet"
-                          buttonText="connect EVM wallet"
-                          className="max-w-xs h-8 text-sm md:text-md"
-                        />
-                      }
+                    <BrandedButton
+                      iconName="Wallet"
+                      onClick={handleWalletClick}
+                      buttonText="connect EVM wallet"
+                      className="max-w-xs h-8 text-sm md:text-md"
                     />
                   </div>
                 ) : activeTab === "markets" && loading ? (
