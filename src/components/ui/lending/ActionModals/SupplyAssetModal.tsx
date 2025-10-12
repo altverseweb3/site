@@ -22,7 +22,6 @@ import {
   useDestinationChain,
 } from "@/store/web3Store";
 import useWeb3Store from "@/store/web3Store";
-import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { TransactionDetails } from "@/components/ui/TransactionDetails";
 import { BrandedButton } from "@/components/ui/BrandedButton";
@@ -34,7 +33,7 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import { useSupplyOperations } from "@/hooks/lending/useSupplyOperations";
-
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 
 interface SupplyAssetModalProps {
@@ -63,7 +62,7 @@ const SupplyAssetModal: React.FC<SupplyAssetModalProps> = ({
   const setSourceChain = useWeb3Store((state) => state.setSourceChain);
   const setAmount = tokenTransferState.setAmount;
 
-  const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
+  const sourceWalletConnected = useConnectedRequiredWallet();
 
   const isDirectSupply =
     sourceToken &&

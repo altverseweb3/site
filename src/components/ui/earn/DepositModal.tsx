@@ -32,7 +32,6 @@ import useWeb3Store, {
   useTransactionDetails,
   useIsWalletTypeConnected,
   useSetReceiveAddress,
-  useWalletByType,
 } from "@/store/web3Store";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
@@ -51,6 +50,7 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
 import { formatPercentage, parseDepositError } from "@/utils/formatters";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 
 interface DepositModalProps {
   isOpen: boolean;

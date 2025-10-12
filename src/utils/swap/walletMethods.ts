@@ -38,6 +38,7 @@ import {
   REFERRER_BPS,
 } from "@/config/mayan";
 import { parseSwapError } from "@/utils/formatters";
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 
 /**
  * Creates a properly formatted CAIP network ID with correct TypeScript typing
@@ -574,41 +575,6 @@ export function useChainSwitch(sourceChain: Chain) {
     hasRequiredWallet: !!requiredWallet,
   };
 }
-/**
- * Ensures the correct wallet type is active for the given chain
- * Automatically switches active wallet if needed and possible
- *
- * @param sourceChain The chain we want to use
- * @returns True if the correct wallet type is active or was switched to, false otherwise
- */
-export function ensureCorrectWalletTypeForChain(sourceChain: Chain): boolean {
-  const store = useWeb3Store.getState();
-  const requiredWallet = store.getWalletByType(sourceChain.walletType);
-  const connectedWallets = store.connectedWallets;
-
-  const neededWalletType = sourceChain.walletType;
-
-  // If active wallet is already the correct type, return true
-  if (requiredWallet?.type === neededWalletType) {
-    return true;
-  }
-
-  // Check if we have a connected wallet of the needed type
-  const compatibleWallet = connectedWallets.find(
-    (w) => w.type === neededWalletType,
-  );
-
-  if (compatibleWallet) {
-    // Switch to the compatible wallet
-    return true;
-  }
-
-  // No compatible wallet connected
-  console.error(
-    `No connected ${neededWalletType} wallet available for ${sourceChain.name}`,
-  );
-  return false;
-}
 
 /**
  * Shared hook for token transfer functionality (swap or bridge)
@@ -626,7 +592,6 @@ export function useTokenTransfer(
     number | null
   >(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  const [isWalletCompatible, setIsWalletCompatible] = useState<boolean>(true);
 
   // Add state for fee information
   const [protocolFeeBps, setProtocolFeeBps] = useState<number | null>(null);
@@ -649,6 +614,8 @@ export function useTokenTransfer(
 
   // Get wallet providers and signers
   const { getEvmSigner, getSolanaSigner } = useReownWalletProviderAndSigner();
+
+  const isWalletCompatible = useConnectedRequiredWallet();
 
   // Add the chain switch hook
   const { switchToSourceChain, isLoading: isChainSwitching } = useChainSwitch(
@@ -782,18 +749,6 @@ export function useTokenTransfer(
       setProgressToastId(null);
     }
   }, [isTracking, progressToastId]);
-  // HOOK CHECK: Check wallet compatibility when source chain changes
-  useEffect(() => {
-    if (!requiredWallet) {
-      setIsWalletCompatible(true);
-      return;
-    }
-
-    const walletCompatible = ensureCorrectWalletTypeForChain(
-      options.sourceChain,
-    );
-    setIsWalletCompatible(walletCompatible);
-  }, [requiredWallet, options.sourceChain]);
 
   const failQuote = () => {
     setQuoteData(null);
