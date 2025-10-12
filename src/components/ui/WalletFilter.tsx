@@ -131,7 +131,7 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
           variant="outline"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            "flex items-center justify-between gap-2 min-w-[140px] h-9 px-3",
+            "flex items-center justify-between gap-2 w-full h-9 px-3",
             "border-[#27272A] bg-[#18181B] hover:bg-[#1C1C1F] text-[#FAFAFA]",
             "focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50",
           )}

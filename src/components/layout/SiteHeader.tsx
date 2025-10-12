@@ -11,17 +11,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/Sheet";
-import { Menu, History, Wallet } from "lucide-react";
+import { Menu, History } from "lucide-react";
 import Link from "next/link";
 import { SwapHistorySheet } from "@/components/ui/SwapHistorySheet";
-import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
 import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
+import { BrandedButton } from "@/components/ui/BrandedButton";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
 export function SiteHeader(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const isConnectedRequiredWallet = useConnectedRequiredWallet();
+  const handleWalletClick = useHandleWalletClick();
 
   // Get wallet button text based on connection status
   const getWalletButtonText = (): string => {
@@ -111,11 +113,13 @@ export function SiteHeader(): JSX.Element {
                   <MainNav onNavigate={(): void => setIsOpen(false)} />
                 </nav>
                 {/* transaction history Button for Mobile with enhanced styling */}
-
-                <DynamicConnectButton buttonClassName="w-full inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background py-2 px-4 bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg leading-zero whitespace-nowrap text-sm h-[30px]">
-                  <Wallet className="mr-2 h-4 w-4" />
-                  {getWalletButtonText()}
-                </DynamicConnectButton>
+                <BrandedButton
+                  className="md:inline-flex whitespace-nowrap text-sm h-[30px]"
+                  iconClassName="h-4 w-4"
+                  iconName="Wallet"
+                  onClick={handleWalletClick}
+                  buttonText={getWalletButtonText()}
+                />
                 <Button
                   variant="outline"
                   size="sm"
@@ -148,10 +152,13 @@ export function SiteHeader(): JSX.Element {
 
           {/* Desktop Wallet Button  */}
           <div className="hidden md:block">
-            <DynamicConnectButton buttonClassName="inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background py-2 px-4 bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg leading-zero whitespace-nowrap text-sm h-[30px]">
-              <Wallet className="mr-2 h-4 w-4" />
-              {getWalletButtonText()}
-            </DynamicConnectButton>
+            <BrandedButton
+              className="md:inline-flex whitespace-nowrap text-sm h-[30px]"
+              iconClassName="h-4 w-4"
+              iconName="Wallet"
+              onClick={handleWalletClick}
+              buttonText={getWalletButtonText()}
+            />
           </div>
         </div>
       </div>
