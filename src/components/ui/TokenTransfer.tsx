@@ -10,6 +10,7 @@ import { swapChains } from "@/utils/chains/chainMethods";
 import useWeb3Store, {
   useSourceToken,
   useDestinationToken,
+  useSourceChain,
 } from "@/store/web3Store";
 import { Token } from "@/types/web3";
 import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
@@ -74,7 +75,8 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   );
   const destinationToken = useDestinationToken();
   const sourceToken = useSourceToken();
-  const handleWalletClick = useHandleWalletClick();
+  const sourceChain = useSourceChain();
+  const handleWalletClick = useHandleWalletClick(sourceChain.walletType);
 
   useEffect(() => {
     const shouldBeEnabled =
