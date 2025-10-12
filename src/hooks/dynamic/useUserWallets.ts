@@ -59,15 +59,25 @@ export const useIsWalletTypeConnected = (walletType: WalletType): boolean => {
   return useWalletByType(walletType) !== null;
 };
 
-export const useHandleWalletClick = () => {
-  const { setShowAuthFlow, primaryWallet } = useDynamicContext();
+export const useHandleWalletClick = (walletType?: WalletType) => {
+  const { setShowAuthFlow, primaryWallet, setSelectedTabIndex } =
+    useDynamicContext();
   const { setShowLinkNewWalletModal } = useDynamicModals();
-
+  const tabIndex = walletType
+    ? walletType === WalletType.EVM
+      ? 0
+      : walletType === WalletType.SOLANA
+        ? 1
+        : 2
+    : -1;
   return () => {
     if (primaryWallet) {
       setShowLinkNewWalletModal(true);
     } else {
       setShowAuthFlow(true);
+    }
+    if (tabIndex !== -1) {
+      setSelectedTabIndex(tabIndex);
     }
   };
 };

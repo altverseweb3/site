@@ -137,7 +137,7 @@ export default function LendingPage() {
     !isEvmWalletConnected &&
     (activeTab === "dashboard" || activeTab === "history");
 
-  const handleWalletClick = useHandleWalletClick();
+  const handleWalletClick = useHandleWalletClick(WalletType.EVM);
 
   return (
     <AggregatedMarketData

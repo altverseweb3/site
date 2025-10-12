@@ -85,7 +85,7 @@ export default function EarnPage() {
   const setActiveSwapSection = useSetActiveSwapSection();
 
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
-  const handleWalletClick = useHandleWalletClick();
+  const handleWalletClick = useHandleWalletClick(WalletType.EVM);
   useEffect(() => {
     setActiveSwapSection("earn");
   }, [setActiveSwapSection]);

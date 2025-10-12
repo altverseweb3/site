@@ -21,7 +21,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   showIcon = true,
   children,
 }) => {
-  const handleWalletClick = useHandleWalletClick();
+  const handleWalletClick = useHandleWalletClick(walletType);
   const walletOption = walletOptions.find(
     (option) => option.walletType === walletType,
   );
