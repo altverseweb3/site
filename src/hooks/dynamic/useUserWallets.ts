@@ -5,6 +5,10 @@ import {
 } from "@dynamic-labs/sdk-react-core";
 import { useSourceChain, useDestinationChain } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
+import {
+  useDynamicContext,
+  useDynamicModals,
+} from "@dynamic-labs/sdk-react-core";
 
 export const useConnectedRequiredWallet = (): boolean => {
   const requiredWalletType = useSourceChain().walletType;
@@ -53,4 +57,17 @@ export const useWalletByType = (walletType: WalletType): Wallet | null => {
 
 export const useIsWalletTypeConnected = (walletType: WalletType): boolean => {
   return useWalletByType(walletType) !== null;
+};
+
+export const useHandleWalletClick = () => {
+  const { setShowAuthFlow, primaryWallet } = useDynamicContext();
+  const { setShowLinkNewWalletModal } = useDynamicModals();
+
+  return () => {
+    if (primaryWallet) {
+      setShowLinkNewWalletModal(true);
+    } else {
+      setShowAuthFlow(true);
+    }
+  };
 };

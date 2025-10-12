@@ -8,7 +8,6 @@ import AssetFilter from "@/components/ui/AssetFilter";
 import EarnTable from "@/components/ui/earn/EarnTable";
 import CardsList from "@/components/ui/CardsList";
 import EarnCard from "@/components/ui/earn/EarnCard";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { chainList, getChainById } from "@/config/chains";
@@ -31,6 +30,7 @@ import {
 } from "@/types/earn";
 import { useChainSwitch } from "@/utils/swap/walletMethods";
 import useWeb3Store, { useSourceChain } from "@/store/web3Store";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -85,7 +85,7 @@ export default function EarnPage() {
   const setActiveSwapSection = useSetActiveSwapSection();
 
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
-
+  const handleWalletClick = useHandleWalletClick();
   useEffect(() => {
     setActiveSwapSection("earn");
   }, [setActiveSwapSection]);
@@ -361,14 +361,11 @@ export default function EarnPage() {
                 and managed on EVM wallets as they will opened and managed on
                 ethereum or other EVM chains.
               </p>
-              <ConnectWalletModal
-                trigger={
-                  <BrandedButton
-                    iconName="Wallet"
-                    buttonText="connect EVM wallet"
-                    className="max-w-xs h-8 text-sm md:text-md"
-                  />
-                }
+              <BrandedButton
+                onClick={handleWalletClick}
+                iconName="Wallet"
+                buttonText="connect EVM wallet"
+                className="max-w-xs h-8 text-sm md:text-md"
               />
             </div>
           ) : (activeTab === "earn" && loading) ||
