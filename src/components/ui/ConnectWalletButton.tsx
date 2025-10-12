@@ -3,7 +3,8 @@ import { Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WalletType } from "@/types/web3";
 import { walletOptions } from "@/config/wallets";
-import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
+
 interface ConnectWalletButtonProps {
   walletType: WalletType;
   onSuccess?: () => void;
@@ -20,6 +21,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   showIcon = true,
   children,
 }) => {
+  const handleWalletClick = useHandleWalletClick();
   const walletOption = walletOptions.find(
     (option) => option.walletType === walletType,
   );
@@ -44,7 +46,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const getWalletStyles = () => {
     switch (walletType) {
       case WalletType.EVM:
-        return "bg-[#6379F8]/20 text-[#6379F8] hover:text-[#6379F8] hover:[#6379F8]/30";
+        return "bg-[#6379F8]/20 text-[#6379F8] hover:text-[#6379F8] hover:bg-[#6379F8]/30";
       case WalletType.SOLANA:
         return "bg-purple-500/20 text-purple-500 hover:text-purple-400 hover:bg-purple-500/30";
       default:
@@ -52,8 +54,9 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
     }
   };
 
-  const trigger = (
-    <div
+  return (
+    <button
+      onClick={handleWalletClick}
       className={cn(
         sizeClasses[size],
         "rounded transition-colors flex items-center justify-between hover:cursor-pointer w-full",
@@ -70,13 +73,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
       {showIcon && walletOption.icon && (
         <div className={iconSizes[size]}>{walletOption.icon}</div>
       )}
-    </div>
-  );
-
-  return (
-    <DynamicConnectButton buttonClassName="custom-wallet-button !bg-transparent !border-0 !p-0 !m-0 hover:!bg-transparent">
-      {trigger}
-    </DynamicConnectButton>
+    </button>
   );
 };
 
