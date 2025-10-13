@@ -12,10 +12,7 @@ import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { chainList, getChainById } from "@/config/chains";
 import { WalletType } from "@/types/web3";
-import {
-  useIsWalletTypeConnected,
-  useSetActiveSwapSection,
-} from "@/store/web3Store";
+import { useSetActiveSwapSection } from "@/store/web3Store";
 import {
   useEtherFiEarnData,
   filterEarnData,
@@ -28,10 +25,11 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
-import useWeb3Store from "@/store/web3Store";
 import {
   useHandleWalletClick,
   useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+  useWalletByType,
 } from "@/hooks/dynamic/useUserWallets";
 
 const ITEMS_PER_PAGE = 10;
@@ -82,6 +80,7 @@ export default function EarnPage() {
   const [chainSwitchAttempted, setChainSwitchAttempted] = useState(false);
 
   const { switchNetwork } = useSwitchActiveNetwork(WalletType.EVM);
+  const walletByType = useWalletByType;
 
   const setActiveSwapSection = useSetActiveSwapSection();
 
@@ -95,9 +94,7 @@ export default function EarnPage() {
     const attemptChainSwitch = async () => {
       if (chainSwitchAttempted) return;
 
-      const walletForEthereum = useWeb3Store
-        .getState()
-        .getWalletByChain(ethereumChain);
+      const walletForEthereum = walletByType(ethereumChain.walletType);
 
       if (isEvmWalletConnected && walletForEthereum) {
         setChainSwitchAttempted(true);
@@ -111,7 +108,7 @@ export default function EarnPage() {
     };
 
     attemptChainSwitch();
-  }, [isEvmWalletConnected, switchNetwork, chainSwitchAttempted]);
+  }, [isEvmWalletConnected, switchNetwork, walletByType, chainSwitchAttempted]);
 
   useEffect(() => {
     if (!isEvmWalletConnected) {

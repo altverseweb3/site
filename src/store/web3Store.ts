@@ -309,51 +309,6 @@ const useWeb3Store = create<Web3StoreState>()(
         });
       },
 
-      // Helper methods for wallet lookup by integration
-      getWalletBySourceChain: () => {
-        const integration = get().getSwapStateForSection();
-        const sourceChainWalletType = integration.sourceChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === sourceChainWalletType,
-          ) || null
-        );
-      },
-
-      getWalletByDestinationChain: () => {
-        const integration = get().getSwapStateForSection();
-        const destinationChainWalletType =
-          integration.destinationChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === destinationChainWalletType,
-          ) || null
-        );
-      },
-
-      // New method to get all wallets of a specific type
-      getWalletsOfType: (walletType?: WalletType): WalletInfo[] => {
-        const wallets = get().connectedWallets;
-        // If walletType is undefined, return all wallets
-        if (walletType === undefined) {
-          return wallets;
-        }
-        // Otherwise, filter by the specified wallet type
-        return wallets.filter((w) => w.type === walletType);
-      },
-
-      getWalletByChain: (chain: Chain): WalletInfo | null => {
-        return (
-          get().connectedWallets.find((w) => w.type === chain.walletType) ||
-          null
-        );
-      },
-
-      // New method to check if a specific wallet type is connected
-      isWalletTypeConnected: (walletType: WalletType): boolean => {
-        return get().connectedWallets.some((w) => w.type === walletType);
-      },
-
       addCustomToken: (token: Token) => {
         set((state) => {
           // Ensure lowercase address for consistency
@@ -851,16 +806,6 @@ export const useDestinationChain = (): Chain => {
   );
 };
 
-// Check if a wallet type is connected
-export const useIsWalletTypeConnected = (walletType: WalletType): boolean => {
-  return useWeb3Store((state) => state.isWalletTypeConnected(walletType));
-};
-
-// Get all wallets of a specific type
-export const useWalletsOfType = (walletType: WalletType): WalletInfo[] => {
-  return useWeb3Store((state) => state.getWalletsOfType(walletType));
-};
-
 // New hooks for the selected tokens
 export const useSourceToken = (): Token | null => {
   return useWeb3Store((state) => state.getSwapStateForSection().sourceToken);
@@ -914,14 +859,6 @@ export const useTokenByAddress = (
     const chainTokens = state.tokensByAddress[chainId];
     return chainTokens ? chainTokens[lowerAddress] : undefined;
   });
-};
-
-export const useGetWalletBySourceChain = (): WalletInfo | null => {
-  return useWeb3Store((state) => state.getWalletBySourceChain());
-};
-
-export const useGetWalletByDestinationChain = (): WalletInfo | null => {
-  return useWeb3Store((state) => state.getWalletByDestinationChain());
 };
 
 export const useLoadTokens = () => {
