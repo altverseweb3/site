@@ -15,13 +15,13 @@ import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { TrendingDown, Percent } from "lucide-react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
-import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
 import { useBorrowOperations } from "@/hooks/lending/useBorrowOperations";
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 
 interface BorrowAssetModalProps {
   market: UnifiedReserveData;
@@ -42,7 +42,7 @@ const BorrowAssetModal: React.FC<BorrowAssetModalProps> = ({
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
 
-  const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
+  const sourceWalletConnected = useConnectedRequiredWallet();
 
   const { handleBorrow } = useBorrowOperations({
     sourceChain,

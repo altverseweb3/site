@@ -19,7 +19,6 @@ import { WalletType, SwapStatus } from "@/types/web3";
 import {
   useIsWalletTypeConnected,
   useSetActiveSwapSection,
-  useWalletByType,
   useSourceChain,
   useDestinationChain,
   useSourceToken,
@@ -37,7 +36,10 @@ import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { LendingFilters, LendingSortConfig } from "@/types/lending";
 import { Button } from "@/components/ui/Button";
 import { LendingTabType } from "@/store/uiStore";
-import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
+import {
+  useHandleWalletClick,
+  useWalletByType,
+} from "@/hooks/dynamic/useUserWallets";
 
 export default function LendingPage() {
   const { lending, setLendingActiveMainTab } = useUIStore();

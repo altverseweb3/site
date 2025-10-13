@@ -120,7 +120,6 @@ export interface Web3StoreState {
   getWalletsOfType: (walletType?: WalletType) => WalletInfo[];
   getWalletByChain: (chain: Chain) => WalletInfo | null;
   isWalletTypeConnected: (walletType: WalletType) => boolean;
-  getWalletByType: (walletType: WalletType) => WalletInfo | null;
 
   // New integration-specific actions
   getSwapStateForSection: () => SwapStateForSection;

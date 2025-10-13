@@ -9,9 +9,9 @@ import { fetchAssetPrice } from "@/utils/etherFi/prices";
 import { queryAllVaultsAPY, VaultApyData } from "@/utils/etherFi/apy";
 import { chains } from "@/config/chains";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
-import { useWalletByType } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import EtherFiModal from "@/components/ui/earn/EtherFiModal";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 
 export interface EtherFiEarnData {
   earnRows: EarnTableRow[];
