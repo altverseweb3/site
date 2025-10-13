@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/Button";
 import DepositModal from "@/components/ui/earn/DepositModal";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
-import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import { getChainById } from "@/config/chains";
 import {
@@ -25,7 +24,10 @@ import {
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import { useEtherFiFetch } from "@/hooks/etherFi/useEtherFiFetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
-import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
+import {
+  useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+} from "@/hooks/dynamic/useUserWallets";
 
 interface EtherFiModalProps {
   isOpen: boolean;

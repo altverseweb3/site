@@ -1,7 +1,7 @@
 // utils/walletMethods.ts
 
 import { WalletType } from "@/types/web3";
-import useWeb3Store, { useSourceChain } from "@/store/web3Store";
+import { useSourceChain } from "@/store/web3Store";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   useAppKitAccount,
@@ -39,6 +39,7 @@ import { parseSwapError } from "@/utils/formatters";
 import {
   useConnectedRequiredWallet,
   useSwitchActiveNetwork,
+  useWalletByType,
 } from "@/hooks/dynamic/useUserWallets";
 
 /**
@@ -223,10 +224,7 @@ export function useTokenTransfer(
   >(null);
 
   // Get relevant state from the web3 store
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletByChain(options.sourceChain),
-  );
-
+  const requiredWallet = useWalletByType(options.sourceChain.walletType);
   // Get the transaction details for slippage
   const receiveAddress = options.transactionDetails.receiveAddress;
 

@@ -30,7 +30,6 @@ import useWeb3Store, {
   useSourceToken,
   useDestinationToken,
   useTransactionDetails,
-  useIsWalletTypeConnected,
   useSetReceiveAddress,
 } from "@/store/web3Store";
 import useVaultDepositStore, {
@@ -53,6 +52,7 @@ import { formatPercentage, parseDepositError } from "@/utils/formatters";
 import {
   useWalletByType,
   useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
 } from "@/hooks/dynamic/useUserWallets";
 
 interface DepositModalProps {
@@ -108,9 +108,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const isWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
   const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUI);
   const isSolanaWalletConnected = useIsWalletTypeConnected(WalletType.SOLANA);
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
+  const requiredWallet = useWalletByType(sourceChain.walletType);
 
   // Wallet hooks for address retrieval
   const { getEvmSigner } = useReownWalletProviderAndSigner();
