@@ -15,7 +15,6 @@ import { calculateApyWithIncentives } from "@/utils/lending/incentives";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { TrendingUp, Percent } from "lucide-react";
 import { useSourceToken, useSourceChain } from "@/store/web3Store";
-import { ensureCorrectWalletTypeForChain } from "@/utils/swap/walletMethods";
 import { TokenImage } from "@/components/ui/TokenImage";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { calculateTokenPrice } from "@/utils/common";
@@ -23,6 +22,7 @@ import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import SubscriptNumber from "@/components/ui/SubscriptNumber";
 import { useWithdrawOperations } from "@/hooks/lending/useWithdrawOperations";
 import HealthFactorRiskDisplay from "@/components/ui/lending/AssetDetails/HealthFactorRiskDisplay";
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 
 interface WithdrawAssetModalProps {
   market: UnifiedReserveData;
@@ -43,7 +43,7 @@ const WithdrawAssetModal: React.FC<WithdrawAssetModalProps> = ({
   const sourceToken = useSourceToken();
   const sourceChain = useSourceChain();
 
-  const sourceWalletConnected = ensureCorrectWalletTypeForChain(sourceChain);
+  const sourceWalletConnected = useConnectedRequiredWallet();
   const [position] = market.userSupplyPositions;
   const maxWithdrawableTokens = position
     ? parseFloat(position.balance.amount.value) || 0

@@ -1,1 +1,1 @@
-export const STORE_VERSION = 14;
+export const STORE_VERSION = 15;
