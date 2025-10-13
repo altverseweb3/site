@@ -17,6 +17,7 @@ import { WalletType } from "@/types/web3";
 import { GasDrop } from "@/components/ui/GasDrop";
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import { useDestinationWallet } from "@/hooks/dynamic/useUserWallets";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
   relayerFeeUsd?: number;
@@ -34,12 +35,12 @@ export function TransactionDetails({
 }: TransactionDetailsProps) {
   // ─── Zustand store hooks ─────────────────────────────────────────────────────
   const connectedWallets = useWeb3Store((state) => state.connectedWallets);
-  const getWalletByType = useWeb3Store((state) => state.getWalletByType);
   const transactionDetails = useTransactionDetails();
   const setSlippageValue = useSetSlippageValue();
   const setReceiveAddress = useSetReceiveAddress();
   const destinationChain = useDestinationChain();
   const requiredWallet = useDestinationWallet();
+  const destinationChainWallet = useWalletByType(destinationChain?.walletType);
 
   // ─── Local state ─────────────────────────────────────────────────────────────
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(isOpen || false);
@@ -241,12 +242,10 @@ export function TransactionDetails({
     if (!destinationChain?.walletType) return;
 
     // Try to get a wallet of the needed type
-    const matchingWallet = getWalletByType(destinationChain.walletType);
-
-    if (matchingWallet) {
+    if (destinationChainWallet) {
       // We have a matching wallet, use its address
-      setReceiveAddressInput(matchingWallet.address);
-      setReceiveAddress(matchingWallet.address);
+      setReceiveAddressInput(destinationChainWallet.address);
+      setReceiveAddress(destinationChainWallet.address);
       setAddressError(null);
     } else {
       // No matching wallet, clear the address or keep existing if valid
@@ -264,8 +263,8 @@ export function TransactionDetails({
     }
   }, [
     destinationChain?.walletType,
-    getWalletByType,
     setReceiveAddress,
+    destinationChainWallet,
     transactionDetails.receiveAddress,
   ]);
 
@@ -302,10 +301,8 @@ export function TransactionDetails({
   // Update when new wallets are connected
   useEffect(() => {
     if (destinationChain?.walletType) {
-      const matchingWallet = getWalletByType(destinationChain.walletType);
-
       if (
-        matchingWallet &&
+        destinationChainWallet &&
         (!transactionDetails.receiveAddress ||
           !validateAddressForWalletType(
             transactionDetails.receiveAddress,
@@ -313,15 +310,15 @@ export function TransactionDetails({
           ))
       ) {
         // Update to the new wallet address if we don't have a valid address already
-        setReceiveAddressInput(matchingWallet.address);
-        setReceiveAddress(matchingWallet.address);
+        setReceiveAddressInput(destinationChainWallet.address);
+        setReceiveAddress(destinationChainWallet.address);
         setAddressError(null);
       }
     }
   }, [
     connectedWallets,
     destinationChain?.walletType,
-    getWalletByType,
+    destinationChainWallet,
     setReceiveAddress,
     transactionDetails.receiveAddress,
     validateAddressForWalletType,
