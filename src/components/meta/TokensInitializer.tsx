@@ -10,6 +10,7 @@ import useWeb3Store, {
   useDestinationToken,
 } from "@/store/web3Store";
 import { getPricesAndBalances } from "@/utils/tokens/tokenApiMethods";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 
 /**
  * Component that initializes token data on dApp startup.
@@ -18,14 +19,12 @@ import { getPricesAndBalances } from "@/utils/tokens/tokenApiMethods";
 const TokenInitializer: React.FC = () => {
   // Use separate selectors to avoid object reference changes
   const tokenCount = useWeb3Store((state) => state.allTokensList.length);
-  const connectedWallets = useWeb3Store((state) => state.connectedWallets);
   const sourceChain = useSourceChain();
   const destinationChain = useDestinationChain();
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
   const destinationTokenId = useDestinationToken()?.id;
   const sourceTokenId = useSourceToken()?.id;
+  const sourceWallet = useWalletByType(sourceChain.walletType);
+  const destinationWallet = useWalletByType(destinationChain.walletType);
 
   // Track whether the user is active or idle
   const [isIdle, setIsIdle] = useState(false);
@@ -44,12 +43,22 @@ const TokenInitializer: React.FC = () => {
       // Function to fetch data
       const fetchData = () => {
         if (!isIdle) {
-          getPricesAndBalances(sourceChain, destinationChain);
+          getPricesAndBalances(
+            sourceChain,
+            destinationChain,
+            sourceWallet?.address,
+            destinationWallet?.address,
+          );
         }
       };
 
       // Initial fetch when dependencies change (regardless of idle state)
-      getPricesAndBalances(sourceChain, destinationChain);
+      getPricesAndBalances(
+        sourceChain,
+        destinationChain,
+        sourceWallet?.address,
+        destinationWallet?.address,
+      );
 
       // Set up interval to run every 10 seconds
       const intervalId = setInterval(fetchData, 10000); // 10 seconds
@@ -61,11 +70,11 @@ const TokenInitializer: React.FC = () => {
     sourceChain,
     destinationChain,
     tokenCount,
-    requiredWallet,
-    connectedWallets,
     isIdle,
     destinationTokenId,
     sourceTokenId,
+    sourceWallet,
+    destinationWallet,
   ]);
 
   return null;
