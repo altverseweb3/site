@@ -4,11 +4,11 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { evmAddress } from "@aave/react";
 import { useAaveCollateral } from "@/hooks/aave/useAaveInteractions";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 export interface CollateralToggleOperationDependencies {
   userWalletAddress: string | null;
@@ -46,7 +46,7 @@ export const useCollateralToggleOperations = (
     marketChain = targetChain;
   }
 
-  const { switchToChain } = useChainSwitch(marketChain);
+  const { switchNetwork } = useSwitchActiveNetwork(marketChain.walletType);
 
   const handleCollateralToggle = useCallback(
     async (market: UnifiedReserveData): Promise<void> => {
@@ -70,7 +70,7 @@ export const useCollateralToggleOperations = (
 
         // Switch to correct chain FIRST before any operations
         try {
-          await switchToChain(targetChain);
+          await switchNetwork(targetChain.chainId);
         } catch (chainSwitchError) {
           console.error("Chain switch failed:", chainSwitchError);
           toast.error("Chain switch failed", {
@@ -124,7 +124,7 @@ export const useCollateralToggleOperations = (
       userWalletAddress,
       targetChain,
       executeCollateralToggle,
-      switchToChain,
+      switchNetwork,
       dependencies,
     ],
   );

@@ -28,9 +28,11 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
-import useWeb3Store, { useSourceChain } from "@/store/web3Store";
-import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
+import useWeb3Store from "@/store/web3Store";
+import {
+  useHandleWalletClick,
+  useSwitchActiveNetwork,
+} from "@/hooks/dynamic/useUserWallets";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -79,8 +81,7 @@ export default function EarnPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [chainSwitchAttempted, setChainSwitchAttempted] = useState(false);
 
-  const sourceChain = useSourceChain();
-  const { switchToChain } = useChainSwitch(sourceChain);
+  const { switchNetwork } = useSwitchActiveNetwork(WalletType.EVM);
 
   const setActiveSwapSection = useSetActiveSwapSection();
 
@@ -98,11 +99,11 @@ export default function EarnPage() {
         .getState()
         .getWalletByChain(ethereumChain);
 
-      if (isEvmWalletConnected && switchToChain && walletForEthereum) {
+      if (isEvmWalletConnected && walletForEthereum) {
         setChainSwitchAttempted(true);
 
         try {
-          await switchToChain(ethereumChain);
+          await switchNetwork(ethereumChain.chainId);
         } catch (error) {
           console.error("Failed to switch to Ethereum chain:", error);
         }
@@ -110,7 +111,7 @@ export default function EarnPage() {
     };
 
     attemptChainSwitch();
-  }, [isEvmWalletConnected, switchToChain, chainSwitchAttempted]);
+  }, [isEvmWalletConnected, switchNetwork, chainSwitchAttempted]);
 
   useEffect(() => {
     if (!isEvmWalletConnected) {
