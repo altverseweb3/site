@@ -4,11 +4,11 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveWithdraw } from "@/hooks/aave/useAaveInteractions";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 export interface TokenWithdrawState {
   amount: string;
@@ -53,7 +53,7 @@ export const useWithdrawOperations = (
     marketChain = sourceChain;
   }
 
-  const { switchToChain } = useChainSwitch(marketChain);
+  const { switchNetwork } = useSwitchActiveNetwork(marketChain.walletType);
 
   const handleWithdraw = useCallback(
     async (market: UnifiedReserveData, max: boolean): Promise<void> => {
@@ -77,7 +77,7 @@ export const useWithdrawOperations = (
 
         // Switch to correct chain FIRST before any operations
         try {
-          await switchToChain(sourceChain);
+          await switchNetwork(sourceChain.chainId);
         } catch (chainSwitchError) {
           toast.error("Chain switch failed", {
             description: parseDepositError(chainSwitchError),
@@ -135,7 +135,7 @@ export const useWithdrawOperations = (
       userWalletAddress,
       sourceChain,
       executeWithdraw,
-      switchToChain,
+      switchNetwork,
       dependencies,
     ],
   );

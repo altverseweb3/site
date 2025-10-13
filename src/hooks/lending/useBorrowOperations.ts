@@ -4,11 +4,11 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveBorrow } from "@/hooks/aave/useAaveInteractions";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 export interface TokenBorrowState {
   amount: string;
@@ -53,7 +53,7 @@ export const useBorrowOperations = (
     marketChain = sourceChain;
   }
 
-  const { switchToChain } = useChainSwitch(marketChain);
+  const { switchNetwork } = useSwitchActiveNetwork(marketChain.walletType);
 
   const handleBorrow = useCallback(
     async (market: UnifiedReserveData): Promise<void> => {
@@ -77,7 +77,7 @@ export const useBorrowOperations = (
 
         // Switch to correct chain FIRST before any operations
         try {
-          await switchToChain(sourceChain);
+          await switchNetwork(sourceChain.chainId);
         } catch (chainSwitchError) {
           console.error("Chain switch failed:", chainSwitchError);
           return;
@@ -132,7 +132,7 @@ export const useBorrowOperations = (
       userWalletAddress,
       sourceChain,
       executeBorrow,
-      switchToChain,
+      switchNetwork,
       dependencies,
     ],
   );

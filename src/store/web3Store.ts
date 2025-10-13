@@ -331,22 +331,6 @@ const useWeb3Store = create<Web3StoreState>()(
         );
       },
 
-      updateWalletAddress: (walletType: WalletType, address: string) => {
-        set((state) => ({
-          connectedWallets: state.connectedWallets.map((wallet) =>
-            wallet.type === walletType ? { ...wallet, address } : wallet,
-          ),
-        }));
-      },
-
-      updateWalletChainId: (walletType: WalletType, chainId: number) => {
-        set((state) => ({
-          connectedWallets: state.connectedWallets.map((wallet) =>
-            wallet.type === walletType ? { ...wallet, chainId } : wallet,
-          ),
-        }));
-      },
-
       // New method to get all wallets of a specific type
       getWalletsOfType: (walletType?: WalletType): WalletInfo[] => {
         const wallets = get().connectedWallets;

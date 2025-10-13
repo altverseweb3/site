@@ -81,3 +81,40 @@ export const useHandleWalletClick = (walletType?: WalletType) => {
     }
   };
 };
+
+export const useSwitchActiveNetwork = (walletType: WalletType) => {
+  const targetWallet = useWalletByType(walletType);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const switchNetwork = async (targetNetworkId: number) => {
+    if (!targetWallet) {
+      setError("No wallet connected");
+      return false;
+    }
+
+    if (!targetWallet.connector.supportsNetworkSwitching()) {
+      setError("Wallet does not support network switching");
+      return false;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await targetWallet.switchNetwork(targetNetworkId);
+      console.log("Success! Network switched to", targetNetworkId);
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error switching network";
+      console.error("Error switching network", err);
+      setError(errorMessage);
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  return { switchNetwork, isLoading, error };
+};
