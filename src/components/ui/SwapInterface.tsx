@@ -2,7 +2,6 @@ import React, { ReactNode, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { TransactionDetails } from "@/components/ui/TransactionDetails";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useSourceChain } from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";
@@ -45,9 +44,6 @@ export function SwapInterface({
 }: SwapInterfaceProps) {
   const sourceChain = useSourceChain();
 
-  // Get wallet connection information for EVM, Solana, and Sui
-  const { evmNetwork } = useWalletConnection();
-
   // Get Sui wallet info directly
   const { connected: suiConnected } = useWallet();
 
@@ -67,18 +63,7 @@ export function SwapInterface({
     }
 
     try {
-      let currentChainId: number | undefined;
-
-      // Check which wallet type we're using
-      if (requiredWallet.chain === "EVM") {
-        // For EVM wallets, get chain ID from the EVM network
-        if (evmNetwork.chainId !== undefined) {
-          currentChainId =
-            typeof evmNetwork.chainId === "string"
-              ? parseInt(evmNetwork.chainId, 10)
-              : evmNetwork.chainId;
-        }
-      }
+      const currentChainId = await requiredWallet.getNetwork();
       return currentChainId === sourceChain.chainId;
     } catch (error) {
       console.error("Error checking current chain:", error);
