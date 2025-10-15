@@ -170,8 +170,20 @@ export function SwapHistorySheet({
 
   const fetchSwapHistoryRef = useRef(fetchSwapHistory);
   fetchSwapHistoryRef.current = fetchSwapHistory;
-  const isWalletTypeConnected: WalletConnectionChecker =
-    useIsWalletTypeConnected;
+
+  // Call hooks at component level to avoid Rules of Hooks violation
+  const isEVMConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const isSolanaConnected = useIsWalletTypeConnected(WalletType.SOLANA);
+  const isSUIConnected = useIsWalletTypeConnected(WalletType.SUI);
+
+  const isWalletTypeConnected: WalletConnectionChecker = (
+    walletType: WalletType,
+  ) => {
+    if (walletType === WalletType.EVM) return isEVMConnected;
+    if (walletType === WalletType.SOLANA) return isSolanaConnected;
+    if (walletType === WalletType.SUI) return isSUIConnected;
+    return false;
+  };
 
   // Load swap history on initial page load
   useEffect((): void => {

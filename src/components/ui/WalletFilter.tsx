@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ChevronDownIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { WalletFilterType } from "@/types/web3";
+import { WalletFilterType, WalletType } from "@/types/web3";
 import { toast } from "sonner";
 import { walletOptions } from "@/config/wallets";
 import { ConnectWalletButton } from "@/components/ui/ConnectWalletButton";
@@ -99,7 +99,18 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isWalletTypeConnected = useIsWalletTypeConnected;
+
+  // Call hooks at component level to avoid Rules of Hooks violation
+  const isEVMConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const isSolanaConnected = useIsWalletTypeConnected(WalletType.SOLANA);
+  const isSUIConnected = useIsWalletTypeConnected(WalletType.SUI);
+
+  const isWalletTypeConnected = (walletType: WalletType): boolean => {
+    if (walletType === WalletType.EVM) return isEVMConnected;
+    if (walletType === WalletType.SOLANA) return isSolanaConnected;
+    if (walletType === WalletType.SUI) return isSUIConnected;
+    return false;
+  };
 
   const selectedOption = walletOptions.find(
     (option) => option.value === selectedWallet,
