@@ -21,7 +21,7 @@ import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/hooks/etherFi/useEtherFiInteract";
 import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
-import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
+import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { getChainById, chains } from "@/config/chains";
 import useWeb3Store, {
@@ -30,7 +30,6 @@ import useWeb3Store, {
   useSourceToken,
   useDestinationToken,
   useTransactionDetails,
-  useIsWalletTypeConnected,
   useSetReceiveAddress,
 } from "@/store/web3Store";
 import useVaultDepositStore, {
@@ -50,7 +49,11 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
 import { formatPercentage, parseDepositError } from "@/utils/formatters";
-import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
+import {
+  useWalletByType,
+  useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+} from "@/hooks/dynamic/useUserWallets";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -93,7 +96,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // Integration hooks
   const { approveToken, depositTokens } = useEtherFiInteract();
-  const { switchToChain } = useChainSwitch(sourceChain);
+  const { switchNetwork } = useSwitchActiveNetwork(WalletType.EVM);
 
   // Web3Store functions for token management
   const loadTokens = useWeb3Store((state) => state.loadTokens);
@@ -105,9 +108,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const isWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
   const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUI);
   const isSolanaWalletConnected = useIsWalletTypeConnected(WalletType.SOLANA);
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
+  const requiredWallet = useWalletByType(sourceChain.walletType);
 
   // Wallet hooks for address retrieval
   const { getEvmSigner } = useReownWalletProviderAndSigner();
@@ -419,7 +420,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       throw new Error("Ethereum chain not found");
     }
 
-    await switchToChain(ethereumChain);
+    await switchNetwork(ethereumChain.chainId);
 
     // Start deposit step
     startDepositStep(processId);
@@ -439,7 +440,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // Create stable references for the functions that cause dependency issues
   const performVaultDepositRef = useRef(performVaultDeposit);
-  const switchToChainRef = useRef(switchToChain);
+  const switchToChainRef = useRef(switchNetwork);
 
   // Update refs when functions change
   useEffect(() => {
@@ -447,8 +448,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }, [performVaultDeposit]);
 
   useEffect(() => {
-    switchToChainRef.current = switchToChain;
-  }, [switchToChain]);
+    switchToChainRef.current = switchNetwork;
+  }, [switchNetwork]);
 
   const performCrossChainVaultDeposit = useCallback(
     async (process: typeof activeProcess) => {
@@ -486,7 +487,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         if (!ethereumChain) {
           throw new Error("Ethereum chain not found");
         }
-        await switchToChainRef.current(ethereumChain);
+        await switchToChainRef.current(ethereumChain.chainId);
         if (isCancelled) return;
 
         // Small delay to ensure chain switch is settled
