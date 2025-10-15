@@ -14,9 +14,7 @@ import { Button } from "@/components/ui/Button";
 import DepositModal from "@/components/ui/earn/DepositModal";
 import { EarnTableRow, DashboardTableRow } from "@/types/earn";
 import { EtherFiVault } from "@/config/etherFi";
-import { useIsWalletTypeConnected } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { getChainById } from "@/config/chains";
 import {
   formatBalance,
@@ -26,6 +24,10 @@ import {
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
 import { useEtherFiFetch } from "@/hooks/etherFi/useEtherFiFetch";
 import { fetchAssetPrice } from "@/utils/etherFi/prices";
+import {
+  useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+} from "@/hooks/dynamic/useUserWallets";
 
 interface EtherFiModalProps {
   isOpen: boolean;
@@ -50,7 +52,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
 
   const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
 
-  const { switchToChain } = useChainSwitch(sourceChain);
+  const { switchNetwork } = useSwitchActiveNetwork(sourceChain.walletType);
   const { getUserVaultBalance } = useEtherFiFetch();
 
   const isWalletConnected = isEvmWalletConnected;
@@ -138,7 +140,7 @@ const EtherFiModal: React.FC<EtherFiModalProps> = ({
       throw new Error("Ethereum chain not found");
     }
 
-    await switchToChain(ethereumChain);
+    await switchNetwork(ethereumChain.chainId);
     setIsDepositModalOpen(true);
   };
 

@@ -1,8 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Wallet } from "lucide-react";
 import PersistentAmountDisplay from "@/components/ui/PersistentAmountDisplay";
-import useWeb3Store, { useSourceToken } from "@/store/web3Store";
+import useWeb3Store, {
+  useSourceToken,
+  useSourceChain,
+} from "@/store/web3Store";
 import { formatBalance } from "@/utils/formatters";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 
 interface TokenAmountInputProps {
   amount: string;
@@ -29,6 +33,7 @@ export function TokenAmountInput({
 }: TokenAmountInputProps) {
   const isLoading = isLoadingQuote && readOnly;
   const sourceToken = useSourceToken();
+  const sourceChain = useSourceChain();
   const [displayedAmountUsd, setDisplayedAmountUsd] = useState("$~");
 
   // Check if source token is selected
@@ -39,9 +44,7 @@ export function TokenAmountInput({
   const chainId = sourceToken?.chainId;
 
   // Get the required wallet separately to use for conditional rendering
-  const requiredWallet = useWeb3Store((state) => {
-    return state.getWalletBySourceChain();
-  });
+  const requiredWallet = useWalletByType(sourceChain.walletType);
 
   // This will re-render when the specific token balance changes
   const tokenBalance = useWeb3Store((state) => {

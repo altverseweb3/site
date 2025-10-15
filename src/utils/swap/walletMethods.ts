@@ -1,7 +1,7 @@
 // utils/walletMethods.ts
 
-import { WalletType, Chain } from "@/types/web3";
-import useWeb3Store from "@/store/web3Store";
+import { WalletType } from "@/types/web3";
+import { useSourceChain } from "@/store/web3Store";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   useAppKitAccount,
@@ -9,8 +9,7 @@ import {
   useAppKitNetwork,
   useWalletInfo,
 } from "@reown/appkit/react";
-import { ChainNamespace, SolanaSigner } from "@/types/web3";
-import { defineChain } from "@reown/appkit/networks";
+import { SolanaSigner } from "@/types/web3";
 import {
   getMayanQuote,
   executeEvmSwap,
@@ -37,20 +36,11 @@ import {
   REFERRER_BPS,
 } from "@/config/mayan";
 import { parseSwapError } from "@/utils/formatters";
-import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
-
-/**
- * Creates a properly formatted CAIP network ID with correct TypeScript typing
- * @param namespace The chain namespace (eip155, solana, etc)
- * @param chainId The chain ID
- * @returns A properly typed CAIP network ID
- */
-function createCaipNetworkId(
-  namespace: "eip155" | "solana" | "bip122" | "polkadot",
-  chainId: number,
-): `${typeof namespace}:${number}` {
-  return `${namespace}:${chainId}` as `${typeof namespace}:${number}`;
-}
+import {
+  useConnectedRequiredWallet,
+  useSwitchActiveNetwork,
+  useWalletByType,
+} from "@/hooks/dynamic/useUserWallets";
 
 /**
  * Custom hook for wallet connections via Reown AppKit
@@ -101,24 +91,6 @@ export function useWalletConnection() {
     });
   }, [evmAccount.isConnected, solanaAccount.isConnected, suiConnected]);
 
-  useEffect(() => {
-    if (evmAccount.isConnected && evmNetwork.chainId !== undefined) {
-      const store = useWeb3Store.getState();
-      const requiredWallet = store.getWalletBySourceChain();
-
-      if (requiredWallet?.type === WalletType.EVM) {
-        // Convert chainId to a number if it's a string
-        const numericChainId =
-          typeof evmNetwork.chainId === "string"
-            ? parseInt(evmNetwork.chainId, 10)
-            : evmNetwork.chainId;
-
-        if (requiredWallet.chainId !== numericChainId) {
-          store.updateWalletChainId(WalletType.EVM, numericChainId);
-        }
-      }
-    }
-  }, [evmNetwork.chainId, evmAccount.isConnected]);
   /**
    * Connect to a wallet via Reown AppKit or Suiet
    * @param walletType Specific wallet type to connect to
@@ -224,135 +196,6 @@ export function useWalletConnection() {
 }
 
 /**
- * Enhanced hook for managing chain switching functionality in the UI
- * Uses Reown AppKit's network functions
- * Supports both EVM and Solana chains
- */
-export function useChainSwitch(sourceChain: Chain) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletByChain(sourceChain),
-  );
-
-  // Get the wallet connection hook for access to both wallet types
-  const { evmNetwork, solanaNetwork } = useWalletConnection();
-
-  const switchToChain = useCallback(
-    async (chain: Chain): Promise<boolean> => {
-      setError(null);
-
-      try {
-        setIsLoading(true);
-
-        const walletForChain = useWeb3Store.getState().getWalletByChain(chain);
-        if (!walletForChain) {
-          const errorMsg = `No ${chain.walletType} wallet connected for chain ${chain.name}`;
-          setError(errorMsg);
-          console.warn(errorMsg);
-          return false;
-        }
-
-        // For Sui wallets, just update the store with the chain ID
-        if (chain.walletType === WalletType.SUI) {
-          useWeb3Store
-            .getState()
-            .updateWalletChainId(walletForChain.type, chain.chainId);
-          return true;
-        }
-
-        // For EVM and Solana wallets, proceed with regular network switching
-        const isSolanaChain = chain.walletType === WalletType.SOLANA;
-        const isEvmChain = chain.walletType === WalletType.EVM;
-        const namespace = isSolanaChain ? "solana" : "eip155";
-
-        // Create properly typed CAIP network ID
-        const caipNetworkId = createCaipNetworkId(
-          namespace as "eip155" | "solana" | "bip122" | "polkadot",
-          chain.chainId,
-        );
-
-        // Create a proper Reown network definition
-        const reownNetwork = defineChain({
-          id: chain.chainId,
-          caipNetworkId: caipNetworkId,
-          chainNamespace: namespace as ChainNamespace,
-          name: chain.name,
-          nativeCurrency: {
-            decimals: chain.decimals,
-            name: chain.currency,
-            symbol: chain.nativeGasToken.symbol,
-          },
-          rpcUrls: {
-            default: {
-              http: chain.rpcUrls || [],
-            },
-          },
-          blockExplorers: chain.explorerUrl
-            ? {
-                default: {
-                  name: chain.name,
-                  url: chain.explorerUrl,
-                },
-              }
-            : undefined,
-        });
-
-        // Use the appropriate network switcher
-        if (isSolanaChain) {
-          await solanaNetwork.switchNetwork(reownNetwork);
-        } else if (isEvmChain) {
-          await evmNetwork.switchNetwork(reownNetwork);
-        }
-
-        useWeb3Store
-          .getState()
-          .updateWalletChainId(walletForChain.type, chain.chainId);
-        return true;
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "An unknown error occurred";
-        const errorMsg = `Error switching chains: ${message}`;
-        setError(errorMsg);
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [setError, setIsLoading, solanaNetwork, evmNetwork],
-  );
-
-  /**
-   * Switch to the source chain specified in the store
-   */
-  const switchToSourceChain = async (): Promise<boolean> => {
-    setError(null);
-
-    try {
-      setIsLoading(true);
-      return await switchToChain(sourceChain);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      const errorMsg = `Error switching to source chain: ${message}`;
-      setError(errorMsg);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return {
-    isLoading,
-    error,
-    switchToSourceChain,
-    switchToChain,
-    requiredWallet,
-    hasRequiredWallet: !!requiredWallet,
-  };
-}
-
-/**
  * Shared hook for token transfer functionality (swap or bridge)
  * Handles state management, validation, and transfer actions
  */
@@ -381,10 +224,7 @@ export function useTokenTransfer(
   >(null);
 
   // Get relevant state from the web3 store
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletByChain(options.sourceChain),
-  );
-
+  const requiredWallet = useWalletByType(options.sourceChain.walletType);
   // Get the transaction details for slippage
   const receiveAddress = options.transactionDetails.receiveAddress;
 
@@ -394,9 +234,9 @@ export function useTokenTransfer(
   const isWalletCompatible = useConnectedRequiredWallet();
 
   // Add the chain switch hook
-  const { switchToSourceChain, isLoading: isChainSwitching } = useChainSwitch(
-    options.sourceChain,
-  );
+  const { switchNetwork, isLoading } = useSwitchActiveNetwork(WalletType.EVM);
+
+  const sourceChain = useSourceChain();
 
   // Get wallet connection info for chain checking
   const { evmNetwork } = useWalletConnection();
@@ -860,7 +700,7 @@ export function useTokenTransfer(
 
         try {
           // Switch to the source chain and wait for completion
-          const switchSuccess = await switchToSourceChain();
+          const switchSuccess = await switchNetwork(sourceChain.chainId);
 
           if (!switchSuccess) {
             // Update the toast to show error instead of dismissing and creating new one
@@ -1102,12 +942,9 @@ export function useTokenTransfer(
 
     // Enhanced processing state (includes tracking)
     isProcessing:
-      isProcessing || isChainSwitching || (isTrackingEnabled && isTracking),
+      isProcessing || isLoading || (isTrackingEnabled && isTracking),
     isButtonDisabled:
-      !isValidForSwap ||
-      isProcessing ||
-      !isWalletCompatible ||
-      isChainSwitching,
+      !isValidForSwap || isProcessing || !isWalletCompatible || isLoading,
     // Actions
     handleTransfer,
     swapAmounts,

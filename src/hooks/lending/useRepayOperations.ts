@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { ethers } from "ethers";
 import { evmAddress, bigDecimal } from "@aave/react";
 import { useAaveRepay, useAavePermit } from "@/hooks/aave/useAaveInteractions";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import { UnifiedReserveData, ChainId } from "@/types/aave";
 import { Chain, Token } from "@/types/web3";
 import { getChainByChainId } from "@/config/chains";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 export interface TokenRepayState {
   amount: string;
@@ -55,7 +55,7 @@ export const useRepayOperations = (
     marketChain = sourceChain;
   }
 
-  const { switchToChain } = useChainSwitch(marketChain);
+  const { switchNetwork } = useSwitchActiveNetwork(marketChain.walletType);
 
   const handleRepay = useCallback(
     async (market: UnifiedReserveData, max: boolean): Promise<void> => {
@@ -79,7 +79,7 @@ export const useRepayOperations = (
 
         // Switch to correct chain FIRST before any operations
         try {
-          await switchToChain(sourceChain);
+          await switchNetwork(sourceChain.chainId);
         } catch (chainSwitchError) {
           console.error("Chain switch failed:", chainSwitchError);
           return;
@@ -190,7 +190,7 @@ export const useRepayOperations = (
       sourceChain,
       executeRepay,
       signPermit,
-      switchToChain,
+      switchNetwork,
       dependencies,
     ],
   );
