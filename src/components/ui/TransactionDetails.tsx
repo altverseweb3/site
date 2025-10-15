@@ -7,7 +7,7 @@ import {
   Edit2,
   Check,
 } from "lucide-react";
-import useWeb3Store, {
+import {
   useTransactionDetails,
   useSetSlippageValue,
   useSetReceiveAddress,
@@ -34,7 +34,6 @@ export function TransactionDetails({
   onToggle,
 }: TransactionDetailsProps) {
   // ─── Zustand store hooks ─────────────────────────────────────────────────────
-  const connectedWallets = useWeb3Store((state) => state.connectedWallets);
   const transactionDetails = useTransactionDetails();
   const setSlippageValue = useSetSlippageValue();
   const setReceiveAddress = useSetReceiveAddress();
@@ -316,7 +315,6 @@ export function TransactionDetails({
       }
     }
   }, [
-    connectedWallets,
     destinationChain?.walletType,
     destinationChainWallet,
     setReceiveAddress,

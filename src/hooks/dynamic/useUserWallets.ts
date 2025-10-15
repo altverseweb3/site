@@ -4,7 +4,7 @@ import {
   Wallet,
 } from "@dynamic-labs/sdk-react-core";
 import { useSourceChain, useDestinationChain } from "@/store/web3Store";
-import { WalletType } from "@/types/web3";
+import { UserWallets, WalletType } from "@/types/web3";
 import {
   useDynamicContext,
   useDynamicModals,
@@ -117,4 +117,41 @@ export const useSwitchActiveNetwork = (walletType: WalletType) => {
   };
 
   return { switchNetwork, isLoading, error };
+};
+
+export const useGetUserWalletAddresses = (): UserWallets => {
+  const userWallets = useDynamicUserWallets();
+  return {
+    evm:
+      userWallets.find((wallet) => wallet.chain === "EVM")?.address ||
+      undefined,
+    solana:
+      userWallets.find((wallet) => wallet.chain === "SOL")?.address ||
+      undefined,
+    sui:
+      userWallets.find((wallet) => wallet.chain === "SUI")?.address ||
+      undefined,
+  };
+};
+
+export const useConnectedWalletSummary = (): {
+  hasEVM: boolean;
+  hasSolana: boolean;
+  hasSUI: boolean;
+  totalConnected: number;
+  walletsByType: Record<string, string>;
+} => {
+  const userWallets = useGetUserWalletAddresses();
+
+  return {
+    hasEVM: !!userWallets.evm,
+    hasSolana: !!userWallets.solana,
+    hasSUI: !!userWallets.sui,
+    totalConnected: Object.values(userWallets).filter(Boolean).length,
+    walletsByType: {
+      EVM: userWallets.evm || "Not connected",
+      Solana: userWallets.solana || "Not connected",
+      SUI: userWallets.sui || "Not connected",
+    },
+  };
 };
