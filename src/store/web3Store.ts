@@ -3,16 +3,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import {
-  WalletInfo,
   Web3StoreState,
-  WalletType,
   Token,
   Chain,
   SwapStateForSection,
   SerializedToken,
   SerializedSwapStateForSection,
   SectionKey,
-  UserWallets,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -739,12 +736,6 @@ const useWeb3Store = create<Web3StoreState>()(
         });
         return {
           version: state.version,
-          connectedWallets: state.connectedWallets.map((wallet) => ({
-            type: wallet.type,
-            name: wallet.name,
-            address: wallet.address,
-            chainId: wallet.chainId,
-          })),
           swapIntegrations: serializedIntegrations,
           selectedAaveChains: state.selectedAaveChains,
         };
@@ -893,54 +884,6 @@ export const useSelectedAaveChains = (): Chain[] => {
 
 export const useSetSelectedAaveChains = () => {
   return useWeb3Store((state) => state.setSelectedAaveChains);
-};
-
-export const useExtractUserWallets = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>,
-): UserWallets => {
-  const userWallets: UserWallets = {};
-
-  connectedWallets.forEach((wallet) => {
-    switch (wallet.type) {
-      case WalletType.EVM:
-        userWallets.evm = wallet.address;
-        break;
-      case WalletType.SOLANA:
-        userWallets.solana = wallet.address;
-        break;
-      case WalletType.SUI:
-        userWallets.sui = wallet.address;
-        break;
-      default:
-        console.warn(`Unknown wallet type: ${wallet.type}`);
-    }
-  });
-
-  return userWallets;
-};
-
-export const useConnectedWalletSummary = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>,
-): {
-  hasEVM: boolean;
-  hasSolana: boolean;
-  hasSUI: boolean;
-  totalConnected: number;
-  walletsByType: Record<string, string>;
-} => {
-  const userWallets = useExtractUserWallets(connectedWallets);
-
-  return {
-    hasEVM: !!userWallets.evm,
-    hasSolana: !!userWallets.solana,
-    hasSUI: !!userWallets.sui,
-    totalConnected: connectedWallets.length,
-    walletsByType: {
-      EVM: userWallets.evm || "Not connected",
-      Solana: userWallets.solana || "Not connected",
-      SUI: userWallets.sui || "Not connected",
-    },
-  };
 };
 
 export default useWeb3Store;

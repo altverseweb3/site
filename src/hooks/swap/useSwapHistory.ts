@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import { MayanSwapService } from "@/utils/swap/swapHistory";
-import useWeb3Store, {
-  useExtractUserWallets,
-  useConnectedWalletSummary,
-} from "@/store/web3Store";
 import { SwapQueryResult, SwapData } from "@/types/web3";
+import {
+  useConnectedWalletSummary,
+  useGetUserWalletAddresses,
+} from "@/hooks/dynamic/useUserWallets";
 
 interface SwapHistoryState {
   isLoading: boolean;
@@ -90,8 +90,6 @@ const deduplicateSwaps = (swaps: SwapData[]): SwapData[] => {
 };
 
 export const useSwapHistory = (): UseSwapHistoryReturn => {
-  const { connectedWallets } = useWeb3Store();
-
   const [state, setState] = useState<SwapHistoryState>({
     isLoading: false,
     isLoadingMore: false,
@@ -102,10 +100,10 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
     summary: null,
   });
 
-  const walletSummary = useConnectedWalletSummary(connectedWallets);
+  const walletSummary = useConnectedWalletSummary();
 
   // Extract user wallets at the top level of the hook
-  const userWallets = useExtractUserWallets(connectedWallets);
+  const userWallets = useGetUserWalletAddresses();
 
   const clearHistory = useCallback(() => {
     setState({
@@ -134,7 +132,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
 
     try {
       // Check if any wallets are connected
-      if (connectedWallets.length === 0) {
+      if (walletSummary.totalConnected === 0) {
         throw new Error("No wallets connected");
       }
 
@@ -212,7 +210,7 @@ export const useSwapHistory = (): UseSwapHistoryReturn => {
       }));
       console.error("❌ Error fetching swap history:", error);
     }
-  }, [connectedWallets, userWallets]); // Added userWallets to dependencies
+  }, [walletSummary.totalConnected, userWallets]);
 
   return {
     ...state,

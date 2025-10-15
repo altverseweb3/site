@@ -93,7 +93,6 @@ export type SectionKey = "swap" | "earn" | "lending";
 
 export interface Web3StoreState {
   version: number;
-  connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
   // Replace single state with keyed integrations
   swapIntegrations: Record<string, SwapStateForSection>;
