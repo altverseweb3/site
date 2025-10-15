@@ -112,11 +112,8 @@ export interface Web3StoreState {
   selectedAaveChains: Chain[];
 
   // Wallet actions (remain the same)
-  addWallet: (wallet: WalletInfo) => void;
-  removeWallet: (walletType: WalletType) => void;
   updateWalletAddress: (walletType: WalletType, address: string) => void;
   updateWalletChainId: (walletType: WalletType, chainId: number) => void;
-  disconnectAll: () => void;
   getWalletsOfType: (walletType?: WalletType) => WalletInfo[];
   getWalletByChain: (chain: Chain) => WalletInfo | null;
   isWalletTypeConnected: (walletType: WalletType) => boolean;

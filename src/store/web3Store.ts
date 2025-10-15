@@ -331,46 +331,6 @@ const useWeb3Store = create<Web3StoreState>()(
         );
       },
 
-      // Wallet actions
-      addWallet: (wallet: WalletInfo) => {
-        const walletForStorage = {
-          type: wallet.type,
-          name: wallet.name,
-          address: wallet.address,
-          chainId: wallet.chainId,
-        };
-
-        set((state) => {
-          const existingWalletIndex = state.connectedWallets.findIndex(
-            (w) => w.type === wallet.type,
-          );
-          let newWallets: Array<Omit<WalletInfo, "provider">>;
-
-          if (existingWalletIndex >= 0) {
-            newWallets = [...state.connectedWallets];
-            newWallets[existingWalletIndex] = walletForStorage;
-          } else {
-            newWallets = [...state.connectedWallets, walletForStorage];
-          }
-
-          return {
-            connectedWallets: newWallets,
-          };
-        });
-      },
-
-      removeWallet: (walletType: WalletType) => {
-        set((state) => {
-          const updatedWallets = state.connectedWallets.filter(
-            (w) => w.type !== walletType,
-          );
-
-          return {
-            connectedWallets: updatedWallets,
-          };
-        });
-      },
-
       updateWalletAddress: (walletType: WalletType, address: string) => {
         set((state) => ({
           connectedWallets: state.connectedWallets.map((wallet) =>
@@ -385,12 +345,6 @@ const useWeb3Store = create<Web3StoreState>()(
             wallet.type === walletType ? { ...wallet, chainId } : wallet,
           ),
         }));
-      },
-
-      disconnectAll: () => {
-        set({
-          connectedWallets: [],
-        });
       },
 
       // New method to get all wallets of a specific type
