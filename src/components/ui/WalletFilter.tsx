@@ -5,11 +5,11 @@ import { useState } from "react";
 import { ChevronDownIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletFilterType } from "@/types/web3";
 import { toast } from "sonner";
 import { walletOptions } from "@/config/wallets";
 import { ConnectWalletButton } from "@/components/ui/ConnectWalletButton";
+import { useIsWalletTypeConnected } from "@/hooks/dynamic/useUserWallets";
 
 interface WalletFilterProps {
   selectedWallet: WalletFilterType;
@@ -99,7 +99,7 @@ const WalletFilter: React.FC<WalletFilterProps> = ({
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isWalletTypeConnected } = useWalletConnection();
+  const isWalletTypeConnected = useIsWalletTypeConnected;
 
   const selectedOption = walletOptions.find(
     (option) => option.value === selectedWallet,

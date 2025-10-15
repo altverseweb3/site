@@ -17,11 +17,8 @@ import {
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 
 // --- Suiet Imports ---
-import { WalletProvider, useWallet } from "@suiet/wallet-kit";
+import { WalletProvider } from "@suiet/wallet-kit";
 import "@suiet/wallet-kit/style.css"; // Import Suiet CSS
-import { useEffect } from "react";
-import useWeb3Store from "@/store/web3Store";
-import { WalletType } from "@/types/web3";
 
 // --- Reown AppKit Configuration ---
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
@@ -76,44 +73,6 @@ createAppKit({
   enableWalletConnect: false,
 });
 
-// SuiWalletSync component to handle Sui wallet state synchronization
-const SuiWalletSync = () => {
-  const { connected, address, name, disconnect } = useWallet();
-
-  useEffect(() => {
-    // Sync Sui wallet connection state with our store
-    if (connected && address) {
-      const store = useWeb3Store.getState();
-      store.addWallet({
-        type: WalletType.SUI,
-        name: name || "Sui Wallet",
-        address: address,
-        chainId: 1, // Default to Sui mainnet
-      });
-    }
-  }, [connected, address, name]);
-
-  // Handle disconnection if our store state conflicts with wallet state
-  useEffect(() => {
-    const checkDisconnectState = () => {
-      const store = useWeb3Store.getState();
-      const suiWalletInStore = store.connectedWallets.some(
-        (wallet) => wallet.type === WalletType.SUI,
-      );
-
-      // If Sui wallet is connected in provider but not in our store, disconnect it
-      if (connected && !suiWalletInStore) {
-        disconnect();
-      }
-    };
-
-    // Check on mount and when connected state changes
-    checkDisconnectState();
-  }, [connected, disconnect]);
-
-  return null; // This is a non-UI component
-};
-
 // --- Combined Provider Component ---
 // This new component will wrap children with the necessary providers
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +84,6 @@ export function CombinedWalletProvider({ children }: { children: any }) {
   return (
     <WalletProvider>
       {/* Include our state sync component */}
-      <SuiWalletSync />
       {/*
         Reown AppKit's context is implicitly available to hooks like useAppKit
         because createAppKit was called in this module's scope.
