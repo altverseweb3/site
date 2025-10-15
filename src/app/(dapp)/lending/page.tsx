@@ -17,7 +17,6 @@ import useWeb3Store, {
 import BrandedButton from "@/components/ui/BrandedButton";
 import { WalletType, SwapStatus } from "@/types/web3";
 import {
-  useIsWalletTypeConnected,
   useSetActiveSwapSection,
   useSourceChain,
   useDestinationChain,
@@ -39,6 +38,7 @@ import { LendingTabType } from "@/store/uiStore";
 import {
   useHandleWalletClick,
   useWalletByType,
+  useIsWalletTypeConnected,
 } from "@/hooks/dynamic/useUserWallets";
 
 export default function LendingPage() {

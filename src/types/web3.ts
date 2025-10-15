@@ -111,13 +111,6 @@ export interface Web3StoreState {
 
   selectedAaveChains: Chain[];
 
-  // Wallet actions (remain the same)
-  updateWalletAddress: (walletType: WalletType, address: string) => void;
-  updateWalletChainId: (walletType: WalletType, chainId: number) => void;
-  getWalletsOfType: (walletType?: WalletType) => WalletInfo[];
-  getWalletByChain: (chain: Chain) => WalletInfo | null;
-  isWalletTypeConnected: (walletType: WalletType) => boolean;
-
   // New integration-specific actions
   getSwapStateForSection: () => SwapStateForSection;
   initializeSwapStateForSection: () => void;
@@ -130,10 +123,6 @@ export interface Web3StoreState {
   setSlippageValue: (value: "auto" | string) => void;
   setReceiveAddress: (address: string | null) => void;
   setGasDrop: (gasDrop: number) => void;
-
-  // Helper methods for backward compatibility and convenience
-  getWalletBySourceChain: () => WalletInfo | null;
-  getWalletByDestinationChain: () => WalletInfo | null;
 
   // Token management (remains largely the same)
   loadTokens: () => Promise<void>;

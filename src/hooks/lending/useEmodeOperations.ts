@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { evmAddress } from "@aave/react";
 import { useAaveEMode } from "@/hooks/aave/useAaveInteractions";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
 import { truncateAddress, parseDepositError } from "@/utils/formatters";
 import {
   UnifiedReserveData,
@@ -12,6 +11,8 @@ import {
   UserBorrowData,
 } from "@/types/aave";
 import { getChainByChainId } from "@/config/chains";
+import { useSwitchActiveNetwork } from "../dynamic/useUserWallets";
+import { WalletType } from "@/types/web3";
 
 export interface EmodeOperationDependencies {
   unifiedReserves: UnifiedReserveData[];
@@ -88,9 +89,8 @@ export const useEmodeOperations = (
   } = useAaveEMode();
 
   // Initialize chain switching with Ethereum as default
-  const { switchToChain, isLoading: isChainSwitching } = useChainSwitch(
-    getChainByChainId(1),
-  );
+  const { switchNetwork, isLoading: isSwitchingNetwork } =
+    useSwitchActiveNetwork(WalletType.EVM);
 
   const getMarketsWithEmode = useCallback(() => {
     const seenKeys = new Set();
@@ -225,7 +225,7 @@ export const useEmodeOperations = (
         );
 
         // Switch to the required chain
-        const switchSuccess = await switchToChain(requiredChain);
+        const switchSuccess = await switchNetwork(requiredChain.chainId);
 
         if (!switchSuccess) {
           toast.error(`failed to switch to ${requiredChain.name}`);
@@ -278,12 +278,12 @@ export const useEmodeOperations = (
         });
       }
     },
-    [userAddress, executeEMode, switchToChain, refetchMarkets],
+    [userAddress, executeEMode, switchNetwork, refetchMarkets],
   );
 
   return {
     handleEmodeToggle,
-    isLoading: emodeLoading || isChainSwitching,
+    isLoading: emodeLoading || isSwitchingNetwork,
     error: typeof emodeError === "string" ? emodeError : null,
     hasIncompatiblePositions,
     getMarketsWithEmode,

@@ -2,15 +2,13 @@ import React, { ReactNode, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { TransactionDetails } from "@/components/ui/TransactionDetails";
-import {
-  useChainSwitch,
-  useWalletConnection,
-} from "@/utils/swap/walletMethods";
+import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { useSourceChain } from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";
 import { useWallet } from "@suiet/wallet-kit";
 import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 interface SwapInterfaceProps {
   children: ReactNode;
@@ -47,12 +45,6 @@ export function SwapInterface({
 }: SwapInterfaceProps) {
   const sourceChain = useSourceChain();
 
-  const {
-    isLoading: isSwitchingChain,
-    error: chainSwitchError,
-    switchToSourceChain,
-  } = useChainSwitch(sourceChain);
-
   // Get wallet connection information for EVM, Solana, and Sui
   const { evmNetwork } = useWalletConnection();
 
@@ -62,6 +54,12 @@ export function SwapInterface({
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const requiredWallet = useWalletByType(sourceChain.walletType);
+
+  const {
+    switchNetwork,
+    error: networkSwitchError,
+    isLoading: isSwitchingNetwork,
+  } = useSwitchActiveNetwork(sourceChain.walletType);
 
   const checkCurrentChain = async (): Promise<boolean> => {
     if (!requiredWallet) {
@@ -89,12 +87,12 @@ export function SwapInterface({
   };
 
   useEffect(() => {
-    if (chainSwitchError) {
+    if (networkSwitchError) {
       toast.error("Chain switch failed", {
-        description: chainSwitchError,
+        description: networkSwitchError,
       });
     }
-  }, [chainSwitchError]);
+  }, [networkSwitchError]);
 
   const handleButtonClick = async () => {
     if (renderActionButton) {
@@ -150,7 +148,7 @@ export function SwapInterface({
           },
         );
 
-        const switched = await switchToSourceChain();
+        const switched = await switchNetwork(sourceChain.chainId);
 
         if (!switched) {
           toast.error("Chain switch required", {
@@ -182,10 +180,10 @@ export function SwapInterface({
   };
 
   const isButtonDisabled =
-    (actionButton?.disabled ?? false) || isSwitchingChain || isProcessing;
+    (actionButton?.disabled ?? false) || isSwitchingNetwork || isProcessing;
 
   const getButtonText = () => {
-    if (isSwitchingChain) {
+    if (isSwitchingNetwork) {
       return `switching network`;
     }
     if (isProcessing) {
@@ -195,7 +193,7 @@ export function SwapInterface({
   };
 
   const getButtonIcon = (): AvailableIconName => {
-    if (isSwitchingChain) {
+    if (isSwitchingNetwork) {
       return "ArrowLeftRight";
     }
     return actionButton?.iconName || "Coins";

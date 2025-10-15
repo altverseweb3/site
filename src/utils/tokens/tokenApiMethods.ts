@@ -59,23 +59,22 @@ function formatTokenBalance(balanceStr: string, decimals: number): string {
 export async function getPricesAndBalances(
   sourceChain: Chain,
   destinationChain: Chain,
+  sourceWalletAddress?: string,
+  destinationWalletAddress?: string,
 ): Promise<boolean> {
   const store = useWeb3Store.getState();
-  const sourceWallet = store.getWalletBySourceChain();
-  const destinationWallet = store.getWalletByDestinationChain();
-
   store.setTokensLoading(true);
 
   try {
     const [sourceResult, destinationResult] = await Promise.allSettled([
       getPricesAndBalancesForChain(
         sourceChain.chainId,
-        sourceWallet?.address,
+        sourceWalletAddress,
         "source",
       ),
       getPricesAndBalancesForChain(
         destinationChain.chainId,
-        destinationWallet?.address,
+        destinationWalletAddress,
         "destination",
       ),
     ]);
