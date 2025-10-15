@@ -18,12 +18,12 @@ import {
 } from "lucide-react";
 import { useSwapHistory } from "@/hooks/swap/useSwapHistory";
 import { WalletFilter, WalletIcons } from "@/components/ui/WalletFilter";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletType, SwapData } from "@/types/web3";
 import { getChainByMayanChainId, getChainByMayanName } from "@/config/chains";
 import { getExplorerUrl } from "@/utils/common";
 import type { WalletFilterType } from "@/types/web3";
 import { truncateAddress } from "@/utils/formatters";
+import { useIsWalletTypeConnected } from "@/hooks/dynamic/useUserWallets";
 
 interface SwapHistorySheetProps {
   isOpen: boolean;
@@ -157,14 +157,6 @@ export function SwapHistorySheet({
 }: SwapHistorySheetProps): JSX.Element {
   const [selectedWallet, setSelectedWallet] = useState<WalletFilterType>("all");
 
-  const { isWalletTypeConnected } = useWalletConnection();
-
-  const walletConnectionChecker: WalletConnectionChecker = (
-    walletType: WalletType,
-  ): boolean => {
-    return isWalletTypeConnected(walletType);
-  };
-
   const {
     isLoading,
     isLoadingMore,
@@ -178,6 +170,8 @@ export function SwapHistorySheet({
 
   const fetchSwapHistoryRef = useRef(fetchSwapHistory);
   fetchSwapHistoryRef.current = fetchSwapHistory;
+  const isWalletTypeConnected: WalletConnectionChecker =
+    useIsWalletTypeConnected;
 
   // Load swap history on initial page load
   useEffect((): void => {
@@ -207,7 +201,7 @@ export function SwapHistorySheet({
   const filteredTransactions: TransactionDisplay[] = getFilteredTransactions(
     realTransactions,
     selectedWallet,
-    walletConnectionChecker,
+    isWalletTypeConnected,
   );
 
   const getEmptyStateMessage = (): string => {
@@ -227,9 +221,7 @@ export function SwapHistorySheet({
     };
 
     const walletType = walletTypeMap[selectedWallet];
-    const isConnected = walletType
-      ? walletConnectionChecker(walletType)
-      : false;
+    const isConnected = walletType ? isWalletTypeConnected(walletType) : false;
 
     return isConnected
       ? `your ${selectedWallet} swap history will appear here`
