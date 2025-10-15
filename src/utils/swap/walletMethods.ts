@@ -3,12 +3,6 @@
 import { WalletType } from "@/types/web3";
 import { useSourceChain } from "@/store/web3Store";
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  useAppKitAccount,
-  useAppKit,
-  useAppKitNetwork,
-  useWalletInfo,
-} from "@reown/appkit/react";
 import { SolanaSigner } from "@/types/web3";
 import {
   getMayanQuote,
@@ -41,159 +35,6 @@ import {
   useSwitchActiveNetwork,
   useWalletByType,
 } from "@/hooks/dynamic/useUserWallets";
-
-/**
- * Custom hook for wallet connections via Reown AppKit
- * Handles both EVM (MetaMask) and Solana (Phantom) wallets through Reown
- * Also handles Sui wallets through Suiet
- * Supports connecting to multiple wallet types simultaneously
- */
-export function useWalletConnection() {
-  // Get the Reown AppKit modal control functions
-  const { open, close } = useAppKit();
-
-  // Track the wallet accounts for each namespace
-  const evmAccount = useAppKitAccount({ namespace: "eip155" });
-  const solanaAccount = useAppKitAccount({ namespace: "solana" });
-
-  // Get Sui wallet info from Suiet
-  const {
-    connected: suiConnected,
-    address: suiAddress,
-    name: suiWalletName,
-  } = useWallet();
-
-  // Get wallet information for each namespace
-  const { walletInfo: evmWalletInfo } = useWalletInfo();
-  const { walletInfo: solanaWalletInfo } = useWalletInfo();
-
-  // Get network/chain info for each namespace
-  const evmNetwork = useAppKitNetwork();
-  const solanaNetwork = useAppKitNetwork();
-
-  // Track connection status in local state
-  const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Track which namespaces are connected
-  const [connectedNamespaces, setConnectedNamespaces] = useState<{
-    evm: boolean;
-    solana: boolean;
-    sui: boolean; // Add Sui to connected namespaces
-  }>({ evm: false, solana: false, sui: false });
-
-  // Update connected namespaces state when accounts change
-  useEffect(() => {
-    setConnectedNamespaces({
-      evm: evmAccount.isConnected,
-      solana: solanaAccount.isConnected,
-      sui: suiConnected,
-    });
-  }, [evmAccount.isConnected, solanaAccount.isConnected, suiConnected]);
-
-  /**
-   * Connect to a wallet via Reown AppKit or Suiet
-   * @param walletType Specific wallet type to connect to
-   */
-  const connectWallet = useCallback(
-    (walletType?: "metamask" | "phantom" | "walletConnect" | "sui") => {
-      setConnecting(true);
-      setError(null);
-
-      try {
-        if (walletType === "phantom") {
-          // Open the Solana-specific connection modal
-          open({ view: "Connect", namespace: "solana" });
-        } else if (walletType === "metamask") {
-          // Open the EVM-specific connection modal
-          open({ view: "Connect", namespace: "eip155" });
-        } else if (walletType === "walletConnect") {
-          // For WalletConnect, just open the standard view
-          open({ view: "Connect" });
-        } else if (walletType === "sui") {
-          // For Sui, we would trigger the Suiet wallet connection
-          // This would typically happen through the CustomSuiConnectButton
-          // Find and click the hidden button
-          const suiButton = document.querySelector("[data-sui-wallet-button]");
-          if (suiButton && suiButton instanceof HTMLButtonElement) {
-            suiButton.click();
-          } else {
-            throw new Error(
-              "Could not find Sui wallet button to trigger connection",
-            );
-          }
-        } else {
-          // Open the general connect modal
-          open({ view: "Connect" });
-        }
-      } catch (error) {
-        console.error("Error initiating wallet connection:", error);
-        setError(
-          typeof error === "string" ? error : "Failed to connect wallet",
-        );
-      } finally {
-        setConnecting(false);
-      }
-    },
-    [open],
-  );
-
-  /**
-   * Checks if the connected wallet is MetaMask (based on wallet name)
-   */
-  const isMetaMask = useCallback(() => {
-    if (!evmWalletInfo || !evmWalletInfo.name) return false;
-    return evmWalletInfo.name.toLowerCase().includes("metamask");
-  }, [evmWalletInfo]);
-
-  /**
-   * Checks if the connected wallet is Phantom (based on wallet name)
-   */
-  const isPhantom = useCallback(() => {
-    if (!solanaWalletInfo || !solanaWalletInfo.name) return false;
-    return solanaWalletInfo.name.toLowerCase().includes("phantom");
-  }, [solanaWalletInfo]);
-
-  /**
-   * Checks if the connected wallet is a Sui wallet (Suiet, etc.)
-   */
-  const isSuiWallet = useCallback(() => {
-    return suiConnected && !!suiAddress;
-  }, [suiConnected, suiAddress]);
-
-  return {
-    // Connection state
-    evmAccount,
-    solanaAccount,
-    suiConnected,
-    suiAddress,
-    connecting,
-    error,
-
-    // Connected states
-    isEvmConnected: evmAccount.isConnected,
-    isSolanaConnected: solanaAccount.isConnected,
-    isSuiConnected: suiConnected,
-    connectedNamespaces,
-
-    // Wallet info
-    evmWalletInfo,
-    solanaWalletInfo,
-    suiWalletName,
-    isMetaMask: isMetaMask(),
-    isPhantom: isPhantom(),
-    isSuiWallet: isSuiWallet(),
-
-    // Network/chain info
-    evmNetwork,
-    solanaNetwork,
-
-    // Actions
-    connectWallet,
-    openModal: open,
-    closeModal: close,
-  };
-}
 
 /**
  * Shared hook for token transfer functionality (swap or bridge)
@@ -237,9 +78,6 @@ export function useTokenTransfer(
   const { switchNetwork, isLoading } = useSwitchActiveNetwork(WalletType.EVM);
 
   const sourceChain = useSourceChain();
-
-  // Get wallet connection info for chain checking
-  const { evmNetwork } = useWalletConnection();
 
   const latestRequestIdRef = useRef<number>(0);
 
@@ -681,10 +519,7 @@ export function useTokenTransfer(
     // NEW: Check if we need to switch chains for EVM wallets
     if (options.sourceChain.walletType === WalletType.EVM && requiredWallet) {
       // Convert both chainIds to numbers for comparison
-      const currentChainId =
-        typeof evmNetwork.chainId === "string"
-          ? parseInt(evmNetwork.chainId, 10)
-          : evmNetwork.chainId;
+      const currentChainId = await requiredWallet.getNetwork();
 
       const targetChainId = options.sourceChain.chainId;
 
