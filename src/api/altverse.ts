@@ -66,16 +66,64 @@ export interface SuiBalanceResult {
   lockedBalance: object;
 }
 
-export interface SwapMetricsRequest {
-  swapperAddress: string; // Required: Address performing the swap
-  txHash?: string; // Optional: Transaction hash
-  swapType?: string; // Optional: Type of swap ("vanilla", "earn/etherFi", "earn/aave", "earn/pendle", "lend/aave")
-  path?: string; // Optional: Specific swap path
-  amount?: string; // Optional: Swap amount
-  tokenIn?: string; // Optional: Input token address
-  tokenOut?: string; // Optional: Output token address
-  network?: string; // Optional: Network name
+// Payload interfaces for each event type
+export interface SwapPayload {
+  user_address: string;
+  tx_hash: string;
+  protocol: string;
+  swap_provider: string;
+  source_chain: string;
+  source_token_address: string;
+  source_token_symbol: string;
+  amount_in: string | number;
+  destination_chain: string;
+  destination_token_address: string;
+  destination_token_symbol: string;
+  amount_out: string | number;
+  timestamp: string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allows for extra, non-required fields
 }
+
+export interface LendingPayload {
+  user_address: string;
+  tx_hash: string;
+  protocol: string;
+  action: string; // e.g., "deposit", "withdraw", "borrow", "repay"
+  chain: string;
+  market_name: string;
+  token_address: string;
+  token_symbol: string;
+  amount: string | number;
+  timestamp: string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allows for extra fields
+}
+
+export interface EarnPayload {
+  user_address: string;
+  tx_hash: string;
+  protocol: string;
+  action: string; // e.g., "stake", "unstake", "claim"
+  chain: string;
+  vault_name: string;
+  vault_address: string;
+  token_address: string;
+  token_symbol: string;
+  amount: string | number;
+  timestamp: string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allows for extra fields
+}
+
+// Main request body for all /metrics calls
+export interface MetricsRequestBody {
+  eventType: "entrance" | "swap" | "lending" | "earn";
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  payload?: SwapPayload | LendingPayload | EarnPayload | {};
+}
+
+export type MetricsRequest = MetricsRequestBody;
 
 // Endpoint-specific response types
 export interface AllowanceResponse {
@@ -86,7 +134,7 @@ export interface PricesResponse {
   data: TokenPriceResult[];
 }
 
-export interface SwapMetricsResponse {
+export interface MetricsResponse {
   success: boolean;
   message: string;
 }
@@ -163,12 +211,12 @@ export class AltverseAPI {
   }
 
   /**
-   * Record swap metrics
+   * Record unified metrics
    */
-  public async recordSwap(
-    request: SwapMetricsRequest,
-  ): Promise<ApiResponse<SwapMetricsResponse>> {
-    return this.request<SwapMetricsResponse>("POST", "swap-metrics", request);
+  public async recordMetric(
+    request: MetricsRequest,
+  ): Promise<ApiResponse<MetricsResponse>> {
+    return this.request<MetricsResponse>("POST", "metrics", request);
   }
 
   /**
@@ -177,11 +225,7 @@ export class AltverseAPI {
   private async request<T>(
     method: "GET" | "POST",
     endpoint: string,
-    body?:
-      | BaseRequest
-      | PricesRequest
-      | SuiBalancesRequest
-      | SwapMetricsRequest,
+    body?: BaseRequest | PricesRequest | SuiBalancesRequest | MetricsRequest,
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}/${endpoint}`;

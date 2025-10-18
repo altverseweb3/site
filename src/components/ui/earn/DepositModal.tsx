@@ -51,6 +51,7 @@ import ProgressTracker, {
 } from "@/components/ui/ProgressTracker";
 import { VaultDepositProcess } from "@/types/earn";
 import { formatPercentage, parseDepositError } from "@/utils/formatters";
+import { recordEarn } from "@/utils/metrics/metricsRecorder";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -186,6 +187,27 @@ const DepositModal: React.FC<DepositModalProps> = ({
               vaultShares: "0",
               completedAt: new Date(),
             });
+
+            // Record earn metrics
+            try {
+              const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
+              await recordEarn({
+                user_address: requiredWallet!.address,
+                tx_hash: depositResult.hash || "",
+                protocol: "etherFi",
+                action: "deposit",
+                chain: "ethereum",
+                vault_name: vault?.name || "",
+                vault_address: vault?.addresses.vault || "",
+                token_address: asset?.contractAddress || "",
+                token_symbol: assetSymbol,
+                amount: depositAmount,
+                timestamp: Math.floor(Date.now() / 1000),
+              });
+            } catch (error) {
+              console.error("Failed to record earn metrics:", error);
+            }
+
             return true;
           } else {
             console.error(
@@ -217,6 +239,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
       startDepositStep,
       depositTokens,
       completeDepositStep,
+      requiredWallet,
+      vault?.name,
+      vault?.addresses.vault,
       failDepositStep,
     ],
   );
@@ -270,6 +295,27 @@ const DepositModal: React.FC<DepositModalProps> = ({
             vaultShares: "0",
             completedAt: new Date(),
           });
+
+          // Record earn metrics
+          try {
+            const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
+            await recordEarn({
+              user_address: requiredWallet!.address,
+              tx_hash: result.hash || "",
+              protocol: "etherFi",
+              action: "deposit",
+              chain: "ethereum",
+              vault_name: vault?.name || "",
+              vault_address: vault?.addresses.vault || "",
+              token_address: asset?.contractAddress || "",
+              token_symbol: assetSymbol,
+              amount: depositAmount,
+              timestamp: Math.floor(Date.now() / 1000),
+            });
+          } catch (error) {
+            console.error("Failed to record earn metrics:", error);
+          }
+
           return true;
         } else {
           console.error("❌ Deposit failed:", result.message);
@@ -288,9 +334,12 @@ const DepositModal: React.FC<DepositModalProps> = ({
     },
     [
       getEvmSigner,
-      handleApprovalAndRetry,
       depositTokens,
+      handleApprovalAndRetry,
       completeDepositStep,
+      requiredWallet,
+      vault?.name,
+      vault?.addresses.vault,
       failDepositStep,
     ],
   );

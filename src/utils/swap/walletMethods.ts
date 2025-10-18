@@ -29,8 +29,7 @@ import {
   TokenTransferState,
   ExtendedQuote,
 } from "@/types/web3";
-import { recordSwap } from "@/utils/swap/swapRecorder";
-import { SwapMetricsRequest } from "@/utils/swap/swapRecorder";
+import { recordSwap, SwapPayload } from "@/utils/metrics/metricsRecorder";
 import {
   REFERRER_EVM,
   REFERRER_SOL,
@@ -1285,18 +1284,30 @@ export function useTokenTransfer(
       }
 
       setSwapId(result);
-      const swapMetricsRequest: SwapMetricsRequest = {
-        swapperAddress: requiredWallet!.address,
-        txHash: result,
-        swapType: options.type,
-        amount: amount,
-        tokenIn: options.sourceToken?.address,
-        tokenOut: options.destinationToken?.address,
-        network: options.sourceChain.name,
+
+      // Get the expected amount out from the quote
+      const quote = quotes[0] as ExtendedQuote;
+      const amountOut = quote.expectedAmountOut.toString();
+
+      const swapPayload: SwapPayload = {
+        user_address: requiredWallet!.address,
+        tx_hash: result,
+        protocol: options.type,
+        swap_provider: "mayan",
+        source_chain: options.sourceChain.name,
+        source_token_address: options.sourceToken!.address,
+        source_token_symbol: options.sourceToken!.ticker,
+        amount_in: amount,
+        destination_chain: options.destinationChain.name,
+        destination_token_address: options.destinationToken!.address,
+        destination_token_symbol: options.destinationToken!.ticker,
+        amount_out: amountOut,
+        timestamp: Math.floor(Date.now() / 1000), // Unix timestamp in seconds
       };
+
       // Send swap metrics to the backend
       try {
-        await recordSwap(swapMetricsRequest);
+        await recordSwap(swapPayload);
       } catch (error) {
         console.error("Failed to record swap metrics:", error);
       }
