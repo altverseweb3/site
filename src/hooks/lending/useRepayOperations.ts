@@ -116,8 +116,13 @@ export const useRepayOperations = (
               description: "Please sign the permit message in your wallet",
             });
 
+            // When repaying max, use unlimited approval (standard Aave pattern)
+            const permitAmount = max
+              ? bigDecimal(ethers.MaxUint256.toString())
+              : bigDecimal(amountInWei.toString());
+
             permitSignature = await signPermit({
-              amount: bigDecimal(amountInWei.toString()),
+              amount: permitAmount,
               chainId: market.marketInfo.chain.chainId as ChainId,
               currency: evmAddress(sourceToken.address),
               owner: evmAddress(userWalletAddress),
