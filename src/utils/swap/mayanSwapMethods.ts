@@ -277,9 +277,7 @@ export async function executeSuiSwap({
     evm?: string;
     sui?: string;
   } | null;
-  signTransaction: (input: {
-    transaction: SuiTransaction;
-  }) => Promise<SignedTransaction>;
+  signTransaction: (transaction: SuiTransaction) => Promise<SignedTransaction>;
 }): Promise<string> {
   try {
     if (!quote) throw new Error("Invalid quote");
@@ -311,10 +309,8 @@ export async function executeSuiSwap({
     // Build the transaction
     await txBlock.build({ client: suiClient });
 
-    // Use 'transaction' instead of 'transactionBlock' to match Suiet wallet expectation
-    const signedTx = await signTransaction({
-      transaction: txBlock,
-    });
+    // Sign the transaction using Sui Wallet Standard interface
+    const signedTx = await signTransaction(txBlock);
 
     // Execute the transaction
     const executionResponse = await suiClient.executeTransactionBlock({

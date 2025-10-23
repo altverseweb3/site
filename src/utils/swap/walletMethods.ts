@@ -13,9 +13,7 @@ import {
 import { Quote } from "@mayanfinance/swap-sdk";
 import { toast } from "sonner";
 import { useSwapTracking } from "@/hooks/swap/useSwapTracking";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
 import { Connection } from "@solana/web3.js";
-import { useWallet } from "@suiet/wallet-kit"; // Import Suiet hook
 import {
   TokenTransferOptions,
   TokenTransferState,
@@ -34,6 +32,11 @@ import {
   useSwitchActiveNetwork,
   useWalletByType,
 } from "@/hooks/dynamic/useUserWallets";
+import {
+  useDynamicEvmProvider,
+  useDynamicSolanaProvider,
+} from "@/hooks/dynamic/useDynamicProviderAndSigner";
+import { isSuiWallet } from "@dynamic-labs/sui";
 
 /**
  * Shared hook for token transfer functionality (swap or bridge)
@@ -68,8 +71,8 @@ export function useTokenTransfer(
   // Get the transaction details for slippage
   const receiveAddress = options.transactionDetails.receiveAddress;
 
-  // Get wallet providers and signers
-  const { getEvmSigner, getSolanaSigner } = useReownWalletProviderAndSigner();
+  const { getEvmSigner } = useDynamicEvmProvider(requiredWallet);
+  const { getSolanaSigner } = useDynamicSolanaProvider(requiredWallet);
 
   const isWalletCompatible = useConnectedRequiredWallet();
 
@@ -79,9 +82,6 @@ export function useTokenTransfer(
   const sourceChain = useSourceChain();
 
   const latestRequestIdRef = useRef<number>(0);
-
-  // Determine if source chain requires Solana or Sui
-  const wallet = useWallet();
   const {
     status: swapStatus,
     isLoading: isTracking,
@@ -626,7 +626,6 @@ export function useTokenTransfer(
 
       // Execute the appropriate swap based on wallet type
       if (sourceChain.walletType === WalletType.SOLANA) {
-        // Get Solana signer
         const solanaSigner = await getSolanaSigner();
         const connection = new Connection(
           `https://solana-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
@@ -648,26 +647,39 @@ export function useTokenTransfer(
           connection: connection,
         });
       } else if (sourceChain.walletType === WalletType.SUI) {
-        // Get Sui signer
-        if (!wallet || !wallet.signAndExecuteTransaction) {
-          throw new Error(
-            "Sui wallet not connected or doesn't support signAndExecuteTransaction",
-          );
+        if (!requiredWallet) {
+          throw new Error("No Sui wallet connected");
         }
+        if (!isSuiWallet(requiredWallet)) {
+          throw new Error("Connected wallet is not a Sui wallet");
+        }
+
+        // Use the wallet's signTransaction method directly
+        if (
+          !requiredWallet ||
+          typeof requiredWallet.signTransaction !== "function"
+        ) {
+          throw new Error("Sui wallet does not support signTransaction");
+        }
+
         result = await executeSuiSwap({
           quote: quotes[0],
-          swapperAddress: requiredWallet!.address,
+          swapperAddress: requiredWallet.address,
           destinationAddress: receiveAddress,
           referrerAddresses: {
             solana: REFERRER_SOL,
             evm: REFERRER_EVM,
             sui: REFERRER_SUI,
           },
-          signTransaction: wallet.signTransaction,
+          signTransaction: requiredWallet.signTransaction.bind(requiredWallet),
         });
       } else {
         // Get EVM signer
         const evmSigner = await getEvmSigner();
+
+        if (!evmSigner) {
+          throw new Error("Failed to get EVM signer from wallet");
+        }
 
         // Execute EVM swap
         result = await executeEvmSwap({

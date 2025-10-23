@@ -3,6 +3,7 @@
 import {
   DynamicContextProvider,
   FilterChain,
+  EvmNetwork,
 } from "@dynamic-labs/sdk-react-core";
 
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
@@ -11,6 +12,28 @@ import { SuiWalletConnectors } from "@dynamic-labs/sui";
 import { SolanaIcon, EthereumIcon, SuiIcon } from "@dynamic-labs/iconic";
 
 import Terms from "@/components/ui/Terms";
+import { chainList } from "@/config/chains";
+import { WalletType } from "@/types/web3";
+
+// Map our chain configuration to Dynamic's EvmNetwork format
+const evmNetworks: EvmNetwork[] = chainList
+  .filter((chain) => chain.walletType === WalletType.EVM)
+  .map((chain) => ({
+    blockExplorerUrls: chain.explorerUrl ? [chain.explorerUrl] : [],
+    chainId: chain.chainId,
+    chainName: chain.chainName,
+    iconUrls: [`https://app.dynamic.xyz/assets/networks/${chain.id}.svg`],
+    name: chain.name,
+    nativeCurrency: {
+      decimals: chain.nativeGasToken.decimals,
+      name: chain.currency,
+      symbol: chain.nativeGasToken.symbol,
+      iconUrl: `https://app.dynamic.xyz/assets/networks/${chain.id}.svg`,
+    },
+    networkId: chain.chainId,
+    rpcUrls: chain.rpcUrls || [],
+    vanityName: chain.chainName,
+  }));
 
 export default function DynamicWalletContext({
   children,
@@ -47,6 +70,7 @@ export default function DynamicWalletContext({
       settings={{
         environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID!,
         overrides: {
+          evmNetworks,
           views: [
             {
               type: "wallet-list",

@@ -36,8 +36,10 @@ import {
   HealthFactorPreviewRequest,
   HealthFactorPreviewResponse,
 } from "@/types/aave";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
+import { useDynamicEvmProvider } from "@/hooks/dynamic/useDynamicProviderAndSigner";
 import { useCallback, useState } from "react";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
+import { WalletType } from "@/types/web3";
 import { ethers } from "ethers";
 
 /**
@@ -45,7 +47,8 @@ import { ethers } from "ethers";
  * Handles both direct supply and supply with permit functionality
  */
 export const useAaveSupply = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [supply, supplying] = useSupply();
   const [state, setState] = useState<SupplyState>({
     loading: false,
@@ -64,6 +67,9 @@ export const useAaveSupply = () => {
       maxPriorityFeePerGas?: string | number;
     }) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
 
       // Convert the transaction request to ethers format
       const tx = {
@@ -102,6 +108,9 @@ export const useAaveSupply = () => {
 
       try {
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const userAddress = await signer.getAddress();
 
         // Prepare the supply configuration
@@ -195,7 +204,8 @@ export const useAaveSupply = () => {
  * This allows gasless approvals when supplying ERC-20 tokens
  */
 export const useAavePermit = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [state, setState] = useState<{
     loading: boolean;
     error: string | null;
@@ -220,6 +230,9 @@ export const useAavePermit = () => {
 
       try {
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const deadline =
           args.deadline || BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour from now
 
@@ -302,7 +315,8 @@ export const useAavePermit = () => {
  * Handles borrowing assets against supplied collateral
  */
 export const useAaveBorrow = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [borrow, borrowing] = useBorrow();
   const [state, setState] = useState<BorrowState>({
     loading: false,
@@ -321,6 +335,9 @@ export const useAaveBorrow = () => {
       maxPriorityFeePerGas?: string | number;
     }) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
 
       const tx = {
         to: transactionRequest.to,
@@ -357,6 +374,9 @@ export const useAaveBorrow = () => {
 
       try {
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const userAddress = await signer.getAddress();
 
         const borrowConfig = {
@@ -430,7 +450,8 @@ export const useAaveBorrow = () => {
  * Handles repaying borrowed assets
  */
 export const useAaveRepay = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [repay, repaying] = useRepay();
   const [state, setState] = useState<RepayState>({
     loading: false,
@@ -448,7 +469,9 @@ export const useAaveRepay = () => {
       maxPriorityFeePerGas?: string | number;
     }) => {
       const signer = await getEvmSigner();
-
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const tx = {
         to: transactionRequest.to,
         data: transactionRequest.data,
@@ -484,6 +507,9 @@ export const useAaveRepay = () => {
 
       try {
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const userAddress = await signer.getAddress();
 
         const repayConfig = {
@@ -575,7 +601,8 @@ export const useAaveRepay = () => {
  * Handles withdrawing supplied assets (aTokens)
  */
 export const useAaveWithdraw = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [withdraw, withdrawing] = useWithdraw();
   const [state, setState] = useState<WithdrawState>({
     loading: false,
@@ -593,7 +620,9 @@ export const useAaveWithdraw = () => {
       maxPriorityFeePerGas?: string | number;
     }) => {
       const signer = await getEvmSigner();
-
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const tx = {
         to: transactionRequest.to,
         data: transactionRequest.data,
@@ -630,6 +659,9 @@ export const useAaveWithdraw = () => {
 
       try {
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const userAddress = await signer.getAddress();
 
         const withdrawConfig = {
@@ -709,7 +741,8 @@ export const useAaveWithdraw = () => {
  * Handles enabling/disabling efficiency mode for improved capital efficiency
  */
 export const useAaveEMode = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [setEMode, settingEMode] = useUserEMode();
   const [state, setState] = useState<EmodeState>({
     loading: false,
@@ -739,7 +772,9 @@ export const useAaveEMode = () => {
         maxFeePerGas: transactionRequest.maxFeePerGas,
         maxPriorityFeePerGas: transactionRequest.maxPriorityFeePerGas,
       };
-
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const response = await signer.sendTransaction(tx);
       await response.wait(); // Wait for confirmation
       return response.hash;
@@ -826,7 +861,8 @@ export const useAaveEMode = () => {
  * Handles enabling/disabling supplied assets as collateral for borrowing
  */
 export const useAaveCollateral = () => {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
   const [toggleCollateral, togglingCollateral] = useCollateralToggle();
   const [state, setState] = useState<CollateralState>({
     loading: false,
@@ -845,7 +881,9 @@ export const useAaveCollateral = () => {
       maxPriorityFeePerGas?: string | number;
     }) => {
       const signer = await getEvmSigner();
-
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       // Convert the transaction request to ethers format
       const tx = {
         to: transactionRequest.to,

@@ -5,7 +5,6 @@ import { TransactionDetails } from "@/components/ui/TransactionDetails";
 import { useSourceChain } from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";
-import { useWallet } from "@suiet/wallet-kit";
 import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
@@ -43,9 +42,6 @@ export function SwapInterface({
   onDetailsToggle,
 }: SwapInterfaceProps) {
   const sourceChain = useSourceChain();
-
-  // Get Sui wallet info directly
-  const { connected: suiConnected } = useWallet();
 
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
@@ -106,14 +102,6 @@ export function SwapInterface({
 
       // Special handling for Sui - no chain switching yet
       if (requiredWallet?.chain === "SUI") {
-        // For Sui, we just check if we're connected
-        if (!suiConnected) {
-          toast.error("Sui wallet not connected", {
-            description: "Please connect your Sui wallet to continue",
-          });
-          return;
-        }
-
         // Execute the action directly since we can't switch chains in Sui yet
         if (actionButton?.onClick) {
           setIsProcessing(true);
