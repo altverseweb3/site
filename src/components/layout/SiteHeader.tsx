@@ -18,7 +18,7 @@ import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
-export function SiteHeader(): JSX.Element {
+export function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 

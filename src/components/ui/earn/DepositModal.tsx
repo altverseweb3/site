@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/hooks/etherFi/useEtherFiInteract";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
+import { useDynamicEvmProvider } from "@/hooks/dynamic/useDynamicProviderAndSigner";
 import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { getChainById, chains } from "@/config/chains";
@@ -112,7 +112,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const requiredWallet = useWalletByType(sourceChain.walletType);
 
   // Wallet hooks for address retrieval
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { getEvmSigner } = useDynamicEvmProvider(requiredWallet);
 
   // Vault Deposit Store integration
   const {
@@ -256,6 +256,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
       try {
         // Get signer for allowance check
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("EVM signer not available");
+        }
 
         // Convert deposit amount to BigInt for comparison
         const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];

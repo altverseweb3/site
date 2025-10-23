@@ -61,7 +61,8 @@
     "zustand": "^5.0.3"
   },
   "overrides": {
-    "@mysten/sui": "1.16.2"
+    "@mysten/sui": "1.16.2",
+    "@solana/web3.js": "1.98.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
