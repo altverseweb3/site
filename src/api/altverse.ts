@@ -139,6 +139,43 @@ export interface MetricsResponse {
   message: string;
 }
 
+export interface LeaderboardRequest {
+  queryType: "leaderboard";
+  scope: "global" | "weekly";
+  limit?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lastKey?: { [key: string]: any }; // For DynamoDB pagination
+}
+
+export interface UserLeaderboardEntryRequest {
+  queryType: "user_leaderboard_entry";
+  user_address: string;
+}
+
+export interface GlobalLeaderboardEntry {
+  user_address: string;
+  total_xp: number;
+  first_active_timestamp: string;
+}
+
+export interface WeeklyLeaderboardEntry {
+  user_address: string;
+  xp: number;
+  first_xp_timestamp: string;
+}
+
+export interface LeaderboardResponse {
+  items: (GlobalLeaderboardEntry | WeeklyLeaderboardEntry)[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lastKey?: { [key: string]: any };
+}
+
+export interface UserLeaderboardEntryResponse {
+  user_address: string;
+  global_total_xp: number;
+  weekly_xp: number;
+}
+
 export class AltverseAPI {
   private baseUrl: string;
 
@@ -220,12 +257,40 @@ export class AltverseAPI {
   }
 
   /**
+   * Fetches the paginated leaderboard, either global or weekly.
+   */
+  public async getLeaderboard(
+    request: LeaderboardRequest,
+  ): Promise<ApiResponse<LeaderboardResponse>> {
+    return this.request<LeaderboardResponse>("POST", "analytics", request);
+  }
+
+  /**
+   * Fetches a single user's global and weekly leaderboard XP.
+   */
+  public async getUserLeaderboardEntry(
+    request: UserLeaderboardEntryRequest,
+  ): Promise<ApiResponse<UserLeaderboardEntryResponse>> {
+    return this.request<UserLeaderboardEntryResponse>(
+      "POST",
+      "analytics",
+      request,
+    );
+  }
+
+  /**
    * Unified request method that handles both GET and POST requests
    */
   private async request<T>(
     method: "GET" | "POST",
     endpoint: string,
-    body?: BaseRequest | PricesRequest | SuiBalancesRequest | MetricsRequest,
+    body?:
+      | BaseRequest
+      | PricesRequest
+      | SuiBalancesRequest
+      | MetricsRequest
+      | LeaderboardRequest
+      | UserLeaderboardEntryRequest,
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}/${endpoint}`;
