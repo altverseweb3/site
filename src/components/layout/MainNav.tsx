@@ -32,7 +32,7 @@ export function MainNav({ onNavigate }: MainNavProps) {
             disabled={config.disabled}
             title={config.disabledMessage}
             className={cn(
-              "w-full md:w-auto text-sm font-medium transition-colors bg-transparent justify-start md:justify-center",
+              "w-full lg:w-auto text-sm font-medium transition-colors bg-transparent justify-start lg:justify-center",
               currentTab === value
                 ? "text-amber-500 hover:text-amber-400 hover:bg-transparent"
                 : config.disabled

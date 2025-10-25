@@ -43,8 +43,8 @@ export function SiteHeader(): JSX.Element {
 
   useEffect((): (() => void) => {
     const handleResize = (): void => {
-      // Check if window width is at or above the md breakpoint
-      if (window.innerWidth >= 768 && isOpen) {
+      // Check if window width is at or above the lg breakpoint
+      if (window.innerWidth >= 1024 && isOpen) {
         setIsOpen(false);
       }
     };
@@ -76,7 +76,7 @@ export function SiteHeader(): JSX.Element {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <MainNav onNavigate={(): void => void 0} />
           </div>
         </div>
@@ -85,7 +85,7 @@ export function SiteHeader(): JSX.Element {
         <div className="ml-auto flex items-center gap-4">
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild className="md:hidden">
+            <SheetTrigger asChild className="lg:hidden">
               <Button variant="ghost" size="sm" className="mr-0 px-2">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Open menu</span>
@@ -153,7 +153,7 @@ export function SiteHeader(): JSX.Element {
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden md:flex items-center gap-2 bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg transition-all duration-300 h-[30px]"
+                className="hidden lg:flex items-center gap-2 bg-amber-500/25 hover:bg-amber-500/50 hover:text-amber-400 text-amber-500 border-[#61410B] border-[1px] rounded-lg transition-all duration-300 h-[30px]"
               >
                 <History className="h-4 w-4" />
                 <span className="sr-only">transaction history</span>
@@ -165,7 +165,7 @@ export function SiteHeader(): JSX.Element {
           <ConnectWalletModal
             trigger={
               <BrandedButton
-                className="hidden md:inline-flex whitespace-nowrap text-sm h-[30px]"
+                className="hidden lg:inline-flex whitespace-nowrap text-sm h-[30px]"
                 iconClassName="h-4 w-4"
                 iconName="Wallet"
                 buttonText={getWalletButtonText()}

@@ -1,4 +1,4 @@
-export type Tab = "swap" | "earn" | "lending" | "dashboard";
+export type Tab = "swap" | "earn" | "lending" | "leaderboard" | "dashboard";
 export type Theme = "light" | "dark";
 export type AvailableIconName =
   | "Coins"
