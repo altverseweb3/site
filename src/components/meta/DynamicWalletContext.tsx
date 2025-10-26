@@ -1,9 +1,17 @@
 "use client";
 
 import {
+  useState,
+  useRef,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import {
   DynamicContextProvider,
   FilterChain,
   EvmNetwork,
+  useDynamicContext,
 } from "@dynamic-labs/sdk-react-core";
 
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
@@ -12,8 +20,10 @@ import { SuiWalletConnectors } from "@dynamic-labs/sui";
 import { SolanaIcon, EthereumIcon, SuiIcon } from "@dynamic-labs/iconic";
 
 import Terms from "@/components/ui/Terms";
+import Disclaimer from "@/components/ui/Disclaimer";
 import { chainList } from "@/config/chains";
 import { WalletType } from "@/types/web3";
+import useUIStore from "@/store/uiStore";
 
 // Map our chain configuration to Dynamic's EvmNetwork format
 const evmNetworks: EvmNetwork[] = chainList
@@ -35,33 +45,101 @@ const evmNetworks: EvmNetwork[] = chainList
     vanityName: chain.chainName,
   }));
 
-export default function DynamicWalletContext({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const handleAuthFlowOpen = () => {
-    // Focus the modal container after it opens to enable immediate scrolling
+// Inner component that has access to useDynamicContext
+const DynamicWalletInner = forwardRef<
+  { handleAuthFlowOpenCallback: () => void },
+  { children: React.ReactNode }
+>(({ children }, ref) => {
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const hasAcceptedTerms = useUIStore((state) => state.hasAcceptedTerms);
+  const setHasAcceptedTerms = useUIStore((state) => state.setHasAcceptedTerms);
+  const { setShowAuthFlow } = useDynamicContext();
+  const isHandlingAuthFlowRef = useRef(false);
+
+  const handleAuthFlowOpenCallback = useCallback(() => {
+    // Prevent multiple simultaneous calls
+    if (isHandlingAuthFlowRef.current) return;
+
+    // Check if terms have been accepted
+    if (!hasAcceptedTerms) {
+      isHandlingAuthFlowRef.current = true;
+
+      // Use a small delay to ensure the auth flow is fully opened before we close it
+      setTimeout(() => {
+        // Close the Dynamic auth flow
+        setShowAuthFlow(false);
+        // Show our disclaimer instead
+        setShowDisclaimer(true);
+        isHandlingAuthFlowRef.current = false;
+      }, 50);
+
+      return;
+    }
+
+    // Terms accepted, proceed with normal scroll focus behavior
     setTimeout(() => {
-      // Find the scrollable wallet list container
       const scrollContainer = document.querySelector(
         ".wallet-list__scroll-container",
       );
 
       if (scrollContainer instanceof HTMLElement) {
-        // Make it focusable if it isn't already
         if (!scrollContainer.hasAttribute("tabindex")) {
           scrollContainer.setAttribute("tabindex", "-1");
         }
         scrollContainer.focus();
 
-        // For mobile: ensure smooth scrolling on iOS
         scrollContainer.style.setProperty(
           "-webkit-overflow-scrolling",
           "touch",
         );
       }
     }, 150);
+  }, [hasAcceptedTerms, setShowAuthFlow]);
+
+  // Expose the callback to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleAuthFlowOpenCallback,
+  }));
+
+  const handleDisclaimerAccept = () => {
+    setHasAcceptedTerms(true);
+    setShowDisclaimer(false);
+    // Reopen the Dynamic auth flow
+    setTimeout(() => {
+      setShowAuthFlow(true);
+    }, 500);
+  };
+
+  const handleDisclaimerDeny = () => {
+    setShowDisclaimer(false);
+  };
+
+  return (
+    <>
+      {children}
+      <Disclaimer
+        open={showDisclaimer}
+        onOpenChange={setShowDisclaimer}
+        onAccept={handleDisclaimerAccept}
+        onDeny={handleDisclaimerDeny}
+      />
+    </>
+  );
+});
+
+DynamicWalletInner.displayName = "DynamicWalletInner";
+
+export default function DynamicWalletContext({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const innerRef = useRef<{ handleAuthFlowOpenCallback: () => void }>(null);
+
+  const handleAuthFlowOpen = () => {
+    if (innerRef.current) {
+      innerRef.current.handleAuthFlowOpenCallback();
+    }
   };
 
   return (
@@ -109,7 +187,7 @@ export default function DynamicWalletContext({
         },
       }}
     >
-      {children}
+      <DynamicWalletInner ref={innerRef}>{children}</DynamicWalletInner>
     </DynamicContextProvider>
   );
 }
