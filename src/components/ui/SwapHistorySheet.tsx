@@ -18,12 +18,12 @@ import {
 } from "lucide-react";
 import { useSwapHistory } from "@/hooks/swap/useSwapHistory";
 import { WalletFilter, WalletIcons } from "@/components/ui/WalletFilter";
-import { useWalletConnection } from "@/utils/swap/walletMethods";
 import { WalletType, SwapData } from "@/types/web3";
 import { getChainByMayanChainId, getChainByMayanName } from "@/config/chains";
 import { getExplorerUrl } from "@/utils/common";
 import type { WalletFilterType } from "@/types/web3";
 import { truncateAddress } from "@/utils/formatters";
+import { useIsWalletTypeConnected } from "@/hooks/dynamic/useUserWallets";
 
 interface SwapHistorySheetProps {
   isOpen: boolean;
@@ -87,14 +87,14 @@ const getWalletTypeFromChain = (chainId: string): WalletTypeMapping => {
   const chain = getChainByMayanChainId(Number(chainId));
   const walletType = chain?.walletType;
   let wallet: WalletFilterType = "all";
-  if (walletType === WalletType.REOWN_EVM) {
-    wallet = "metamask";
-  } else if (walletType === WalletType.REOWN_SOL) {
-    wallet = "phantom";
-  } else if (walletType === WalletType.SUIET_SUI) {
-    wallet = "suiet";
+  if (walletType === WalletType.EVM) {
+    wallet = "evm";
+  } else if (walletType === WalletType.SOLANA) {
+    wallet = "solana";
+  } else if (walletType === WalletType.SUI) {
+    wallet = "sui";
   }
-  return { wallet, walletType: walletType || WalletType.REOWN_EVM };
+  return { wallet, walletType: walletType || WalletType.EVM };
 };
 
 const mapSwapToTransaction = (swap: SwapData): TransactionDisplay => {
@@ -135,9 +135,9 @@ const getFilteredTransactions = (
   } else {
     const walletTypeMap: WalletTypeMap = {
       all: undefined,
-      metamask: WalletType.REOWN_EVM,
-      phantom: WalletType.REOWN_SOL,
-      suiet: WalletType.SUIET_SUI,
+      evm: WalletType.EVM,
+      solana: WalletType.SOLANA,
+      sui: WalletType.SUI,
     };
 
     const walletType = walletTypeMap[selectedWallet];
@@ -154,16 +154,8 @@ export function SwapHistorySheet({
   isOpen,
   onOpenChange,
   children,
-}: SwapHistorySheetProps): JSX.Element {
+}: SwapHistorySheetProps) {
   const [selectedWallet, setSelectedWallet] = useState<WalletFilterType>("all");
-
-  const { isWalletTypeConnected } = useWalletConnection();
-
-  const walletConnectionChecker: WalletConnectionChecker = (
-    walletType: WalletType,
-  ): boolean => {
-    return isWalletTypeConnected(walletType);
-  };
 
   const {
     isLoading,
@@ -178,6 +170,20 @@ export function SwapHistorySheet({
 
   const fetchSwapHistoryRef = useRef(fetchSwapHistory);
   fetchSwapHistoryRef.current = fetchSwapHistory;
+
+  // Call hooks at component level to avoid Rules of Hooks violation
+  const isEVMConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const isSolanaConnected = useIsWalletTypeConnected(WalletType.SOLANA);
+  const isSUIConnected = useIsWalletTypeConnected(WalletType.SUI);
+
+  const isWalletTypeConnected: WalletConnectionChecker = (
+    walletType: WalletType,
+  ) => {
+    if (walletType === WalletType.EVM) return isEVMConnected;
+    if (walletType === WalletType.SOLANA) return isSolanaConnected;
+    if (walletType === WalletType.SUI) return isSUIConnected;
+    return false;
+  };
 
   // Load swap history on initial page load
   useEffect((): void => {
@@ -207,7 +213,7 @@ export function SwapHistorySheet({
   const filteredTransactions: TransactionDisplay[] = getFilteredTransactions(
     realTransactions,
     selectedWallet,
-    walletConnectionChecker,
+    isWalletTypeConnected,
   );
 
   const getEmptyStateMessage = (): string => {
@@ -221,15 +227,13 @@ export function SwapHistorySheet({
 
     const walletTypeMap: WalletTypeMap = {
       all: undefined,
-      metamask: WalletType.REOWN_EVM,
-      phantom: WalletType.REOWN_SOL,
-      suiet: WalletType.SUIET_SUI,
+      evm: WalletType.EVM,
+      solana: WalletType.SOLANA,
+      sui: WalletType.SUI,
     };
 
     const walletType = walletTypeMap[selectedWallet];
-    const isConnected = walletType
-      ? walletConnectionChecker(walletType)
-      : false;
+    const isConnected = walletType ? isWalletTypeConnected(walletType) : false;
 
     return isConnected
       ? `your ${selectedWallet} swap history will appear here`
@@ -246,7 +250,7 @@ export function SwapHistorySheet({
       : `no ${selectedWallet} transactions`;
   };
 
-  const renderChainBadge = (chainName: string): JSX.Element => {
+  const renderChainBadge = (chainName: string) => {
     const chain = getChainByMayanName(chainName);
 
     if (!chain) {
@@ -279,7 +283,7 @@ export function SwapHistorySheet({
     );
   };
 
-  const renderSkeletonLoading = (): JSX.Element => (
+  const renderSkeletonLoading = () => (
     <div className="space-y-4 animate-pulse pb-6">
       {[...Array(3)].map((_, i: number) => (
         <div
@@ -310,7 +314,7 @@ export function SwapHistorySheet({
     </div>
   );
 
-  const renderErrorState = (): JSX.Element => (
+  const renderErrorState = () => (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 animate-pulse">
         <ExternalLink className="h-8 w-8 text-red-500" />
@@ -330,7 +334,7 @@ export function SwapHistorySheet({
     </div>
   );
 
-  const renderEmptyState = (): JSX.Element => (
+  const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-20 h-20 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-6 animate-pulse">
         <Clock className="h-10 w-10 text-amber-500" />
@@ -344,10 +348,7 @@ export function SwapHistorySheet({
     </div>
   );
 
-  const renderTransactionCard = (
-    tx: TransactionDisplay,
-    index: number,
-  ): JSX.Element => (
+  const renderTransactionCard = (tx: TransactionDisplay, index: number) => (
     <div
       key={tx.id}
       className="group border border-amber-500/10 rounded-xl p-5 space-y-4 bg-amber-500/5 backdrop-blur-sm hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-500 ease-out animate-fade-in-up"

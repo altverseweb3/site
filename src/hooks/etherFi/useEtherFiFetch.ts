@@ -1,5 +1,7 @@
 import { useCallback } from "react";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
+import { useDynamicEvmProvider } from "@/hooks/dynamic/useDynamicProviderAndSigner";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
+import { WalletType } from "@/types/web3";
 import {
   fetchVaultTVL,
   checkIfTellerPaused,
@@ -12,11 +14,15 @@ import {
  * React hook for etherFi fetch functions with wallet integration
  */
 export function useEtherFiFetch() {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
 
   const fetchVaultTVLMemoized = useCallback(
     async (vaultId: number) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const provider = signer.provider;
       if (!provider) {
         throw new Error("Signer must have a provider");
@@ -29,6 +35,9 @@ export function useEtherFiFetch() {
   const checkIfTellerPausedMemoized = useCallback(
     async (vaultId: number) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const provider = signer.provider;
       if (!provider) {
         throw new Error("Signer must have a provider");
@@ -41,6 +50,9 @@ export function useEtherFiFetch() {
   const getTokenAllowanceMemoized = useCallback(
     async (tokenSymbol: string, vaultId: number) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       return getTokenAllowance(tokenSymbol, vaultId, signer);
     },
     [getEvmSigner],
@@ -49,6 +61,9 @@ export function useEtherFiFetch() {
   const getTokenBalanceMemoized = useCallback(
     async (tokenSymbol: string) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       return getTokenBalance(tokenSymbol, signer);
     },
     [getEvmSigner],
@@ -57,6 +72,9 @@ export function useEtherFiFetch() {
   const getUserVaultBalanceMemoized = useCallback(
     async (vaultId: number) => {
       const signer = await getEvmSigner();
+      if (!signer) {
+        throw new Error("No signer available");
+      }
       const userAddress = await signer.getAddress();
       const provider = signer.provider;
       if (!provider) {

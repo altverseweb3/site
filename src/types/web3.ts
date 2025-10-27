@@ -12,9 +12,9 @@ export interface WalletInfo {
 }
 
 export enum WalletType {
-  REOWN_EVM = "REOWN_EVM",
-  REOWN_SOL = "REOWN_SOL",
-  SUIET_SUI = "SUIET_SUI",
+  EVM = "EVM",
+  SOLANA = "SOLANA",
+  SUI = "SUI",
 }
 
 export type MayanChainName =
@@ -93,7 +93,6 @@ export type SectionKey = "swap" | "earn" | "lending";
 
 export interface Web3StoreState {
   version: number;
-  connectedWallets: Array<Omit<WalletInfo, "provider">>;
 
   // Replace single state with keyed integrations
   swapIntegrations: Record<string, SwapStateForSection>;
@@ -111,17 +110,6 @@ export interface Web3StoreState {
 
   selectedAaveChains: Chain[];
 
-  // Wallet actions (remain the same)
-  addWallet: (wallet: WalletInfo) => void;
-  removeWallet: (walletType: WalletType) => void;
-  updateWalletAddress: (walletType: WalletType, address: string) => void;
-  updateWalletChainId: (walletType: WalletType, chainId: number) => void;
-  disconnectAll: () => void;
-  getWalletsOfType: (walletType?: WalletType) => WalletInfo[];
-  getWalletByChain: (chain: Chain) => WalletInfo | null;
-  isWalletTypeConnected: (walletType: WalletType) => boolean;
-  getWalletByType: (walletType: WalletType) => WalletInfo | null;
-
   // New integration-specific actions
   getSwapStateForSection: () => SwapStateForSection;
   initializeSwapStateForSection: () => void;
@@ -134,10 +122,6 @@ export interface Web3StoreState {
   setSlippageValue: (value: "auto" | string) => void;
   setReceiveAddress: (address: string | null) => void;
   setGasDrop: (gasDrop: number) => void;
-
-  // Helper methods for backward compatibility and convenience
-  getWalletBySourceChain: () => WalletInfo | null;
-  getWalletByDestinationChain: () => WalletInfo | null;
 
   // Token management (remains largely the same)
   loadTokens: () => Promise<void>;
@@ -482,13 +466,13 @@ export interface SwapQueryResult {
 
 export type ChainType = "EVM" | "SOL" | "SUI";
 
-export type WalletFilterType = "all" | "metamask" | "phantom" | "suiet";
+export type WalletFilterType = "all" | "evm" | "solana" | "sui";
 
 export interface WalletOption {
   value: WalletFilterType;
   label: string;
-  icon?: string;
-  icons?: string[]; // For "all" option
+  icon?: string | React.ReactNode;
+  icons?: (string | React.ReactNode)[]; // For "all" option
   walletType?: WalletType; // Map to actual wallet type
 }
 

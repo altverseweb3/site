@@ -8,15 +8,11 @@ import AssetFilter from "@/components/ui/AssetFilter";
 import EarnTable from "@/components/ui/earn/EarnTable";
 import CardsList from "@/components/ui/CardsList";
 import EarnCard from "@/components/ui/earn/EarnCard";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import BrandedButton from "@/components/ui/BrandedButton";
 import ChainPicker from "@/components/ui/ChainPicker";
 import { chainList, getChainById } from "@/config/chains";
 import { WalletType } from "@/types/web3";
-import {
-  useIsWalletTypeConnected,
-  useSetActiveSwapSection,
-} from "@/store/web3Store";
+import { useSetActiveSwapSection } from "@/store/web3Store";
 import {
   useEtherFiEarnData,
   filterEarnData,
@@ -29,8 +25,12 @@ import {
   EarnTableType,
   ProtocolOption,
 } from "@/types/earn";
-import { useChainSwitch } from "@/utils/swap/walletMethods";
-import useWeb3Store, { useSourceChain } from "@/store/web3Store";
+import {
+  useHandleWalletClick,
+  useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+  useWalletByType,
+} from "@/hooks/dynamic/useUserWallets";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -79,13 +79,13 @@ export default function EarnPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [chainSwitchAttempted, setChainSwitchAttempted] = useState(false);
 
-  const sourceChain = useSourceChain();
-  const { switchToChain } = useChainSwitch(sourceChain);
+  const { switchNetwork } = useSwitchActiveNetwork(WalletType.EVM);
+  const walletByType = useWalletByType;
 
   const setActiveSwapSection = useSetActiveSwapSection();
 
-  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-
+  const isEvmWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const handleWalletClick = useHandleWalletClick(WalletType.EVM);
   useEffect(() => {
     setActiveSwapSection("earn");
   }, [setActiveSwapSection]);
@@ -94,15 +94,13 @@ export default function EarnPage() {
     const attemptChainSwitch = async () => {
       if (chainSwitchAttempted) return;
 
-      const walletForEthereum = useWeb3Store
-        .getState()
-        .getWalletByChain(ethereumChain);
+      const walletForEthereum = walletByType(ethereumChain.walletType);
 
-      if (isEvmWalletConnected && switchToChain && walletForEthereum) {
+      if (isEvmWalletConnected && walletForEthereum) {
         setChainSwitchAttempted(true);
 
         try {
-          await switchToChain(ethereumChain);
+          await switchNetwork(ethereumChain.chainId);
         } catch (error) {
           console.error("Failed to switch to Ethereum chain:", error);
         }
@@ -110,7 +108,7 @@ export default function EarnPage() {
     };
 
     attemptChainSwitch();
-  }, [isEvmWalletConnected, switchToChain, chainSwitchAttempted]);
+  }, [isEvmWalletConnected, switchNetwork, walletByType, chainSwitchAttempted]);
 
   useEffect(() => {
     if (!isEvmWalletConnected) {
@@ -361,14 +359,11 @@ export default function EarnPage() {
                 and managed on EVM wallets as they will opened and managed on
                 ethereum or other EVM chains.
               </p>
-              <ConnectWalletModal
-                trigger={
-                  <BrandedButton
-                    iconName="Wallet"
-                    buttonText="connect EVM wallet"
-                    className="max-w-xs h-8 text-sm md:text-md"
-                  />
-                }
+              <BrandedButton
+                onClick={handleWalletClick}
+                iconName="Wallet"
+                buttonText="connect EVM wallet"
+                className="max-w-xs h-8 text-sm md:text-md"
               />
             </div>
           ) : (activeTab === "earn" && loading) ||

@@ -9,17 +9,20 @@ import {
   useSourceChain,
   useDestinationChain,
   useTransactionDetails,
-  useGetWalletBySourceChain,
-  useGetWalletByDestinationChain,
   useSetActiveSwapSection,
 } from "@/store/web3Store";
+import {
+  useConnectedRequiredWallet,
+  useDestinationWallet,
+} from "@/hooks/dynamic/useUserWallets";
 
 const SwapComponent: React.FC = () => {
   const sourceToken = useSourceToken();
   const destinationToken = useDestinationToken();
   const setActiveSwapSection = useSetActiveSwapSection();
-  const destinationWallet = useGetWalletByDestinationChain();
+  const destinationWallet = useDestinationWallet();
   const transactionDetails = useTransactionDetails();
+  const isConnectedRequiredWallet = useConnectedRequiredWallet();
   const [showTransactionDetails, setShowTransactionDetails] = useState(false);
 
   // Use the shared hook with tracking enabled
@@ -71,7 +74,7 @@ const SwapComponent: React.FC = () => {
       amount={amount}
       onAmountChange={handleAmountChange}
       isButtonDisabled={isButtonDisabled}
-      hasActiveWallet={!!useGetWalletBySourceChain()}
+      hasActiveWallet={isConnectedRequiredWallet}
       onTransfer={handleSwapClick}
       swapAmounts={swapAmounts}
       transferType="swap"

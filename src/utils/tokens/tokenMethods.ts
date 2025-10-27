@@ -64,7 +64,7 @@ export const loadTokensForChain = async (
 
     const numericChainId = chainConfig.chainId;
     const isSuiChain = fetchChainId === "sui";
-    const isEvmChain = chainConfig.walletType === WalletType.REOWN_EVM;
+    const isEvmChain = chainConfig.walletType === WalletType.EVM;
     const chainId = chainConfig.id;
 
     // Load standard tokens - filter out native tokens since they're handled separately

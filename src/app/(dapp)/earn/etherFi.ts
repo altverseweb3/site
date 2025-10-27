@@ -9,9 +9,9 @@ import { fetchAssetPrice } from "@/utils/etherFi/prices";
 import { queryAllVaultsAPY, VaultApyData } from "@/utils/etherFi/apy";
 import { chains } from "@/config/chains";
 import { createEthersJsonRpcProviderFromUrls } from "@/utils/wallet/ethersJsonRpcProvider";
-import { useWalletByType } from "@/store/web3Store";
 import { WalletType } from "@/types/web3";
 import EtherFiModal from "@/components/ui/earn/EtherFiModal";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 
 export interface EtherFiEarnData {
   earnRows: EarnTableRow[];
@@ -26,7 +26,7 @@ export function useEtherFiEarnData(isWalletConnected: boolean) {
   });
   const [loading, setLoading] = useState(false);
   const [userPositionsLoading, setUserPositionsLoading] = useState(false);
-  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
+  const evmWallet = useWalletByType(WalletType.EVM);
 
   // Effect 1: Fetch vault data (independent of wallet connection)
   useEffect(() => {

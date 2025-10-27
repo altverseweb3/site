@@ -157,11 +157,11 @@ export async function fetchNativeBalanceForChain(
   walletAddress: string,
 ): Promise<NativeBalance> {
   switch (chain.walletType) {
-    case WalletType.REOWN_EVM:
+    case WalletType.EVM:
       return getEvmNativeBalance(chain, walletAddress);
-    case WalletType.REOWN_SOL:
+    case WalletType.SOLANA:
       return getSolanaNativeBalance(chain, walletAddress);
-    case WalletType.SUIET_SUI:
+    case WalletType.SUI:
       return getSuiNativeBalance(chain, walletAddress);
     default:
       return {
@@ -221,7 +221,7 @@ export async function fetchAllNativeBalances(walletAddresses: {
   if (evmAddress) {
     try {
       const evmResult = await fetchNativeBalancesForWalletType(
-        WalletType.REOWN_EVM,
+        WalletType.EVM,
         evmAddress,
       );
       allBalances.push(...evmResult.balances);
@@ -230,7 +230,7 @@ export async function fetchAllNativeBalances(walletAddresses: {
       console.error("Error fetching EVM balances:", error);
       // Add errors for all EVM chains
       const evmChains = chainList.filter(
-        (chain) => chain.walletType === WalletType.REOWN_EVM,
+        (chain) => chain.walletType === WalletType.EVM,
       );
       evmChains.forEach((chain) => {
         allErrors.push({
@@ -245,7 +245,7 @@ export async function fetchAllNativeBalances(walletAddresses: {
   if (solanaAddress) {
     try {
       const solanaResult = await fetchNativeBalancesForWalletType(
-        WalletType.REOWN_SOL,
+        WalletType.SOLANA,
         solanaAddress,
       );
       allBalances.push(...solanaResult.balances);
@@ -265,7 +265,7 @@ export async function fetchAllNativeBalances(walletAddresses: {
   if (suiAddress) {
     try {
       const suiResult = await fetchNativeBalancesForWalletType(
-        WalletType.SUIET_SUI,
+        WalletType.SUI,
         suiAddress,
       );
       allBalances.push(...suiResult.balances);

@@ -3,16 +3,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import {
-  WalletInfo,
   Web3StoreState,
-  WalletType,
   Token,
   Chain,
   SwapStateForSection,
   SerializedToken,
   SerializedSwapStateForSection,
   SectionKey,
-  UserWallets,
 } from "@/types/web3";
 import {
   defaultSourceChain,
@@ -307,120 +304,6 @@ const useWeb3Store = create<Web3StoreState>()(
             },
           };
         });
-      },
-
-      // Helper methods for wallet lookup by integration
-      getWalletBySourceChain: () => {
-        const integration = get().getSwapStateForSection();
-        const sourceChainWalletType = integration.sourceChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === sourceChainWalletType,
-          ) || null
-        );
-      },
-
-      getWalletByDestinationChain: () => {
-        const integration = get().getSwapStateForSection();
-        const destinationChainWalletType =
-          integration.destinationChain.walletType;
-        return (
-          get().connectedWallets.find(
-            (w) => w.type === destinationChainWalletType,
-          ) || null
-        );
-      },
-
-      // Wallet actions
-      addWallet: (wallet: WalletInfo) => {
-        const walletForStorage = {
-          type: wallet.type,
-          name: wallet.name,
-          address: wallet.address,
-          chainId: wallet.chainId,
-        };
-
-        set((state) => {
-          const existingWalletIndex = state.connectedWallets.findIndex(
-            (w) => w.type === wallet.type,
-          );
-          let newWallets: Array<Omit<WalletInfo, "provider">>;
-
-          if (existingWalletIndex >= 0) {
-            newWallets = [...state.connectedWallets];
-            newWallets[existingWalletIndex] = walletForStorage;
-          } else {
-            newWallets = [...state.connectedWallets, walletForStorage];
-          }
-
-          return {
-            connectedWallets: newWallets,
-          };
-        });
-      },
-
-      removeWallet: (walletType: WalletType) => {
-        set((state) => {
-          const updatedWallets = state.connectedWallets.filter(
-            (w) => w.type !== walletType,
-          );
-
-          return {
-            connectedWallets: updatedWallets,
-          };
-        });
-      },
-
-      updateWalletAddress: (walletType: WalletType, address: string) => {
-        set((state) => ({
-          connectedWallets: state.connectedWallets.map((wallet) =>
-            wallet.type === walletType ? { ...wallet, address } : wallet,
-          ),
-        }));
-      },
-
-      updateWalletChainId: (walletType: WalletType, chainId: number) => {
-        set((state) => ({
-          connectedWallets: state.connectedWallets.map((wallet) =>
-            wallet.type === walletType ? { ...wallet, chainId } : wallet,
-          ),
-        }));
-      },
-
-      disconnectAll: () => {
-        set({
-          connectedWallets: [],
-        });
-      },
-
-      // New method to get all wallets of a specific type
-      getWalletsOfType: (walletType?: WalletType): WalletInfo[] => {
-        const wallets = get().connectedWallets;
-        // If walletType is undefined, return all wallets
-        if (walletType === undefined) {
-          return wallets;
-        }
-        // Otherwise, filter by the specified wallet type
-        return wallets.filter((w) => w.type === walletType);
-      },
-
-      getWalletByChain: (chain: Chain): WalletInfo | null => {
-        return (
-          get().connectedWallets.find((w) => w.type === chain.walletType) ||
-          null
-        );
-      },
-
-      // New method to check if a specific wallet type is connected
-      isWalletTypeConnected: (walletType: WalletType): boolean => {
-        return get().connectedWallets.some((w) => w.type === walletType);
-      },
-
-      // New method to get a connected wallet by type
-      getWalletByType: (walletType: WalletType): WalletInfo | null => {
-        return (
-          get().connectedWallets.find((w) => w.type === walletType) || null
-        );
       },
 
       addCustomToken: (token: Token) => {
@@ -853,12 +736,6 @@ const useWeb3Store = create<Web3StoreState>()(
         });
         return {
           version: state.version,
-          connectedWallets: state.connectedWallets.map((wallet) => ({
-            type: wallet.type,
-            name: wallet.name,
-            address: wallet.address,
-            chainId: wallet.chainId,
-          })),
           swapIntegrations: serializedIntegrations,
           selectedAaveChains: state.selectedAaveChains,
         };
@@ -920,21 +797,6 @@ export const useDestinationChain = (): Chain => {
   );
 };
 
-// Get wallet by type hook
-export const useWalletByType = (walletType: WalletType): WalletInfo | null => {
-  return useWeb3Store((state) => state.getWalletByType(walletType));
-};
-
-// Check if a wallet type is connected
-export const useIsWalletTypeConnected = (walletType: WalletType): boolean => {
-  return useWeb3Store((state) => state.isWalletTypeConnected(walletType));
-};
-
-// Get all wallets of a specific type
-export const useWalletsOfType = (walletType: WalletType): WalletInfo[] => {
-  return useWeb3Store((state) => state.getWalletsOfType(walletType));
-};
-
 // New hooks for the selected tokens
 export const useSourceToken = (): Token | null => {
   return useWeb3Store((state) => state.getSwapStateForSection().sourceToken);
@@ -990,14 +852,6 @@ export const useTokenByAddress = (
   });
 };
 
-export const useGetWalletBySourceChain = (): WalletInfo | null => {
-  return useWeb3Store((state) => state.getWalletBySourceChain());
-};
-
-export const useGetWalletByDestinationChain = (): WalletInfo | null => {
-  return useWeb3Store((state) => state.getWalletByDestinationChain());
-};
-
 export const useLoadTokens = () => {
   return useWeb3Store((state) => state.loadTokens);
 };
@@ -1030,54 +884,6 @@ export const useSelectedAaveChains = (): Chain[] => {
 
 export const useSetSelectedAaveChains = () => {
   return useWeb3Store((state) => state.setSelectedAaveChains);
-};
-
-export const useExtractUserWallets = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>,
-): UserWallets => {
-  const userWallets: UserWallets = {};
-
-  connectedWallets.forEach((wallet) => {
-    switch (wallet.type) {
-      case WalletType.REOWN_EVM:
-        userWallets.evm = wallet.address;
-        break;
-      case WalletType.REOWN_SOL:
-        userWallets.solana = wallet.address;
-        break;
-      case WalletType.SUIET_SUI:
-        userWallets.sui = wallet.address;
-        break;
-      default:
-        console.warn(`Unknown wallet type: ${wallet.type}`);
-    }
-  });
-
-  return userWallets;
-};
-
-export const useConnectedWalletSummary = (
-  connectedWallets: Array<Omit<WalletInfo, "provider">>,
-): {
-  hasEVM: boolean;
-  hasSolana: boolean;
-  hasSUI: boolean;
-  totalConnected: number;
-  walletsByType: Record<string, string>;
-} => {
-  const userWallets = useExtractUserWallets(connectedWallets);
-
-  return {
-    hasEVM: !!userWallets.evm,
-    hasSolana: !!userWallets.solana,
-    hasSUI: !!userWallets.sui,
-    totalConnected: connectedWallets.length,
-    walletsByType: {
-      EVM: userWallets.evm || "Not connected",
-      Solana: userWallets.solana || "Not connected",
-      SUI: userWallets.sui || "Not connected",
-    },
-  };
 };
 
 export default useWeb3Store;

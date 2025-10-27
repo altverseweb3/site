@@ -7,7 +7,7 @@ import {
   Edit2,
   Check,
 } from "lucide-react";
-import useWeb3Store, {
+import {
   useTransactionDetails,
   useSetSlippageValue,
   useSetReceiveAddress,
@@ -16,6 +16,8 @@ import useWeb3Store, {
 import { WalletType } from "@/types/web3";
 import { GasDrop } from "@/components/ui/GasDrop";
 import ConnectWalletButton from "@/components/ui/ConnectWalletButton";
+import { useDestinationWallet } from "@/hooks/dynamic/useUserWallets";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
 interface TransactionDetailsProps {
   protocolFeeUsd?: number;
   relayerFeeUsd?: number;
@@ -32,15 +34,12 @@ export function TransactionDetails({
   onToggle,
 }: TransactionDetailsProps) {
   // ─── Zustand store hooks ─────────────────────────────────────────────────────
-  const connectedWallets = useWeb3Store((state) => state.connectedWallets);
-  const getWalletByType = useWeb3Store((state) => state.getWalletByType);
   const transactionDetails = useTransactionDetails();
   const setSlippageValue = useSetSlippageValue();
   const setReceiveAddress = useSetReceiveAddress();
   const destinationChain = useDestinationChain();
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletByType(destinationChain.walletType),
-  );
+  const requiredWallet = useDestinationWallet();
+  const destinationChainWallet = useWalletByType(destinationChain?.walletType);
 
   // ─── Local state ─────────────────────────────────────────────────────────────
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(isOpen || false);
@@ -67,11 +66,11 @@ export function TransactionDetails({
    */
   const getPlaceholderText = useCallback((walletType?: WalletType): string => {
     switch (walletType) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         return "Connect Ethereum wallet";
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         return "Connect Solana wallet";
-      case WalletType.SUIET_SUI:
+      case WalletType.SUI:
         return "Connect Sui wallet";
       default:
         return "Connect wallet";
@@ -90,12 +89,12 @@ export function TransactionDetails({
       if (address === placeholder) return address;
 
       switch (walletType) {
-        case WalletType.REOWN_EVM:
-        case WalletType.SUIET_SUI:
+        case WalletType.EVM:
+        case WalletType.SUI:
           // EVM and Sui addresses: 0x + first 4 + ... + last 4
           if (address.length <= 10) return address;
           return `${address.slice(0, 6)}...${address.slice(-4)}`;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           // Solana addresses: first 4 + ... + last 4
           if (address.length <= 8) return address;
           return `${address.slice(0, 4)}...${address.slice(-4)}`;
@@ -166,11 +165,11 @@ export function TransactionDetails({
       const isSuiAddress = /^0x[a-fA-F0-9]{64}$/.test(address);
 
       switch (walletType) {
-        case WalletType.REOWN_EVM:
+        case WalletType.EVM:
           return isEthereumAddress;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           return isSolanaAddress;
-        case WalletType.SUIET_SUI:
+        case WalletType.SUI:
           return isSuiAddress;
         default:
           return false;
@@ -200,15 +199,15 @@ export function TransactionDetails({
     if (!walletType) return "Invalid wallet type";
 
     switch (walletType) {
-      case WalletType.REOWN_EVM:
+      case WalletType.EVM:
         return /^0x[a-fA-F0-9]{40}$/.test(address)
           ? null
           : "Invalid Ethereum address format";
-      case WalletType.REOWN_SOL:
+      case WalletType.SOLANA:
         return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
           ? null
           : "Invalid Solana address format";
-      case WalletType.SUIET_SUI:
+      case WalletType.SUI:
         return /^0x[a-fA-F0-9]{64}$/.test(address)
           ? null
           : "Invalid Sui address format";
@@ -242,12 +241,10 @@ export function TransactionDetails({
     if (!destinationChain?.walletType) return;
 
     // Try to get a wallet of the needed type
-    const matchingWallet = getWalletByType(destinationChain.walletType);
-
-    if (matchingWallet) {
+    if (destinationChainWallet) {
       // We have a matching wallet, use its address
-      setReceiveAddressInput(matchingWallet.address);
-      setReceiveAddress(matchingWallet.address);
+      setReceiveAddressInput(destinationChainWallet.address);
+      setReceiveAddress(destinationChainWallet.address);
       setAddressError(null);
     } else {
       // No matching wallet, clear the address or keep existing if valid
@@ -265,8 +262,8 @@ export function TransactionDetails({
     }
   }, [
     destinationChain?.walletType,
-    getWalletByType,
     setReceiveAddress,
+    destinationChainWallet,
     transactionDetails.receiveAddress,
   ]);
 
@@ -303,10 +300,8 @@ export function TransactionDetails({
   // Update when new wallets are connected
   useEffect(() => {
     if (destinationChain?.walletType) {
-      const matchingWallet = getWalletByType(destinationChain.walletType);
-
       if (
-        matchingWallet &&
+        destinationChainWallet &&
         (!transactionDetails.receiveAddress ||
           !validateAddressForWalletType(
             transactionDetails.receiveAddress,
@@ -314,15 +309,14 @@ export function TransactionDetails({
           ))
       ) {
         // Update to the new wallet address if we don't have a valid address already
-        setReceiveAddressInput(matchingWallet.address);
-        setReceiveAddress(matchingWallet.address);
+        setReceiveAddressInput(destinationChainWallet.address);
+        setReceiveAddress(destinationChainWallet.address);
         setAddressError(null);
       }
     }
   }, [
-    connectedWallets,
     destinationChain?.walletType,
-    getWalletByType,
+    destinationChainWallet,
     setReceiveAddress,
     transactionDetails.receiveAddress,
     validateAddressForWalletType,
@@ -643,13 +637,15 @@ export function TransactionDetails({
               )}
             </div>
             {/* Align the button to the right */}
-            <div className="flex justify-end mt-2">
-              <ConnectWalletButton
-                className="w-auto"
-                walletType={destinationChain?.walletType}
-                size="sm"
-              />
-            </div>
+            {!requiredWallet && (
+              <div className="flex justify-end mt-2">
+                <ConnectWalletButton
+                  className="w-auto"
+                  walletType={destinationChain?.walletType}
+                  size="sm"
+                />
+              </div>
+            )}
           </div>
 
           {/* ─── Gas Drop ─────────────────────────── */}

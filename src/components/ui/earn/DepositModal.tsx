@@ -20,8 +20,8 @@ import { Button } from "@/components/ui/Button";
 import { EtherFiVault, DEPOSIT_ASSETS } from "@/config/etherFi";
 import { getTokenAllowance } from "@/utils/etherFi/fetch";
 import { useEtherFiInteract } from "@/hooks/etherFi/useEtherFiInteract";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
-import { useChainSwitch, useTokenTransfer } from "@/utils/swap/walletMethods";
+import { useDynamicEvmProvider } from "@/hooks/dynamic/useDynamicProviderAndSigner";
+import { useTokenTransfer } from "@/utils/swap/walletMethods";
 import { WalletType, Token, SwapStatus } from "@/types/web3";
 import { getChainById, chains } from "@/config/chains";
 import useWeb3Store, {
@@ -30,9 +30,7 @@ import useWeb3Store, {
   useSourceToken,
   useDestinationToken,
   useTransactionDetails,
-  useIsWalletTypeConnected,
   useSetReceiveAddress,
-  useWalletByType,
 } from "@/store/web3Store";
 import useVaultDepositStore, {
   useActiveVaultDepositProcess,
@@ -52,6 +50,11 @@ import ProgressTracker, {
 import { VaultDepositProcess } from "@/types/earn";
 import { formatPercentage, parseDepositError } from "@/utils/formatters";
 import { recordEarn } from "@/utils/metrics/metricsRecorder";
+import {
+  useWalletByType,
+  useSwitchActiveNetwork,
+  useIsWalletTypeConnected,
+} from "@/hooks/dynamic/useUserWallets";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -72,7 +75,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const destinationChain = useDestinationChain();
   const transactionDetails = useTransactionDetails();
   const setReceiveAddress = useSetReceiveAddress();
-  const evmWallet = useWalletByType(WalletType.REOWN_EVM);
+  const evmWallet = useWalletByType(WalletType.EVM);
 
   const isDirectDeposit = useMemo(() => {
     if (!sourceToken || !vault) {
@@ -94,7 +97,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // Integration hooks
   const { approveToken, depositTokens } = useEtherFiInteract();
-  const { switchToChain } = useChainSwitch(sourceChain);
+  const { switchNetwork } = useSwitchActiveNetwork(WalletType.EVM);
 
   // Web3Store functions for token management
   const loadTokens = useWeb3Store((state) => state.loadTokens);
@@ -103,17 +106,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const tokensByChainId = useWeb3Store((state) => state.tokensByChainId);
 
   // Wallet connection states
-  const isWalletConnected = useIsWalletTypeConnected(WalletType.REOWN_EVM);
-  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUIET_SUI);
-  const isSolanaWalletConnected = useIsWalletTypeConnected(
-    WalletType.REOWN_SOL,
-  );
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
+  const isWalletConnected = useIsWalletTypeConnected(WalletType.EVM);
+  const isSuiWalletConnected = useIsWalletTypeConnected(WalletType.SUI);
+  const isSolanaWalletConnected = useIsWalletTypeConnected(WalletType.SOLANA);
+  const requiredWallet = useWalletByType(sourceChain.walletType);
 
   // Wallet hooks for address retrieval
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const { getEvmSigner } = useDynamicEvmProvider(requiredWallet);
 
   // Vault Deposit Store integration
   const {
@@ -137,11 +136,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
       if (!chain) return false;
 
       switch (chain.walletType) {
-        case WalletType.REOWN_EVM:
+        case WalletType.EVM:
           return isWalletConnected;
-        case WalletType.SUIET_SUI:
+        case WalletType.SUI:
           return isSuiWalletConnected;
-        case WalletType.REOWN_SOL:
+        case WalletType.SOLANA:
           return isSolanaWalletConnected;
         default:
           return false;
@@ -257,6 +256,9 @@ const DepositModal: React.FC<DepositModalProps> = ({
       try {
         // Get signer for allowance check
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("EVM signer not available");
+        }
 
         // Convert deposit amount to BigInt for comparison
         const asset = DEPOSIT_ASSETS[assetSymbol.toLowerCase()];
@@ -470,7 +472,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
       throw new Error("Ethereum chain not found");
     }
 
-    await switchToChain(ethereumChain);
+    await switchNetwork(ethereumChain.chainId);
 
     // Start deposit step
     startDepositStep(processId);
@@ -490,7 +492,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   // Create stable references for the functions that cause dependency issues
   const performVaultDepositRef = useRef(performVaultDeposit);
-  const switchToChainRef = useRef(switchToChain);
+  const switchToChainRef = useRef(switchNetwork);
 
   // Update refs when functions change
   useEffect(() => {
@@ -498,8 +500,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }, [performVaultDeposit]);
 
   useEffect(() => {
-    switchToChainRef.current = switchToChain;
-  }, [switchToChain]);
+    switchToChainRef.current = switchNetwork;
+  }, [switchNetwork]);
 
   const performCrossChainVaultDeposit = useCallback(
     async (process: typeof activeProcess) => {
@@ -537,7 +539,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         if (!ethereumChain) {
           throw new Error("Ethereum chain not found");
         }
-        await switchToChainRef.current(ethereumChain);
+        await switchToChainRef.current(ethereumChain.chainId);
         if (isCancelled) return;
 
         // Small delay to ensure chain switch is settled

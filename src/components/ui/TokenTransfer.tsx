@@ -4,15 +4,16 @@ import { AssetBox } from "@/components/ui/AssetBox";
 import { TokenInputGroup } from "@/components/ui/TokenInputGroup";
 import { SwapInterface } from "@/components/ui/SwapInterface";
 import { TokenSwitch } from "@/components/ui/TokenSwitch";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { AvailableIconName } from "@/types/ui";
 import { swapChains } from "@/utils/chains/chainMethods";
 import useWeb3Store, {
   useSourceToken,
   useDestinationToken,
+  useSourceChain,
 } from "@/store/web3Store";
 import { Token } from "@/types/web3";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
 interface TokenTransferProps {
   amount: string;
@@ -74,6 +75,8 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   );
   const destinationToken = useDestinationToken();
   const sourceToken = useSourceToken();
+  const sourceChain = useSourceChain();
+  const handleWalletClick = useHandleWalletClick(sourceChain.walletType);
 
   useEffect(() => {
     const shouldBeEnabled =
@@ -145,14 +148,11 @@ export const TokenTransfer: React.FC<TokenTransferProps> = ({
   const renderButtonOrModal = hasActiveWallet
     ? undefined
     : () => (
-        <ConnectWalletModal
-          trigger={
-            <BrandedButton
-              buttonText="connect wallet"
-              iconName="Wallet"
-              className="h-[40px] w-full"
-            />
-          }
+        <BrandedButton
+          buttonText="connect wallet"
+          iconName="Wallet"
+          className="h-[40px] w-full"
+          onClick={handleWalletClick}
         />
       );
 

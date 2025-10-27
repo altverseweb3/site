@@ -2,16 +2,11 @@ import React, { ReactNode, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BrandedButton } from "@/components/ui/BrandedButton";
 import { TransactionDetails } from "@/components/ui/TransactionDetails";
-import {
-  useChainSwitch,
-  useWalletConnection,
-  ensureCorrectWalletTypeForChain,
-} from "@/utils/swap/walletMethods";
-import useWeb3Store, { useSourceChain } from "@/store/web3Store";
+import { useSourceChain } from "@/store/web3Store";
 import { toast } from "sonner";
 import { AvailableIconName } from "@/types/ui";
-import { WalletType } from "@/types/web3";
-import { useWallet } from "@suiet/wallet-kit";
+import { useWalletByType } from "@/hooks/dynamic/useUserWallets";
+import { useSwitchActiveNetwork } from "@/hooks/dynamic/useUserWallets";
 
 interface SwapInterfaceProps {
   children: ReactNode;
@@ -48,23 +43,15 @@ export function SwapInterface({
 }: SwapInterfaceProps) {
   const sourceChain = useSourceChain();
 
-  const {
-    isLoading: isSwitchingChain,
-    error: chainSwitchError,
-    switchToSourceChain,
-  } = useChainSwitch(sourceChain);
-
-  // Get wallet connection information for EVM, Solana, and Sui
-  const { evmNetwork, isEvmConnected } = useWalletConnection();
-
-  // Get Sui wallet info directly
-  const { connected: suiConnected } = useWallet();
-
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
+  const requiredWallet = useWalletByType(sourceChain.walletType);
+
+  const {
+    switchNetwork,
+    error: networkSwitchError,
+    isLoading: isSwitchingNetwork,
+  } = useSwitchActiveNetwork(sourceChain.walletType);
 
   const checkCurrentChain = async (): Promise<boolean> => {
     if (!requiredWallet) {
@@ -72,29 +59,7 @@ export function SwapInterface({
     }
 
     try {
-      let currentChainId: number | undefined;
-
-      // Check which wallet type we're using
-      if (requiredWallet.type === WalletType.REOWN_EVM) {
-        // For EVM wallets, get chain ID from the EVM network
-        if (evmNetwork.chainId !== undefined) {
-          currentChainId =
-            typeof evmNetwork.chainId === "string"
-              ? parseInt(evmNetwork.chainId, 10)
-              : evmNetwork.chainId;
-        }
-      }
-      // For Solana and Sui wallets, we only support the mainnet chain
-
-      // Update the store if the chain ID has changed
-      if (
-        requiredWallet.chainId !== currentChainId &&
-        currentChainId !== undefined
-      ) {
-        const store = useWeb3Store.getState();
-        store.updateWalletChainId(requiredWallet.type, currentChainId);
-      }
-
+      const currentChainId = await requiredWallet.getNetwork();
       return currentChainId === sourceChain.chainId;
     } catch (error) {
       console.error("Error checking current chain:", error);
@@ -102,32 +67,13 @@ export function SwapInterface({
     }
   };
 
-  // Update store when chain ID changes for EVM, Solana, or Sui wallets
   useEffect(() => {
-    if (
-      isEvmConnected &&
-      requiredWallet?.type === WalletType.REOWN_EVM &&
-      evmNetwork.chainId !== undefined
-    ) {
-      const numericChainId =
-        typeof evmNetwork.chainId === "string"
-          ? parseInt(evmNetwork.chainId, 10)
-          : evmNetwork.chainId;
-
-      if (requiredWallet.chainId !== numericChainId) {
-        const store = useWeb3Store.getState();
-        store.updateWalletChainId(WalletType.REOWN_EVM, numericChainId);
-      }
-    }
-  }, [evmNetwork.chainId, isEvmConnected, requiredWallet]);
-
-  useEffect(() => {
-    if (chainSwitchError) {
+    if (networkSwitchError) {
       toast.error("Chain switch failed", {
-        description: chainSwitchError,
+        description: networkSwitchError,
       });
     }
-  }, [chainSwitchError]);
+  }, [networkSwitchError]);
 
   const handleButtonClick = async () => {
     if (renderActionButton) {
@@ -143,7 +89,7 @@ export function SwapInterface({
 
     try {
       // First, check if we're using the correct wallet type for the source chain
-      const isWalletTypeCorrect = ensureCorrectWalletTypeForChain(sourceChain);
+      const isWalletTypeCorrect = requiredWallet !== null;
 
       if (!isWalletTypeCorrect) {
         const requiredWalletType = sourceChain.walletType;
@@ -155,15 +101,7 @@ export function SwapInterface({
       }
 
       // Special handling for Sui - no chain switching yet
-      if (requiredWallet?.type === WalletType.SUIET_SUI) {
-        // For Sui, we just check if we're connected
-        if (!suiConnected) {
-          toast.error("Sui wallet not connected", {
-            description: "Please connect your Sui wallet to continue",
-          });
-          return;
-        }
-
+      if (requiredWallet?.chain === "SUI") {
         // Execute the action directly since we can't switch chains in Sui yet
         if (actionButton?.onClick) {
           setIsProcessing(true);
@@ -183,7 +121,7 @@ export function SwapInterface({
           },
         );
 
-        const switched = await switchToSourceChain();
+        const switched = await switchNetwork(sourceChain.chainId);
 
         if (!switched) {
           toast.error("Chain switch required", {
@@ -215,10 +153,10 @@ export function SwapInterface({
   };
 
   const isButtonDisabled =
-    (actionButton?.disabled ?? false) || isSwitchingChain || isProcessing;
+    (actionButton?.disabled ?? false) || isSwitchingNetwork || isProcessing;
 
   const getButtonText = () => {
-    if (isSwitchingChain) {
+    if (isSwitchingNetwork) {
       return `switching network`;
     }
     if (isProcessing) {
@@ -228,7 +166,7 @@ export function SwapInterface({
   };
 
   const getButtonIcon = (): AvailableIconName => {
-    if (isSwitchingChain) {
+    if (isSwitchingNetwork) {
       return "ArrowLeftRight";
     }
     return actionButton?.iconName || "Coins";

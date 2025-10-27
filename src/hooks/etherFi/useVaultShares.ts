@@ -1,21 +1,27 @@
 import { useCallback } from "react";
-import { useReownWalletProviderAndSigner } from "@/hooks/useReownWalletProviderAndSigner";
+import { useDynamicEvmProvider } from "@/hooks/dynamic/useDynamicProviderAndSigner";
 import {
   queryVaultConversionRate,
   queryMultipleConversionRates,
   queryAllVaultsForAsset,
 } from "@/utils/etherFi/vaultShares";
+import { WalletType } from "@/types/web3";
+import { useWalletByType } from "../dynamic/useUserWallets";
 
 // React hook for vault share conversion queries with wallet integration
 
 export function useVaultShares() {
-  const { getEvmSigner } = useReownWalletProviderAndSigner();
+  const wallet = useWalletByType(WalletType.EVM);
+  const { getEvmSigner } = useDynamicEvmProvider(wallet);
 
   const queryVaultConversionRateMemoized = useCallback(
     async (vaultId: number, depositAsset: string, depositAmount: string) => {
       try {
         // Try to use wallet provider if available and connected to Ethereum
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const provider = signer.provider;
         if (provider) {
           const network = await provider.getNetwork();
@@ -50,6 +56,9 @@ export function useVaultShares() {
       try {
         // Try to use wallet provider if available and connected to Ethereum
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const provider = signer.provider;
         if (provider) {
           const network = await provider.getNetwork();
@@ -73,6 +82,9 @@ export function useVaultShares() {
       try {
         // Try to use wallet provider if available and connected to Ethereum
         const signer = await getEvmSigner();
+        if (!signer) {
+          throw new Error("No signer available");
+        }
         const provider = signer.provider;
         if (provider) {
           const network = await provider.getNetwork();

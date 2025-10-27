@@ -4,7 +4,6 @@ import { MainNav } from "@/components/layout/MainNav";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
-import useWeb3Store from "@/store/web3Store";
 import {
   Sheet,
   SheetContent,
@@ -13,26 +12,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/Sheet";
 import { Menu, History } from "lucide-react";
-import BrandedButton from "@/components/ui/BrandedButton";
-import { ConnectWalletModal } from "@/components/ui/ConnectWalletModal";
 import Link from "next/link";
 import { SwapHistorySheet } from "@/components/ui/SwapHistorySheet";
+import { useConnectedRequiredWallet } from "@/hooks/dynamic/useUserWallets";
+import { BrandedButton } from "@/components/ui/BrandedButton";
+import { useHandleWalletClick } from "@/hooks/dynamic/useUserWallets";
 
-export function SiteHeader(): JSX.Element {
+export function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  const requiredWallet = useWeb3Store((state) =>
-    state.getWalletBySourceChain(),
-  );
-
-  const handleSheetClose = (): void => {
-    setIsOpen(false);
-  };
+  const isConnectedRequiredWallet = useConnectedRequiredWallet();
+  const handleWalletClick = useHandleWalletClick();
 
   // Get wallet button text based on connection status
   const getWalletButtonText = (): string => {
-    if (!requiredWallet) return "connect wallet";
+    if (!isConnectedRequiredWallet) return "connect wallet";
     return "wallet connected";
   };
 
@@ -118,18 +113,12 @@ export function SiteHeader(): JSX.Element {
                   <MainNav onNavigate={(): void => setIsOpen(false)} />
                 </nav>
                 {/* transaction history Button for Mobile with enhanced styling */}
-
-                {/* Always use ConnectWalletModal for mobile */}
-                <ConnectWalletModal
-                  onSuccess={handleSheetClose}
-                  trigger={
-                    <BrandedButton
-                      className="md:inline-flex whitespace-nowrap text-sm h-[30px]"
-                      iconClassName="h-4 w-4"
-                      iconName="Wallet"
-                      buttonText={getWalletButtonText()}
-                    />
-                  }
+                <BrandedButton
+                  className="md:inline-flex whitespace-nowrap text-sm h-[30px]"
+                  iconClassName="h-4 w-4"
+                  iconName="Wallet"
+                  onClick={handleWalletClick}
+                  buttonText={getWalletButtonText()}
                 />
                 <Button
                   variant="outline"
@@ -161,17 +150,16 @@ export function SiteHeader(): JSX.Element {
             </SheetTrigger>
           </SwapHistorySheet>
 
-          {/* Desktop Wallet Button - Always use ConnectWalletModal */}
-          <ConnectWalletModal
-            trigger={
-              <BrandedButton
-                className="hidden lg:inline-flex whitespace-nowrap text-sm h-[30px]"
-                iconClassName="h-4 w-4"
-                iconName="Wallet"
-                buttonText={getWalletButtonText()}
-              />
-            }
-          />
+          {/* Desktop Wallet Button  */}
+          <div className="hidden md:block">
+            <BrandedButton
+              className="md:inline-flex whitespace-nowrap text-sm h-[30px]"
+              iconClassName="h-4 w-4"
+              iconName="Wallet"
+              onClick={handleWalletClick}
+              buttonText={getWalletButtonText()}
+            />
+          </div>
         </div>
       </div>
     </header>

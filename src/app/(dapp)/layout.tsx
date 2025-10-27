@@ -1,15 +1,15 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import TokenInitializer from "@/components/meta/TokensInitializer";
-import { CombinedWalletProvider } from "@/components/meta/WalletContext";
 import { AaveClientProvider } from "@/components/meta/AaveClientProvider";
+import DynamicWalletContext from "@/components/meta/DynamicWalletContext";
 export default async function DAppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <CombinedWalletProvider>
+    <DynamicWalletContext>
       <div className="flex flex-col h-dvh">
         <AaveClientProvider>
           <TokenInitializer />
@@ -20,6 +20,6 @@ export default async function DAppLayout({
         </AaveClientProvider>
         <SiteFooter />
       </div>
-    </CombinedWalletProvider>
+    </DynamicWalletContext>
   );
 }
