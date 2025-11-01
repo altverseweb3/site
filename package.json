@@ -37,7 +37,6 @@
     "@reown/appkit-adapter-ethers": "^1.0.4",
     "@reown/appkit-adapter-solana": "^1.7.14",
     "@solana/wallet-adapter-wallets": "^0.19.33",
-    "@suiet/wallet-kit": "^0.3.4",
     "@vercel/analytics": "^1.4.1",
     "@vercel/speed-insights": "^1.1.0",
     "class-variance-authority": "^0.7.1",
