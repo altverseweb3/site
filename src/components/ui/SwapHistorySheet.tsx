@@ -371,7 +371,7 @@ export function SwapHistorySheet({
             {tx.type}
           </span>
           <span
-            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all duration-[1000ms] ${
+            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all transition-duration-[1000ms] ${
               tx.status === "completed"
                 ? "text-green-400 bg-green-500/10 border-green-500/30 group-hover:shadow-green-500/20 group-hover:shadow-md"
                 : tx.status === "inprogress"
