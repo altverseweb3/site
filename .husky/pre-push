@@ -1,1 +1,7 @@
-npm run build
+#!/bin/bash
+set -eou pipefail
+
+echo "Running local development build check..."
+npm run build:dev
+rm -rf .next-prepush
+echo "Build check passed."

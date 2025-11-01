@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:dev": "DIST_DIR=.next-prepush dotenv -e .env.development next build",
     "vercel-build": "chmod +x ./vercel-build.sh && ./vercel-build.sh",
     "start": "next start",
     "lint": "eslint --max-warnings=0 .",
@@ -70,6 +71,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "husky": "^8.0.3",

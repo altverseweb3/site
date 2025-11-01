@@ -1,9 +1,32 @@
 #!/bin/bash
 set -eou pipefail
 
-npx prettier --write "**/*.{ts,tsx,js,jsx,json}" && git add -A
-npm run lint
+# Format only staged files (those about to be committed)
+STAGED_FILES_PRETTIER=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json)$' || true)
 
+if [ -n "$STAGED_FILES_PRETTIER" ]; then
+  echo "Running Prettier on staged files..."
+  # Use xargs to handle potential "Argument list too long" errors
+  echo "$STAGED_FILES_PRETTIER" | xargs npx prettier --write
+
+  # Re-add only the files that were formatted
+  echo "$STAGED_FILES_PRETTIER" | xargs git add
+else
+  echo "No staged files to format."
+fi
+
+# Filter the list to get ONLY files ESLint should check (no .json)
+LINT_FILES=$(echo "$STAGED_FILES_PRETTIER" | grep -E '\.(ts|tsx|js|jsx)$' || true)
+
+# Run linter
+if [ -n "$LINT_FILES" ]; then
+  echo "Running ESLint on staged files..."
+  echo "$LINT_FILES" | xargs npx eslint --max-warnings=0
+else
+  echo "No staged files to lint."
+fi
+
+# Auto-bump store version only if store files changed
 if git diff --staged --name-only | grep -q '^src/store/.*\.ts$'; then
   current_version=$(grep -o 'STORE_VERSION = [0-9]\+' src/store/storeVersion.ts | grep -o '[0-9]\+')
   new_version=$((current_version + 1))
