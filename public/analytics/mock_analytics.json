@@ -1,0 +1,3709 @@
+{
+  "total_users": {
+    "total_users": 122
+  },
+  "total_activity_stats": {
+    "total_transactions": 876,
+    "swap_count": 433,
+    "lending_count": 75,
+    "earn_count": 234,
+    "dapp_entrances": 1994,
+    "total_users": 122
+  },
+  "total_swap_stats": {
+    "total_swap_count": 433,
+    "swap_routes": {
+      "base,polygon": 14,
+      "base,arbitrum": 21,
+      "arbitrum,optimism": 17,
+      "arbitrum,base": 27,
+      "optimism,polygon": 10,
+      "polygon,base": 14,
+      "solana,base": 17,
+      "ethereum,optimism": 8,
+      "polygon,solana": 13,
+      "optimism,ethereum": 13,
+      "solana,polygon": 14,
+      "arbitrum,ethereum": 16,
+      "base,ethereum": 15,
+      "base,optimism": 13,
+      "arbitrum,solana": 13,
+      "solana,ethereum": 23,
+      "optimism,solana": 18,
+      "arbitrum,polygon": 14,
+      "solana,arbitrum": 16,
+      "ethereum,polygon": 14,
+      "solana,optimism": 18,
+      "optimism,arbitrum": 14,
+      "polygon,optimism": 8,
+      "ethereum,base": 12,
+      "polygon,ethereum": 11,
+      "base,solana": 14,
+      "optimism,base": 14,
+      "ethereum,solana": 8,
+      "ethereum,arbitrum": 14,
+      "polygon,arbitrum": 10
+    },
+    "cross_chain_count": 433,
+    "same_chain_count": 0
+  },
+  "total_lending_stats": {
+    "total_lending_count": 75,
+    "breakdown": [
+      {
+        "chain": "Ethereum",
+        "market": "AaveV3Ethereum",
+        "count": 18
+      },
+      {
+        "chain": "Optimism",
+        "market": "AaveV3Optimism",
+        "count": 43
+      },
+      {
+        "chain": "Polygon",
+        "market": "AaveV3Polygon",
+        "count": 50
+      },
+      {
+        "chain": "Solana",
+        "market": "SolendSolana",
+        "count": 53
+      },
+      {
+        "chain": "Polygon",
+        "market": "CompoundPolygon",
+        "count": 36
+      },
+      {
+        "chain": "Arbitrum",
+        "market": "AaveV3Arbitrum",
+        "count": 21
+      },
+      {
+        "chain": "Ethereum",
+        "market": "CompoundEthereum",
+        "count": 20
+      },
+      {
+        "chain": "Arbitrum",
+        "market": "CompoundArbitrum",
+        "count": 2
+      }
+    ]
+  },
+  "total_earn_stats": {
+    "total_earn_count": 234,
+    "by_chain": {
+      "Ethereum": 29,
+      "Polygon": 21,
+      "Base": 37,
+      "Optimism": 42
+    },
+    "by_protocol": {
+      "etherFi": 33,
+      "Yearn": 10,
+      "Lido": 34
+    },
+    "by_chain_protocol": {
+      "Optimism#Yearn": 11,
+      "Arbitrum#Yearn": 15
+    }
+  },
+  "periodic_stats": {
+    "daily": {
+      "periodic_user_stats": [
+        {
+          "period_start": "2025-10-29",
+          "new_users": 7,
+          "active_users": 7
+        },
+        {
+          "period_start": "2025-10-28",
+          "new_users": 8,
+          "active_users": 17
+        },
+        {
+          "period_start": "2025-10-27",
+          "new_users": 4,
+          "active_users": 16
+        },
+        {
+          "period_start": "2025-10-26",
+          "new_users": 4,
+          "active_users": 12
+        },
+        {
+          "period_start": "2025-10-25",
+          "new_users": 1,
+          "active_users": 4
+        },
+        {
+          "period_start": "2025-10-24",
+          "new_users": 3,
+          "active_users": 17
+        },
+        {
+          "period_start": "2025-10-23",
+          "new_users": 6,
+          "active_users": 10
+        },
+        {
+          "period_start": "2025-10-22",
+          "new_users": 8,
+          "active_users": 18
+        },
+        {
+          "period_start": "2025-10-21",
+          "new_users": 5,
+          "active_users": 19
+        },
+        {
+          "period_start": "2025-10-20",
+          "new_users": 7,
+          "active_users": 16
+        },
+        {
+          "period_start": "2025-10-19",
+          "new_users": 1,
+          "active_users": 3
+        },
+        {
+          "period_start": "2025-10-18",
+          "new_users": 1,
+          "active_users": 9
+        },
+        {
+          "period_start": "2025-10-17",
+          "new_users": 4,
+          "active_users": 24
+        },
+        {
+          "period_start": "2025-10-16",
+          "new_users": 3,
+          "active_users": 6
+        },
+        {
+          "period_start": "2025-10-15",
+          "new_users": 6,
+          "active_users": 11
+        },
+        {
+          "period_start": "2025-10-14",
+          "new_users": 5,
+          "active_users": 16
+        },
+        {
+          "period_start": "2025-10-13",
+          "new_users": 4,
+          "active_users": 25
+        },
+        {
+          "period_start": "2025-10-12",
+          "new_users": 1,
+          "active_users": 14
+        },
+        {
+          "period_start": "2025-10-11",
+          "new_users": 1,
+          "active_users": 6
+        },
+        {
+          "period_start": "2025-10-10",
+          "new_users": 2,
+          "active_users": 18
+        },
+        {
+          "period_start": "2025-10-09",
+          "new_users": 8,
+          "active_users": 23
+        },
+        {
+          "period_start": "2025-10-08",
+          "new_users": 7,
+          "active_users": 9
+        },
+        {
+          "period_start": "2025-10-07",
+          "new_users": 4,
+          "active_users": 23
+        },
+        {
+          "period_start": "2025-10-06",
+          "new_users": 4,
+          "active_users": 21
+        },
+        {
+          "period_start": "2025-10-05",
+          "new_users": 4,
+          "active_users": 7
+        },
+        {
+          "period_start": "2025-10-04",
+          "new_users": 3,
+          "active_users": 13
+        },
+        {
+          "period_start": "2025-10-03",
+          "new_users": 6,
+          "active_users": 9
+        },
+        {
+          "period_start": "2025-10-02",
+          "new_users": 4,
+          "active_users": 8
+        },
+        {
+          "period_start": "2025-10-01",
+          "new_users": 6,
+          "active_users": 18
+        },
+        {
+          "period_start": "2025-09-30",
+          "new_users": 3,
+          "active_users": 19
+        }
+      ],
+      "periodic_activity_stats": [
+        {
+          "period": "2025-10-29",
+          "total_transactions": 14,
+          "swap_count": 9,
+          "lending_count": 2,
+          "earn_count": 3,
+          "dapp_entrances": 22,
+          "active_users": 5,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-28",
+          "total_transactions": 34,
+          "swap_count": 20,
+          "lending_count": 9,
+          "earn_count": 5,
+          "dapp_entrances": 37,
+          "active_users": 11,
+          "transactions_per_active_user": 3
+        },
+        {
+          "period": "2025-10-27",
+          "total_transactions": 31,
+          "swap_count": 19,
+          "lending_count": 4,
+          "earn_count": 8,
+          "dapp_entrances": 98,
+          "active_users": 3,
+          "transactions_per_active_user": 10
+        },
+        {
+          "period": "2025-10-26",
+          "total_transactions": 19,
+          "swap_count": 11,
+          "lending_count": 4,
+          "earn_count": 4,
+          "dapp_entrances": 26,
+          "active_users": 7,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-25",
+          "total_transactions": 20,
+          "swap_count": 7,
+          "lending_count": 6,
+          "earn_count": 7,
+          "dapp_entrances": 50,
+          "active_users": 9,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-24",
+          "total_transactions": 37,
+          "swap_count": 22,
+          "lending_count": 10,
+          "earn_count": 5,
+          "dapp_entrances": 68,
+          "active_users": 6,
+          "transactions_per_active_user": 6
+        },
+        {
+          "period": "2025-10-23",
+          "total_transactions": 38,
+          "swap_count": 17,
+          "lending_count": 9,
+          "earn_count": 12,
+          "dapp_entrances": 51,
+          "active_users": 4,
+          "transactions_per_active_user": 9
+        },
+        {
+          "period": "2025-10-22",
+          "total_transactions": 22,
+          "swap_count": 13,
+          "lending_count": 2,
+          "earn_count": 7,
+          "dapp_entrances": 52,
+          "active_users": 9,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-21",
+          "total_transactions": 31,
+          "swap_count": 7,
+          "lending_count": 10,
+          "earn_count": 14,
+          "dapp_entrances": 59,
+          "active_users": 10,
+          "transactions_per_active_user": 3
+        },
+        {
+          "period": "2025-10-20",
+          "total_transactions": 34,
+          "swap_count": 13,
+          "lending_count": 7,
+          "earn_count": 14,
+          "dapp_entrances": 100,
+          "active_users": 14,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-19",
+          "total_transactions": 18,
+          "swap_count": 9,
+          "lending_count": 3,
+          "earn_count": 6,
+          "dapp_entrances": 36,
+          "active_users": 7,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-18",
+          "total_transactions": 16,
+          "swap_count": 6,
+          "lending_count": 5,
+          "earn_count": 5,
+          "dapp_entrances": 42,
+          "active_users": 4,
+          "transactions_per_active_user": 4
+        },
+        {
+          "period": "2025-10-17",
+          "total_transactions": 41,
+          "swap_count": 23,
+          "lending_count": 10,
+          "earn_count": 8,
+          "dapp_entrances": 49,
+          "active_users": 3,
+          "transactions_per_active_user": 13
+        },
+        {
+          "period": "2025-10-16",
+          "total_transactions": 37,
+          "swap_count": 25,
+          "lending_count": 7,
+          "earn_count": 5,
+          "dapp_entrances": 96,
+          "active_users": 3,
+          "transactions_per_active_user": 12
+        },
+        {
+          "period": "2025-10-15",
+          "total_transactions": 15,
+          "swap_count": 9,
+          "lending_count": 3,
+          "earn_count": 3,
+          "dapp_entrances": 70,
+          "active_users": 14,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-14",
+          "total_transactions": 21,
+          "swap_count": 13,
+          "lending_count": 1,
+          "earn_count": 7,
+          "dapp_entrances": 84,
+          "active_users": 14,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-13",
+          "total_transactions": 39,
+          "swap_count": 27,
+          "lending_count": 10,
+          "earn_count": 2,
+          "dapp_entrances": 37,
+          "active_users": 8,
+          "transactions_per_active_user": 4
+        },
+        {
+          "period": "2025-10-12",
+          "total_transactions": 13,
+          "swap_count": 7,
+          "lending_count": 4,
+          "earn_count": 2,
+          "dapp_entrances": 96,
+          "active_users": 4,
+          "transactions_per_active_user": 3
+        },
+        {
+          "period": "2025-10-11",
+          "total_transactions": 12,
+          "swap_count": 8,
+          "lending_count": 2,
+          "earn_count": 2,
+          "dapp_entrances": 87,
+          "active_users": 7,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-10",
+          "total_transactions": 20,
+          "swap_count": 7,
+          "lending_count": 5,
+          "earn_count": 8,
+          "dapp_entrances": 87,
+          "active_users": 7,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-09",
+          "total_transactions": 16,
+          "swap_count": 5,
+          "lending_count": 8,
+          "earn_count": 3,
+          "dapp_entrances": 47,
+          "active_users": 9,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-08",
+          "total_transactions": 30,
+          "swap_count": 11,
+          "lending_count": 4,
+          "earn_count": 15,
+          "dapp_entrances": 22,
+          "active_users": 13,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-07",
+          "total_transactions": 34,
+          "swap_count": 18,
+          "lending_count": 6,
+          "earn_count": 10,
+          "dapp_entrances": 82,
+          "active_users": 5,
+          "transactions_per_active_user": 6
+        },
+        {
+          "period": "2025-10-06",
+          "total_transactions": 28,
+          "swap_count": 14,
+          "lending_count": 5,
+          "earn_count": 9,
+          "dapp_entrances": 47,
+          "active_users": 4,
+          "transactions_per_active_user": 7
+        },
+        {
+          "period": "2025-10-05",
+          "total_transactions": 26,
+          "swap_count": 18,
+          "lending_count": 5,
+          "earn_count": 3,
+          "dapp_entrances": 64,
+          "active_users": 10,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-04",
+          "total_transactions": 23,
+          "swap_count": 12,
+          "lending_count": 4,
+          "earn_count": 7,
+          "dapp_entrances": 72,
+          "active_users": 9,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-03",
+          "total_transactions": 26,
+          "swap_count": 11,
+          "lending_count": 6,
+          "earn_count": 9,
+          "dapp_entrances": 31,
+          "active_users": 9,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-02",
+          "total_transactions": 18,
+          "swap_count": 8,
+          "lending_count": 7,
+          "earn_count": 3,
+          "dapp_entrances": 35,
+          "active_users": 3,
+          "transactions_per_active_user": 6
+        },
+        {
+          "period": "2025-10-01",
+          "total_transactions": 34,
+          "swap_count": 19,
+          "lending_count": 1,
+          "earn_count": 14,
+          "dapp_entrances": 78,
+          "active_users": 3,
+          "transactions_per_active_user": 11
+        },
+        {
+          "period": "2025-09-30",
+          "total_transactions": 37,
+          "swap_count": 25,
+          "lending_count": 9,
+          "earn_count": 3,
+          "dapp_entrances": 42,
+          "active_users": 10,
+          "transactions_per_active_user": 3
+        }
+      ],
+      "periodic_swap_stats": [
+        {
+          "period_start": "2025-10-29",
+          "total_swap_count": 28,
+          "swap_routes": {
+            "arbitrum,optimism": 2,
+            "solana,ethereum": 4,
+            "polygon,base": 1,
+            "base,polygon": 2,
+            "base,ethereum": 2,
+            "ethereum,arbitrum": 2,
+            "solana,arbitrum": 1,
+            "solana,optimism": 1,
+            "polygon,optimism": 1,
+            "base,solana": 2,
+            "optimism,solana": 1,
+            "ethereum,polygon": 1,
+            "ethereum,base": 1,
+            "base,optimism": 2,
+            "ethereum,solana": 3,
+            "optimism,polygon": 1,
+            "optimism,arbitrum": 1
+          },
+          "cross_chain_count": 28,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-28",
+          "total_swap_count": 9,
+          "swap_routes": {
+            "ethereum,polygon": 2,
+            "ethereum,arbitrum": 1,
+            "polygon,base": 1,
+            "arbitrum,base": 2,
+            "solana,optimism": 1,
+            "ethereum,optimism": 1,
+            "polygon,arbitrum": 1
+          },
+          "cross_chain_count": 9,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-27",
+          "total_swap_count": 12,
+          "swap_routes": {
+            "solana,optimism": 2,
+            "arbitrum,base": 1,
+            "base,arbitrum": 2,
+            "arbitrum,polygon": 1,
+            "base,optimism": 1,
+            "optimism,solana": 1,
+            "optimism,arbitrum": 1,
+            "solana,arbitrum": 1,
+            "ethereum,base": 1,
+            "ethereum,optimism": 1
+          },
+          "cross_chain_count": 12,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-26",
+          "total_swap_count": 21,
+          "swap_routes": {
+            "solana,ethereum": 1,
+            "arbitrum,base": 2,
+            "solana,polygon": 1,
+            "arbitrum,polygon": 1,
+            "optimism,ethereum": 1,
+            "ethereum,solana": 2,
+            "ethereum,arbitrum": 1,
+            "solana,optimism": 2,
+            "base,optimism": 1,
+            "arbitrum,optimism": 1,
+            "ethereum,polygon": 1,
+            "base,polygon": 1,
+            "ethereum,optimism": 1,
+            "polygon,base": 2,
+            "solana,arbitrum": 1,
+            "optimism,polygon": 1,
+            "optimism,solana": 1
+          },
+          "cross_chain_count": 21,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-25",
+          "total_swap_count": 13,
+          "swap_routes": {
+            "polygon,solana": 1,
+            "base,polygon": 1,
+            "ethereum,base": 1,
+            "arbitrum,solana": 1,
+            "optimism,solana": 1,
+            "ethereum,solana": 2,
+            "arbitrum,ethereum": 1,
+            "ethereum,optimism": 2,
+            "solana,base": 2,
+            "arbitrum,base": 1
+          },
+          "cross_chain_count": 13,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-24",
+          "total_swap_count": 20,
+          "swap_routes": {
+            "solana,base": 1,
+            "optimism,polygon": 2,
+            "ethereum,arbitrum": 3,
+            "optimism,arbitrum": 2,
+            "arbitrum,polygon": 2,
+            "ethereum,polygon": 1,
+            "optimism,solana": 2,
+            "solana,optimism": 1,
+            "arbitrum,base": 1,
+            "base,solana": 1,
+            "arbitrum,ethereum": 1,
+            "polygon,arbitrum": 1,
+            "base,arbitrum": 1,
+            "base,polygon": 1
+          },
+          "cross_chain_count": 20,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-23",
+          "total_swap_count": 18,
+          "swap_routes": {
+            "polygon,optimism": 1,
+            "ethereum,arbitrum": 1,
+            "ethereum,optimism": 2,
+            "polygon,base": 1,
+            "ethereum,polygon": 1,
+            "ethereum,base": 1,
+            "base,polygon": 1,
+            "optimism,solana": 2,
+            "optimism,base": 2,
+            "optimism,ethereum": 1,
+            "arbitrum,solana": 1,
+            "solana,optimism": 1,
+            "solana,ethereum": 2,
+            "arbitrum,optimism": 1
+          },
+          "cross_chain_count": 18,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-22",
+          "total_swap_count": 9,
+          "swap_routes": {
+            "polygon,arbitrum": 1,
+            "arbitrum,polygon": 1,
+            "arbitrum,optimism": 2,
+            "base,polygon": 2,
+            "solana,polygon": 2,
+            "base,ethereum": 1
+          },
+          "cross_chain_count": 9,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-21",
+          "total_swap_count": 24,
+          "swap_routes": {
+            "ethereum,arbitrum": 2,
+            "optimism,polygon": 3,
+            "polygon,ethereum": 3,
+            "optimism,base": 1,
+            "base,optimism": 2,
+            "solana,polygon": 1,
+            "ethereum,polygon": 2,
+            "solana,ethereum": 2,
+            "polygon,base": 1,
+            "arbitrum,solana": 2,
+            "polygon,arbitrum": 1,
+            "optimism,solana": 2,
+            "base,solana": 1,
+            "solana,optimism": 1
+          },
+          "cross_chain_count": 24,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_swap_count": 29,
+          "swap_routes": {
+            "optimism,solana": 1,
+            "polygon,arbitrum": 1,
+            "polygon,base": 2,
+            "arbitrum,polygon": 1,
+            "solana,arbitrum": 1,
+            "optimism,arbitrum": 2,
+            "solana,base": 2,
+            "ethereum,base": 2,
+            "base,solana": 1,
+            "solana,optimism": 1,
+            "polygon,optimism": 2,
+            "base,optimism": 2,
+            "ethereum,optimism": 1,
+            "arbitrum,optimism": 2,
+            "polygon,solana": 1,
+            "ethereum,polygon": 1,
+            "solana,ethereum": 1,
+            "arbitrum,solana": 1,
+            "polygon,ethereum": 2,
+            "arbitrum,base": 1,
+            "ethereum,solana": 1
+          },
+          "cross_chain_count": 29,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-19",
+          "total_swap_count": 15,
+          "swap_routes": {
+            "base,optimism": 2,
+            "solana,ethereum": 3,
+            "solana,base": 1,
+            "ethereum,arbitrum": 1,
+            "polygon,optimism": 1,
+            "solana,arbitrum": 1,
+            "solana,optimism": 1,
+            "ethereum,optimism": 1,
+            "base,polygon": 1,
+            "base,ethereum": 1,
+            "arbitrum,ethereum": 1,
+            "optimism,base": 1
+          },
+          "cross_chain_count": 15,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-18",
+          "total_swap_count": 5,
+          "swap_routes": {
+            "arbitrum,ethereum": 1,
+            "optimism,ethereum": 1,
+            "optimism,polygon": 1,
+            "base,polygon": 1,
+            "ethereum,optimism": 1
+          },
+          "cross_chain_count": 5,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-17",
+          "total_swap_count": 18,
+          "swap_routes": {
+            "optimism,solana": 1,
+            "optimism,arbitrum": 3,
+            "base,solana": 1,
+            "optimism,base": 1,
+            "optimism,ethereum": 1,
+            "base,polygon": 1,
+            "solana,arbitrum": 1,
+            "ethereum,arbitrum": 2,
+            "arbitrum,ethereum": 1,
+            "solana,ethereum": 1,
+            "base,optimism": 1,
+            "polygon,optimism": 1,
+            "polygon,solana": 1,
+            "arbitrum,base": 1,
+            "ethereum,polygon": 1
+          },
+          "cross_chain_count": 18,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-16",
+          "total_swap_count": 24,
+          "swap_routes": {
+            "solana,ethereum": 2,
+            "ethereum,base": 2,
+            "base,optimism": 2,
+            "optimism,solana": 2,
+            "polygon,optimism": 2,
+            "polygon,ethereum": 2,
+            "solana,optimism": 2,
+            "polygon,solana": 2,
+            "polygon,arbitrum": 1,
+            "ethereum,optimism": 1,
+            "optimism,polygon": 2,
+            "arbitrum,optimism": 1,
+            "base,ethereum": 1,
+            "optimism,arbitrum": 2
+          },
+          "cross_chain_count": 24,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-15",
+          "total_swap_count": 14,
+          "swap_routes": {
+            "ethereum,arbitrum": 2,
+            "solana,arbitrum": 1,
+            "base,polygon": 1,
+            "ethereum,optimism": 1,
+            "base,arbitrum": 2,
+            "ethereum,polygon": 1,
+            "solana,ethereum": 1,
+            "arbitrum,ethereum": 1,
+            "optimism,arbitrum": 1,
+            "solana,base": 1,
+            "solana,polygon": 1,
+            "arbitrum,solana": 1
+          },
+          "cross_chain_count": 14,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-14",
+          "total_swap_count": 28,
+          "swap_routes": {
+            "base,optimism": 1,
+            "solana,polygon": 2,
+            "polygon,optimism": 3,
+            "polygon,base": 3,
+            "polygon,arbitrum": 3,
+            "solana,base": 2,
+            "optimism,base": 1,
+            "arbitrum,solana": 2,
+            "base,solana": 2,
+            "base,arbitrum": 2,
+            "ethereum,solana": 1,
+            "ethereum,polygon": 1,
+            "arbitrum,optimism": 2,
+            "optimism,polygon": 1,
+            "ethereum,base": 1,
+            "optimism,solana": 1
+          },
+          "cross_chain_count": 28,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_swap_count": 16,
+          "swap_routes": {
+            "optimism,solana": 2,
+            "polygon,base": 1,
+            "ethereum,polygon": 2,
+            "optimism,arbitrum": 1,
+            "arbitrum,ethereum": 1,
+            "polygon,ethereum": 2,
+            "arbitrum,solana": 1,
+            "base,optimism": 1,
+            "polygon,optimism": 1,
+            "optimism,base": 1,
+            "solana,ethereum": 2,
+            "arbitrum,polygon": 1
+          },
+          "cross_chain_count": 16,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-12",
+          "total_swap_count": 8,
+          "swap_routes": {
+            "polygon,optimism": 1,
+            "optimism,base": 1,
+            "polygon,base": 2,
+            "polygon,ethereum": 1,
+            "polygon,arbitrum": 1,
+            "solana,base": 1,
+            "base,ethereum": 1
+          },
+          "cross_chain_count": 8,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-11",
+          "total_swap_count": 4,
+          "swap_routes": {
+            "solana,base": 1,
+            "polygon,ethereum": 1,
+            "polygon,optimism": 1,
+            "ethereum,polygon": 1
+          },
+          "cross_chain_count": 4,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-10",
+          "total_swap_count": 16,
+          "swap_routes": {
+            "polygon,ethereum": 1,
+            "ethereum,solana": 1,
+            "base,polygon": 1,
+            "ethereum,arbitrum": 2,
+            "polygon,base": 2,
+            "optimism,solana": 1,
+            "arbitrum,ethereum": 1,
+            "arbitrum,optimism": 1,
+            "polygon,solana": 1,
+            "base,ethereum": 1,
+            "polygon,optimism": 1,
+            "arbitrum,base": 1,
+            "polygon,arbitrum": 1,
+            "ethereum,optimism": 1
+          },
+          "cross_chain_count": 16,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-09",
+          "total_swap_count": 30,
+          "swap_routes": {
+            "arbitrum,base": 2,
+            "polygon,ethereum": 3,
+            "arbitrum,solana": 3,
+            "base,solana": 2,
+            "ethereum,optimism": 2,
+            "solana,ethereum": 1,
+            "optimism,arbitrum": 2,
+            "solana,base": 1,
+            "ethereum,arbitrum": 2,
+            "optimism,base": 4,
+            "ethereum,base": 1,
+            "base,ethereum": 1,
+            "ethereum,polygon": 1,
+            "polygon,optimism": 2,
+            "arbitrum,polygon": 1,
+            "optimism,solana": 1,
+            "solana,optimism": 1
+          },
+          "cross_chain_count": 30,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-08",
+          "total_swap_count": 16,
+          "swap_routes": {
+            "optimism,arbitrum": 1,
+            "arbitrum,solana": 1,
+            "base,solana": 2,
+            "arbitrum,ethereum": 1,
+            "optimism,base": 1,
+            "base,polygon": 2,
+            "solana,ethereum": 1,
+            "optimism,solana": 1,
+            "ethereum,solana": 1,
+            "polygon,ethereum": 1,
+            "base,ethereum": 2,
+            "ethereum,optimism": 1,
+            "solana,base": 1
+          },
+          "cross_chain_count": 16,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-07",
+          "total_swap_count": 7,
+          "swap_routes": {
+            "optimism,ethereum": 1,
+            "optimism,polygon": 1,
+            "ethereum,solana": 1,
+            "polygon,ethereum": 1,
+            "arbitrum,polygon": 2,
+            "solana,polygon": 1
+          },
+          "cross_chain_count": 7,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_swap_count": 11,
+          "swap_routes": {
+            "polygon,ethereum": 2,
+            "base,arbitrum": 1,
+            "polygon,base": 2,
+            "ethereum,base": 1,
+            "arbitrum,solana": 1,
+            "solana,optimism": 2,
+            "ethereum,arbitrum": 1,
+            "optimism,polygon": 1
+          },
+          "cross_chain_count": 11,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-05",
+          "total_swap_count": 4,
+          "swap_routes": {
+            "base,solana": 1,
+            "solana,base": 1,
+            "ethereum,optimism": 1,
+            "arbitrum,optimism": 1
+          },
+          "cross_chain_count": 4,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-04",
+          "total_swap_count": 18,
+          "swap_routes": {
+            "arbitrum,ethereum": 1,
+            "optimism,ethereum": 1,
+            "base,arbitrum": 1,
+            "polygon,optimism": 2,
+            "arbitrum,solana": 2,
+            "optimism,base": 2,
+            "ethereum,arbitrum": 2,
+            "base,polygon": 1,
+            "solana,base": 1,
+            "base,optimism": 1,
+            "solana,arbitrum": 1,
+            "ethereum,base": 1,
+            "solana,ethereum": 1,
+            "ethereum,solana": 1
+          },
+          "cross_chain_count": 18,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-03",
+          "total_swap_count": 13,
+          "swap_routes": {
+            "solana,base": 1,
+            "ethereum,optimism": 2,
+            "polygon,base": 1,
+            "arbitrum,polygon": 2,
+            "optimism,polygon": 1,
+            "base,arbitrum": 1,
+            "arbitrum,ethereum": 1,
+            "optimism,arbitrum": 1,
+            "solana,ethereum": 1,
+            "solana,polygon": 1,
+            "ethereum,arbitrum": 1
+          },
+          "cross_chain_count": 13,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-02",
+          "total_swap_count": 27,
+          "swap_routes": {
+            "base,polygon": 1,
+            "base,solana": 1,
+            "arbitrum,solana": 2,
+            "polygon,optimism": 2,
+            "solana,optimism": 3,
+            "polygon,ethereum": 3,
+            "ethereum,base": 1,
+            "solana,ethereum": 2,
+            "solana,arbitrum": 1,
+            "arbitrum,optimism": 2,
+            "base,ethereum": 1,
+            "base,optimism": 1,
+            "solana,polygon": 1,
+            "ethereum,polygon": 1,
+            "polygon,arbitrum": 2,
+            "arbitrum,ethereum": 2,
+            "ethereum,arbitrum": 1
+          },
+          "cross_chain_count": 27,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-01",
+          "total_swap_count": 5,
+          "swap_routes": {
+            "optimism,polygon": 1,
+            "arbitrum,solana": 1,
+            "ethereum,optimism": 1,
+            "optimism,ethereum": 1,
+            "solana,optimism": 1
+          },
+          "cross_chain_count": 5,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-09-30",
+          "total_swap_count": 26,
+          "swap_routes": {
+            "arbitrum,base": 1,
+            "optimism,polygon": 1,
+            "base,solana": 1,
+            "ethereum,solana": 2,
+            "ethereum,optimism": 2,
+            "ethereum,base": 1,
+            "polygon,solana": 1,
+            "base,polygon": 2,
+            "arbitrum,solana": 1,
+            "base,arbitrum": 2,
+            "base,optimism": 3,
+            "polygon,optimism": 1,
+            "solana,base": 1,
+            "optimism,arbitrum": 1,
+            "solana,ethereum": 1,
+            "polygon,arbitrum": 1,
+            "solana,optimism": 1,
+            "base,ethereum": 1,
+            "arbitrum,optimism": 1,
+            "polygon,ethereum": 1
+          },
+          "cross_chain_count": 26,
+          "same_chain_count": 0
+        }
+      ],
+      "periodic_lending_stats": [
+        {
+          "period_start": "2025-10-29",
+          "total_lending_count": 8,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 2
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 3
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-28",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-27",
+          "total_lending_count": 4,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 2
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-26",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-25",
+          "total_lending_count": 3,
+          "breakdown": [
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 3
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-24",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-23",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-22",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-21",
+          "total_lending_count": 1,
+          "breakdown": [
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_lending_count": 5,
+          "breakdown": [
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 4
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 1
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-19",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-18",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-17",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-16",
+          "total_lending_count": 8,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 4
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 4
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 5
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 4
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 4
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-15",
+          "total_lending_count": 5,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 4
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 1
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-14",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_lending_count": 5,
+          "breakdown": [
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 4
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 4
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 1
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-12",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-11",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-10",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-09",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-08",
+          "total_lending_count": 6,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 4
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 4
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 2
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-07",
+          "total_lending_count": 3,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 1
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 3
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-05",
+          "total_lending_count": 1,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-04",
+          "total_lending_count": 1,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-03",
+          "total_lending_count": 6,
+          "breakdown": [
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 1
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 4
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 1
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 2
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-02",
+          "total_lending_count": 0,
+          "breakdown": []
+        },
+        {
+          "period_start": "2025-10-01",
+          "total_lending_count": 10,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 1
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 2
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 4
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 1
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-09-30",
+          "total_lending_count": 0,
+          "breakdown": []
+        }
+      ],
+      "periodic_earn_stats": [
+        {
+          "period_start": "2025-10-29",
+          "total_earn_count": 6,
+          "by_chain": {
+            "Solana": 3,
+            "Base": 4,
+            "Polygon": 2
+          },
+          "by_protocol": {
+            "MakerDAO": 5,
+            "Lido": 2
+          },
+          "by_chain_protocol": {
+            "Optimism#MakerDAO": 3
+          }
+        },
+        {
+          "period_start": "2025-10-28",
+          "total_earn_count": 9,
+          "by_chain": {
+            "Optimism": 2,
+            "Ethereum": 1,
+            "Polygon": 4
+          },
+          "by_protocol": {
+            "Yearn": 1,
+            "Lido": 4
+          },
+          "by_chain_protocol": {
+            "Ethereum#etherFi": 2
+          }
+        },
+        {
+          "period_start": "2025-10-27",
+          "total_earn_count": 3,
+          "by_chain": {
+            "Base": 5,
+            "Polygon": 3,
+            "Ethereum": 2
+          },
+          "by_protocol": {
+            "etherFi": 1,
+            "Yearn": 3
+          },
+          "by_chain_protocol": {
+            "Base#Lido": 2
+          }
+        },
+        {
+          "period_start": "2025-10-26",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-25",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-24",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-23",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-22",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-21",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_earn_count": 3,
+          "by_chain": {
+            "Ethereum": 3,
+            "Base": 2,
+            "Solana": 1
+          },
+          "by_protocol": {
+            "Yearn": 2,
+            "MakerDAO": 3
+          },
+          "by_chain_protocol": {
+            "Polygon#Yearn": 1
+          }
+        },
+        {
+          "period_start": "2025-10-19",
+          "total_earn_count": 9,
+          "by_chain": {
+            "Base": 2,
+            "Optimism": 1,
+            "Ethereum": 4
+          },
+          "by_protocol": {
+            "Yearn": 1,
+            "MakerDAO": 1
+          },
+          "by_chain_protocol": {
+            "Optimism#Yearn": 1
+          }
+        },
+        {
+          "period_start": "2025-10-18",
+          "total_earn_count": 2,
+          "by_chain": {
+            "Base": 2,
+            "Arbitrum": 2,
+            "Optimism": 2
+          },
+          "by_protocol": {
+            "etherFi": 3,
+            "MakerDAO": 2
+          },
+          "by_chain_protocol": {
+            "Solana#Yearn": 1
+          }
+        },
+        {
+          "period_start": "2025-10-17",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-16",
+          "total_earn_count": 13,
+          "by_chain": {
+            "Base": 4,
+            "Ethereum": 4,
+            "Solana": 2
+          },
+          "by_protocol": {
+            "etherFi": 5,
+            "Lido": 4
+          },
+          "by_chain_protocol": {
+            "Optimism#Yearn": 3
+          }
+        },
+        {
+          "period_start": "2025-10-15",
+          "total_earn_count": 3,
+          "by_chain": {
+            "Solana": 5,
+            "Optimism": 1,
+            "Base": 4
+          },
+          "by_protocol": {
+            "Yearn": 4,
+            "Lido": 2
+          },
+          "by_chain_protocol": {
+            "Arbitrum#Lido": 2
+          }
+        },
+        {
+          "period_start": "2025-10-14",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-12",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-11",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-10",
+          "total_earn_count": 12,
+          "by_chain": {
+            "Optimism": 5,
+            "Solana": 5,
+            "Ethereum": 3
+          },
+          "by_protocol": {
+            "Lido": 4,
+            "MakerDAO": 4
+          },
+          "by_chain_protocol": {
+            "Arbitrum#Lido": 2
+          }
+        },
+        {
+          "period_start": "2025-10-09",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-08",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-07",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-05",
+          "total_earn_count": 4,
+          "by_chain": {
+            "Optimism": 4,
+            "Ethereum": 3,
+            "Polygon": 2
+          },
+          "by_protocol": {
+            "Lido": 5,
+            "Yearn": 3
+          },
+          "by_chain_protocol": {
+            "Optimism#Lido": 3
+          }
+        },
+        {
+          "period_start": "2025-10-04",
+          "total_earn_count": 4,
+          "by_chain": {
+            "Base": 5,
+            "Arbitrum": 4,
+            "Ethereum": 3
+          },
+          "by_protocol": {
+            "Yearn": 4,
+            "MakerDAO": 2
+          },
+          "by_chain_protocol": {
+            "Ethereum#Yearn": 3
+          }
+        },
+        {
+          "period_start": "2025-10-03",
+          "total_earn_count": 0,
+          "by_chain": {},
+          "by_protocol": {},
+          "by_chain_protocol": {}
+        },
+        {
+          "period_start": "2025-10-02",
+          "total_earn_count": 15,
+          "by_chain": {
+            "Ethereum": 4,
+            "Arbitrum": 4,
+            "Polygon": 5
+          },
+          "by_protocol": {
+            "MakerDAO": 2,
+            "etherFi": 5
+          },
+          "by_chain_protocol": {
+            "Optimism#Yearn": 3
+          }
+        },
+        {
+          "period_start": "2025-10-01",
+          "total_earn_count": 6,
+          "by_chain": {
+            "Base": 2,
+            "Optimism": 1,
+            "Arbitrum": 4
+          },
+          "by_protocol": {
+            "Yearn": 4,
+            "etherFi": 3
+          },
+          "by_chain_protocol": {
+            "Solana#Lido": 1
+          }
+        },
+        {
+          "period_start": "2025-09-30",
+          "total_earn_count": 12,
+          "by_chain": {
+            "Arbitrum": 5,
+            "Polygon": 1,
+            "Ethereum": 2
+          },
+          "by_protocol": {
+            "etherFi": 4,
+            "Yearn": 5
+          },
+          "by_chain_protocol": {
+            "Optimism#Lido": 3
+          }
+        }
+      ]
+    },
+    "weekly": {
+      "periodic_user_stats": [
+        {
+          "period_start": "2025-10-27",
+          "new_users": 34,
+          "active_users": 113
+        },
+        {
+          "period_start": "2025-10-20",
+          "new_users": 38,
+          "active_users": 105
+        },
+        {
+          "period_start": "2025-10-13",
+          "new_users": 34,
+          "active_users": 106
+        },
+        {
+          "period_start": "2025-10-06",
+          "new_users": 29,
+          "active_users": 100
+        },
+        {
+          "period_start": "2025-09-29",
+          "new_users": 30,
+          "active_users": 89
+        }
+      ],
+      "periodic_activity_stats": [
+        {
+          "period": "2025-10-27",
+          "total_transactions": 223,
+          "swap_count": 134,
+          "lending_count": 39,
+          "earn_count": 50,
+          "dapp_entrances": 176,
+          "active_users": 113,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-20",
+          "total_transactions": 258,
+          "swap_count": 145,
+          "lending_count": 37,
+          "earn_count": 76,
+          "dapp_entrances": 446,
+          "active_users": 105,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-10-13",
+          "total_transactions": 197,
+          "swap_count": 98,
+          "lending_count": 33,
+          "earn_count": 66,
+          "dapp_entrances": 599,
+          "active_users": 106,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-10-06",
+          "total_transactions": 199,
+          "swap_count": 122,
+          "lending_count": 35,
+          "earn_count": 42,
+          "dapp_entrances": 569,
+          "active_users": 100,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-09-29",
+          "total_transactions": 206,
+          "swap_count": 101,
+          "lending_count": 43,
+          "earn_count": 62,
+          "dapp_entrances": 540,
+          "active_users": 89,
+          "transactions_per_active_user": 2
+        }
+      ],
+      "periodic_swap_stats": [
+        {
+          "period_start": "2025-10-27",
+          "total_swap_count": 134,
+          "swap_routes": {
+            "optimism,solana": 6,
+            "optimism,ethereum": 7,
+            "solana,base": 2,
+            "solana,polygon": 3,
+            "polygon,ethereum": 9,
+            "base,solana": 8,
+            "arbitrum,ethereum": 8,
+            "ethereum,solana": 2,
+            "arbitrum,base": 4,
+            "arbitrum,polygon": 3,
+            "solana,ethereum": 7,
+            "polygon,solana": 3,
+            "polygon,arbitrum": 7,
+            "ethereum,base": 4,
+            "optimism,arbitrum": 2,
+            "arbitrum,optimism": 5,
+            "optimism,polygon": 5,
+            "polygon,optimism": 7,
+            "ethereum,polygon": 6,
+            "polygon,base": 7,
+            "arbitrum,solana": 9,
+            "solana,arbitrum": 3,
+            "ethereum,arbitrum": 3,
+            "base,optimism": 2,
+            "base,arbitrum": 3,
+            "base,ethereum": 1,
+            "base,polygon": 3,
+            "solana,optimism": 2,
+            "optimism,base": 1,
+            "ethereum,optimism": 2
+          },
+          "cross_chain_count": 134,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_swap_count": 145,
+          "swap_routes": {
+            "base,ethereum": 6,
+            "optimism,solana": 4,
+            "ethereum,solana": 3,
+            "ethereum,arbitrum": 7,
+            "optimism,arbitrum": 10,
+            "optimism,ethereum": 6,
+            "base,optimism": 5,
+            "arbitrum,solana": 7,
+            "base,solana": 6,
+            "arbitrum,optimism": 4,
+            "arbitrum,base": 4,
+            "polygon,arbitrum": 6,
+            "solana,optimism": 6,
+            "solana,arbitrum": 4,
+            "base,arbitrum": 4,
+            "ethereum,base": 4,
+            "ethereum,polygon": 5,
+            "solana,polygon": 3,
+            "ethereum,optimism": 4,
+            "arbitrum,ethereum": 3,
+            "optimism,polygon": 6,
+            "base,polygon": 5,
+            "solana,base": 3,
+            "polygon,ethereum": 1,
+            "polygon,base": 4,
+            "optimism,base": 3,
+            "solana,ethereum": 12,
+            "polygon,solana": 5,
+            "arbitrum,polygon": 2,
+            "polygon,optimism": 3
+          },
+          "cross_chain_count": 145,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_swap_count": 98,
+          "swap_routes": {
+            "polygon,ethereum": 4,
+            "optimism,solana": 4,
+            "arbitrum,ethereum": 4,
+            "arbitrum,optimism": 4,
+            "arbitrum,base": 5,
+            "polygon,base": 3,
+            "ethereum,solana": 4,
+            "arbitrum,solana": 5,
+            "solana,arbitrum": 5,
+            "solana,base": 5,
+            "optimism,base": 2,
+            "ethereum,optimism": 5,
+            "base,arbitrum": 4,
+            "polygon,arbitrum": 3,
+            "polygon,optimism": 3,
+            "solana,ethereum": 4,
+            "optimism,ethereum": 3,
+            "solana,polygon": 1,
+            "ethereum,base": 2,
+            "base,solana": 8,
+            "optimism,arbitrum": 5,
+            "base,ethereum": 2,
+            "polygon,solana": 2,
+            "arbitrum,polygon": 3,
+            "base,optimism": 4,
+            "solana,optimism": 2,
+            "ethereum,arbitrum": 2
+          },
+          "cross_chain_count": 98,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_swap_count": 122,
+          "swap_routes": {
+            "arbitrum,ethereum": 5,
+            "base,polygon": 9,
+            "base,ethereum": 3,
+            "ethereum,optimism": 5,
+            "ethereum,arbitrum": 2,
+            "base,optimism": 3,
+            "solana,ethereum": 5,
+            "ethereum,base": 4,
+            "polygon,optimism": 8,
+            "polygon,arbitrum": 2,
+            "base,solana": 9,
+            "polygon,ethereum": 6,
+            "optimism,arbitrum": 5,
+            "base,arbitrum": 4,
+            "arbitrum,base": 4,
+            "optimism,ethereum": 4,
+            "ethereum,solana": 4,
+            "ethereum,polygon": 5,
+            "solana,optimism": 3,
+            "arbitrum,optimism": 5,
+            "solana,base": 2,
+            "arbitrum,polygon": 3,
+            "arbitrum,solana": 4,
+            "optimism,base": 7,
+            "polygon,base": 3,
+            "solana,polygon": 1,
+            "solana,arbitrum": 3,
+            "optimism,solana": 3,
+            "polygon,solana": 1
+          },
+          "cross_chain_count": 122,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-09-29",
+          "total_swap_count": 101,
+          "swap_routes": {
+            "optimism,polygon": 4,
+            "polygon,arbitrum": 4,
+            "arbitrum,base": 3,
+            "optimism,solana": 6,
+            "optimism,ethereum": 4,
+            "base,arbitrum": 7,
+            "base,optimism": 6,
+            "ethereum,arbitrum": 4,
+            "polygon,base": 4,
+            "ethereum,polygon": 6,
+            "optimism,arbitrum": 6,
+            "polygon,optimism": 4,
+            "arbitrum,ethereum": 5,
+            "arbitrum,polygon": 3,
+            "arbitrum,solana": 4,
+            "base,polygon": 3,
+            "solana,base": 3,
+            "solana,optimism": 4,
+            "ethereum,solana": 1,
+            "solana,ethereum": 2,
+            "solana,arbitrum": 3,
+            "polygon,ethereum": 1,
+            "base,ethereum": 3,
+            "optimism,base": 1,
+            "polygon,solana": 2,
+            "solana,polygon": 1,
+            "base,solana": 1,
+            "ethereum,optimism": 2,
+            "arbitrum,optimism": 3,
+            "ethereum,base": 1
+          },
+          "cross_chain_count": 101,
+          "same_chain_count": 0
+        }
+      ],
+      "periodic_lending_stats": [
+        {
+          "period_start": "2025-10-27",
+          "total_lending_count": 39,
+          "breakdown": [
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_lending_count": 37,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_lending_count": 33,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 4
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_lending_count": 35,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-09-29",
+          "total_lending_count": 43,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 1
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 3
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "periodic_earn_stats": [
+        {
+          "period_start": "2025-10-27",
+          "total_earn_count": 50,
+          "by_chain": {
+            "Arbitrum": 8,
+            "Base": 8,
+            "Optimism": 10
+          },
+          "by_protocol": {
+            "MakerDAO": 6,
+            "etherFi": 2
+          },
+          "by_chain_protocol": {
+            "Base#Lido": 5
+          }
+        },
+        {
+          "period_start": "2025-10-20",
+          "total_earn_count": 76,
+          "by_chain": {
+            "Solana": 8,
+            "Ethereum": 8,
+            "Polygon": 4
+          },
+          "by_protocol": {
+            "Lido": 6,
+            "Yearn": 6
+          },
+          "by_chain_protocol": {
+            "Ethereum#etherFi": 5
+          }
+        },
+        {
+          "period_start": "2025-10-13",
+          "total_earn_count": 66,
+          "by_chain": {
+            "Polygon": 8,
+            "Base": 10,
+            "Ethereum": 4
+          },
+          "by_protocol": {
+            "Lido": 10,
+            "Yearn": 1
+          },
+          "by_chain_protocol": {
+            "Optimism#etherFi": 5
+          }
+        },
+        {
+          "period_start": "2025-10-06",
+          "total_earn_count": 42,
+          "by_chain": {
+            "Polygon": 9,
+            "Solana": 5,
+            "Base": 6
+          },
+          "by_protocol": {
+            "etherFi": 3,
+            "MakerDAO": 2
+          },
+          "by_chain_protocol": {
+            "Polygon#Yearn": 3
+          }
+        },
+        {
+          "period_start": "2025-09-29",
+          "total_earn_count": 62,
+          "by_chain": {
+            "Arbitrum": 5,
+            "Base": 1,
+            "Solana": 3
+          },
+          "by_protocol": {
+            "Lido": 2,
+            "Yearn": 5
+          },
+          "by_chain_protocol": {
+            "Ethereum#MakerDAO": 1
+          }
+        }
+      ]
+    },
+    "monthly": {
+      "periodic_user_stats": [
+        {
+          "period_start": "2025-10-01",
+          "new_users": 159,
+          "active_users": 433
+        },
+        {
+          "period_start": "2025-09-01",
+          "new_users": 155,
+          "active_users": 480
+        },
+        {
+          "period_start": "2025-08-01",
+          "new_users": 137,
+          "active_users": 451
+        },
+        {
+          "period_start": "2025-07-01",
+          "new_users": 138,
+          "active_users": 476
+        },
+        {
+          "period_start": "2025-06-01",
+          "new_users": 162,
+          "active_users": 434
+        },
+        {
+          "period_start": "2025-05-01",
+          "new_users": 167,
+          "active_users": 429
+        },
+        {
+          "period_start": "2025-04-01",
+          "new_users": 165,
+          "active_users": 449
+        },
+        {
+          "period_start": "2025-03-01",
+          "new_users": 151,
+          "active_users": 482
+        },
+        {
+          "period_start": "2025-02-01",
+          "new_users": 159,
+          "active_users": 422
+        },
+        {
+          "period_start": "2025-01-01",
+          "new_users": 137,
+          "active_users": 476
+        },
+        {
+          "period_start": "2024-12-01",
+          "new_users": 143,
+          "active_users": 430
+        },
+        {
+          "period_start": "2024-11-01",
+          "new_users": 143,
+          "active_users": 447
+        }
+      ],
+      "periodic_activity_stats": [
+        {
+          "period": "2025-10-01",
+          "total_transactions": 1039,
+          "swap_count": 608,
+          "lending_count": 154,
+          "earn_count": 277,
+          "dapp_entrances": 958,
+          "active_users": 433,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-09-01",
+          "total_transactions": 851,
+          "swap_count": 503,
+          "lending_count": 140,
+          "earn_count": 208,
+          "dapp_entrances": 2687,
+          "active_users": 480,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-08-01",
+          "total_transactions": 886,
+          "swap_count": 499,
+          "lending_count": 161,
+          "earn_count": 226,
+          "dapp_entrances": 1967,
+          "active_users": 451,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-07-01",
+          "total_transactions": 950,
+          "swap_count": 471,
+          "lending_count": 189,
+          "earn_count": 290,
+          "dapp_entrances": 1194,
+          "active_users": 476,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-06-01",
+          "total_transactions": 892,
+          "swap_count": 491,
+          "lending_count": 159,
+          "earn_count": 242,
+          "dapp_entrances": 1515,
+          "active_users": 434,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-05-01",
+          "total_transactions": 872,
+          "swap_count": 440,
+          "lending_count": 174,
+          "earn_count": 258,
+          "dapp_entrances": 1040,
+          "active_users": 429,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-04-01",
+          "total_transactions": 958,
+          "swap_count": 558,
+          "lending_count": 176,
+          "earn_count": 224,
+          "dapp_entrances": 2867,
+          "active_users": 449,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-03-01",
+          "total_transactions": 930,
+          "swap_count": 492,
+          "lending_count": 170,
+          "earn_count": 268,
+          "dapp_entrances": 1598,
+          "active_users": 482,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2025-02-01",
+          "total_transactions": 985,
+          "swap_count": 586,
+          "lending_count": 170,
+          "earn_count": 229,
+          "dapp_entrances": 871,
+          "active_users": 422,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2025-01-01",
+          "total_transactions": 818,
+          "swap_count": 425,
+          "lending_count": 145,
+          "earn_count": 248,
+          "dapp_entrances": 1366,
+          "active_users": 476,
+          "transactions_per_active_user": 1
+        },
+        {
+          "period": "2024-12-01",
+          "total_transactions": 1000,
+          "swap_count": 580,
+          "lending_count": 172,
+          "earn_count": 248,
+          "dapp_entrances": 1887,
+          "active_users": 430,
+          "transactions_per_active_user": 2
+        },
+        {
+          "period": "2024-11-01",
+          "total_transactions": 949,
+          "swap_count": 560,
+          "lending_count": 142,
+          "earn_count": 247,
+          "dapp_entrances": 907,
+          "active_users": 447,
+          "transactions_per_active_user": 2
+        }
+      ],
+      "periodic_swap_stats": [
+        {
+          "period_start": "2025-10-01",
+          "total_swap_count": 608,
+          "swap_routes": {
+            "ethereum,base": 22,
+            "base,polygon": 23,
+            "optimism,solana": 26,
+            "polygon,arbitrum": 18,
+            "solana,ethereum": 28,
+            "arbitrum,ethereum": 25,
+            "base,solana": 29,
+            "solana,arbitrum": 24,
+            "ethereum,solana": 14,
+            "solana,base": 15,
+            "polygon,base": 16,
+            "base,optimism": 19,
+            "optimism,polygon": 14,
+            "optimism,ethereum": 19,
+            "base,arbitrum": 22,
+            "polygon,optimism": 20,
+            "base,ethereum": 22,
+            "solana,optimism": 18,
+            "arbitrum,polygon": 17,
+            "arbitrum,optimism": 18,
+            "optimism,base": 31,
+            "polygon,solana": 19,
+            "arbitrum,base": 11,
+            "arbitrum,solana": 19,
+            "ethereum,arbitrum": 19,
+            "polygon,ethereum": 21,
+            "ethereum,polygon": 18,
+            "optimism,arbitrum": 23,
+            "ethereum,optimism": 22,
+            "solana,polygon": 16
+          },
+          "cross_chain_count": 608,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-09-01",
+          "total_swap_count": 503,
+          "swap_routes": {
+            "solana,arbitrum": 22,
+            "ethereum,arbitrum": 14,
+            "optimism,base": 21,
+            "solana,optimism": 16,
+            "base,optimism": 15,
+            "arbitrum,optimism": 18,
+            "arbitrum,polygon": 18,
+            "polygon,base": 13,
+            "polygon,arbitrum": 14,
+            "solana,base": 24,
+            "optimism,polygon": 13,
+            "ethereum,base": 12,
+            "optimism,solana": 14,
+            "base,arbitrum": 13,
+            "arbitrum,ethereum": 13,
+            "base,polygon": 19,
+            "solana,ethereum": 26,
+            "polygon,ethereum": 14,
+            "ethereum,optimism": 13,
+            "polygon,solana": 18,
+            "polygon,optimism": 20,
+            "arbitrum,solana": 18,
+            "optimism,arbitrum": 21,
+            "ethereum,solana": 16,
+            "base,ethereum": 16,
+            "solana,polygon": 16,
+            "ethereum,polygon": 17,
+            "optimism,ethereum": 16,
+            "base,solana": 16,
+            "arbitrum,base": 17
+          },
+          "cross_chain_count": 503,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-08-01",
+          "total_swap_count": 499,
+          "swap_routes": {
+            "arbitrum,base": 23,
+            "optimism,polygon": 17,
+            "optimism,ethereum": 16,
+            "arbitrum,ethereum": 17,
+            "optimism,solana": 13,
+            "optimism,arbitrum": 19,
+            "ethereum,arbitrum": 13,
+            "polygon,arbitrum": 15,
+            "solana,base": 20,
+            "arbitrum,polygon": 14,
+            "ethereum,base": 14,
+            "polygon,solana": 12,
+            "arbitrum,solana": 11,
+            "optimism,base": 16,
+            "solana,optimism": 31,
+            "solana,polygon": 17,
+            "ethereum,polygon": 15,
+            "ethereum,solana": 13,
+            "base,polygon": 11,
+            "solana,arbitrum": 19,
+            "polygon,base": 17,
+            "arbitrum,optimism": 17,
+            "base,ethereum": 16,
+            "base,optimism": 16,
+            "base,solana": 26,
+            "solana,ethereum": 22,
+            "polygon,optimism": 12,
+            "ethereum,optimism": 18,
+            "base,arbitrum": 15,
+            "polygon,ethereum": 14
+          },
+          "cross_chain_count": 499,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-07-01",
+          "total_swap_count": 471,
+          "swap_routes": {
+            "solana,optimism": 21,
+            "optimism,base": 17,
+            "optimism,ethereum": 17,
+            "solana,ethereum": 14,
+            "base,ethereum": 19,
+            "polygon,optimism": 16,
+            "base,polygon": 14,
+            "optimism,polygon": 18,
+            "arbitrum,base": 18,
+            "arbitrum,solana": 20,
+            "solana,polygon": 15,
+            "base,arbitrum": 17,
+            "arbitrum,ethereum": 14,
+            "arbitrum,polygon": 17,
+            "optimism,solana": 14,
+            "polygon,ethereum": 13,
+            "polygon,solana": 16,
+            "optimism,arbitrum": 22,
+            "ethereum,polygon": 23,
+            "base,solana": 16,
+            "ethereum,base": 16,
+            "ethereum,arbitrum": 11,
+            "ethereum,optimism": 15,
+            "solana,base": 17,
+            "arbitrum,optimism": 18,
+            "solana,arbitrum": 11,
+            "base,optimism": 10,
+            "ethereum,solana": 11,
+            "polygon,arbitrum": 10,
+            "polygon,base": 11
+          },
+          "cross_chain_count": 471,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-06-01",
+          "total_swap_count": 491,
+          "swap_routes": {
+            "optimism,base": 17,
+            "ethereum,optimism": 16,
+            "optimism,polygon": 10,
+            "ethereum,arbitrum": 21,
+            "optimism,arbitrum": 16,
+            "arbitrum,ethereum": 21,
+            "base,polygon": 14,
+            "polygon,arbitrum": 20,
+            "arbitrum,optimism": 11,
+            "polygon,base": 22,
+            "ethereum,base": 16,
+            "arbitrum,base": 16,
+            "arbitrum,solana": 13,
+            "base,solana": 16,
+            "solana,polygon": 12,
+            "ethereum,solana": 19,
+            "optimism,solana": 18,
+            "arbitrum,polygon": 20,
+            "base,arbitrum": 17,
+            "optimism,ethereum": 18,
+            "base,ethereum": 20,
+            "polygon,optimism": 12,
+            "polygon,ethereum": 23,
+            "ethereum,polygon": 16,
+            "solana,optimism": 14,
+            "base,optimism": 14,
+            "solana,base": 15,
+            "solana,arbitrum": 16,
+            "solana,ethereum": 14,
+            "polygon,solana": 14
+          },
+          "cross_chain_count": 491,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-05-01",
+          "total_swap_count": 440,
+          "swap_routes": {
+            "optimism,ethereum": 9,
+            "optimism,arbitrum": 17,
+            "ethereum,solana": 20,
+            "optimism,polygon": 19,
+            "ethereum,base": 11,
+            "base,solana": 24,
+            "polygon,arbitrum": 11,
+            "arbitrum,ethereum": 11,
+            "ethereum,polygon": 14,
+            "arbitrum,polygon": 17,
+            "solana,ethereum": 10,
+            "optimism,base": 18,
+            "ethereum,arbitrum": 12,
+            "solana,base": 12,
+            "polygon,base": 13,
+            "polygon,solana": 19,
+            "base,arbitrum": 21,
+            "arbitrum,solana": 15,
+            "optimism,solana": 11,
+            "arbitrum,optimism": 18,
+            "base,polygon": 11,
+            "solana,polygon": 18,
+            "solana,optimism": 22,
+            "arbitrum,base": 16,
+            "polygon,ethereum": 13,
+            "base,optimism": 17,
+            "solana,arbitrum": 15,
+            "polygon,optimism": 8,
+            "ethereum,optimism": 12,
+            "base,ethereum": 6
+          },
+          "cross_chain_count": 440,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-04-01",
+          "total_swap_count": 558,
+          "swap_routes": {
+            "polygon,arbitrum": 20,
+            "optimism,arbitrum": 18,
+            "solana,polygon": 16,
+            "arbitrum,optimism": 14,
+            "polygon,base": 20,
+            "base,polygon": 24,
+            "arbitrum,polygon": 18,
+            "base,ethereum": 20,
+            "ethereum,base": 17,
+            "ethereum,solana": 23,
+            "arbitrum,ethereum": 21,
+            "polygon,ethereum": 22,
+            "base,arbitrum": 17,
+            "solana,base": 24,
+            "optimism,ethereum": 19,
+            "solana,arbitrum": 16,
+            "solana,optimism": 25,
+            "solana,ethereum": 16,
+            "polygon,solana": 26,
+            "optimism,solana": 17,
+            "optimism,polygon": 13,
+            "arbitrum,solana": 18,
+            "ethereum,optimism": 16,
+            "base,optimism": 21,
+            "base,solana": 24,
+            "arbitrum,base": 16,
+            "polygon,optimism": 13,
+            "ethereum,polygon": 19,
+            "optimism,base": 12,
+            "ethereum,arbitrum": 13
+          },
+          "cross_chain_count": 558,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-03-01",
+          "total_swap_count": 492,
+          "swap_routes": {
+            "arbitrum,base": 15,
+            "solana,base": 16,
+            "arbitrum,optimism": 15,
+            "polygon,optimism": 16,
+            "optimism,ethereum": 20,
+            "solana,ethereum": 18,
+            "polygon,ethereum": 18,
+            "arbitrum,ethereum": 14,
+            "ethereum,solana": 21,
+            "base,ethereum": 17,
+            "solana,optimism": 17,
+            "ethereum,base": 25,
+            "base,arbitrum": 10,
+            "ethereum,polygon": 18,
+            "polygon,arbitrum": 19,
+            "polygon,base": 24,
+            "base,solana": 25,
+            "optimism,solana": 16,
+            "optimism,arbitrum": 21,
+            "arbitrum,solana": 10,
+            "optimism,base": 11,
+            "base,polygon": 11,
+            "ethereum,arbitrum": 14,
+            "arbitrum,polygon": 17,
+            "base,optimism": 14,
+            "solana,polygon": 21,
+            "optimism,polygon": 15,
+            "solana,arbitrum": 12,
+            "polygon,solana": 11,
+            "ethereum,optimism": 11
+          },
+          "cross_chain_count": 492,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-02-01",
+          "total_swap_count": 586,
+          "swap_routes": {
+            "solana,optimism": 21,
+            "optimism,base": 32,
+            "solana,base": 19,
+            "optimism,ethereum": 27,
+            "arbitrum,base": 27,
+            "ethereum,polygon": 13,
+            "solana,polygon": 18,
+            "optimism,polygon": 18,
+            "ethereum,base": 17,
+            "optimism,solana": 19,
+            "base,optimism": 14,
+            "arbitrum,optimism": 16,
+            "ethereum,optimism": 22,
+            "polygon,solana": 15,
+            "polygon,base": 19,
+            "base,polygon": 16,
+            "arbitrum,ethereum": 10,
+            "arbitrum,solana": 16,
+            "solana,ethereum": 24,
+            "arbitrum,polygon": 25,
+            "base,solana": 17,
+            "polygon,arbitrum": 24,
+            "polygon,optimism": 17,
+            "polygon,ethereum": 25,
+            "base,arbitrum": 18,
+            "ethereum,solana": 17,
+            "base,ethereum": 23,
+            "ethereum,arbitrum": 22,
+            "optimism,arbitrum": 20,
+            "solana,arbitrum": 15
+          },
+          "cross_chain_count": 586,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2025-01-01",
+          "total_swap_count": 425,
+          "swap_routes": {
+            "arbitrum,solana": 26,
+            "base,solana": 14,
+            "optimism,base": 13,
+            "arbitrum,polygon": 12,
+            "ethereum,base": 19,
+            "ethereum,optimism": 19,
+            "polygon,base": 16,
+            "solana,polygon": 10,
+            "optimism,arbitrum": 14,
+            "base,ethereum": 10,
+            "solana,optimism": 18,
+            "ethereum,solana": 19,
+            "arbitrum,ethereum": 17,
+            "optimism,ethereum": 10,
+            "arbitrum,optimism": 13,
+            "base,optimism": 12,
+            "polygon,solana": 20,
+            "base,arbitrum": 14,
+            "arbitrum,base": 11,
+            "solana,ethereum": 8,
+            "solana,base": 16,
+            "polygon,optimism": 6,
+            "solana,arbitrum": 8,
+            "optimism,polygon": 17,
+            "polygon,ethereum": 13,
+            "polygon,arbitrum": 15,
+            "ethereum,polygon": 19,
+            "optimism,solana": 14,
+            "base,polygon": 9,
+            "ethereum,arbitrum": 13
+          },
+          "cross_chain_count": 425,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2024-12-01",
+          "total_swap_count": 580,
+          "swap_routes": {
+            "base,solana": 17,
+            "base,arbitrum": 17,
+            "ethereum,solana": 17,
+            "solana,arbitrum": 26,
+            "base,polygon": 26,
+            "optimism,arbitrum": 23,
+            "polygon,solana": 16,
+            "ethereum,arbitrum": 17,
+            "polygon,ethereum": 27,
+            "ethereum,polygon": 25,
+            "optimism,ethereum": 15,
+            "polygon,optimism": 16,
+            "base,optimism": 31,
+            "solana,optimism": 16,
+            "solana,polygon": 15,
+            "arbitrum,optimism": 16,
+            "arbitrum,ethereum": 17,
+            "optimism,solana": 21,
+            "ethereum,base": 21,
+            "base,ethereum": 22,
+            "solana,ethereum": 22,
+            "arbitrum,solana": 20,
+            "arbitrum,base": 14,
+            "polygon,arbitrum": 14,
+            "polygon,base": 19,
+            "optimism,base": 17,
+            "arbitrum,polygon": 20,
+            "optimism,polygon": 19,
+            "solana,base": 17,
+            "ethereum,optimism": 17
+          },
+          "cross_chain_count": 580,
+          "same_chain_count": 0
+        },
+        {
+          "period_start": "2024-11-01",
+          "total_swap_count": 560,
+          "swap_routes": {
+            "optimism,polygon": 16,
+            "ethereum,base": 22,
+            "optimism,ethereum": 16,
+            "ethereum,optimism": 16,
+            "solana,base": 29,
+            "polygon,arbitrum": 17,
+            "solana,ethereum": 15,
+            "ethereum,solana": 17,
+            "polygon,optimism": 15,
+            "solana,arbitrum": 25,
+            "arbitrum,polygon": 20,
+            "arbitrum,base": 23,
+            "polygon,base": 24,
+            "base,ethereum": 22,
+            "polygon,ethereum": 16,
+            "arbitrum,ethereum": 21,
+            "optimism,solana": 20,
+            "optimism,base": 14,
+            "solana,polygon": 18,
+            "base,polygon": 20,
+            "ethereum,polygon": 20,
+            "arbitrum,solana": 19,
+            "solana,optimism": 14,
+            "base,optimism": 23,
+            "base,arbitrum": 20,
+            "polygon,solana": 12,
+            "base,solana": 18,
+            "arbitrum,optimism": 13,
+            "ethereum,arbitrum": 18,
+            "optimism,arbitrum": 17
+          },
+          "cross_chain_count": 560,
+          "same_chain_count": 0
+        }
+      ],
+      "periodic_lending_stats": [
+        {
+          "period_start": "2025-10-01",
+          "total_lending_count": 154,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "period_start": "2025-09-01",
+          "total_lending_count": 140,
+          "breakdown": [
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2025-08-01",
+          "total_lending_count": 161,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 3
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 4
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-07-01",
+          "total_lending_count": 189,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 1
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 3
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            }
+          ]
+        },
+        {
+          "period_start": "2025-06-01",
+          "total_lending_count": 159,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 4
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-05-01",
+          "total_lending_count": 174,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 1
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-04-01",
+          "total_lending_count": 176,
+          "breakdown": [
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "period_start": "2025-03-01",
+          "total_lending_count": 170,
+          "breakdown": [
+            {
+              "chain": "Arbitrum",
+              "market": "CompoundArbitrum",
+              "count": 1
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Arbitrum",
+              "market": "AaveV3Arbitrum",
+              "count": 2
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 5
+            },
+            {
+              "chain": "Polygon",
+              "market": "CompoundPolygon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2025-02-01",
+          "total_lending_count": 170,
+          "breakdown": [
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 4
+            },
+            {
+              "chain": "Ethereum",
+              "market": "CompoundEthereum",
+              "count": 1
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 2
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2025-01-01",
+          "total_lending_count": 145,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 2
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 1
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 1
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "period_start": "2024-12-01",
+          "total_lending_count": 172,
+          "breakdown": [
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 1
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 3
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 3
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 5
+            },
+            {
+              "chain": "Optimism",
+              "market": "AaveV3Optimism",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "period_start": "2024-11-01",
+          "total_lending_count": 142,
+          "breakdown": [
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 5
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            },
+            {
+              "chain": "Ethereum",
+              "market": "AaveV3Ethereum",
+              "count": 2
+            },
+            {
+              "chain": "Polygon",
+              "market": "AaveV3Polygon",
+              "count": 4
+            },
+            {
+              "chain": "Solana",
+              "market": "SolendSolana",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "periodic_earn_stats": [
+        {
+          "period_start": "2025-10-01",
+          "total_earn_count": 277,
+          "by_chain": {
+            "Ethereum": 20,
+            "Solana": 5,
+            "Arbitrum": 14,
+            "Polygon": 12
+          },
+          "by_protocol": {
+            "Lido": 10,
+            "MakerDAO": 12,
+            "etherFi": 10
+          },
+          "by_chain_protocol": {
+            "Optimism#etherFi": 4,
+            "Ethereum#Yearn": 8
+          }
+        },
+        {
+          "period_start": "2025-09-01",
+          "total_earn_count": 208,
+          "by_chain": {
+            "Ethereum": 15,
+            "Polygon": 18,
+            "Optimism": 8,
+            "Solana": 16
+          },
+          "by_protocol": {
+            "etherFi": 14,
+            "Yearn": 11,
+            "MakerDAO": 14
+          },
+          "by_chain_protocol": {
+            "Solana#Lido": 10,
+            "Ethereum#Lido": 7
+          }
+        },
+        {
+          "period_start": "2025-08-01",
+          "total_earn_count": 226,
+          "by_chain": {
+            "Optimism": 18,
+            "Solana": 20,
+            "Polygon": 11,
+            "Base": 16
+          },
+          "by_protocol": {
+            "etherFi": 5,
+            "Lido": 10,
+            "Yearn": 13
+          },
+          "by_chain_protocol": {
+            "Optimism#Lido": 4,
+            "Solana#Yearn": 6
+          }
+        },
+        {
+          "period_start": "2025-07-01",
+          "total_earn_count": 290,
+          "by_chain": {
+            "Solana": 5,
+            "Arbitrum": 10,
+            "Ethereum": 20,
+            "Optimism": 19
+          },
+          "by_protocol": {
+            "etherFi": 16,
+            "Lido": 12,
+            "MakerDAO": 10
+          },
+          "by_chain_protocol": {
+            "Arbitrum#Yearn": 8,
+            "Solana#Yearn": 10
+          }
+        },
+        {
+          "period_start": "2025-06-01",
+          "total_earn_count": 242,
+          "by_chain": {
+            "Base": 11,
+            "Solana": 8,
+            "Ethereum": 12,
+            "Arbitrum": 18
+          },
+          "by_protocol": {
+            "Lido": 15,
+            "MakerDAO": 10,
+            "Yearn": 19
+          },
+          "by_chain_protocol": {
+            "Ethereum#MakerDAO": 6,
+            "Polygon#etherFi": 2
+          }
+        },
+        {
+          "period_start": "2025-05-01",
+          "total_earn_count": 258,
+          "by_chain": {
+            "Solana": 8,
+            "Optimism": 6,
+            "Ethereum": 6,
+            "Arbitrum": 17
+          },
+          "by_protocol": {
+            "MakerDAO": 7,
+            "Yearn": 16,
+            "etherFi": 16
+          },
+          "by_chain_protocol": {
+            "Polygon#Yearn": 8,
+            "Arbitrum#Yearn": 7
+          }
+        },
+        {
+          "period_start": "2025-04-01",
+          "total_earn_count": 224,
+          "by_chain": {
+            "Optimism": 9,
+            "Arbitrum": 11,
+            "Base": 9,
+            "Solana": 11
+          },
+          "by_protocol": {
+            "Lido": 19,
+            "Yearn": 18,
+            "etherFi": 5
+          },
+          "by_chain_protocol": {
+            "Base#etherFi": 9,
+            "Ethereum#MakerDAO": 2
+          }
+        },
+        {
+          "period_start": "2025-03-01",
+          "total_earn_count": 268,
+          "by_chain": {
+            "Base": 15,
+            "Polygon": 6,
+            "Arbitrum": 14,
+            "Optimism": 11
+          },
+          "by_protocol": {
+            "Lido": 10,
+            "Yearn": 7,
+            "etherFi": 14
+          },
+          "by_chain_protocol": {
+            "Optimism#MakerDAO": 3,
+            "Base#MakerDAO": 7
+          }
+        },
+        {
+          "period_start": "2025-02-01",
+          "total_earn_count": 229,
+          "by_chain": {
+            "Solana": 16,
+            "Optimism": 5,
+            "Arbitrum": 5,
+            "Polygon": 13
+          },
+          "by_protocol": {
+            "etherFi": 17,
+            "Lido": 18,
+            "Yearn": 16
+          },
+          "by_chain_protocol": {
+            "Base#etherFi": 3,
+            "Polygon#Yearn": 7
+          }
+        },
+        {
+          "period_start": "2025-01-01",
+          "total_earn_count": 248,
+          "by_chain": {
+            "Optimism": 11,
+            "Solana": 12,
+            "Base": 10,
+            "Arbitrum": 14
+          },
+          "by_protocol": {
+            "MakerDAO": 14,
+            "Lido": 18,
+            "etherFi": 20
+          },
+          "by_chain_protocol": {
+            "Optimism#MakerDAO": 10,
+            "Arbitrum#etherFi": 7
+          }
+        },
+        {
+          "period_start": "2024-12-01",
+          "total_earn_count": 248,
+          "by_chain": {
+            "Arbitrum": 8,
+            "Optimism": 10,
+            "Base": 11,
+            "Polygon": 9
+          },
+          "by_protocol": {
+            "Yearn": 5,
+            "etherFi": 17,
+            "Lido": 10
+          },
+          "by_chain_protocol": {
+            "Base#Yearn": 4,
+            "Solana#MakerDAO": 6
+          }
+        },
+        {
+          "period_start": "2024-11-01",
+          "total_earn_count": 247,
+          "by_chain": {
+            "Base": 11,
+            "Arbitrum": 16,
+            "Optimism": 10,
+            "Solana": 15
+          },
+          "by_protocol": {
+            "Lido": 12,
+            "Yearn": 15,
+            "etherFi": 19
+          },
+          "by_chain_protocol": {
+            "Polygon#Yearn": 10,
+            "Solana#MakerDAO": 9
+          }
+        }
+      ]
+    }
+  }
+}
