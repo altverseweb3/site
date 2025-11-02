@@ -10,7 +10,6 @@ import {
   RadialBar,
   RadialBarChart,
   XAxis,
-  YAxis,
 } from "recharts";
 import {
   Card,
@@ -202,7 +201,6 @@ export function EarnTab({
                 minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent

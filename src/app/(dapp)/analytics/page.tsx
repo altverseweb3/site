@@ -191,6 +191,7 @@ export default function AnalyticsPage() {
         )}
         {activeTab === "lending" && (
           <LendingTab
+            data={analyticsData}
             periodicStats={periodicStats}
             formatDate={formatDate}
             timePeriod={timePeriod}

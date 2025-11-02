@@ -1,17 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Label,
-  PolarAngleAxis,
-  RadialBar,
-  RadialBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -22,29 +12,34 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/Chart";
 import {
+  AnalyticsData,
   PeriodicLendingBreakdown,
   PeriodicStats,
   TimePeriod,
 } from "@/types/analytics";
 
 interface LendingTabProps {
+  data: AnalyticsData;
   periodicStats: PeriodicStats | null;
   formatDate: (dateStr: string, period: TimePeriod) => string;
   timePeriod: TimePeriod;
 }
 
 export function LendingTab({
+  data,
   periodicStats,
   formatDate,
   timePeriod,
 }: LendingTabProps) {
   const chartConfig = {
     count: {
-      label: "Lending",
+      label: "Lending Operations",
       color: "hsl(30 80% 55%)",
     },
   } satisfies ChartConfig;
@@ -63,13 +58,13 @@ export function LendingTab({
       { total: 0, breakdown: [] as PeriodicLendingBreakdown[] },
     );
 
-    // Aggregate by market
+    // Aggregate by protocol (market)
     const byMarket = totals.breakdown.reduce(
       (acc, item) => {
-        const market = item.market
+        const protocol = item.market
           .replace(item.chain, "")
           .replace(/^(Aave|Compound|Solend)/, "$1");
-        acc[market] = (acc[market] || 0) + item.count;
+        acc[protocol] = (acc[protocol] || 0) + item.count;
         return acc;
       },
       {} as Record<string, number>,
@@ -93,107 +88,94 @@ export function LendingTab({
   }, [periodicStats]);
 
   // Volume over time
-  const volumeData =
-    periodicStats?.periodic_lending_stats.map((item) => ({
-      period: item.period_start,
-      count: item.total_lending_count,
-    })) || [];
+  const volumeData = React.useMemo(() => {
+    if (!periodicStats) return [];
 
-  // Radial data for market distribution
-  const radialData = Object.entries(aggregatedLending.byMarket).map(
-    ([market, count], index) => ({
-      name: market,
-      value: count,
-      fill: `hsl(${30 + index * 15} ${70 + index * 5}% ${50 + index * 3}%)`,
-    }),
-  );
+    return periodicStats.periodic_lending_stats.map((item) => ({
+      date: item.period_start,
+      count: item.total_lending_count,
+    }));
+  }, [periodicStats]);
+
+  // Chain breakdown for pie chart
+  const chainChartData = React.useMemo(() => {
+    return Object.entries(aggregatedLending.byChain).map(
+      ([chain, count], index) => ({
+        name: chain,
+        value: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }),
+    );
+  }, [aggregatedLending.byChain]);
+
+  // Protocol breakdown for pie chart
+  const protocolChartData = React.useMemo(() => {
+    return Object.entries(aggregatedLending.byMarket).map(
+      ([protocol, count], index) => ({
+        name: protocol,
+        value: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }),
+    );
+  }, [aggregatedLending.byMarket]);
+
+  // Chart configs for pie charts
+  const chainConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Operations" },
+    };
+    Object.keys(aggregatedLending.byChain).forEach((chain, index) => {
+      config[chain] = {
+        label: chain,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [aggregatedLending.byChain]);
+
+  const protocolConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Operations" },
+    };
+    Object.keys(aggregatedLending.byMarket).forEach((protocol, index) => {
+      config[protocol] = {
+        label: protocol,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [aggregatedLending.byMarket]);
 
   return (
     <div className="space-y-6">
-      {/* Radial Stacked Chart - Total + By Market */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader className="items-center pb-0">
-          <CardTitle>Lending Distribution by Market</CardTitle>
-          <CardDescription>
-            Protocol usage across selected period
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 pb-0">
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-[350px]"
-          >
-            <RadialBarChart
-              data={radialData}
-              startAngle={0}
-              endAngle={250}
-              innerRadius={80}
-              outerRadius={140}
-            >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, aggregatedLending.total]}
-                angleAxisId={0}
-                tick={false}
-              />
-              <RadialBar dataKey="value" background cornerRadius={10} />
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
-                        >
-                          {aggregatedLending.total.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Total Lending
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
-              />
-            </RadialBarChart>
-          </ChartContainer>
-          <div className="flex flex-wrap justify-center gap-3 mt-4 pb-6">
-            {Object.entries(aggregatedLending.byMarket).map(
-              ([market, count], index) => (
-                <div key={market} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{
-                      backgroundColor: `hsl(${30 + index * 15} ${70 + index * 5}% ${50 + index * 3}%)`,
-                    }}
-                  />
-                  <span className="text-sm">
-                    {market}: {count.toLocaleString()}
-                  </span>
-                </div>
-              ),
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground text-center pb-4">
-            Distribution of lending activity across different markets (Aave,
-            Compound, Solend)
-          </p>
-        </CardContent>
-      </Card>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Total Lending Operations (All-Time) Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>Total Lending Operations</CardDescription>
+            <CardTitle className="text-4xl">
+              {data.total_lending_stats.total_lending_count.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-      {/* Lending Volume Over Time */}
+        {/* Lending Operations (Period) Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>Lending Operations (Period)</CardDescription>
+            <CardTitle className="text-4xl">
+              {aggregatedLending.total.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Lending Volume Over Time - Area Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
         <CardHeader>
           <CardTitle>Lending Volume Over Time</CardTitle>
-          <CardDescription>
-            Total lending transactions per period
-          </CardDescription>
+          <CardDescription>Total lending operations per period</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -214,14 +196,13 @@ export function LendingTab({
               </defs>
               <CartesianGrid vertical={false} stroke="#27272A" />
               <XAxis
-                dataKey="period"
+                dataKey="date"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
                 minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -239,54 +220,67 @@ export function LendingTab({
               />
             </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Lending transaction volume trends over the selected period
-          </p>
         </CardContent>
       </Card>
 
-      {/* Detailed Breakdown - Horizontal Bars */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader>
-          <CardTitle>Chain & Market Breakdown</CardTitle>
-          <CardDescription>
-            Lending activity by chain and protocol
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Object.entries(aggregatedLending.byChain)
-              .sort(([, a], [, b]) => b - a)
-              .map(([chain, count]) => {
-                const maxCount = Math.max(
-                  ...Object.values(aggregatedLending.byChain),
-                );
-                const percentage = (count / maxCount) * 100;
+      {/* Chain and Protocol Breakdown - Side by Side Donut Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chain Breakdown - Donut Pie Chart */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Chain Breakdown</CardTitle>
+            <CardDescription>Lending operations by chain</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={chainConfig}
+              className="mx-auto aspect-square max-h-[250px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={chainChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-                return (
-                  <div key={chain} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{chain}</span>
-                      <span className="text-[hsl(30_80%_55%)] font-semibold">
-                        {count.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-[#27272A] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[hsl(30_80%_55%)] rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Horizontal bars showing lending distribution across blockchain
-            networks
-          </p>
-        </CardContent>
-      </Card>
+        {/* Protocol Breakdown - Donut Pie Chart */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Protocol Breakdown</CardTitle>
+            <CardDescription>Lending operations by protocol</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={protocolConfig}
+              className="mx-auto aspect-square max-h-[250px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={protocolChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
