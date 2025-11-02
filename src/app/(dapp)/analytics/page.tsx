@@ -183,6 +183,7 @@ export default function AnalyticsPage() {
         )}
         {activeTab === "swaps" && (
           <SwapsTab
+            data={analyticsData}
             periodicStats={periodicStats}
             formatDate={formatDate}
             timePeriod={timePeriod}
