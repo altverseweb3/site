@@ -27,7 +27,6 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedFile] = useState<string>("mock_analytics.json");
 
-  // Load JSON file
   useEffect(() => {
     const loadFiles = async () => {
       try {
@@ -44,7 +43,6 @@ export default function AnalyticsPage() {
     loadFiles();
   }, [selectedFile]);
 
-  // Process periodic data based on selected time period
   const periodicStats = useMemo(() => {
     if (!analyticsData?.periodic_stats) return null;
 
@@ -73,7 +71,6 @@ export default function AnalyticsPage() {
     return null;
   }, [analyticsData, timePeriod]);
 
-  // Utility function to format dates based on time period
   const formatDate = (dateStr: string, period: TimePeriod) => {
     const date = new Date(dateStr);
     if (period === "monthly") {
@@ -114,15 +111,13 @@ export default function AnalyticsPage() {
   return (
     <div className="container mx-auto px-2 md:py-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="mb-6">
-          <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-            {/* Tabs */}
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <ToggleGroup
               type="single"
               value={activeTab}
               onValueChange={(value) => value && setActiveTab(value as TabType)}
-              className="justify-start"
+              className="justify-start hidden md:flex"
             >
               <ToggleGroupItem value="users" aria-label="Users">
                 <Users className="h-4 w-4 mr-2" />
@@ -146,25 +141,85 @@ export default function AnalyticsPage() {
               </ToggleGroupItem>
             </ToggleGroup>
 
-            {/* Time Period Selector */}
-            <Select
-              value={timePeriod}
-              onValueChange={(value) => setTimePeriod(value as TimePeriod)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="last7">Last 7 days</SelectItem>
-                <SelectItem value="last30">Last 30 days</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-row md:hidden gap-4 w-full">
+              <Select
+                value={activeTab}
+                onValueChange={(value) =>
+                  value && setActiveTab(value as TabType)
+                }
+              >
+                <SelectTrigger className="w-1/2">
+                  <SelectValue placeholder="Select tab" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="users">
+                    <span className="flex items-center">
+                      <Users className="h-4 w-4 mr-2" />
+                      Users
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="activity">
+                    <span className="flex items-center">
+                      <Activity className="h-4 w-4 mr-2" />
+                      Activity
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="swaps">
+                    <span className="flex items-center">
+                      <Repeat className="h-4 w-4 mr-2" />
+                      Swaps
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="lending">
+                    <span className="flex items-center">
+                      <Landmark className="h-4 w-4 mr-2" />
+                      Lending
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="earn">
+                    <span className="flex items-center">
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Earn
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={timePeriod}
+                onValueChange={(value) => setTimePeriod(value as TimePeriod)}
+              >
+                <SelectTrigger className="w-1/2">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last7">Last 7 days</SelectItem>
+                  <SelectItem value="last30">Last 30 days</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="hidden md:block">
+              <Select
+                value={timePeriod}
+                onValueChange={(value) => setTimePeriod(value as TimePeriod)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last7">Last 7 days</SelectItem>
+                  <SelectItem value="last30">Last 30 days</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        {/* Content based on active tab */}
         {activeTab === "users" && (
           <UsersTab
             data={analyticsData}
