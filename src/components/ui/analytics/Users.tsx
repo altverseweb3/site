@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -12,6 +12,8 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/Chart";
@@ -30,18 +32,14 @@ export function UsersTab({
   formatDate,
   timePeriod,
 }: UsersTabProps) {
-  const [activeMetric, setActiveMetric] = React.useState<
-    "new_users" | "active_users"
-  >("new_users");
-
   const chartConfig = {
     new_users: {
       label: "New Users",
-      color: "hsl(30 80% 55%)",
+      color: "#f97316",
     },
     active_users: {
       label: "Active Users",
-      color: "hsl(35 85% 60%)",
+      color: "#eab308",
     },
   } satisfies ChartConfig;
 
@@ -52,55 +50,49 @@ export function UsersTab({
       active_users: item.active_users,
     })) || [];
 
-  const total = React.useMemo(
-    () => ({
-      new_users:
-        periodicStats?.periodic_user_stats.reduce(
-          (acc, item) => acc + item.new_users,
-          0,
-        ) || 0,
-      active_users: Math.max(
-        ...(periodicStats?.periodic_user_stats.map(
-          (item) => item.active_users,
-        ) || [0]),
-      ),
-    }),
+  const totalNewUsers = React.useMemo(
+    () =>
+      periodicStats?.periodic_user_stats.reduce(
+        (acc, item) => acc + item.new_users,
+        0,
+      ) || 0,
     [periodicStats],
   );
 
   return (
     <div className="space-y-6">
-      {/* Interactive Area Chart with Toggle */}
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Total Users Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>All-Time Total Users</CardDescription>
+            <CardTitle className="text-4xl">
+              {data.total_users.total_users.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        {/* New Users This Period Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>New Users (Period)</CardDescription>
+            <CardTitle className="text-4xl">
+              {totalNewUsers.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Combined Users Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader className="flex flex-col items-stretch border-b border-[#27272A] p-0 sm:flex-row">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-            <CardTitle>User Metrics - Interactive</CardTitle>
-            <CardDescription>
-              {activeMetric === "new_users"
-                ? "New users acquired"
-                : "Peak active users"}{" "}
-              across selected period
-            </CardDescription>
-          </div>
-          <div className="flex">
-            {(["new_users", "active_users"] as const).map((key) => (
-              <button
-                key={key}
-                data-active={activeMetric === key}
-                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l border-[#27272A] sm:border-t-0 sm:px-8 sm:py-6"
-                onClick={() => setActiveMetric(key)}
-              >
-                <span className="text-xs text-muted-foreground">
-                  {chartConfig[key].label}
-                </span>
-                <span className="text-lg font-bold leading-none sm:text-3xl text-[hsl(30_80%_55%)]">
-                  {total[key].toLocaleString()}
-                </span>
-              </button>
-            ))}
-          </div>
+        <CardHeader>
+          <CardTitle>Users Over Time</CardTitle>
+          <CardDescription>
+            Track new users and active users across the selected period
+          </CardDescription>
         </CardHeader>
-        <CardContent className="px-2 sm:p-6">
+        <CardContent className="p-6">
           <ChartContainer
             config={chartConfig}
             className="aspect-auto h-[300px] w-full"
@@ -108,20 +100,22 @@ export function UsersTab({
             <AreaChart
               accessibilityLayer
               data={chartData}
-              margin={{ left: 12, right: 12 }}
+              margin={{ left: 0, right: 0, top: 5, bottom: 5 }}
             >
               <defs>
-                <linearGradient id="fillUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor="hsl(30 80% 55%)"
-                    stopOpacity={0.8}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor="hsl(30 80% 55%)"
-                    stopOpacity={0.1}
-                  />
+                <linearGradient id="fillNewUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient
+                  id="fillActiveUsers"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor="#eab308" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#eab308" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke="#27272A" />
@@ -133,44 +127,34 @@ export function UsersTab({
                 minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
                     className="w-[150px]"
-                    nameKey="users"
                     labelFormatter={(value) => formatDate(value, timePeriod)}
                   />
                 }
               />
               <Area
-                dataKey={activeMetric}
-                type="monotone"
-                fill="url(#fillUsers)"
+                dataKey="new_users"
+                type="natural"
+                fill="url(#fillNewUsers)"
                 fillOpacity={0.4}
-                stroke="hsl(30 80% 55%)"
+                stroke="#f97316"
                 strokeWidth={2}
               />
+              <Area
+                dataKey="active_users"
+                type="natural"
+                fill="url(#fillActiveUsers)"
+                fillOpacity={0.4}
+                stroke="#eab308"
+                strokeWidth={2}
+              />
+              <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Toggle between New Users and Active Users to compare metrics over
-            time
-          </p>
         </CardContent>
-      </Card>
-
-      {/* Total Users KPI */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader>
-          <CardDescription>All-Time Total Users</CardDescription>
-          <CardTitle className="text-5xl">
-            {data.total_users.total_users.toLocaleString()}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            Cumulative users since platform launch
-          </p>
-        </CardHeader>
       </Card>
     </div>
   );
