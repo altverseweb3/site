@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Label,
-  PolarAngleAxis,
+  PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
   XAxis,
@@ -22,6 +24,8 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/Chart";
@@ -39,10 +43,6 @@ export function SwapsTab({
   timePeriod,
 }: SwapsTabProps) {
   const chartConfig = {
-    total_swap_count: {
-      label: "Swaps",
-      color: "hsl(30 80% 55%)",
-    },
     cross_chain: {
       label: "Cross-Chain",
       color: "hsl(30 80% 55%)",
@@ -50,6 +50,10 @@ export function SwapsTab({
     same_chain: {
       label: "Same-Chain",
       color: "hsl(40 85% 60%)",
+    },
+    count: {
+      label: "Count",
+      color: "hsl(30 80% 55%)",
     },
   } satisfies ChartConfig;
 
@@ -85,190 +89,286 @@ export function SwapsTab({
     return totals;
   }, [periodicStats]);
 
-  // Volume over time data
-  const volumeData =
-    periodicStats?.periodic_swap_stats.map((item) => ({
-      period: item.period_start,
-      count: item.total_swap_count,
-    })) || [];
+  // Volume over time data with separate counts for cross-chain and same-chain
+  const volumeData = React.useMemo(() => {
+    if (!periodicStats) return [];
+
+    return periodicStats.periodic_swap_stats.map((item) => ({
+      date: item.period_start,
+      cross_chain: item.cross_chain_count,
+      same_chain: item.same_chain_count,
+    }));
+  }, [periodicStats]);
 
   // Radial stacked chart data
   const radialData = [
     {
-      name: "Cross-Chain",
-      value: aggregatedSwaps.cross_chain,
-      fill: "hsl(30 80% 55%)",
-    },
-    {
-      name: "Same-Chain",
-      value: aggregatedSwaps.same_chain,
-      fill: "hsl(40 85% 60%)",
+      month: "swaps",
+      cross_chain: aggregatedSwaps.cross_chain,
+      same_chain: aggregatedSwaps.same_chain,
     },
   ];
 
+  // Top routes data for horizontal bar chart
+  const topRoutesData = React.useMemo(() => {
+    return Object.entries(aggregatedSwaps.routes)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([route, count]) => {
+        const [source, target] = route.split(",");
+        return {
+          route: route,
+          source: source,
+          target: target,
+          routeLabel: `${source} → ${target}`,
+          count,
+        };
+      });
+  }, [aggregatedSwaps.routes]);
+
   return (
     <div className="space-y-6">
-      {/* Radial Stacked Chart - Total + Cross/Same Chain */}
-      <Card className="bg-[#18181B] border-[#27272A]">
+      {/* Radial Stacked Chart - Swap Distribution */}
+      <Card className="flex flex-col bg-[#18181B] border-[#27272A]">
         <CardHeader className="items-center pb-0">
           <CardTitle>Swap Distribution</CardTitle>
           <CardDescription>
             Cross-chain vs same-chain swaps for selected period
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 pb-0">
+        <CardContent className="flex flex-1 items-center pb-0">
           <ChartContainer
             config={chartConfig}
-            className="mx-auto aspect-square max-h-[350px]"
+            className="mx-auto aspect-square w-full max-w-[250px]"
           >
             <RadialBarChart
               data={radialData}
-              startAngle={0}
-              endAngle={250}
+              endAngle={180}
               innerRadius={80}
-              outerRadius={140}
+              outerRadius={130}
             >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, aggregatedSwaps.total]}
-                angleAxisId={0}
-                tick={false}
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
               />
-              <RadialBar dataKey="value" background cornerRadius={10} />
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
-                        >
-                          {aggregatedSwaps.total.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Total Swaps
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
+              <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      return (
+                        <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) - 16}
+                            className="fill-foreground text-2xl font-bold"
+                          >
+                            {aggregatedSwaps.total.toLocaleString()}
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 4}
+                            className="fill-muted-foreground"
+                          >
+                            Total Swaps
+                          </tspan>
+                        </text>
+                      );
+                    }
+                  }}
+                />
+              </PolarRadiusAxis>
+              <RadialBar
+                dataKey="cross_chain"
+                stackId="a"
+                cornerRadius={5}
+                fill="var(--color-cross_chain)"
+                className="stroke-transparent stroke-2"
+              />
+              <RadialBar
+                dataKey="same_chain"
+                fill="var(--color-same_chain)"
+                stackId="a"
+                cornerRadius={5}
+                className="stroke-transparent stroke-2"
               />
             </RadialBarChart>
           </ChartContainer>
-          <div className="flex justify-center gap-4 mt-4 pb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[hsl(30_80%_55%)]" />
-              <span className="text-sm">
-                Cross-Chain: {aggregatedSwaps.cross_chain.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[hsl(40_85%_60%)]" />
-              <span className="text-sm">
-                Same-Chain: {aggregatedSwaps.same_chain.toLocaleString()}
-              </span>
-            </div>
+        </CardContent>
+        <CardContent className="flex justify-center gap-4 pt-0 pb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[hsl(30_80%_55%)]" />
+            <span className="text-sm">
+              Cross-Chain: {aggregatedSwaps.cross_chain.toLocaleString()}
+            </span>
           </div>
-          <p className="text-xs text-muted-foreground text-center pb-4">
-            Breakdown of swap types across the selected time period
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[hsl(40_85%_60%)]" />
+            <span className="text-sm">
+              Same-Chain: {aggregatedSwaps.same_chain.toLocaleString()}
+            </span>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Swap Volume Over Time */}
+      {/* Swap Volume Over Time - Area Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
         <CardHeader>
           <CardTitle>Swap Volume Over Time</CardTitle>
-          <CardDescription>Total swaps per period</CardDescription>
+          <CardDescription>
+            Cross-chain and same-chain swaps over time
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <BarChart
-              data={volumeData}
-              margin={{ left: 12, right: 12 }}
-              layout="horizontal"
-            >
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <AreaChart data={volumeData}>
+              <defs>
+                <linearGradient id="fillCrossChain" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-cross_chain)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-cross_chain)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+                <linearGradient id="fillSameChain" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-same_chain)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-same_chain)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="#27272A" />
-              <XAxis type="number" tickLine={false} axisLine={false} />
-              <YAxis
-                dataKey="period"
-                type="category"
+              <XAxis
+                dataKey="date"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                width={80}
+                minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
               <ChartTooltip
+                cursor={false}
                 content={
                   <ChartTooltipContent
                     labelFormatter={(value) => formatDate(value, timePeriod)}
+                    indicator="dot"
                   />
                 }
               />
-              <Bar
-                dataKey="count"
-                fill="hsl(30 80% 55%)"
-                radius={[0, 4, 4, 0]}
+              <Area
+                dataKey="same_chain"
+                type="natural"
+                fill="url(#fillSameChain)"
+                stroke="var(--color-same_chain)"
+                stackId="a"
               />
-            </BarChart>
+              <Area
+                dataKey="cross_chain"
+                type="natural"
+                fill="url(#fillCrossChain)"
+                stroke="var(--color-cross_chain)"
+                stackId="a"
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+            </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Horizontal bar chart showing swap activity across different time
-            periods
-          </p>
         </CardContent>
       </Card>
 
-      {/* Top Swap Routes */}
+      {/* Top Swap Routes - Horizontal Bar Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
         <CardHeader>
           <CardTitle>Top Swap Routes</CardTitle>
-          <CardDescription>
-            Most popular chain-to-chain swaps (aggregated)
-          </CardDescription>
+          <CardDescription>Most popular chain-to-chain swaps</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {Object.entries(aggregatedSwaps.routes)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-              .map(([route, count]) => {
-                const [source, target] = route.split(",");
-                const maxCount = Math.max(
-                  ...Object.values(aggregatedSwaps.routes),
-                );
-                const percentage = (count / maxCount) * 100;
+          <ChartContainer config={chartConfig}>
+            <BarChart
+              accessibilityLayer
+              data={topRoutesData}
+              layout="vertical"
+              margin={{
+                left: 0,
+              }}
+            >
+              <XAxis type="number" dataKey="count" hide />
+              <YAxis
+                dataKey="route"
+                type="category"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                width={80}
+                tick={(props) => {
+                  const { x, y, payload } = props;
+                  const item = topRoutesData.find(
+                    (d) => d.route === payload.value,
+                  );
+                  if (!item) return <></>;
 
-                return (
-                  <div key={route} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="capitalize">
-                        {source} → {target}
-                      </span>
-                      <span className="text-[hsl(30_80%_55%)] font-semibold">
-                        {count}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-[#27272A] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[hsl(30_80%_55%)] rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Aggregated route data from the selected time period
-          </p>
+                  const source =
+                    item.source.charAt(0).toUpperCase() + item.source.slice(1);
+                  const target =
+                    item.target.charAt(0).toUpperCase() + item.target.slice(1);
+
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={0}
+                        y={-4}
+                        textAnchor="end"
+                        className="fill-foreground"
+                        style={{ fontSize: 11 }}
+                      >
+                        {source} →
+                      </text>
+                      <text
+                        x={0}
+                        y={12}
+                        textAnchor="end"
+                        className="fill-foreground"
+                        style={{ fontSize: 11 }}
+                      >
+                        {target}
+                      </text>
+                    </g>
+                  );
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    hideLabel
+                    formatter={(value, name, item) => (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium capitalize">
+                          {item.payload.routeLabel}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {value} swaps
+                        </span>
+                      </div>
+                    )}
+                  />
+                }
+              />
+              <Bar dataKey="count" fill="var(--color-cross_chain)" radius={5} />
+            </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>
