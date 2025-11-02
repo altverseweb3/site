@@ -266,7 +266,7 @@
       ],
       "periodic_activity_stats": [
         {
-          "period": "2025-10-29",
+          "period_start": "2025-10-29",
           "total_transactions": 14,
           "swap_count": 9,
           "lending_count": 2,
@@ -276,7 +276,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-28",
+          "period_start": "2025-10-28",
           "total_transactions": 34,
           "swap_count": 20,
           "lending_count": 9,
@@ -286,7 +286,7 @@
           "transactions_per_active_user": 3
         },
         {
-          "period": "2025-10-27",
+          "period_start": "2025-10-27",
           "total_transactions": 31,
           "swap_count": 19,
           "lending_count": 4,
@@ -296,7 +296,7 @@
           "transactions_per_active_user": 10
         },
         {
-          "period": "2025-10-26",
+          "period_start": "2025-10-26",
           "total_transactions": 19,
           "swap_count": 11,
           "lending_count": 4,
@@ -306,7 +306,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-25",
+          "period_start": "2025-10-25",
           "total_transactions": 20,
           "swap_count": 7,
           "lending_count": 6,
@@ -316,7 +316,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-24",
+          "period_start": "2025-10-24",
           "total_transactions": 37,
           "swap_count": 22,
           "lending_count": 10,
@@ -326,7 +326,7 @@
           "transactions_per_active_user": 6
         },
         {
-          "period": "2025-10-23",
+          "period_start": "2025-10-23",
           "total_transactions": 38,
           "swap_count": 17,
           "lending_count": 9,
@@ -336,7 +336,7 @@
           "transactions_per_active_user": 9
         },
         {
-          "period": "2025-10-22",
+          "period_start": "2025-10-22",
           "total_transactions": 22,
           "swap_count": 13,
           "lending_count": 2,
@@ -346,7 +346,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-21",
+          "period_start": "2025-10-21",
           "total_transactions": 31,
           "swap_count": 7,
           "lending_count": 10,
@@ -356,7 +356,7 @@
           "transactions_per_active_user": 3
         },
         {
-          "period": "2025-10-20",
+          "period_start": "2025-10-20",
           "total_transactions": 34,
           "swap_count": 13,
           "lending_count": 7,
@@ -366,7 +366,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-19",
+          "period_start": "2025-10-19",
           "total_transactions": 18,
           "swap_count": 9,
           "lending_count": 3,
@@ -376,7 +376,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-18",
+          "period_start": "2025-10-18",
           "total_transactions": 16,
           "swap_count": 6,
           "lending_count": 5,
@@ -386,7 +386,7 @@
           "transactions_per_active_user": 4
         },
         {
-          "period": "2025-10-17",
+          "period_start": "2025-10-17",
           "total_transactions": 41,
           "swap_count": 23,
           "lending_count": 10,
@@ -396,7 +396,7 @@
           "transactions_per_active_user": 13
         },
         {
-          "period": "2025-10-16",
+          "period_start": "2025-10-16",
           "total_transactions": 37,
           "swap_count": 25,
           "lending_count": 7,
@@ -406,7 +406,7 @@
           "transactions_per_active_user": 12
         },
         {
-          "period": "2025-10-15",
+          "period_start": "2025-10-15",
           "total_transactions": 15,
           "swap_count": 9,
           "lending_count": 3,
@@ -416,7 +416,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-14",
+          "period_start": "2025-10-14",
           "total_transactions": 21,
           "swap_count": 13,
           "lending_count": 1,
@@ -426,7 +426,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-13",
+          "period_start": "2025-10-13",
           "total_transactions": 39,
           "swap_count": 27,
           "lending_count": 10,
@@ -436,7 +436,7 @@
           "transactions_per_active_user": 4
         },
         {
-          "period": "2025-10-12",
+          "period_start": "2025-10-12",
           "total_transactions": 13,
           "swap_count": 7,
           "lending_count": 4,
@@ -446,7 +446,7 @@
           "transactions_per_active_user": 3
         },
         {
-          "period": "2025-10-11",
+          "period_start": "2025-10-11",
           "total_transactions": 12,
           "swap_count": 8,
           "lending_count": 2,
@@ -456,7 +456,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-10",
+          "period_start": "2025-10-10",
           "total_transactions": 20,
           "swap_count": 7,
           "lending_count": 5,
@@ -466,7 +466,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-09",
+          "period_start": "2025-10-09",
           "total_transactions": 16,
           "swap_count": 5,
           "lending_count": 8,
@@ -476,7 +476,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-08",
+          "period_start": "2025-10-08",
           "total_transactions": 30,
           "swap_count": 11,
           "lending_count": 4,
@@ -486,7 +486,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-07",
+          "period_start": "2025-10-07",
           "total_transactions": 34,
           "swap_count": 18,
           "lending_count": 6,
@@ -496,7 +496,7 @@
           "transactions_per_active_user": 6
         },
         {
-          "period": "2025-10-06",
+          "period_start": "2025-10-06",
           "total_transactions": 28,
           "swap_count": 14,
           "lending_count": 5,
@@ -506,7 +506,7 @@
           "transactions_per_active_user": 7
         },
         {
-          "period": "2025-10-05",
+          "period_start": "2025-10-05",
           "total_transactions": 26,
           "swap_count": 18,
           "lending_count": 5,
@@ -516,7 +516,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-04",
+          "period_start": "2025-10-04",
           "total_transactions": 23,
           "swap_count": 12,
           "lending_count": 4,
@@ -526,7 +526,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-03",
+          "period_start": "2025-10-03",
           "total_transactions": 26,
           "swap_count": 11,
           "lending_count": 6,
@@ -536,7 +536,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-02",
+          "period_start": "2025-10-02",
           "total_transactions": 18,
           "swap_count": 8,
           "lending_count": 7,
@@ -546,7 +546,7 @@
           "transactions_per_active_user": 6
         },
         {
-          "period": "2025-10-01",
+          "period_start": "2025-10-01",
           "total_transactions": 34,
           "swap_count": 19,
           "lending_count": 1,
@@ -556,7 +556,7 @@
           "transactions_per_active_user": 11
         },
         {
-          "period": "2025-09-30",
+          "period_start": "2025-09-30",
           "total_transactions": 37,
           "swap_count": 25,
           "lending_count": 9,
@@ -2029,7 +2029,7 @@
       ],
       "periodic_activity_stats": [
         {
-          "period": "2025-10-27",
+          "period_start": "2025-10-27",
           "total_transactions": 223,
           "swap_count": 134,
           "lending_count": 39,
@@ -2039,7 +2039,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-20",
+          "period_start": "2025-10-20",
           "total_transactions": 258,
           "swap_count": 145,
           "lending_count": 37,
@@ -2049,7 +2049,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-10-13",
+          "period_start": "2025-10-13",
           "total_transactions": 197,
           "swap_count": 98,
           "lending_count": 33,
@@ -2059,7 +2059,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-10-06",
+          "period_start": "2025-10-06",
           "total_transactions": 199,
           "swap_count": 122,
           "lending_count": 35,
@@ -2069,7 +2069,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-09-29",
+          "period_start": "2025-09-29",
           "total_transactions": 206,
           "swap_count": 101,
           "lending_count": 43,
@@ -2522,7 +2522,7 @@
       ],
       "periodic_activity_stats": [
         {
-          "period": "2025-10-01",
+          "period_start": "2025-10-01",
           "total_transactions": 1039,
           "swap_count": 608,
           "lending_count": 154,
@@ -2532,7 +2532,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-09-01",
+          "period_start": "2025-09-01",
           "total_transactions": 851,
           "swap_count": 503,
           "lending_count": 140,
@@ -2542,7 +2542,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-08-01",
+          "period_start": "2025-08-01",
           "total_transactions": 886,
           "swap_count": 499,
           "lending_count": 161,
@@ -2552,7 +2552,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-07-01",
+          "period_start": "2025-07-01",
           "total_transactions": 950,
           "swap_count": 471,
           "lending_count": 189,
@@ -2562,7 +2562,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-06-01",
+          "period_start": "2025-06-01",
           "total_transactions": 892,
           "swap_count": 491,
           "lending_count": 159,
@@ -2572,7 +2572,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-05-01",
+          "period_start": "2025-05-01",
           "total_transactions": 872,
           "swap_count": 440,
           "lending_count": 174,
@@ -2582,7 +2582,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-04-01",
+          "period_start": "2025-04-01",
           "total_transactions": 958,
           "swap_count": 558,
           "lending_count": 176,
@@ -2592,7 +2592,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-03-01",
+          "period_start": "2025-03-01",
           "total_transactions": 930,
           "swap_count": 492,
           "lending_count": 170,
@@ -2602,7 +2602,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2025-02-01",
+          "period_start": "2025-02-01",
           "total_transactions": 985,
           "swap_count": 586,
           "lending_count": 170,
@@ -2612,7 +2612,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2025-01-01",
+          "period_start": "2025-01-01",
           "total_transactions": 818,
           "swap_count": 425,
           "lending_count": 145,
@@ -2622,7 +2622,7 @@
           "transactions_per_active_user": 1
         },
         {
-          "period": "2024-12-01",
+          "period_start": "2024-12-01",
           "total_transactions": 1000,
           "swap_count": 580,
           "lending_count": 172,
@@ -2632,7 +2632,7 @@
           "transactions_per_active_user": 2
         },
         {
-          "period": "2024-11-01",
+          "period_start": "2024-11-01",
           "total_transactions": 949,
           "swap_count": 560,
           "lending_count": 142,

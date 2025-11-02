@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -51,11 +43,19 @@ export function ActivityTab({
     },
     lending_count: {
       label: "Lending",
-      color: "hsl(160 60% 45%)",
+      color: "hsl(40 90% 60%)",
     },
     earn_count: {
       label: "Earn",
-      color: "hsl(220 70% 50%)",
+      color: "hsl(20 80% 50%)",
+    },
+    entrances: {
+      label: "Entrances",
+      color: "hsl(30 80% 55%)",
+    },
+    ratio: {
+      label: "Ratio",
+      color: "hsl(35 85% 60%)",
     },
   } satisfies ChartConfig;
 
@@ -121,7 +121,7 @@ export function ActivityTab({
       {/* Transaction Volume Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
         <CardHeader>
-          <CardTitle>Transaction Volume Over Time</CardTitle>
+          <CardTitle>Transactions Over Time</CardTitle>
           <CardDescription>Total transactions per period</CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,9 +133,9 @@ export function ActivityTab({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 10)}
+                minTickGap={32} // Added this prop
+                tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar
                 dataKey="transactions"
@@ -162,9 +162,9 @@ export function ActivityTab({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 10)}
+                minTickGap={32} // Added this prop
+                tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Bar
@@ -176,13 +176,13 @@ export function ActivityTab({
               <Bar
                 dataKey="lending_count"
                 stackId="a"
-                fill="hsl(160 60% 45%)"
+                fill="hsl(40 90% 60%)"
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="earn_count"
                 stackId="a"
-                fill="hsl(220 70% 50%)"
+                fill="hsl(20 80% 50%)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
@@ -222,7 +222,6 @@ export function ActivityTab({
                 minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -240,10 +239,6 @@ export function ActivityTab({
               />
             </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Tracking the number of times users access the dApp across the
-            selected period
-          </p>
         </CardContent>
       </Card>
 
@@ -282,13 +277,9 @@ export function ActivityTab({
                 minTickGap={32}
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
-              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value) =>
-                      typeof value === "number" ? value.toFixed(2) : value
-                    }
                     labelFormatter={(value) => formatDate(value, timePeriod)}
                   />
                 }
@@ -303,10 +294,6 @@ export function ActivityTab({
               />
             </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Average number of transactions per active user - a key indicator of
-            user engagement
-          </p>
         </CardContent>
       </Card>
     </div>
