@@ -1,16 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Label,
-  PolarAngleAxis,
-  RadialBar,
-  RadialBarChart,
-  XAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -21,25 +12,29 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/Chart";
-import { PeriodicStats, TimePeriod } from "@/types/analytics";
+import { AnalyticsData, PeriodicStats, TimePeriod } from "@/types/analytics";
 
 interface EarnTabProps {
+  data: AnalyticsData;
   periodicStats: PeriodicStats | null;
   formatDate: (dateStr: string, period: TimePeriod) => string;
   timePeriod: TimePeriod;
 }
 
 export function EarnTab({
+  data,
   periodicStats,
   formatDate,
   timePeriod,
 }: EarnTabProps) {
   const chartConfig = {
     count: {
-      label: "Earn",
+      label: "Earn Operations",
       color: "hsl(30 80% 55%)",
     },
   } satisfies ChartConfig;
@@ -75,105 +70,94 @@ export function EarnTab({
   }, [periodicStats]);
 
   // Volume over time
-  const volumeData =
-    periodicStats?.periodic_earn_stats.map((item) => ({
-      period: item.period_start,
-      count: item.total_earn_count,
-    })) || [];
+  const volumeData = React.useMemo(() => {
+    if (!periodicStats) return [];
 
-  // Radial data for protocol distribution
-  const radialData = Object.entries(aggregatedEarn.byProtocol).map(
-    ([protocol, count], index) => ({
-      name: protocol,
-      value: count,
-      fill: `hsl(${30 + index * 12} ${75 + index * 3}% ${52 + index * 2}%)`,
-    }),
-  );
+    return periodicStats.periodic_earn_stats.map((item) => ({
+      date: item.period_start,
+      count: item.total_earn_count,
+    }));
+  }, [periodicStats]);
+
+  // Chain breakdown for pie chart
+  const chainChartData = React.useMemo(() => {
+    return Object.entries(aggregatedEarn.byChain).map(
+      ([chain, count], index) => ({
+        name: chain,
+        value: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }),
+    );
+  }, [aggregatedEarn.byChain]);
+
+  // Protocol breakdown for pie chart
+  const protocolChartData = React.useMemo(() => {
+    return Object.entries(aggregatedEarn.byProtocol).map(
+      ([protocol, count], index) => ({
+        name: protocol,
+        value: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }),
+    );
+  }, [aggregatedEarn.byProtocol]);
+
+  // Chart configs for pie charts
+  const chainConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Operations" },
+    };
+    Object.keys(aggregatedEarn.byChain).forEach((chain, index) => {
+      config[chain] = {
+        label: chain,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [aggregatedEarn.byChain]);
+
+  const protocolConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Operations" },
+    };
+    Object.keys(aggregatedEarn.byProtocol).forEach((protocol, index) => {
+      config[protocol] = {
+        label: protocol,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [aggregatedEarn.byProtocol]);
 
   return (
     <div className="space-y-6">
-      {/* Radial Stacked Chart - Total + By Protocol */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader className="items-center pb-0">
-          <CardTitle>Earn Distribution by Protocol</CardTitle>
-          <CardDescription>
-            Activity across earn protocols for selected period
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 pb-0">
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-[350px]"
-          >
-            <RadialBarChart
-              data={radialData}
-              startAngle={0}
-              endAngle={250}
-              innerRadius={80}
-              outerRadius={140}
-            >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, aggregatedEarn.total]}
-                angleAxisId={0}
-                tick={false}
-              />
-              <RadialBar dataKey="value" background cornerRadius={10} />
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
-                        >
-                          {aggregatedEarn.total.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Total Earn
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
-              />
-            </RadialBarChart>
-          </ChartContainer>
-          <div className="flex flex-wrap justify-center gap-3 mt-4 pb-6">
-            {Object.entries(aggregatedEarn.byProtocol).map(
-              ([protocol, count], index) => (
-                <div key={protocol} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{
-                      backgroundColor: `hsl(${30 + index * 12} ${75 + index * 3}% ${52 + index * 2}%)`,
-                    }}
-                  />
-                  <span className="text-sm">
-                    {protocol}: {count.toLocaleString()}
-                  </span>
-                </div>
-              ),
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground text-center pb-4">
-            Distribution of earn activity across protocols (etherFi, Yearn,
-            Lido, etc.)
-          </p>
-        </CardContent>
-      </Card>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Total Earn Operations (All-Time) Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>Total Earn Operations</CardDescription>
+            <CardTitle className="text-4xl">
+              {data.total_earn_stats.total_earn_count.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-      {/* Earn Volume Over Time */}
+        {/* Earn Operations (Period) Card */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader>
+            <CardDescription>Earn Operations (Period)</CardDescription>
+            <CardTitle className="text-4xl">
+              {aggregatedEarn.total.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Earn Volume Over Time - Area Chart */}
       <Card className="bg-[#18181B] border-[#27272A]">
         <CardHeader>
           <CardTitle>Earn Volume Over Time</CardTitle>
-          <CardDescription>Total earn transactions per period</CardDescription>
+          <CardDescription>Total earn operations per period</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -194,7 +178,7 @@ export function EarnTab({
               </defs>
               <CartesianGrid vertical={false} stroke="#27272A" />
               <XAxis
-                dataKey="period"
+                dataKey="date"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -218,53 +202,67 @@ export function EarnTab({
               />
             </AreaChart>
           </ChartContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Earn transaction volume trends over the selected period
-          </p>
         </CardContent>
       </Card>
 
-      {/* By Chain - Horizontal Bars */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader>
-          <CardTitle>Earn by Chain</CardTitle>
-          <CardDescription>
-            Earn activity distribution across blockchains
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Object.entries(aggregatedEarn.byChain)
-              .sort(([, a], [, b]) => b - a)
-              .map(([chain, count]) => {
-                const maxCount = Math.max(
-                  ...Object.values(aggregatedEarn.byChain),
-                );
-                const percentage = (count / maxCount) * 100;
+      {/* Chain and Protocol Breakdown - Side by Side Donut Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chain Breakdown - Donut Pie Chart */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Chain Breakdown</CardTitle>
+            <CardDescription>Earn operations by chain</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={chainConfig}
+              className="mx-auto aspect-square max-h-[250px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={chainChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-                return (
-                  <div key={chain} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{chain}</span>
-                      <span className="text-[hsl(30_80%_55%)] font-semibold">
-                        {count.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-[#27272A] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[hsl(30_80%_55%)] rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Horizontal bars showing earn distribution across blockchain networks
-          </p>
-        </CardContent>
-      </Card>
+        {/* Protocol Breakdown - Donut Pie Chart */}
+        <Card className="bg-[#18181B] border-[#27272A]">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Protocol Breakdown</CardTitle>
+            <CardDescription>Earn operations by protocol</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={protocolConfig}
+              className="mx-auto aspect-square max-h-[250px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={protocolChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

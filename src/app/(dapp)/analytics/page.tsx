@@ -199,6 +199,7 @@ export default function AnalyticsPage() {
         )}
         {activeTab === "earn" && (
           <EarnTab
+            data={analyticsData}
             periodicStats={periodicStats}
             formatDate={formatDate}
             timePeriod={timePeriod}
