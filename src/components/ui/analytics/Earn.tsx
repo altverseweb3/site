@@ -208,7 +208,7 @@ export function EarnTab({
       {/* Chain and Protocol Breakdown - Side by Side Donut Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chain Breakdown - Donut Pie Chart */}
-        <Card className="bg-[#18181B] border-[#27272A]">
+        <Card className="bg-[#18181B] border-[#27272A] flex flex-col">
           <CardHeader className="items-center pb-0">
             <CardTitle>Chain Breakdown</CardTitle>
             <CardDescription>Earn operations by chain</CardDescription>
@@ -216,7 +216,7 @@ export function EarnTab({
           <CardContent className="flex-1 pb-0">
             <ChartContainer
               config={chainConfig}
-              className="mx-auto aspect-square max-h-[250px]"
+              className="mx-auto aspect-square max-h-[300px]"
             >
               <PieChart>
                 <ChartTooltip
@@ -229,14 +229,17 @@ export function EarnTab({
                   nameKey="name"
                   innerRadius={60}
                 />
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="name" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
               </PieChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
         {/* Protocol Breakdown - Donut Pie Chart */}
-        <Card className="bg-[#18181B] border-[#27272A]">
+        <Card className="bg-[#18181B] border-[#27272A] flex flex-col">
           <CardHeader className="items-center pb-0">
             <CardTitle>Protocol Breakdown</CardTitle>
             <CardDescription>Earn operations by protocol</CardDescription>
@@ -244,7 +247,7 @@ export function EarnTab({
           <CardContent className="flex-1 pb-0">
             <ChartContainer
               config={protocolConfig}
-              className="mx-auto aspect-square max-h-[250px]"
+              className="mx-auto aspect-square max-h-[300px]"
             >
               <PieChart>
                 <ChartTooltip
@@ -257,7 +260,10 @@ export function EarnTab({
                   nameKey="name"
                   innerRadius={60}
                 />
-                <ChartLegend content={<ChartLegendContent />} />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="name" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
               </PieChart>
             </ChartContainer>
           </CardContent>

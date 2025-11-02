@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -98,22 +90,73 @@ export function SwapsTab({
     }));
   }, [periodicStats]);
 
-  // Top routes data for horizontal bar chart
-  const topRoutesData = React.useMemo(() => {
+  // Same-chain swaps breakdown by chain
+  const sameChainData = React.useMemo(() => {
+    const byChain: Record<string, number> = {};
+
+    Object.entries(aggregatedSwaps.routes).forEach(([route, count]) => {
+      const [source, target] = route.split(",");
+      if (source === target) {
+        byChain[source] = (byChain[source] || 0) + count;
+      }
+    });
+
+    return Object.entries(byChain)
+      .sort(([, a], [, b]) => b - a)
+      .map(([chain, count], index) => ({
+        name: chain.charAt(0).toUpperCase() + chain.slice(1),
+        value: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }));
+  }, [aggregatedSwaps.routes]);
+
+  // Cross-chain routes breakdown (top 10)
+  const crossChainRoutesData = React.useMemo(() => {
     return Object.entries(aggregatedSwaps.routes)
+      .filter(([route]) => {
+        const [source, target] = route.split(",");
+        return source !== target;
+      })
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
-      .map(([route, count]) => {
+      .map(([route, count], index) => {
         const [source, target] = route.split(",");
         return {
           route: route,
-          source: source,
-          target: target,
-          routeLabel: `${source} → ${target}`,
-          count,
+          name: `${source.charAt(0).toUpperCase() + source.slice(1)}→${target.charAt(0).toUpperCase() + target.slice(1)}`,
+          value: count,
+          fill: `hsl(var(--chart-${(index % 5) + 1}))`,
         };
       });
   }, [aggregatedSwaps.routes]);
+
+  // Chart config for same-chain donut
+  const sameChainConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Swaps" },
+    };
+    sameChainData.forEach((item, index) => {
+      config[item.name] = {
+        label: item.name,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [sameChainData]);
+
+  // Chart config for cross-chain routes donut
+  const crossChainConfig = React.useMemo(() => {
+    const config: Record<string, { label: string; color?: string }> = {
+      value: { label: "Swaps" },
+    };
+    crossChainRoutesData.forEach((item, index) => {
+      config[item.name] = {
+        label: item.name,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      };
+    });
+    return config satisfies ChartConfig;
+  }, [crossChainRoutesData]);
 
   return (
     <div className="space-y-6">
@@ -238,89 +281,70 @@ export function SwapsTab({
         </CardContent>
       </Card>
 
-      {/* Top Swap Routes - Horizontal Bar Chart */}
-      <Card className="bg-[#18181B] border-[#27272A]">
-        <CardHeader>
-          <CardTitle>Top Swap Routes</CardTitle>
-          <CardDescription>Most popular chain-to-chain swaps</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig}>
-            <BarChart
-              accessibilityLayer
-              data={topRoutesData}
-              layout="vertical"
-              margin={{
-                left: 0,
-              }}
+      {/* Swap Route Breakdown - Side by Side Donut Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Same-Chain Swaps by Chain - Donut Chart */}
+        <Card className="bg-[#18181B] border-[#27272A] flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Same-Chain Swaps</CardTitle>
+            <CardDescription>Swaps by chain</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={sameChainConfig}
+              className="mx-auto aspect-square max-h-[300px]"
             >
-              <XAxis type="number" dataKey="count" hide />
-              <YAxis
-                dataKey="route"
-                type="category"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                width={80}
-                tick={(props) => {
-                  const { x, y, payload } = props;
-                  const item = topRoutesData.find(
-                    (d) => d.route === payload.value,
-                  );
-                  if (!item) return <></>;
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={sameChainData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="name" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-                  const source =
-                    item.source.charAt(0).toUpperCase() + item.source.slice(1);
-                  const target =
-                    item.target.charAt(0).toUpperCase() + item.target.slice(1);
-
-                  return (
-                    <g transform={`translate(${x},${y})`}>
-                      <text
-                        x={0}
-                        y={-4}
-                        textAnchor="end"
-                        className="fill-foreground"
-                        style={{ fontSize: 11 }}
-                      >
-                        {source} →
-                      </text>
-                      <text
-                        x={0}
-                        y={12}
-                        textAnchor="end"
-                        className="fill-foreground"
-                        style={{ fontSize: 11 }}
-                      >
-                        {target}
-                      </text>
-                    </g>
-                  );
-                }}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    hideLabel
-                    formatter={(value, name, item) => (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-medium capitalize">
-                          {item.payload.routeLabel}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {value} swaps
-                        </span>
-                      </div>
-                    )}
-                  />
-                }
-              />
-              <Bar dataKey="count" fill="var(--color-cross_chain)" radius={5} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+        {/* Cross-Chain Routes - Donut Chart */}
+        <Card className="bg-[#18181B] border-[#27272A] flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Cross-Chain Routes</CardTitle>
+            <CardDescription>Top cross-chain swap routes</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer
+              config={crossChainConfig}
+              className="mx-auto aspect-square max-h-[300px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={crossChainRoutesData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="name" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
