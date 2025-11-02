@@ -109,7 +109,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto px-2 md:py-8">
+    <div className="container mx-auto px-2 pt-4 pb-8 md:pt-8 md:pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
