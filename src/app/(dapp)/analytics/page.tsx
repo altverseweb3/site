@@ -63,9 +63,31 @@ export default function AnalyticsPage() {
         periodic_earn_stats: daily.periodic_earn_stats.slice(-limit).reverse(),
       };
     } else if (timePeriod === "weekly") {
-      return analyticsData.periodic_stats.weekly || null;
+      const weekly = analyticsData.periodic_stats.weekly;
+      if (!weekly) return null;
+      return {
+        periodic_user_stats: weekly.periodic_user_stats.slice().reverse(),
+        periodic_activity_stats: weekly.periodic_activity_stats
+          .slice()
+          .reverse(),
+        periodic_swap_stats: weekly.periodic_swap_stats.slice().reverse(),
+        periodic_lending_stats: weekly.periodic_lending_stats.slice().reverse(),
+        periodic_earn_stats: weekly.periodic_earn_stats.slice().reverse(),
+      };
     } else if (timePeriod === "monthly") {
-      return analyticsData.periodic_stats.monthly || null;
+      const monthly = analyticsData.periodic_stats.monthly;
+      if (!monthly) return null;
+      return {
+        periodic_user_stats: monthly.periodic_user_stats.slice().reverse(),
+        periodic_activity_stats: monthly.periodic_activity_stats
+          .slice()
+          .reverse(),
+        periodic_swap_stats: monthly.periodic_swap_stats.slice().reverse(),
+        periodic_lending_stats: monthly.periodic_lending_stats
+          .slice()
+          .reverse(),
+        periodic_earn_stats: monthly.periodic_earn_stats.slice().reverse(),
+      };
     }
 
     return null;
