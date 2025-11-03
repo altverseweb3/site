@@ -179,7 +179,10 @@ export function LendingTab({
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <AreaChart data={volumeData} margin={{ left: 12, right: 12 }}>
+            <AreaChart
+              data={volumeData}
+              margin={{ top: 8, left: 12, right: 12 }}
+            >
               <defs>
                 <linearGradient id="fillLending" x1="0" y1="0" x2="0" y2="1">
                   <stop

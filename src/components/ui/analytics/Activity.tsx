@@ -198,7 +198,10 @@ export function ActivityTab({
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <AreaChart data={entrancesData} margin={{ left: 12, right: 12 }}>
+            <AreaChart
+              data={entrancesData}
+              margin={{ top: 8, left: 12, right: 12 }}
+            >
               <defs>
                 <linearGradient id="fillEntrances" x1="0" y1="0" x2="0" y2="1">
                   <stop
@@ -252,7 +255,7 @@ export function ActivityTab({
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
             <AreaChart
               data={transactionsPerUser}
-              margin={{ left: 12, right: 12 }}
+              margin={{ top: 8, left: 12, right: 12 }}
             >
               <defs>
                 <linearGradient id="fillRatio" x1="0" y1="0" x2="0" y2="1">
