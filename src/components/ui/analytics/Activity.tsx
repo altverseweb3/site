@@ -18,6 +18,10 @@ import {
   ChartLegendContent,
 } from "@/components/ui/Chart";
 import { AnalyticsData, PeriodicStats, TimePeriod } from "@/types/analytics";
+import {
+  AREA_CHART_COLORS,
+  getBarChartColors,
+} from "@/utils/analytics/analytics";
 
 interface ActivityTabProps {
   data: AnalyticsData;
@@ -32,30 +36,32 @@ export function ActivityTab({
   formatDate,
   timePeriod,
 }: ActivityTabProps) {
+  const breakdownColors = getBarChartColors(3);
+
   const chartConfig = {
     transactions: {
       label: "Transactions",
-      color: "hsl(30 80% 55%)",
+      color: AREA_CHART_COLORS.primary,
     },
     swap_count: {
       label: "Swaps",
-      color: "hsl(30 80% 55%)",
+      color: breakdownColors[0],
     },
     lending_count: {
       label: "Lending",
-      color: "hsl(40 90% 60%)",
+      color: breakdownColors[1],
     },
     earn_count: {
       label: "Earn",
-      color: "hsl(20 80% 50%)",
+      color: breakdownColors[2],
     },
     entrances: {
       label: "Entrances",
-      color: "hsl(30 80% 55%)",
+      color: AREA_CHART_COLORS.primary,
     },
     ratio: {
       label: "Ratio",
-      color: "hsl(35 85% 60%)",
+      color: AREA_CHART_COLORS.secondary,
     },
   } satisfies ChartConfig;
 
@@ -139,7 +145,7 @@ export function ActivityTab({
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar
                 dataKey="transactions"
-                fill="hsl(30 80% 55%)"
+                fill={AREA_CHART_COLORS.primary}
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
@@ -170,19 +176,19 @@ export function ActivityTab({
               <Bar
                 dataKey="swap_count"
                 stackId="a"
-                fill="hsl(30 80% 55%)"
+                fill={breakdownColors[0]}
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="lending_count"
                 stackId="a"
-                fill="hsl(40 90% 60%)"
+                fill={breakdownColors[1]}
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="earn_count"
                 stackId="a"
-                fill="hsl(20 80% 50%)"
+                fill={breakdownColors[2]}
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
@@ -206,12 +212,12 @@ export function ActivityTab({
                 <linearGradient id="fillEntrances" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -237,7 +243,7 @@ export function ActivityTab({
                 type="monotone"
                 fill="url(#fillEntrances)"
                 fillOpacity={0.4}
-                stroke="hsl(30 80% 55%)"
+                stroke={AREA_CHART_COLORS.primary}
                 strokeWidth={2}
               />
             </AreaChart>
@@ -261,12 +267,12 @@ export function ActivityTab({
                 <linearGradient id="fillRatio" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(35 85% 60%)"
+                    stopColor={AREA_CHART_COLORS.secondary}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(35 85% 60%)"
+                    stopColor={AREA_CHART_COLORS.secondary}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -292,7 +298,7 @@ export function ActivityTab({
                 type="monotone"
                 fill="url(#fillRatio)"
                 fillOpacity={0.4}
-                stroke="hsl(35 85% 60%)"
+                stroke={AREA_CHART_COLORS.secondary}
                 strokeWidth={2}
               />
             </AreaChart>

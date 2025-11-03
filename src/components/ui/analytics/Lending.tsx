@@ -23,6 +23,10 @@ import {
   PeriodicStats,
   TimePeriod,
 } from "@/types/analytics";
+import {
+  AREA_CHART_COLORS,
+  getDonutChartColors,
+} from "@/utils/analytics/analytics";
 
 interface LendingTabProps {
   data: AnalyticsData;
@@ -40,7 +44,7 @@ export function LendingTab({
   const chartConfig = {
     count: {
       label: "Lending Operations",
-      color: "hsl(30 80% 55%)",
+      color: AREA_CHART_COLORS.primary,
     },
   } satisfies ChartConfig;
 
@@ -99,24 +103,24 @@ export function LendingTab({
 
   // Chain breakdown for pie chart
   const chainChartData = React.useMemo(() => {
-    return Object.entries(aggregatedLending.byChain).map(
-      ([chain, count], index) => ({
-        name: chain,
-        value: count,
-        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-      }),
-    );
+    const entries = Object.entries(aggregatedLending.byChain);
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([chain, count], index) => ({
+      name: chain,
+      value: count,
+      fill: colors[index],
+    }));
   }, [aggregatedLending.byChain]);
 
   // Protocol breakdown for pie chart
   const protocolChartData = React.useMemo(() => {
-    return Object.entries(aggregatedLending.byMarket).map(
-      ([protocol, count], index) => ({
-        name: protocol,
-        value: count,
-        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-      }),
-    );
+    const entries = Object.entries(aggregatedLending.byMarket);
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([protocol, count], index) => ({
+      name: protocol,
+      value: count,
+      fill: colors[index],
+    }));
   }, [aggregatedLending.byMarket]);
 
   // Chart configs for pie charts
@@ -124,10 +128,12 @@ export function LendingTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Operations" },
     };
-    Object.keys(aggregatedLending.byChain).forEach((chain, index) => {
+    const entries = Object.keys(aggregatedLending.byChain);
+    const colors = getDonutChartColors(entries.length);
+    entries.forEach((chain, index) => {
       config[chain] = {
         label: chain,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -137,10 +143,12 @@ export function LendingTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Operations" },
     };
-    Object.keys(aggregatedLending.byMarket).forEach((protocol, index) => {
+    const entries = Object.keys(aggregatedLending.byMarket);
+    const colors = getDonutChartColors(entries.length);
+    entries.forEach((protocol, index) => {
       config[protocol] = {
         label: protocol,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -187,12 +195,12 @@ export function LendingTab({
                 <linearGradient id="fillLending" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -218,7 +226,7 @@ export function LendingTab({
                 type="monotone"
                 fill="url(#fillLending)"
                 fillOpacity={0.4}
-                stroke="hsl(30 80% 55%)"
+                stroke={AREA_CHART_COLORS.primary}
                 strokeWidth={2}
               />
             </AreaChart>

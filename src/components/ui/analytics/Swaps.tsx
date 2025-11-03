@@ -18,6 +18,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/Chart";
 import { AnalyticsData, PeriodicStats, TimePeriod } from "@/types/analytics";
+import {
+  AREA_CHART_COLORS,
+  getAreaChartColors,
+  getDonutChartColors,
+} from "@/utils/analytics/analytics";
 
 interface SwapsTabProps {
   data: AnalyticsData;
@@ -32,18 +37,20 @@ export function SwapsTab({
   formatDate,
   timePeriod,
 }: SwapsTabProps) {
+  const areaColors = getAreaChartColors(2);
+
   const chartConfig = {
     cross_chain: {
       label: "Cross-Chain",
-      color: "hsl(30 80% 55%)",
+      color: areaColors[0],
     },
     same_chain: {
       label: "Same-Chain",
-      color: "hsl(40 85% 60%)",
+      color: areaColors[1],
     },
     count: {
       label: "Count",
-      color: "hsl(30 80% 55%)",
+      color: AREA_CHART_COLORS.primary,
     },
   } satisfies ChartConfig;
 
@@ -101,33 +108,35 @@ export function SwapsTab({
       }
     });
 
-    return Object.entries(byChain)
-      .sort(([, a], [, b]) => b - a)
-      .map(([chain, count], index) => ({
-        name: chain.charAt(0).toUpperCase() + chain.slice(1),
-        value: count,
-        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-      }));
+    const entries = Object.entries(byChain).sort(([, a], [, b]) => b - a);
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([chain, count], index) => ({
+      name: chain.charAt(0).toUpperCase() + chain.slice(1),
+      value: count,
+      fill: colors[index],
+    }));
   }, [aggregatedSwaps.routes]);
 
   // Cross-chain routes breakdown (top 10)
   const crossChainRoutesData = React.useMemo(() => {
-    return Object.entries(aggregatedSwaps.routes)
+    const entries = Object.entries(aggregatedSwaps.routes)
       .filter(([route]) => {
         const [source, target] = route.split(",");
         return source !== target;
       })
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-      .map(([route, count], index) => {
-        const [source, target] = route.split(",");
-        return {
-          route: route,
-          name: `${source.charAt(0).toUpperCase() + source.slice(1)}→${target.charAt(0).toUpperCase() + target.slice(1)}`,
-          value: count,
-          fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-        };
-      });
+      .slice(0, 10);
+
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([route, count], index) => {
+      const [source, target] = route.split(",");
+      return {
+        route: route,
+        name: `${source.charAt(0).toUpperCase() + source.slice(1)}→${target.charAt(0).toUpperCase() + target.slice(1)}`,
+        value: count,
+        fill: colors[index],
+      };
+    });
   }, [aggregatedSwaps.routes]);
 
   // Chart config for same-chain donut
@@ -135,10 +144,11 @@ export function SwapsTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Swaps" },
     };
+    const colors = getDonutChartColors(sameChainData.length);
     sameChainData.forEach((item, index) => {
       config[item.name] = {
         label: item.name,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -149,10 +159,11 @@ export function SwapsTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Swaps" },
     };
+    const colors = getDonutChartColors(crossChainRoutesData.length);
     crossChainRoutesData.forEach((item, index) => {
       config[item.name] = {
         label: item.name,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -221,24 +232,24 @@ export function SwapsTab({
                 <linearGradient id="fillCrossChain" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={areaColors[0]}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={areaColors[0]}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
                 <linearGradient id="fillSameChain" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(40 85% 60%)"
+                    stopColor={areaColors[1]}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(40 85% 60%)"
+                    stopColor={areaColors[1]}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -264,7 +275,7 @@ export function SwapsTab({
                 type="monotone"
                 fill="url(#fillSameChain)"
                 fillOpacity={0.4}
-                stroke="hsl(40 85% 60%)"
+                stroke={areaColors[1]}
                 strokeWidth={2}
                 stackId="a"
               />
@@ -273,7 +284,7 @@ export function SwapsTab({
                 type="monotone"
                 fill="url(#fillCrossChain)"
                 fillOpacity={0.4}
-                stroke="hsl(30 80% 55%)"
+                stroke={areaColors[0]}
                 strokeWidth={2}
                 stackId="a"
               />

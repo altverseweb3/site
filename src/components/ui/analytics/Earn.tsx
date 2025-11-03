@@ -18,6 +18,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/Chart";
 import { AnalyticsData, PeriodicStats, TimePeriod } from "@/types/analytics";
+import {
+  AREA_CHART_COLORS,
+  getDonutChartColors,
+} from "@/utils/analytics/analytics";
 
 interface EarnTabProps {
   data: AnalyticsData;
@@ -35,7 +39,7 @@ export function EarnTab({
   const chartConfig = {
     count: {
       label: "Earn Operations",
-      color: "hsl(30 80% 55%)",
+      color: AREA_CHART_COLORS.primary,
     },
   } satisfies ChartConfig;
 
@@ -81,24 +85,24 @@ export function EarnTab({
 
   // Chain breakdown for pie chart
   const chainChartData = React.useMemo(() => {
-    return Object.entries(aggregatedEarn.byChain).map(
-      ([chain, count], index) => ({
-        name: chain,
-        value: count,
-        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-      }),
-    );
+    const entries = Object.entries(aggregatedEarn.byChain);
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([chain, count], index) => ({
+      name: chain,
+      value: count,
+      fill: colors[index],
+    }));
   }, [aggregatedEarn.byChain]);
 
   // Protocol breakdown for pie chart
   const protocolChartData = React.useMemo(() => {
-    return Object.entries(aggregatedEarn.byProtocol).map(
-      ([protocol, count], index) => ({
-        name: protocol,
-        value: count,
-        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-      }),
-    );
+    const entries = Object.entries(aggregatedEarn.byProtocol);
+    const colors = getDonutChartColors(entries.length);
+    return entries.map(([protocol, count], index) => ({
+      name: protocol,
+      value: count,
+      fill: colors[index],
+    }));
   }, [aggregatedEarn.byProtocol]);
 
   // Chart configs for pie charts
@@ -106,10 +110,12 @@ export function EarnTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Operations" },
     };
-    Object.keys(aggregatedEarn.byChain).forEach((chain, index) => {
+    const entries = Object.keys(aggregatedEarn.byChain);
+    const colors = getDonutChartColors(entries.length);
+    entries.forEach((chain, index) => {
       config[chain] = {
         label: chain,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -119,10 +125,12 @@ export function EarnTab({
     const config: Record<string, { label: string; color?: string }> = {
       value: { label: "Operations" },
     };
-    Object.keys(aggregatedEarn.byProtocol).forEach((protocol, index) => {
+    const entries = Object.keys(aggregatedEarn.byProtocol);
+    const colors = getDonutChartColors(entries.length);
+    entries.forEach((protocol, index) => {
       config[protocol] = {
         label: protocol,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: colors[index],
       };
     });
     return config satisfies ChartConfig;
@@ -169,12 +177,12 @@ export function EarnTab({
                 <linearGradient id="fillEarn" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(30 80% 55%)"
+                    stopColor={AREA_CHART_COLORS.primary}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -200,7 +208,7 @@ export function EarnTab({
                 type="monotone"
                 fill="url(#fillEarn)"
                 fillOpacity={0.4}
-                stroke="hsl(30 80% 55%)"
+                stroke={AREA_CHART_COLORS.primary}
                 strokeWidth={2}
               />
             </AreaChart>
