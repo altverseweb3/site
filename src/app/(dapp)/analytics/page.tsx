@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [selectedFile] = useState<string>("real.json");
+  const [selectedFile] = useState<string>("data.json");
 
   useEffect(() => {
     const loadFiles = async () => {

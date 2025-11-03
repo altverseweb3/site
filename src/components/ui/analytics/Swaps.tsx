@@ -211,34 +211,34 @@ export function SwapsTab({
             Cross-chain and same-chain swaps over time
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto h-[250px] w-full"
-          >
-            <AreaChart data={volumeData}>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <AreaChart
+              data={volumeData}
+              margin={{ top: 8, left: 12, right: 12 }}
+            >
               <defs>
                 <linearGradient id="fillCrossChain" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="var(--color-cross_chain)"
+                    stopColor="hsl(30 80% 55%)"
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="var(--color-cross_chain)"
+                    stopColor="hsl(30 80% 55%)"
                     stopOpacity={0.1}
                   />
                 </linearGradient>
                 <linearGradient id="fillSameChain" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="var(--color-same_chain)"
+                    stopColor="hsl(40 85% 60%)"
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor="var(--color-same_chain)"
+                    stopColor="hsl(40 85% 60%)"
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -253,26 +253,28 @@ export function SwapsTab({
                 tickFormatter={(value) => formatDate(value, timePeriod)}
               />
               <ChartTooltip
-                cursor={false}
                 content={
                   <ChartTooltipContent
                     labelFormatter={(value) => formatDate(value, timePeriod)}
-                    indicator="dot"
                   />
                 }
               />
               <Area
                 dataKey="same_chain"
-                type="natural"
+                type="monotone"
                 fill="url(#fillSameChain)"
-                stroke="var(--color-same_chain)"
+                fillOpacity={0.4}
+                stroke="hsl(40 85% 60%)"
+                strokeWidth={2}
                 stackId="a"
               />
               <Area
                 dataKey="cross_chain"
-                type="natural"
+                type="monotone"
                 fill="url(#fillCrossChain)"
-                stroke="var(--color-cross_chain)"
+                fillOpacity={0.4}
+                stroke="hsl(30 80% 55%)"
+                strokeWidth={2}
                 stackId="a"
               />
               <ChartLegend content={<ChartLegendContent />} />

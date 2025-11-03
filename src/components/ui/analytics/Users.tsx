@@ -92,15 +92,11 @@ export function UsersTab({
             Track new users and active users across the selected period
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto h-[300px] w-full"
-          >
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[300px] w-full">
             <AreaChart
-              accessibilityLayer
               data={chartData}
-              margin={{ left: 0, right: 0, top: 5, bottom: 5 }}
+              margin={{ top: 8, left: 12, right: 12 }}
             >
               <defs>
                 <linearGradient id="fillNewUsers" x1="0" y1="0" x2="0" y2="1">
@@ -130,26 +126,27 @@ export function UsersTab({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    className="w-[150px]"
                     labelFormatter={(value) => formatDate(value, timePeriod)}
                   />
                 }
               />
               <Area
                 dataKey="new_users"
-                type="natural"
+                type="monotone"
                 fill="url(#fillNewUsers)"
                 fillOpacity={0.4}
                 stroke="#f97316"
                 strokeWidth={2}
+                stackId="a"
               />
               <Area
                 dataKey="active_users"
-                type="natural"
+                type="monotone"
                 fill="url(#fillActiveUsers)"
                 fillOpacity={0.4}
                 stroke="#eab308"
                 strokeWidth={2}
+                stackId="a"
               />
               <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
