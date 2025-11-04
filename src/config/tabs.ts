@@ -21,7 +21,6 @@ export const TAB_CONFIG: Record<Tab, TabConfig> = {
   },
   analytics: {
     label: "analytics",
-    disabled: true,
   },
   dashboard: {
     label: "dashboard",
