@@ -12,13 +12,13 @@
 
 ---
 
-![image](https://github.com/user-attachments/assets/2817df45-8c21-47ab-bd51-1e19861a7eb2)
+![image](public/images/problem.png)
 
 Altverse is a project inspired by the many pain points associated with using the ever-growing number of useful tools and features separated by segregated protocols, chains and dApps. Altverse aims to create a unified user experience by offering exposure to the best of Web3 in a single place, regardless of what chain user assets are sourced from.
 
 ---
 
-![Screenshot 2025-05-17 at 12 42 04 pm](https://github.com/user-attachments/assets/9a957a44-b48a-471f-ae8d-3d493ffd8517)
+![image](public/images/solution.png)
 
 Our platform does more than just aggregate protocols - we abstract away complexities, giving our users a single, simple, and easy-to-use platform for all their needs.
 

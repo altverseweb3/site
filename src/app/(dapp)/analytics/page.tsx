@@ -52,15 +52,21 @@ export default function AnalyticsPage() {
 
       const limit = timePeriod === "last7" ? 7 : 30;
       return {
-        periodic_user_stats: daily.periodic_user_stats.slice(-limit).reverse(),
+        periodic_user_stats: daily.periodic_user_stats
+          .slice(0, limit)
+          .reverse(),
         periodic_activity_stats: daily.periodic_activity_stats
-          .slice(-limit)
+          .slice(0, limit)
           .reverse(),
-        periodic_swap_stats: daily.periodic_swap_stats.slice(-limit).reverse(),
+        periodic_swap_stats: daily.periodic_swap_stats
+          .slice(0, limit)
+          .reverse(),
         periodic_lending_stats: daily.periodic_lending_stats
-          .slice(-limit)
+          .slice(0, limit)
           .reverse(),
-        periodic_earn_stats: daily.periodic_earn_stats.slice(-limit).reverse(),
+        periodic_earn_stats: daily.periodic_earn_stats
+          .slice(0, limit)
+          .reverse(),
       };
     } else if (timePeriod === "weekly") {
       const weekly = analyticsData.periodic_stats.weekly;
