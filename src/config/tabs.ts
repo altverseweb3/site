@@ -19,6 +19,9 @@ export const TAB_CONFIG: Record<Tab, TabConfig> = {
   leaderboard: {
     label: "leaderboard",
   },
+  analytics: {
+    label: "analytics",
+  },
   dashboard: {
     label: "dashboard",
     disabled: true,
